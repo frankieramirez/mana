@@ -1,6 +1,6 @@
 ---
 name: comment-reaper
-description: Deletes comments that do not earn their place and flags the code they were covering for. Report-only on code; edits comments only. Generated from skills/decomment/references/comment-reaper.md, do not edit by hand.
+description: Deletes comments that do not earn their place and flags the code they were covering for. Report-only on code; edits comments only. Generated from skills/scrap/references/comment-reaper.md, do not edit by hand.
 ---
 
 # Comment Reaper

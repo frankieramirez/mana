@@ -1,10 +1,10 @@
 ---
-name: decomment
-description: "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to decomment, remove comments, clean up comments, or run /decomment."
+name: scrap
+description: "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to scrap comments, remove comments, clean up comments, decomment, or run /scrap."
 disable-model-invocation: true
 ---
 
-# Decomment
+# Scrap
 
 Comments in a diff are usually the author explaining code that should have explained itself. This skill hands the diff to a reviewer with no attachment to the code, the Comment Reaper, then acts on what comes back.
 

@@ -13,7 +13,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install fr@frankieramirez
 ```
 
-Skills are then invoked as `/fr:deep-review`, `/fr:address-feedback`, `/fr:spit`, `/fr:be-me`, `/fr:decomment`.
+Skills are then invoked as `/fr:deep-review`, `/fr:address-feedback`, `/fr:spit`, `/fr:be-me`, `/fr:scrap`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -58,13 +58,13 @@ Replies to a message, comment, or email as you, so the other person does not not
 /fr:be-me "say no, we're at capacity until next sprint"
 ```
 
-### decomment
+### scrap
 
 Removes comments that do not earn their place. Spawns the Comment Reaper on your diff, audits its report, applies the deletions, and then fixes the code the comments were covering for. A comment survives only under a short keep list: license headers, public API contracts, quirks of third-party code we cannot change, formatter directives, style-only lint suppressions, and links to constraints code cannot express.
 
 ```
-/fr:decomment                      # current diff against main
-/fr:decomment src/api/             # a path
+/fr:scrap                      # current diff against main
+/fr:scrap src/api/             # a path
 ```
 
 ## Layout
@@ -78,7 +78,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`deep-review` and `address-feedback` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `decomment` was inspired by the comment-removal tooling in Cursor's plugin collection. The Cloudflare skills I also use are not here; install them with `npx skills add cloudflare/skills`.
+`deep-review` and `address-feedback` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` was inspired by the comment-removal tooling in Cursor's plugin collection. The Cloudflare skills I also use are not here; install them with `npx skills add cloudflare/skills`.
 
 ## License
 
