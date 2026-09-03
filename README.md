@@ -77,7 +77,7 @@ An existing project runs setup once and then skips the first two rows. Its stead
 
 ### Trackers
 
-Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` records the choice in `docs/agents/issue-tracker.md`, and `sift`, `conjure`, and `cast` read it before touching a ticket. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
+Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` records the choice in `docs/agents/issue-tracker.md`, and `sift`, `conjure`, and `cast` read it before touching a ticket. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
 
 Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
 
@@ -112,6 +112,26 @@ on a review   /mana:remedy <pr>
 ```
 
 Point a routine at one skill per run. A skill that finds nothing to do exits quietly, so a tight schedule costs little.
+
+### Orca
+
+Nothing here needs [Orca](https://github.com/stablyai/orca). When a skill runs inside an Orca worktree (Orca sets `ORCA_WORKTREE_ID` and puts `orca` on the path), it does a little more, and every extra step is best-effort: a failed `orca` call is reported, never a stop.
+
+- `cast` links the ticket to the worktree card after the claim, and moves the card to in review with the PR URL after the ship. `reveal` moves the card the same way.
+- `cast` and `reveal` can capture proof from Orca's embedded browser (`orca screenshot`).
+- `sift`, `conjure`, and `cast` treat `orca linear` as a Linear connector, so no `LINEAR_API_KEY` is needed there. `cast` also attaches the PR to the Linear issue.
+- `scan` and `reveal` read the base branch Orca records in git config before falling back to the default branch.
+- `setup-mana` offers `.worktreeinclude` and `orca.yaml`, so a fresh worktree can run the validation command.
+
+Orca already creates each worktree on its own branch off the base, so `cast` never makes one there. That fits Orca automations, which run a prompt in a new worktree per run and skip the run when a precheck fails:
+
+```
+orca automations create --name "cast next" --trigger hourly --provider claude \
+  --repo path:. --prompt "/mana:cast next" \
+  --precheck "bash <skill dir>/scripts/tickets.sh next ready-for-agent | grep -q ."
+```
+
+`<skill dir>` is wherever `cast` is installed. The same shape runs `sift you-pick` nightly or `scan <pr> report` hourly with a precheck that lists open pull requests.
 
 ## Skills
 
@@ -195,7 +215,7 @@ Turns a finished map, a spec, or the plan in the conversation into build tickets
 
 ### cast
 
-Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch.
+Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch. Inside an Orca worktree the branch already exists, and the ticket, the status, and the PR land on the worktree card.
 
 ```
 /mana:cast                        # the ticket already in this conversation

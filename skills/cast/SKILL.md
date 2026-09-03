@@ -17,6 +17,7 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
 - **Leave the review to a later pass.** This skill commits the implementation. It does not run a multi-reviewer critique.
 - **Ship by default.** After the commit, push (creating the upstream if needed) and open a pull request with visual evidence. `no-pr` restores commit-only, with a push only when an upstream already exists.
+- **Orca is optional.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), the skill also keeps the worktree card current: the linked ticket, the status column, and a one-line comment. Without Orca nothing changes. An `orca` call that fails is noted in the report and never stops the run. When the skill stops early, leave the reason as the comment: `orca worktree set --worktree active --comment "<reason>" --json`.
 
 ## Arguments
 
@@ -49,7 +50,7 @@ Parse tokens, then treat the remainder as the target.
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too. Ticket ids are whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`).
 
-The operations below are `next`, `claim`, and `view`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered file with `Status: ready-for-agent` and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
+The operations below are `next`, `claim`, and `view`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Inside an Orca worktree, `orca linear` is such a connector for Linear: `orca linear issue <id> --comments --relations --json` is `view`, `orca linear assignee set` is `claim`, and `orca linear --help` lists the rest. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered file with `Status: ready-for-agent` and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
 
 ## Stage 1: Load
 
@@ -79,6 +80,8 @@ bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view ID
 ```
 
 Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the ticket body itself.
+
+**Orca card.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), link the ticket to the worktree card once it is claimed. GitHub: `orca worktree set --worktree active --issue <n> --json`. Linear: `--linear-issue <ENG-42>` instead. Jira, local, or other: `--comment "<id> <title>"` instead, since the card has no field for those. Skip this for a spec path or the conversation.
 
 **Branch.** Compare the current branch with the repo default:
 
@@ -168,6 +171,14 @@ Same rebase-or-stop rule as Stage 4. Never force-push.
 
 Capture at least one proof file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`; see the closing line in `references/body.md`). Then run `scripts/open-pr.sh` with the title, body file, and attaches.
 
+**Orca card.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), move the card once the PR exists:
+
+```bash
+orca worktree set --worktree active --workspace-status in-review --comment "PR <url>" --json
+```
+
+On Linear, also attach the PR to the issue so it shows there before the merge: `orca linear attach <ENG-42> --url <pr url> --title "Pull request" --json`.
+
 ## Report
 
 ```
@@ -179,6 +190,7 @@ Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
 PR: <url | none: no-pr | none: reason>
 Evidence: <file list, or none>
 Validation: <one line>
+Orca: <linked <id>, in-review | not present | failed: reason>
 Open: <any criterion left unmet, or none>
 ```
 

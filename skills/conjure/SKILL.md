@@ -50,7 +50,7 @@ Parse tokens, then treat the remainder as the source.
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too.
 
-The operations below are `view`, `ensure-labels`, `create`, `wire`, and `comment`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, write the tickets as `references/scratch.md` describes. For `other`, follow the tracker file's Conventions by hand.
+The operations below are `view`, `ensure-labels`, `create`, `wire`, and `comment`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), `orca linear` is such a connector for Linear; `orca linear --help` lists its operations. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, write the tickets as `references/scratch.md` describes. For `other`, follow the tracker file's Conventions by hand.
 
 ## Stage 1: Load
 

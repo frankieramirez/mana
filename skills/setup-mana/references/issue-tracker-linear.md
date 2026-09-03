@@ -3,7 +3,7 @@
 Tracker: linear
 Project: <TEAM KEY, the prefix on identifiers, like ENG>
 Adapter flags: --tracker linear --project <TEAM KEY>
-Auth: `LINEAR_API_KEY` in the environment (a personal API key from Linear settings). Never in a file.
+Auth: `LINEAR_API_KEY` in the environment (a personal API key from Linear settings), or the host's Linear connector, which `orca linear` is inside an Orca worktree. Never in a file.
 Keys: `ENG-42`. A bare number is not a ticket here.
 Host: https://linear.app/<workspace>
 
