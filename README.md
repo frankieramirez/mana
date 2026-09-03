@@ -76,7 +76,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`wringer` and `no-comment` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` was inspired by the comment-removal tooling in Cursor's plugin collection.
+`wringer` and `no-comment` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
 
 ## License
 
