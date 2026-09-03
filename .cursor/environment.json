@@ -1,0 +1,4 @@
+{
+  "name": "mana",
+  "install": "git --version && gh --version && python3 --version && python3 -c 'import yaml' && echo deps-ok"
+}
