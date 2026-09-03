@@ -225,6 +225,8 @@ RUN_DIR="$SCRATCH_ROOT/$RUN_ID";
 echo "$RUN_DIR"
 ```
 
+**Check for a prior run of the same diff.** Compute the current patch-id (`git diff "$BASE" | git patch-id --stable | cut -d' ' -f1`, the same working-tree diff Stage 1 computed, or the two fetched refs under `pr-remote`) and look through `$SCRATCH_ROOT/*/metadata.json` for a run with the same `pr` (or the same `branch` when standalone). A matching `patch_id` means that report reviewed this exact diff: say so in one line with its `report.md` path, then continue. Never skip the review on that basis.
+
 **Announce the team** before spawning: name the always-on reviewers plainly, and give each conditional one a one-line reason it was added (the real concern, not the keyword that matched). This is progress reporting, not a confirmation prompt.
 
 ## Stage 4: Dispatch and collect

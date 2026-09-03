@@ -29,8 +29,12 @@ Apply in order:
     - **Already addressed** in the current code: name the file and line that shows it.
     - **Not a finding**: give the reason (the rule does not apply at this site, the flagged code was removed, it is a preference with no defect).
     Never leave a harvested item unaccounted for. A bot finding you cannot verify either way is a finding at confidence 50, not a silent drop.
-12. **Partition the actionable queue.** Actionable is `gated_auto` or `manual` with owner `downstream-resolver`. Normalize any concrete P0 or P1 to `downstream-resolver` unless the report entry names the specific product decision, missing authority, external dependency, or release action that blocks implementation. A broad redesign, several related edits, or sensitive code is not such a blocker. Reviewer caution and `requires_verification: true` do not remove a fixable defect from the queue.
-13. **Group by theme when findings span distinct concerns.** A group has a short title, the `#`s it covers, one line of context, and the preferred resolution with ordering ("decide X once, resolves #1 and #7, do #1 first"). Groups never merge findings or change severity, route, or numbering. A finding appears in at most one group; unrelated findings stay ungrouped. Skip grouping entirely when every finding is about the same thing. Mark each group as mechanical work or a decision gate.
+12. **Lead judgment.** Reviewers saw a slice of the code and a three-line intent. You hold the whole diff, the conversation, and the repo. Apply these three filters before the validator sees the batch. Each dismissal records its reason for the Dismissed section.
+    - **Nitpick gravity.** Reviewers fill their review. When one reviewer's entire return is P3 style or taste items, the code it looked at is fine. Drop those items and say so for that reviewer in Coverage.
+    - **Consistent with the codebase.** A pattern flagged as wrong that matches how the rest of the repo does the same thing is not this diff's defect. One grep settles it. A standards file overrides precedent: a documented rule wins.
+    - **Code the diff did not touch.** A suggestion to change a line outside the hunks, where the diff makes that line neither newly reachable nor newly wrong, is out of scope. A real bug there goes to `pre_existing`; anything else is dismissed.
+13. **Partition the actionable queue.** Actionable is `gated_auto` or `manual` with owner `downstream-resolver`. Normalize any concrete P0 or P1 to `downstream-resolver` unless the report entry names the specific product decision, missing authority, external dependency, or release action that blocks implementation. A broad redesign, several related edits, or sensitive code is not such a blocker. Reviewer caution and `requires_verification: true` do not remove a fixable defect from the queue.
+14. **Group by theme when findings span distinct concerns.** A group has a short title, the `#`s it covers, one line of context, and the preferred resolution with ordering ("decide X once, resolves #1 and #7, do #1 first"). Groups never merge findings or change severity, route, or numbering. A finding appears in at most one group; unrelated findings stay ungrouped. Skip grouping entirely when every finding is about the same thing. Mark each group as mechanical work or a decision gate.
 
 ## Stage 5b: Validation pass
 
@@ -46,14 +50,21 @@ Independent verification of the findings most likely to waste the user's time if
 
 Assemble the markdown report. Sections, in order (omit any that would be empty):
 
-1. **Header.** Scope (what is being reviewed, the PR or branch), intent, and the reviewer team with a one-line reason per conditional lens.
+1. **Header.** Scope (what is being reviewed, the PR or branch), intent, the reviewer team with a one-line reason per conditional lens, and one stamp line: `Reviewed <head_sha> against <base_sha>, patch-id <id>`. A rebase or base retarget rewrites SHAs and can invalidate a verdict without any check going red; the same patch-id means the same diff. Compute it once:
+
+   ```bash
+   BASE_SHA=$(git rev-parse "$BASE") && HEAD_SHA=$(git rev-parse HEAD) && PATCH_ID=$(git diff "$BASE" | git patch-id --stable | cut -d' ' -f1)
+   ```
+
+   `git diff "$BASE"` with no second ref is the same diff Stage 1 reviewed, working tree included, so uncommitted changes are part of the stamp. Under `pr-remote` or `branch-remote`, diff `PR_BASE_REF` against `PR_HEAD_REF` (or the branch ref) instead. When those fetches failed, write `patch-id unavailable (fetch failed)` and set `patch_id` to null.
 2. **Triage Groups.** When groups exist: a compact table of `| Group | Findings | Context | Preferred resolution | Mechanical or decision |`. Every referenced `#` must appear in the findings below.
 3. **Findings**, grouped by severity: `### P0: Critical`, `### P1: High`, `### P2: Moderate`, `### P3: Low`. Per finding make four things unambiguous: **what and where** (one scannable line: the symptom plus `file:line`, not the mechanism); **why it matters** (what breaks and who is hit, never a restatement of the code); **what response it needs** (a bug states its fix, a design call presents options and the tradeoff without forcing one, a coverage gap names the test and a precedent to mirror); and **how sure** (confidence, and whether more than one reviewer or the PR's own bots corroborated it, which is the strongest signal there is). For findings that came from existing PR feedback, say so and name the source, so the user knows the point is already visible on the PR.
 4. **Existing PR feedback.** The Stage 5 step 11 reconciliation: what was harvested, what became findings, what was already addressed, what was dismissed and why. Name each bot by its actual login (`coderabbitai`, `github-actions`, and so on). Omit only when no PR was reviewed.
 5. **Pre-existing.** Separate, does not count toward the verdict.
-6. **Coverage.** Reviewers that ran and any that failed; the lite roster when it was used; suppressed counts by anchor; quote-the-line demotions; soft-bucket demotions; validator results, drops, and any degraded blockers; harvested-feedback counts by outcome; untracked files excluded from scope; residual risks; testing gaps; intent uncertainty; the run artifact path.
-7. **Verdict.** `Ready to merge` / `Ready with fixes` / `Not ready`, plus the fix order when relevant.
-8. **Actionable recap**, last. The prioritized list of what to do, each item carrying severity, `file:line`, the terse what, and its response type.
+6. **Dismissed.** One line per finding that reached synthesis at confidence 50 or above and did not survive, with the reason: the gate-6 drop, `validated: false` plus the validator's reason, or the lead-judgment filter that fired. Confidence 0 and 25 suppressions stay as counts in Coverage; they are noise, not judgment calls. This section exists so the user can override a rejection they disagree with. Omit when empty.
+7. **Coverage.** Reviewers that ran and any that failed; the lite roster when it was used; suppressed counts by anchor; quote-the-line demotions; soft-bucket demotions; validator results, drops, and any degraded blockers; dismissed counts by reason; reviewers whose whole return fell to nitpick gravity; harvested-feedback counts by outcome; untracked files excluded from scope; residual risks; testing gaps; intent uncertainty; the run artifact path.
+8. **Verdict.** `Ready to merge` / `Ready with fixes` / `Not ready`, plus the fix order when relevant. When every surviving finding is P3, say the code is ready and the list is optional polish. Do not pad a clean review.
+9. **Actionable recap**, last. The prioritized list of what to do, each item carrying severity, `file:line`, the terse what, and its response type.
 
 Hard constraints:
 
@@ -71,6 +82,8 @@ Write the rendered report to `{run_dir}/report.md`, the merged findings to `{run
   "run_id": "<run-id>",
   "branch": "<git branch --show-current at dispatch time>",
   "head_sha": "<git rev-parse HEAD at dispatch time>",
+  "base_sha": "<the resolved base commit>",
+  "patch_id": "<git patch-id --stable of the base-to-head diff, or null>",
   "pr": "<url or null>",
   "scope_mode": "local-aligned | pr-remote | branch-remote | standalone",
   "verdict": "<Ready to merge | Ready with fixes | Not ready>",
@@ -88,6 +101,7 @@ Before delivering, verify:
 4. **Line numbers are accurate.** A finding pointing at the wrong line is worse than no finding.
 5. **No linter duplication.** Nothing the project's formatter or linter already catches.
 6. **Nothing harvested vanished.** Every Stage 2b item is in one of the three buckets.
+7. **Nothing dismissed vanished.** Every gate-6 drop, validator drop, and lead-judgment dismissal has a line in Dismissed.
 
 ---
 

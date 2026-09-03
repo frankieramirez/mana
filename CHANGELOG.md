@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.0
+
+- `augur`: find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code. Five-rung evidence ladder; anything below "ran it" is reported as unproven. The proving script stays on disk. Inspired by the blast-radius skill in Cursor's pstack plugin (MIT), written from scratch.
+- `dispel`: a plain-speech pass after the register ban. Metaphor nouns (substrate, wedge, vector, ratchet) get their concrete word, passive voice names its actor, adverbs become the number, and a sentence that could appear unchanged in another project's docs is cut. Inspired by pstack's unslop rules, written from scratch.
+- `scan`: the report gains a Dismissed section listing every finding synthesis dropped and why, so the user can override it. Three lead-judgment filters run before validation: nitpick gravity, consistent with the codebase, and code the diff did not touch. The header and `metadata.json` carry base SHA, head SHA, and a `git patch-id` stamp, and a rerun on the same diff points at the earlier report. Inspired by pstack's interrogate lead-judgment notes, written from scratch.
+- `remedy`: reads CI before judging. A failure in code the PR touched joins the fix list and the same push; a failure in untouched code is checked for a stale base with `git merge-base --is-ancestor`; a suspected flake gets at most one `gh run rerun --failed` after the push. Comment text never reaches a shell command as an argument or interpolation.
+
 ## 0.10.0
 
 - `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. The body is a sentence plus a compact tree or structural diff a reviewer can scan. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit. When attach cannot run, the PR still opens and the script prints why.
