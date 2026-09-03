@@ -4,7 +4,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 
 ## Install
 
-**Claude Code** (plugin, includes the Comment Reaper agent):
+**Claude Code** (plugin, includes the Comment Reaper and Ghost agents):
 
 ```
 /plugin marketplace add frankieramirez/skills
@@ -51,9 +51,14 @@ Rewrites anything a person will read (Slack messages, PR descriptions, tickets, 
 
 Replies to a message, comment, or email as you, so the other person does not notice you did not type it. Pulls your voice from your own messages in the thread, an optional `.be-me.md` profile (template in `skills/be-me/references/voice-profile.md`), and your commits or comments in the repo. Applies the `spit` register plus reply rules: match the medium's length, no acknowledgement openers or helpful closers, no lists in chat, no invented facts (a bracketed placeholder instead). Output is the reply text only.
 
+`setup` fills the profile for you. It spawns Ghost, an agent that reads the prompts you have typed to your coding agent in its local logs, plus your own PR comments, PR descriptions, and commits, drops anything a tool wrote under your name, and returns a draft with the evidence. You approve it before it is written to `~/.be-me.md`. `wringer` reads the same profile when it leaves PR comments.
+
 ```
 /fr:be-me                          # answer the last message from someone else
 /fr:be-me "say no, we're at capacity until next sprint"
+/fr:be-me setup                    # build ~/.be-me.md from your own writing
+/fr:be-me setup project            # build .be-me.md for this project only
+/fr:be-me refresh                  # rebuild and show the diff
 ```
 
 ### scrap

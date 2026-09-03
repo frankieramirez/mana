@@ -31,13 +31,7 @@ done
 for p in $(python3 -c 'import json;print(" ".join(json.load(open(".claude-plugin/plugin.json")).get("agents",[])))'); do
   [ -f "$p" ] || err "plugin.json agent path missing: $p"
 done
-if [ -f agents/comment-reaper.md ]; then
-  tmp=$(mktemp)
-  awk 'f>=2{print} /^---$/{f++}' agents/comment-reaper.md | sed '1{/^$/d;}' > "$tmp"
-  diff -q "$tmp" skills/scrap/references/comment-reaper.md >/dev/null \
-    || err "agents/comment-reaper.md is out of sync; run scripts/sync-agent.sh"
-  rm -f "$tmp"
-fi
+scripts/sync-agent.sh --check || err "generated agents are out of sync"
 
 # 3. Manifests parse.
 for j in .claude-plugin/plugin.json .claude-plugin/marketplace.json skills/wringer/references/findings-schema.json; do

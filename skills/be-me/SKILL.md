@@ -1,12 +1,14 @@
 ---
 name: be-me
-description: "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /be-me. Pulls the user's voice from examples in context and applies the spit register."
-argument-hint: "[what to reply to, or blank to use the message in context] [any instruction about the answer]"
+description: "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /be-me. Pulls the user's voice from examples in context and applies the spit register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing."
+argument-hint: "[what to reply to, or blank to use the message in context] [any instruction about the answer] | setup [project] | refresh"
 ---
 
 # Be me
 
 Someone sent the user a message. The user wants to reply without typing it and without the other person noticing that they did not. Your output is the reply text, ready to paste. Nothing else.
+
+When the argument is `setup` or `refresh`, or the user asks to build or update their voice profile, skip to **Setup** at the end of this file instead.
 
 ## 1. Find the thing to answer
 
@@ -19,7 +21,7 @@ Note the medium. A Slack reply, a GitHub comment, a text, and an email have diff
 Look for the user's own writing before writing anything:
 
 1. Their earlier messages in the same thread or conversation. This is the best evidence there is.
-2. A voice profile, if one exists: `.be-me.md` in the current project, then `~/.be-me.md`. `references/voice-profile.md` is the template for that file.
+2. A voice profile, if one exists: `.be-me.md` in the current project, then `~/.be-me.md`. `references/voice-profile.md` is the template for that file, and `be-me setup` fills it in. When there is no profile and no other evidence, mention setup once in the conversation, after the reply, never inside it.
 3. Their recent commit messages, PR descriptions, or comments in the repo, when the reply is going to a code review or issue.
 4. What the user told you in the request ("keep it short", "be firm", "say no nicely").
 
@@ -57,3 +59,39 @@ Return only the reply, as plain text, with no quotes around it, no label, no exp
 3. Read the first sentence. It must already be the answer.
 4. Read the last sentence. If it restates, offers help, or lands a point, delete it.
 5. Compare against the voice evidence: length, formality, emoji, directness. Fix mismatches.
+
+## Setup
+
+Fills in the voice profile from the user's own writing so replies stop depending on whatever happens to be in context. Run once, and again with `refresh` when the voice drifts. The mining happens in a subagent named Ghost, because a few hundred GitHub comments do not belong in this conversation, and Ghost only returns a draft. Writing the file happens here, after the user has seen it.
+
+### 1. Gather what Ghost cannot see
+
+A subagent starts blank, so hand over the things only this conversation holds:
+
+- Every message the user typed in this session, verbatim, minus anything they pasted from someone else. These are the highest-signal evidence and Ghost has no other way to get them.
+- Samples the user pasted with the request.
+- The existing profile's contents, when `.be-me.md` or `~/.be-me.md` exists.
+- The contents of `references/voice-profile.md`, as the shape to fill.
+
+### 2. Spawn Ghost
+
+Read `references/ghost.md` from this skill's directory. Spawn one subagent with that file's full content as its instructions and the gathered material appended. In Claude Code, prefer the installed agent named `ghost` (or `fr:ghost` when installed as a plugin) if it exists; otherwise, or on any other platform, spawn a generic subagent seeded with the reference file. Do not restate or soften its rules in the prompt. Where no subagent exists at all, follow the reference file yourself and tell the user first that the mining will use a good deal of context.
+
+### 3. Audit the draft
+
+Before showing anything:
+
+- Every sample must be the user's own writing. Cut any that quote someone else, come from a bot, or read generated (headers, severity labels, em dashes when the rest of the set has none).
+- Nothing in the draft may look like a token, key, or password. Cut the sample and the line that carried it.
+- Every rule line needs evidence in Ghost's report. Cut lines that read like guesses.
+- The `Built:` line carries today's date and the item count.
+
+If the report says confidence is low, ask the user for five real messages before going further, and rerun Ghost with them once they arrive. Do not write a low-confidence profile.
+
+### 4. Show it, then wait
+
+Show the draft in full and Ghost's report under it. When a profile already exists, show the diff against it instead of the whole file. Then ask one question with the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded), falling back to the conversation where no such tool exists: write it as shown, edit first, or drop it. Edits the user gives in reply are applied to the draft before writing.
+
+### 5. Write it
+
+Write to `~/.be-me.md`, or to `.be-me.md` in the current project when `project` was passed. The project file carries samples from whatever repos Ghost read, so say in one line that it should be ignored in git unless the user wants it committed. Report where the file went and stop.

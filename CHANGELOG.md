@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- `be-me setup` and `be-me refresh`: a new Ghost agent mines the user's own writing (session messages, prompts typed to the coding agent in its local logs, PR comments, PR descriptions, commits) and returns a filled-in voice profile draft for approval. Text written by a tool under the user's name is dropped as evidence.
+- `wringer` comment mode reads the voice profile when one exists.
+- `scripts/sync-agent.sh` generates every agent from a table and gains `--check`.
+
 ## 0.4.0
 
 - `address-feedback` renamed to `no-comment`.

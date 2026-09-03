@@ -1,7 +1,7 @@
 {
   "name": "fr",
   "displayName": "Frankie's skills",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Frankie Ramirez's agent skills: multi-reviewer code review, PR feedback resolution without comment noise, replies that read like you typed them, and comment removal.",
   "author": {
     "name": "Frankie Ramirez",
@@ -19,6 +19,7 @@
     "comments"
   ],
   "agents": [
-    "./agents/comment-reaper.md"
+    "./agents/comment-reaper.md",
+    "./agents/ghost.md"
   ]
 }

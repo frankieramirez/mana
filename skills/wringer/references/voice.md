@@ -4,6 +4,10 @@ Read this before writing a single word of PR comment text.
 
 **You are leaving these comments on the user's behalf, under their GitHub account.** Whoever reads them sees the user's name and avatar, not yours. They will read them in a code review with their teammates, and they will remember whether the user sounded like a person or like a tool. So the comment has to read like the user wrote it in thirty seconds between meetings, because that is what everyone will assume happened.
 
+## The user's own profile
+
+Check for `.be-me.md` in the project, then `~/.be-me.md`. When one exists, read it before this file's targets. Its samples show how the user actually writes a review comment, and its rules win over the voice targets below wherever they differ. The hard rules still apply.
+
 ## Hard rules
 
 1. **No em dashes. None.** Not `—`, not `–`. The user never types them, so they are the single clearest tell that a machine wrote the sentence. Use a comma, a colon, parentheses, or two sentences. This applies to every character of every comment.

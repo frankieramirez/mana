@@ -1,9 +1,10 @@
 # Voice profile
 
-Copy this file to `.be-me.md` in a project (for that project) or `~/.be-me.md` (everywhere) and fill it in. Delete lines you do not care about. Anything left is treated as a rule when `be-me` writes a reply.
+Copy this file to `.be-me.md` in a project (for that project) or `~/.be-me.md` (everywhere) and fill it in, or run `be-me setup` and let Ghost fill it from your own writing. Delete lines you do not care about. Anything left is treated as a rule when `be-me` writes a reply.
 
 ## Basics
 
+- Built: <date, and how many of my own messages it came from; blank if filled in by hand>
 - Name I sign with:
 - Pronouns:
 - Default length: one line / a few lines / a paragraph
