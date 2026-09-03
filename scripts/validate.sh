@@ -33,6 +33,31 @@ for p in $(python3 -c 'import json;print(" ".join(json.load(open(".claude-plugin
 done
 scripts/sync-agent.sh --check || err "generated agents are out of sync"
 
+# 2b. The plugin prefix agrees across both manifests and every /prefix:skill in the README exists.
+python3 - <<'PY' || err "plugin naming is inconsistent"
+import json, pathlib, re, sys
+plugin = json.load(open(".claude-plugin/plugin.json"))
+market = json.load(open(".claude-plugin/marketplace.json"))
+names = [e["name"] for e in market["plugins"]]
+bad = []
+if plugin["name"] not in names:
+    bad.append(f"plugin.json name {plugin['name']!r} is not in marketplace.json plugins {names}")
+prefix = plugin["name"]
+dirs = {d.name for d in pathlib.Path("skills").iterdir() if d.is_dir()}
+readme = pathlib.Path("README.md").read_text()
+for used_prefix, skill in sorted(set(re.findall(r"/([a-z0-9-]+):([a-z0-9-]+)", readme))):
+    if used_prefix != prefix:
+        bad.append(f"README uses /{used_prefix}:{skill} but the plugin prefix is {prefix}")
+    elif skill not in dirs:
+        bad.append(f"README uses /{used_prefix}:{skill} but skills/{skill} does not exist")
+for name in sorted(dirs):
+    if f"/{prefix}:{name}" not in readme:
+        bad.append(f"skills/{name} is never shown as /{prefix}:{name} in README.md")
+for line in bad:
+    print(line, file=sys.stderr)
+sys.exit(1 if bad else 0)
+PY
+
 # 3. Manifests parse.
 for j in .claude-plugin/plugin.json .claude-plugin/marketplace.json skills/scan/references/findings-schema.json; do
   python3 -c "import json,sys;json.load(open('$j'))" 2>/dev/null || err "$j is not valid JSON"

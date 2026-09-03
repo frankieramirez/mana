@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.3
+
+- `scripts/validate.sh` checks that the plugin name agrees across both manifests, that no README slash command points at a skill that does not exist, and that every skill directory is shown in the README.
+- The naming convention is written down: the skill name is the spell, the description stays plain English.
+- `.mimic.md` is gitignored, since `mimic setup project` writes one into whatever repo it runs in.
+
 ## 0.7.2
 
 - The marketplace is named `frankieramirez`, so the install is `mana@frankieramirez`. A marketplace names a publisher, not a product, and it shows up where provenance is the useful thing to know. `mana` carries the brand in every slash command. The plugin name and every skill are unchanged.
