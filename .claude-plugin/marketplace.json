@@ -9,7 +9,7 @@
     {
       "name": "mana",
       "source": "./",
-      "description": "Multi-reviewer code review, PR feedback resolution, human-sounding prose and replies, comment removal, maps of decision tickets, opening a pull request with visual evidence, inbox triage, merge conflict resolution, and blast radius proofs.",
+      "description": "Multi-reviewer code review, PR feedback resolution, human-sounding prose and replies, comment removal, repo setup for GitHub, Linear, or Jira, maps of decision tickets, build tickets filed from a plan, opening a pull request with visual evidence, inbox triage, merge conflict resolution, and blast radius proofs.",
       "category": "engineering",
       "keywords": [
         "code-review",
@@ -22,7 +22,10 @@
         "triage",
         "git",
         "merge-conflicts",
-        "blast-radius"
+        "blast-radius",
+        "linear",
+        "jira",
+        "setup"
       ]
     }
   ]

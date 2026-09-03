@@ -1,7 +1,7 @@
 ---
 name: cast
-description: "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, or /cast. Pass no-pr to stop after the commit."
-argument-hint: "[ticket number | issue URL | spec path | blank for the conversation] [no-pr]"
+description: "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, take the next ready ticket, or /cast. Pass next to claim the oldest unclaimed ready-for-agent issue, and no-pr to stop after the commit."
+argument-hint: "[ticket number | issue URL | spec path | next | blank for the conversation] [no-pr]"
 disable-model-invocation: true
 ---
 
@@ -12,7 +12,8 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 ## Operating principles
 
 - **One ticket.** The invocation names the work. Do not wander onto adjacent issues.
-- **Never switch branches.** `git checkout`, `git switch`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so.
+- **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1).
+- **Claim before work.** A ticket from the tracker gets assigned to the person driving this session first, so a parallel session skips it. Held by someone else: stop.
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
 - **Leave the review to a later pass.** This skill commits the implementation. It does not run a multi-reviewer critique.
 - **Ship by default.** After the commit, push (creating the upstream if needed) and open a pull request with visual evidence. `no-pr` restores commit-only, with a push only when an upstream already exists.
@@ -29,6 +30,7 @@ Parse tokens, then treat the remainder as the target.
 |-------|--------|
 | none | The ticket or spec already in this conversation. If none is obvious, stop and ask for a number. |
 | number or issue URL | That GitHub issue |
+| `next` | The oldest open `ready-for-agent` issue that nobody holds and nothing blocks |
 | a path | That file, treated as the spec |
 
 ## Execution spine
@@ -43,15 +45,55 @@ Parse tokens, then treat the remainder as the target.
 
 ---
 
+## Tracker
+
+Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too. Ticket ids are whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`).
+
+The operations below are `next`, `claim`, and `view`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered file with `Status: ready-for-agent` and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
+
 ## Stage 1: Load
 
-**Number or URL.** Fetch the issue:
+**`next`.** Resolve the ready label: the string `docs/agents/triage-labels.md` maps for `ready-for-agent` when that file exists, else `ready-for-agent`. Then:
 
 ```bash
-gh issue view NUMBER --comments
+SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> next <ready string> --claim
 ```
 
-Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the issue body itself.
+Empty output means nothing is ready. Say so in one line and stop; a loop that calls this on a schedule should stay quiet. `--claim` assigns the ticket only while it is still open, still carries the ready label, and is still unblocked; otherwise the script releases it and tries the next candidate. The first field is the ticket id. Do not call `claim` again on this path.
+
+**Id or URL.** Claim it before reading further. An explicit id does not have to carry the ready label:
+
+```bash
+SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> claim ID
+```
+
+`ID` is a tracker id (`42`, `ENG-42`, `PLAT-42`) or a GitHub, Linear, or Jira issue URL; the script extracts the id. Exit 1 with "already claimed by" names the other holder: stop and say who has it. A ticket already assigned to you is fine. Exit 3 means the token cannot write; note it in the report and continue unclaimed.
+
+Fetch the ticket with its comments:
+
+```bash
+SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view ID
+```
+
+Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the ticket body itself.
+
+**Branch.** Compare the current branch with the repo default:
+
+```bash
+git rev-parse --abbrev-ref HEAD
+gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+```
+
+When they match, create the working branch now, before any edit, and never commit to the default branch:
+
+```bash
+git switch -c cast/<id>-<short-kebab-slug-from-the-title>
+```
+
+The id is lowercased as it appears on the tracker (`cast/42-flat-tax`, `cast/eng-42-flat-tax`). For a spec path or the conversation with no ticket, name it `cast/<slug>`. Any other current branch is the working branch as it stands.
 
 **A path.** Read that file. It is the spec and the contract.
 
@@ -72,7 +114,7 @@ Do not start coding until that intent is written. If the ticket is still a quest
 
 If the repo has a test harness, read `references/tdd.md` and follow it at the seams you wrote down. If it does not, build without a red-green loop and say so once.
 
-Typecheck and the tests around the files you touch as you go. Run the project's full suite once the slice is in.
+Typecheck and the tests around the files you touch as you go. Run the project's full suite once the slice is in: the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name.
 
 Stay inside the ticket's scope. Adjacent cleanup waits.
 
@@ -124,12 +166,14 @@ fi
 
 Same rebase-or-stop rule as Stage 4. Never force-push.
 
-Capture at least one proof file. Then run `scripts/open-pr.sh` with the title, body file, and attaches.
+Capture at least one proof file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`; see the closing line in `references/body.md`). Then run `scripts/open-pr.sh` with the title, body file, and attaches.
 
 ## Report
 
 ```
 Cast: <ticket title> (#NUMBER)
+Claimed: <yes | already mine | no: reason | none: spec path or conversation>
+Branch: <created cast/... | existing branch name>
 Commit: <sha>
 Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
 PR: <url | none: no-pr | none: reason>
@@ -137,6 +181,10 @@ Evidence: <file list, or none>
 Validation: <one line>
 Open: <any criterion left unmet, or none>
 ```
+
+## Scripts
+
+`scripts/tickets.sh` finds the next unclaimed ready ticket, claims it, and reads it, on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). Exit 3 means the token cannot write. `tickets.sh -h` prints usage. `scripts/open-pr.sh` opens or edits the pull request with `--attach`.
 
 ## References
 

@@ -79,16 +79,21 @@ for s in skills/*/scripts/* scripts/*.sh; do
   head -1 "$s" | grep -q bash && { bash -n "$s" || err "$s does not parse"; }
 done
 
-# 5b. Ship files shared by reveal and cast stay identical. Edit skills/reveal/ and copy.
+# 5b. Shared files stay identical. reveal owns the ship files cast copies; sift owns the
+# ticket files conjure and cast copy. Edit the owner and copy.
 while read -r a b; do
   [ -n "${a:-}" ] || continue
-  cmp -s "$a" "$b" || err "$a and $b differ; edit skills/reveal/ and copy to skills/cast/"
+  cmp -s "$a" "$b" || err "$a and $b differ; edit $(dirname "$(dirname "$a")")/ and copy to $(dirname "$(dirname "$b")")/"
 done <<'EOF'
 skills/reveal/references/capture.md skills/cast/references/capture.md
 skills/reveal/references/body.md skills/cast/references/body.md
 skills/reveal/references/attach.md skills/cast/references/attach.md
 skills/reveal/scripts/open-pr.sh skills/cast/scripts/open-pr.sh
 skills/reveal/scripts/text-frame.sh skills/cast/scripts/text-frame.sh
+skills/sift/references/agent-brief.md skills/conjure/references/agent-brief.md
+skills/sift/scripts/tickets.sh skills/conjure/scripts/tickets.sh
+skills/sift/scripts/tickets.sh skills/cast/scripts/tickets.sh
+skills/sift/scripts/tickets.sh skills/setup-mana/scripts/tickets.sh
 EOF
 
 # 6. Claude Code's own validator, when available.

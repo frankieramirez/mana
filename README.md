@@ -29,6 +29,8 @@
           │    Sift             │
           │    Mend             │
           │    Augur            │
+          │    Conjure          │
+          │    Setup            │
           └─────────────────────┘
            .     *           ·     .
 ```
@@ -44,7 +46,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`, `/mana:augur`.
+Skills are then invoked as `/mana:setup-mana`, `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:conjure`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`, `/mana:augur`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -54,7 +56,73 @@ npx skills add frankieramirez/mana -g         # every project on this machine
 npx skills add frankieramirez/mana -a codex   # one agent only
 ```
 
+## The loop
+
+Start where the work is. A repo the skills have not seen starts at `setup-mana`. A new idea starts at `scry`. A bug report from someone else starts at `sift`. Everything meets at a `ready-for-agent` issue with an agent brief, and from there the skills hand off in this order.
+
+| Stage | Skill | What it leaves behind |
+|-------|-------|-----------------------|
+| Set up a repo | `setup-mana` | The tracker choice, triage labels, the validation command, `docs/agents/*.md`, a pointer block in `CLAUDE.md` or `AGENTS.md` |
+| Decide | `scry` | A map of decision tickets, `CONTEXT.md`, ADRs, a spec |
+| Triage the inbox | `sift` | Each issue in one state, `ready-for-agent` ones with a brief |
+| File the build tickets | `conjure` | One `ready-for-agent` issue per slice, wired in build order |
+| Build | `cast` | A branch, a commit, a pull request with proof and a tracker closing line |
+| Review | `scan`, `augur` | A findings report, or the fixes pushed; a proof the change is safe |
+| Answer feedback | `remedy`, `mimic` | Fixes pushed, threads resolved, paste-ready replies |
+| Repair along the way | `mend`, `banish`, `reveal`, `dispel` | A finished merge, fewer comments, a PR body, prose that reads like you |
+
+A person merges. GitHub and Linear close from the line (`Closes #42`, `Closes ENG-42`). Jira does only when an automation rule reads `Closes PLAT-42`. A local ticket stays open until the builder sets `Status: closed`. `cast next` picks up the one behind it.
+
+An existing project runs setup once and then skips the first two rows. Its steady state is `sift` for what arrives, `cast next` for what is ready, `scan` and `remedy` on every pull request, and `augur` when a small diff looks riskier than its size.
+
+### Trackers
+
+Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` records the choice in `docs/agents/issue-tracker.md`, and `sift`, `conjure`, and `cast` read it before touching a ticket. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
+
+Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
+
+### Unattended
+
+Every skill that would ask a question has a token that answers it, so the same skill runs from a laptop with a person watching or from a scheduled agent with nobody there.
+
+| Skill | Token | What it does without a person |
+|-------|-------|-------------------------------|
+| `setup-mana` | `you-pick` | Accepts every recommended answer; still stops when a required variable is unset |
+| `scry` | `you-pick` | Accepts every recommended answer while charting or walking |
+| `sift` | `you-pick` | Triages up to 10 issues, never closes one as rejected |
+| `conjure` | `you-pick` | Accepts the recommended slices and order |
+| `cast` | `next` | Claims the oldest ready ticket, branches off the default branch, builds, opens the PR. Nothing ready: says so and stops |
+| `scan` | `report`, `fix`, `mode:agent` | Skips the closing question; `mode:agent` returns JSON for a caller |
+| `remedy` | `dry-run`, `no-push` | Judges only, or fixes without pushing; `needs-human` items wait in the summary |
+| `augur`, `mend`, `banish`, `reveal` | none needed | Ask nothing |
+
+When the token cannot write issues (a 403), `scry` and `conjure` write the same shape under `.scratch/` and say so. `cast` and `reveal` still open the PR when `--attach` is refused, and say why.
+
+Two shapes that work:
+
+```
+# on a laptop, while you do something else
+/loop 30m /mana:cast next
+/loop 30m /mana:scan fix
+
+# as scheduled agents
+nightly       /mana:sift you-pick
+on a new PR   /mana:scan <pr> report
+on a review   /mana:remedy <pr>
+```
+
+Point a routine at one skill per run. A skill that finds nothing to do exits quietly, so a tight schedule costs little.
+
 ## Skills
+
+### setup-mana
+
+Sets a repository up for the other skills, once. Explores first (remote, existing docs, labels, a test command, which tracker variables are set), then asks in sections with a recommended answer: the issue tracker, the label names, the command that proves the project works, how proof gets captured. Shows the drafts, writes `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`, and puts an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. Nothing counts as done until the tracker answers a read-only check. Re-run it to switch trackers.
+
+```
+/mana:setup-mana                  # explore, ask, write, verify
+/mana:setup-mana you-pick         # take every recommendation
+```
 
 ### scan
 
@@ -115,13 +183,24 @@ Charts a chunk of work too big for one session as a GitHub map of decision ticke
 /mana:scry 92 you-pick            # accept recommended answers
 ```
 
+### conjure
+
+Turns a finished map, a spec, or the plan in the conversation into build tickets. Each one is a vertical slice sized to one session, with an agent brief and the tickets it waits on wired as blocking edges. Presents the slices and a recommended order as one round before filing anything. On a map, posts the build order as a comment. When the token cannot create issues, the same tickets land under `.scratch/<slug>/tickets/`.
+
+```
+/mana:conjure 92                  # the map, once nothing is left to decide
+/mana:conjure docs/spec.md        # a spec file
+/mana:conjure you-pick            # the plan in this conversation, no questions
+```
+
 ### cast
 
-Builds one ready ticket or spec on the current branch. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence. Pass `no-pr` to stop after the commit. Stays off other branches.
+Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch.
 
 ```
 /mana:cast                        # the ticket already in this conversation
 /mana:cast 181                    # GitHub issue 181
+/mana:cast next                   # the oldest unclaimed ready-for-agent issue
 /mana:cast 181 no-pr              # commit only
 ```
 
@@ -138,10 +217,14 @@ Opens or updates a pull request for the current branch. The description is a sen
 
 Moves unlabeled and `needs-triage` issues through the existing inbox states (`needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). Verifies the claim, grills when the request is thin, and posts an agent brief when the work can be delegated. Rejected enhancements land in `.out-of-scope/`. Tracker comments start with a triage disclaimer.
 
+Works on GitHub, Linear, Jira, or local files, whichever the tracker file names. `you-pick` triages without waiting, at most 10 issues per run, and leaves any rejection for a person.
+
 ```
 /mana:sift                        # what needs attention
 /mana:sift 42                     # one issue
+/mana:sift ENG-42                 # the same on Linear
 /mana:sift move 42 to ready-for-agent
+/mana:sift you-pick               # triage the inbox unattended
 ```
 
 ### mend

@@ -49,7 +49,7 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 
 ## Stage 1: Tracker
 
-If `docs/agents/issue-tracker.md` exists, read it and follow its "Wayfinding operations" section for any mechanic it specifies (extra labels, owning docs, parent-link fallbacks). Missing file: GitHub via `gh`, using the operations in `references/github-ops.md`.
+If `docs/agents/issue-tracker.md` exists, read it. Its `Tracker:` line names the tracker. On `github`, follow its "Wayfinding operations" section for any mechanic it specifies (extra labels, owning docs, parent-link fallbacks) and continue below. On any other tracker, that section replaces `map.sh` entirely: it says what a map, a ticket, a blocking edge, a claim, and a resolution are there, and which connector or API to use. Follow it for every operation in Stage 2 and Stage 3, keep the same map body and ticket shapes from `references/map-shape.md`, and skip the rest of this stage. When it says maps are not supported, read `references/scratch.md` and keep the map under `.scratch/`. Missing file: GitHub via `gh`, using the operations in `references/github-ops.md`.
 
 Load `references/github-ops.md` now. `scripts/map.sh` is the only way to create issues, attach children, wire blocks, query the frontier, and claim. Do not improvise those `gh` calls.
 
