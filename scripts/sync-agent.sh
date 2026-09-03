@@ -9,6 +9,7 @@ cd "$(dirname "$0")/.."
 AGENTS='
 comment-reaper|skills/banish/references/comment-reaper.md|Deletes comments that do not earn their place and flags the code they were covering for. Report-only on code; edits comments only.
 ghost|skills/mimic/references/ghost.md|Builds a voice profile from the user'"'"'s own writing (session messages, PR comments, PR descriptions, commits) and returns a filled-in draft with the evidence. Read-only; never writes the profile.
+weaver|skills/mend/references/weaver.md|Resolves conflict hunks in an in-progress merge, rebase, cherry-pick, or revert. Keeps both intents when they fit. Edits conflicted files only; never aborts or commits.
 '
 
 render() {
