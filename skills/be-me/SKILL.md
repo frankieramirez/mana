@@ -1,7 +1,7 @@
 ---
 name: be-me
 description: "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /be-me. Pulls the user's voice from examples in context and applies the spit register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing."
-argument-hint: "[what to reply to, or blank to use the message in context] [any instruction about the answer] | setup [project] | refresh"
+argument-hint: "[what to reply to, or blank to use the message in context] [any instruction about the answer] | setup [project] [profile URL] | refresh"
 ---
 
 # Be me
@@ -70,6 +70,14 @@ A subagent starts blank, so hand over the things only this conversation holds:
 
 - Every message the user typed in this session, verbatim, minus anything they pasted from someone else. These are the highest-signal evidence and Ghost has no other way to get them.
 - Samples the user pasted with the request.
+- The user's own messages to other people, from wherever this session can reach them. Ghost is read-only and has no browser or connectors, so you fetch the text and pass it along. Everything else on a developer's machine is the user talking to a tool, so this is the only source that shows them talking to a person, and it decides whether a reply lands. Rank sources by how close they sit to the medium the reply is going into:
+
+  1. A chat or mail connector when one is attached, such as a Slack workspace. The user's own sent messages there are the same medium most replies go back into, which makes them the strongest evidence available. Their DMs and their short channel replies beat anything they wrote in public.
+  2. Posts and replies from a public profile the user names (X, Mastodon, Bluesky, a blog). Where the site needs a login, use the user's own logged-in browser and read only their own profile.
+
+  Take recent items over old ones, keep replies as well as top-level posts, and pass the date with each item. Never pass another person's words.
+
+  Scrub before passing anything from a work source. The samples end up in a file on disk, so drop any item carrying a customer or client name, a credential, an internal link, or a plan that has not been announced. Prefer short items, which carry the voice and rarely carry the secret. When the user is on a work machine, say in one line that the profile you are about to build will hold their work voice and their work samples, and let them decide where it goes.
 - The existing profile's contents, when `.be-me.md` or `~/.be-me.md` exists.
 - The contents of `references/voice-profile.md`, as the shape to fill.
 
