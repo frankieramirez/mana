@@ -28,6 +28,7 @@
           │    Reveal           │
           │    Sift             │
           │    Mend             │
+          │    Augur            │
           └─────────────────────┘
            .     *           ·     .
 ```
@@ -43,7 +44,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`.
+Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`, `/mana:augur`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -57,7 +58,7 @@ npx skills add frankieramirez/mana -a codex   # one agent only
 
 ### scan
 
-Multi-reviewer code review for a branch or PR. Picks a roster of reviewer personas from what the diff actually touches (correctness always, then security, performance, data migration, API contract, reliability, testing, maintainability, adversarial, frontend races, project standards as warranted), runs them in parallel as subagents that return structured findings, merges and deduplicates, and renders one report. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
+Multi-reviewer code review for a branch or PR. Picks a roster of reviewer personas from what the diff actually touches (correctness always, then security, performance, data migration, API contract, reliability, testing, maintainability, adversarial, frontend races, project standards as warranted), runs them in parallel as subagents that return structured findings, merges and deduplicates, and renders one report. The report lists what synthesis dismissed and why, so you can override it, and carries a patch-id stamp so a rebase shows up as a different diff. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
 
 ```
 /mana:scan                    # current branch against its base
@@ -67,7 +68,7 @@ Multi-reviewer code review for a branch or PR. Picks a roster of reviewer person
 
 ### remedy
 
-Resolves review feedback already on a PR. Fetches every unresolved thread, top-level comment, and review body, judges each one centrally (bots and humans alike), fixes what is real in parallel subagents, validates once, commits, pushes, and resolves the handled threads. It never writes to the PR conversation. Anything it would have said goes into the summary for you to paste or ignore.
+Resolves review feedback already on a PR. Fetches every unresolved thread, top-level comment, and review body, judges each one centrally (bots and humans alike), fixes what is real in parallel subagents, validates once, commits, pushes, and resolves the handled threads. It never writes to the PR conversation. Anything it would have said goes into the summary for you to paste or ignore. Failing checks get classified before anything runs: a failure in code the PR touched joins the fix list, a failure in untouched code is checked for a stale base, and a suspected flake gets one rerun at most.
 
 ```
 /mana:remedy               # the current branch's PR
@@ -77,7 +78,7 @@ Resolves review feedback already on a PR. Fetches every unresolved thread, top-l
 
 ### dispel
 
-Rewrites anything a person will read (Slack messages, PR descriptions, tickets, docs, commit bodies) so it sounds like someone talking. Bans the essay register: em dashes, antithesis, rule of three, setup and payoff, hedging, performed enthusiasm. Triggers on "no em dashes", "sounds like AI", "make it sound human", "strip the AI voice".
+Rewrites anything a person will read (Slack messages, PR descriptions, tickets, docs, commit bodies) so it sounds like someone talking. Bans the essay register: em dashes, antithesis, rule of three, setup and payoff, hedging, performed enthusiasm. Then the plain-speech pass: metaphor nouns like substrate and vector, passive voice with a nameable actor, adverbs standing in for a number, and sentences that could sit unchanged in any other project's docs. Triggers on "no em dashes", "sounds like AI", "make it sound human", "strip the AI voice".
 
 ### mimic
 
@@ -151,6 +152,16 @@ Finishes an in-progress merge, rebase, cherry-pick, or revert that has unmerged 
 /mana:mend                        # the conflicted merge or rebase already in progress
 ```
 
+### augur
+
+Finds what a change could break beyond its diff and proves it is safe by running code. Names the one fact the change is safe because of, pushes it up a five-rung evidence ladder (asserted, cited, walked, ran, reproduced), and reports anything below "ran it" as unproven. Looks where grep stops: pinned library source, wire formats, database columns, feature flags, callers three hops out. The proving script is left on disk so a reviewer can rerun it.
+
+```
+/mana:augur                       # current branch against its base
+/mana:augur 123                   # PR 123, without checking it out
+/mana:augur base:main src/cache/  # one path against main
+```
+
 ## Layout
 
 ```
@@ -162,7 +173,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
+`scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs. The same plugin's `blast-radius` skill inspired `augur` (one safety fact, an evidence ladder, prove it by running code), its `unslop` skill inspired the plain-speech rules in `dispel`, and its `interrogate` lead-judgment notes inspired the Dismissed section in `scan`. All three were written from scratch here.
 
 `scry`, `cast`, `sift`, and `mend` were inspired by the engineering skills in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Maps filed under that loop's `wayfinder:*` labels still walk.
 

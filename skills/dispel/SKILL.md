@@ -1,6 +1,6 @@
 ---
 name: dispel
-description: "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel."
+description: "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel."
 ---
 
 Write like a person talking. Not like an essay performing.
@@ -59,6 +59,28 @@ Each entry: what it is, then a violation and a fix.
 
 **Performed enthusiasm.** Exclamation points, "excited to", "love this", "this is huge", emoji as reaction.
 
+## Plain speech
+
+**Abstract metaphor nouns.** substrate, wedge, vector, locus, nexus, primitive (as a noun), surface (as in "API surface"), bedrock, scaffolding (as metaphor), paradigm, gold-plating, ratchet, north star, flywheel, endgame. Each has a plainer concrete word. Substrate is base. Wedge in is add. Vector is way. Gold-plating is more than the job needs. Ratchet is a limit that only tightens.
+- ✗ The queue is the substrate every worker builds on.
+- ✓ Every worker reads from the queue.
+
+**Say what it does, not how it feels.** "types that follow your schema" and "the database stays close at hand" name a feeling. Name the mechanism or the number instead. Test: if the sentence could appear unchanged in another project's docs, it says nothing about this one. Cut it.
+- ✗ Types that stay in sync with your schema.
+- ✓ A column rename fails the build.
+
+**Passive voice with a nameable actor.** Catch "is/are/was/were" plus a past participle and name who does it. Passive stays only when the actor is unknown or does not matter.
+- ✗ Queries are validated before they run.
+- ✓ The compiler validates queries before they run.
+
+**Adverbs propping up a verb.** Replace the adverb with the number or a stronger verb. An adverb doing the work means the verb is wrong.
+- ✗ The new index significantly improves lookups.
+- ✓ Lookups drop from 400ms to 30ms with the new index.
+
+**The fancy synonym.** utilize, facilitate, numerous, "in the event that", "prior to", "in order to". Use, help, many, if, before, to.
+- ✗ Prior to deploy, utilize the script in order to facilitate the migration.
+- ✓ Before deploy, run the migration script.
+
 ## Positive rules
 
 - Vary sentence length unpredictably. A four-word sentence next to a twenty-eight-word one. Never settle into a pattern a reader can feel.
@@ -78,5 +100,7 @@ Scan the draft for:
 4. Two adjacent sentences with the same grammatical shape.
 5. The last sentence. If it restates, delete it.
 6. Words from the filler list.
+7. A passive verb whose actor you could name.
+8. Any word from the metaphor-noun list.
 
 Fix what you find, then return the prose. Do not narrate the fixes.
