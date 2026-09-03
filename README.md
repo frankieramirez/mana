@@ -1,5 +1,32 @@
 # mana
 
+```
+                  .       *
+          ·           *          ·
+       *             †              .
+     ·               ║          ·
+           *        ═╬═           *
+        *            ║      .
+    ·          .     ║               ·
+      ╔══════════════╩══════════════╗
+      ║                             ║
+      ║         M  A  N  A          ║
+      ║         ──────────          ║
+      ║       test everything       ║
+      ║                             ║
+      ╚═════════════════════════════╝
+          MP [████████░░] 80/100
+      ·       .                     *
+          ┌────── command ──────┐
+          │  > Scan             │
+          │    Remedy           │  *
+          │    Dispel           │
+          │    Mimic            │
+          │    Banish           │    ·
+          └─────────────────────┘
+           .     *           ·     .
+```
+
 Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in any agent that reads `SKILL.md` files (Codex, Cursor, Copilot, Gemini CLI, and the rest of the skills.sh list).
 
 ## Install
