@@ -48,28 +48,33 @@ die() {
   exit 1
 }
 
-# Runs gh. On 403-class write denial, exit 3. OWNER/REPO already set when needed.
-run_gh() {
+# Runs gh. Prints stderr on failure. Returns 0, 1, or 3 (403-class). Does not exit.
+try_gh() {
   local ec
   ERR=$(mktemp)
   set +e
   "$@" 2>"$ERR"
   ec=$?
   set -e
-  if [ "$ec" -ne 0 ]; then
-    if grep -qiE '403|Resource not accessible|HTTP 403' "$ERR"; then
-      cat "$ERR" >&2
-      rm -f "$ERR"
-      ERR=""
-      exit 3
-    fi
-    cat "$ERR" >&2
+  if [ "$ec" -eq 0 ]; then
     rm -f "$ERR"
     ERR=""
-    exit "$ec"
+    return 0
+  fi
+  cat "$ERR" >&2
+  if grep -qiE '403|Resource not accessible|HTTP 403' "$ERR"; then
+    rm -f "$ERR"
+    ERR=""
+    return 3
   fi
   rm -f "$ERR"
   ERR=""
+  return "$ec"
+}
+
+# Runs gh. On 403-class write denial, exit 3. OWNER/REPO already set when needed.
+run_gh() {
+  try_gh "$@" || exit $?
 }
 
 locate_repo() {
@@ -118,7 +123,8 @@ cmd_create_map() {
   printf '%s\t%s\n' "$num" "$url"
 }
 
-# POST an API write. Exit 3 on 403. Return 1 on any other failure so the caller can fall back.
+# POST an API write. Return 1 on any failure, including 403, so the caller can fall back.
+# Scratch (exit 3) is only for create, edit, comment, and close, via run_gh.
 api_write() {
   local err ec
   err=$(mktemp)
@@ -126,22 +132,13 @@ api_write() {
   gh api "$@" >/dev/null 2>"$err"
   ec=$?
   set -e
-  if [ "$ec" -eq 0 ]; then
-    rm -f "$err"
-    return 0
-  fi
-  if grep -qiE '403|Resource not accessible|HTTP 403' "$err"; then
-    cat "$err" >&2
-    rm -f "$err"
-    exit 3
-  fi
   rm -f "$err"
-  return 1
+  [ "$ec" -eq 0 ]
 }
 
 cmd_create_ticket() {
   local map="$1" typ="$2" title="$3"
-  local tmp out url num child_id body
+  local tmp out url num child_id body attach_ec
   case "$typ" in
     research|prototype|grilling|task) ;;
     *) die "type must be research, prototype, grilling, or task (got '$typ')" ;;
@@ -157,7 +154,13 @@ cmd_create_ticket() {
     body=$(gh issue view "$num" --json body --jq .body)
     tmp=$(mktemp)
     printf 'Part of #%s\n\n%s\n' "$map" "$body" > "$tmp"
-    run_gh gh issue edit "$num" --body-file "$tmp"
+    attach_ec=0
+    try_gh gh issue edit "$num" --body-file "$tmp" || attach_ec=$?
+    if [ "$attach_ec" -ne 0 ]; then
+      rm -f "$tmp"
+      gh issue close "$num" >/dev/null 2>&1 || true
+      exit "$attach_ec"
+    fi
     rm -f "$tmp"
   fi
   printf '%s\t%s\n' "$num" "$url"
@@ -219,7 +222,7 @@ child_numbers() {
   fi
   body=$(gh issue view "$map" --json body --jq .body)
   {
-    printf '%s\n' "$body" | grep -oE '#[0-9]+' | tr -d '#'
+    printf '%s\n' "$body" | grep -E '^[[:space:]]*[-*][[:space:]]*\[[ xX]\]' | grep -oE '#[0-9]+' | tr -d '#' || true
     gh issue list --state open --limit 100 --json number,body --jq '.[] | select(.body | test("Part of #'"$map"'(\\s|$)")) | .number' 2>/dev/null || true
   } | awk 'NF && !seen[$0]++'
 }
@@ -247,11 +250,25 @@ cmd_frontier() {
   done < <(child_numbers "$map")
 }
 
+assignees_except() {
+  local n="$1" me="$2"
+  gh issue view "$n" --json assignees --jq '[.assignees[].login] | map(select(. != "'"$me"'")) | join(",")'
+}
+
 cmd_claim() {
   local n="$1"
-  local login
+  local login others
   login=$(gh api user --jq .login)
+  others=$(assignees_except "$n" "$login")
+  if [ -n "$others" ]; then
+    die "already claimed by $others"
+  fi
   run_gh gh issue edit "$n" --add-assignee "$login"
+  others=$(assignees_except "$n" "$login")
+  if [ -n "$others" ]; then
+    gh issue edit "$n" --remove-assignee "$login" >/dev/null 2>&1 || true
+    die "already claimed by $others"
+  fi
 }
 
 cmd_view() {
