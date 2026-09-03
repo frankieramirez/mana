@@ -79,6 +79,17 @@ for s in skills/*/scripts/* scripts/*.sh; do
   head -1 "$s" | grep -q bash && { bash -n "$s" || err "$s does not parse"; }
 done
 
+# 5b. Ship files shared by reveal and cast stay identical. Edit skills/reveal/ and copy.
+while read -r a b; do
+  [ -n "${a:-}" ] || continue
+  cmp -s "$a" "$b" || err "$a and $b differ; edit skills/reveal/ and copy to skills/cast/"
+done <<'EOF'
+skills/reveal/references/capture.md skills/cast/references/capture.md
+skills/reveal/references/attach.md skills/cast/references/attach.md
+skills/reveal/scripts/open-pr.sh skills/cast/scripts/open-pr.sh
+skills/reveal/scripts/text-frame.sh skills/cast/scripts/text-frame.sh
+EOF
+
 # 6. Claude Code's own validator, when available.
 if command -v claude >/dev/null 2>&1; then
   claude plugin validate . >/dev/null 2>&1 || { claude plugin validate . >&2; err "claude plugin validate failed"; }

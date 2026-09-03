@@ -9,7 +9,7 @@
     {
       "name": "mana",
       "source": "./",
-      "description": "Multi-reviewer code review, PR feedback resolution, human-sounding prose and replies, comment removal, maps of decision tickets, inbox triage, and merge conflict resolution.",
+      "description": "Multi-reviewer code review, PR feedback resolution, human-sounding prose and replies, comment removal, maps of decision tickets, opening a pull request with visual evidence, inbox triage, and merge conflict resolution.",
       "category": "engineering",
       "keywords": [
         "code-review",

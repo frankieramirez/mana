@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+
+- `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit.
+
 ## 0.9.0
 
 - `mend` and the Weaver agent: finish an in-progress merge, rebase, cherry-pick, or revert by reading both sides of each hunk, keeping both intents when they commute, running the project's checks, and continuing the git operation. Never aborts. Inspired by the merge-conflict skill in mattpocock/skills (MIT), written from scratch.

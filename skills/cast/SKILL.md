@@ -1,13 +1,13 @@
 ---
 name: cast
-description: "Implement one ready ticket or spec on the current branch. Use when asked to cast a ticket, implement this ticket, build this issue, or /cast."
-argument-hint: "[ticket number | issue URL | spec path | blank for the conversation]"
+description: "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, or /cast. Pass no-pr to stop after the commit."
+argument-hint: "[ticket number | issue URL | spec path | blank for the conversation] [no-pr]"
 disable-model-invocation: true
 ---
 
 # Cast
 
-Build the work described by one ticket, spec, or the current conversation. Stay on the current branch. Commit when the work matches the ticket. Push only if that branch already tracks a remote.
+Build the work described by one ticket, spec, or the current conversation. Stay on the current branch. Commit when the work matches the ticket. Push and open a pull request with visual evidence. Pass `no-pr` to stop after the commit (and push only if an upstream already exists).
 
 ## Operating principles
 
@@ -15,10 +15,15 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 - **Never switch branches.** `git checkout`, `git switch`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so.
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
 - **Leave the review to a later pass.** This skill commits the implementation. It does not run a multi-reviewer critique.
+- **Ship by default.** After the commit, push (creating the upstream if needed) and open a pull request with visual evidence. `no-pr` restores commit-only, with a push only when an upstream already exists.
 
 ## Arguments
 
-The remainder after any tokens is the target.
+Parse tokens, then treat the remainder as the target.
+
+| Token | Effect |
+|-------|--------|
+| `no-pr` | Stop after Stage 4. Push only when an upstream already exists. |
 
 | Input | Target |
 |-------|--------|
@@ -32,6 +37,9 @@ The remainder after any tokens is the target.
 2. Build it (Stage 2).
 3. Check the diff against the ticket (Stage 3).
 4. Commit, and push only when the branch already has an upstream (Stage 4).
+5. Capture proof and open the pull request (Stage 5). Skip when `no-pr`.
+
+`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs a bundled script sets `SKILL_DIR` again on its first line.
 
 ---
 
@@ -100,12 +108,32 @@ fi
 
 If the push is rejected because the remote moved, `git pull --rebase` only when the tree is otherwise clean and the rebase is conflict-free. Otherwise stop. Never force-push.
 
+## Stage 5: Ship
+
+Skip this stage when `no-pr` was passed. Stage 4 has already committed, and pushed only when an upstream existed. Stage 5 never runs if Stage 4 did not commit.
+
+Read `references/capture.md` and `references/attach.md`. Push so the branch exists on the remote:
+
+```bash
+if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  git push
+else
+  git push -u origin HEAD
+fi
+```
+
+Same rebase-or-stop rule as Stage 4. Never force-push.
+
+Capture at least one proof file. Then run `scripts/open-pr.sh` with the title, body file, and attaches.
+
 ## Report
 
 ```
 Cast: <ticket title> (#NUMBER)
 Commit: <sha>
 Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
+PR: <url | none: no-pr | none: reason>
+Evidence: <file list, or none>
 Validation: <one line>
 Open: <any criterion left unmet, or none>
 ```
@@ -116,3 +144,5 @@ Open: <any criterion left unmet, or none>
 |-----------|---------|---------|
 | `references/tdd.md` | Stage 2, when a test harness exists | Red-green at agreed seams |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
+| `references/capture.md` | Stage 5 | What to record, and the SVG stand-in |
+| `references/attach.md` | Stage 5 | Body, `--attach`, `open-pr.sh` |
