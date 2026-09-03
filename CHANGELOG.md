@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+- The marketplace is now `ark`, so the install is `mana@ark`. The ark is the vessel the manna was kept in. The plugin name and every slash command are unchanged.
+
 ## 0.7.0
 
 - The plugin is now `mana` and the marketplace is `mana`, installed from `frankieramirez/mana`. Every skill is renamed after the spell it casts: `wringer` to `scan`, `settle` to `remedy`, `spit` to `dispel`, `be-me` to `mimic`, `scrap` to `banish`. Slash commands become `/mana:scan` and the rest. Frontmatter descriptions are unchanged in meaning, so model invocation still fires on the same plain-English triggers.

@@ -1,6 +1,6 @@
 # Working in this repo
 
-This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin (`mana`, marketplace `mana`) and a skills.sh source. One layout serves both: `skills/<name>/SKILL.md` plus `agents/`.
+This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin (`mana`, marketplace `ark`) and a skills.sh source. One layout serves both: `skills/<name>/SKILL.md` plus `agents/`.
 
 ## Conventions
 
@@ -19,4 +19,4 @@ This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin 
 
 ## Local development
 
-`scripts/link-local.sh` symlinks this checkout into `~/.claude/skills` and `~/.claude/agents`. Uninstall the `mana` plugin first (`claude plugin uninstall mana@mana`) or every skill appears twice.
+`scripts/link-local.sh` symlinks this checkout into `~/.claude/skills` and `~/.claude/agents`. Uninstall the `mana` plugin first (`claude plugin uninstall mana@ark`) or every skill appears twice.

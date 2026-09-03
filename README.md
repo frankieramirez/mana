@@ -8,7 +8,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 
 ```
 /plugin marketplace add frankieramirez/mana
-/plugin install mana@mana
+/plugin install mana@ark
 ```
 
 Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`.
