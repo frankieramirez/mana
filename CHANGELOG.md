@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- `spit`: quote the frontmatter description so skills.sh discovers the skill.
+
 ## 0.1.0
 
 First release.

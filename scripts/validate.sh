@@ -13,6 +13,18 @@ for dir in skills/*/; do
   fm_name=$(sed -n '2,20p' "$f" | grep -m1 '^name:' | sed 's/^name:[[:space:]]*//; s/^"//; s/"$//')
   [ "$fm_name" = "$name" ] || err "$f frontmatter name '$fm_name' != dir '$name'"
   sed -n '2,20p' "$f" | grep -q '^description:[[:space:]]*.\+' || err "$f has no description"
+  # skills.sh drops a skill whose frontmatter is not valid YAML (an unquoted ": " inside a value does it).
+  python3 - "$f" <<'PY' || err "$f frontmatter does not parse as YAML"
+import sys, re
+text = open(sys.argv[1]).read().split('\n---', 2)[0].split('\n', 1)[1]
+try:
+    import yaml; yaml.safe_load(text)
+except ImportError:
+    for line in text.split('\n'):
+        m = re.match(r'^([\w-]+):\s*(.*)$', line)
+        if m and not m.group(2).startswith(('"', "'")) and ': ' in m.group(2):
+            sys.exit(1)
+PY
 done
 
 # 2. Agent paths in plugin.json exist and the generated agent matches its source.

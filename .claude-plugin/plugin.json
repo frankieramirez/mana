@@ -1,7 +1,7 @@
 {
   "name": "fr",
   "displayName": "Frankie's skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Frankie Ramirez's agent skills: multi-reviewer code review, PR feedback resolution without comment noise, replies that read like you typed them, and comment removal.",
   "author": {
     "name": "Frankie Ramirez",
