@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.3
+
+- README closing line is tracker-specific: GitHub `#N`, Linear `ENG-N`, Jira `PLAT-N` (automation), local file named and left open on merge.
+
 ## 0.13.2
 
 - `tickets.sh`: a GitHub, Linear, or Jira issue URL is reduced to the tracker id before `view`, `claim`, `wire`, `label`, `comment`, and `close`.

@@ -66,12 +66,12 @@ Start where the work is. A repo the skills have not seen starts at `setup-mana`.
 | Decide | `scry` | A map of decision tickets, `CONTEXT.md`, ADRs, a spec |
 | Triage the inbox | `sift` | Each issue in one state, `ready-for-agent` ones with a brief |
 | File the build tickets | `conjure` | One `ready-for-agent` issue per slice, wired in build order |
-| Build | `cast` | A branch, a commit, a pull request with proof, `Closes #N` |
+| Build | `cast` | A branch, a commit, a pull request with proof and a tracker closing line |
 | Review | `scan`, `augur` | A findings report, or the fixes pushed; a proof the change is safe |
 | Answer feedback | `remedy`, `mimic` | Fixes pushed, threads resolved, paste-ready replies |
 | Repair along the way | `mend`, `banish`, `reveal`, `dispel` | A finished merge, fewer comments, a PR body, prose that reads like you |
 
-A person merges. The `Closes #N` line closes the ticket, and `cast next` picks up the one behind it.
+A person merges. GitHub and Linear close from the line (`Closes #42`, `Closes ENG-42`). Jira does only when an automation rule reads `Closes PLAT-42`. A local ticket stays open until the builder sets `Status: closed`. `cast next` picks up the one behind it.
 
 An existing project runs setup once and then skips the first two rows. Its steady state is `sift` for what arrives, `cast next` for what is ready, `scan` and `remedy` on every pull request, and `augur` when a small diff looks riskier than its size.
 
@@ -79,7 +79,7 @@ An existing project runs setup once and then skips the first two rows. Its stead
 
 Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` records the choice in `docs/agents/issue-tracker.md`, and `sift`, `conjure`, and `cast` read it before touching a ticket. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
 
-Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`).
+Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
 
 ### Unattended
 
@@ -195,7 +195,7 @@ Turns a finished map, a spec, or the plan in the conversation into build tickets
 
 ### cast
 
-Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a `Closes #N` line. Pass `no-pr` to stop after the commit. Never switches to an existing branch.
+Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch.
 
 ```
 /mana:cast                        # the ticket already in this conversation
