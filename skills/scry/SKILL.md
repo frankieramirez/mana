@@ -54,11 +54,13 @@ Load `references/github-ops.md` now. `scripts/map.sh` is the only way to create 
 
 Confirm the host with `gh repo view`. If that fails, stop.
 
+Pass `GH_HOST=<host>` inline on every `map.sh` invocation. Derive the host from `gh repo view --json url --jq .url`, or from the issue URL if one was passed. Shell state does not persist between Bash calls. On `github.com` the prefix can be dropped.
+
 Ensure labels exist once per session:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" ensure-labels
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" ensure-labels
 ```
 
 Exit 3 from the script means this token cannot write issues (usually HTTP 403). Read `references/scratch.md` and follow it. Do not keep retrying `gh issue create`.
@@ -87,7 +89,7 @@ Create the map issue, label `wayfinder:map`. Destination and Notes filled in. De
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" create-map "Map: <destination in a few words>" <<'EOF'
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" create-map "Map: <destination in a few words>" <<'EOF'
 <body from references/map-shape.md>
 EOF
 ```
@@ -102,7 +104,7 @@ Create each one as a child of the map, labelled `wayfinder:<type>` (`research`, 
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" create-ticket MAP_NUMBER TYPE "Title" <<'EOF'
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" create-ticket MAP_NUMBER TYPE "Title" <<'EOF'
 ## Question
 
 <the decision or investigation>
@@ -113,7 +115,7 @@ Wire blocking edges in a **second pass**, once every ticket has a number:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" wire CHILD_NUMBER BLOCKER_NUMBER
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" wire CHILD_NUMBER BLOCKER_NUMBER
 ```
 
 Everything still too dim to phrase stays in **Not yet specified**. Do not pre-slice fog into ticket-sized pieces.
@@ -136,8 +138,8 @@ Fetch the map issue (the low-resolution view). Do not fetch every child body yet
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" view MAP_NUMBER
-bash "$SKILL_DIR/scripts/map.sh" frontier MAP_NUMBER
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" view MAP_NUMBER
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" frontier MAP_NUMBER
 ```
 
 Orient to Destination and Notes before picking a ticket.
@@ -150,7 +152,7 @@ Claim it before any work:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" claim TICKET_NUMBER
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" claim TICKET_NUMBER
 ```
 
 ### 3c. Resolve
@@ -176,12 +178,12 @@ Post the answer as a comment, close the ticket, append one gist line to the map'
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/map.sh" comment TICKET_NUMBER <<'EOF'
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" comment TICKET_NUMBER <<'EOF'
 <answer>
 
 Docs impact: <owning doc and what changes, or none>
 EOF
-bash "$SKILL_DIR/scripts/map.sh" close TICKET_NUMBER
+GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" close TICKET_NUMBER
 ```
 
 Then `view` the map, splice a line under **Decisions so far**, and `update-body` the map:

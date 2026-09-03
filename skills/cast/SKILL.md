@@ -37,13 +37,17 @@ The remainder after any tokens is the target.
 
 ## Stage 1: Load
 
-If the target is a number or URL:
+**Number or URL.** Fetch the issue:
 
 ```bash
 gh issue view NUMBER --comments
 ```
 
 Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the issue body itself.
+
+**A path.** Read that file. It is the spec and the contract.
+
+**Blank.** Use the ticket or spec already in this conversation. If none is obvious, stop and ask.
 
 Read `CONTEXT.md` when it exists, and any ADR that sits in the same area as the change. Use the project's words for types and names.
 
@@ -70,7 +74,9 @@ Read `references/spec-check.md` and walk it against the diff and the ticket. If 
 
 ## Stage 4: Commit
 
-Stage only the files this session changed.
+At the start of the session, record `git status --porcelain` and the unstaged and staged diffs (`git diff`, `git diff --cached`). Stop when a file this session will edit already has unstaged or staged hunks.
+
+Stage only this session's changes. `git add <file>` stages every hunk in that file, dirty ones included, and `git commit` includes whatever was already in the index. Before you commit, confirm `git diff --cached` holds only this session.
 
 ```bash
 git add <files you changed>

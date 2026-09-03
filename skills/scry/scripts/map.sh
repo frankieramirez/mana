@@ -105,9 +105,13 @@ ticket_type() {
 }
 
 cmd_ensure_labels() {
-  local name
+  local name existing
+  existing=$(gh label list --repo "$OWNER/$REPO" --limit 100 --json name --jq '.[].name')
   for name in wayfinder:map wayfinder:research wayfinder:prototype wayfinder:grilling wayfinder:task; do
-    gh label create "$name" --color "6f42c1" >/dev/null 2>&1 || true
+    if printf '%s\n' "$existing" | grep -qxF "$name"; then
+      continue
+    fi
+    run_gh gh label create --repo "$OWNER/$REPO" "$name" --color "6f42c1" >/dev/null
   done
 }
 
@@ -116,7 +120,7 @@ cmd_create_map() {
   local tmp out num url
   tmp=$(mktemp)
   cat > "$tmp"
-  out=$(run_gh gh issue create --title "$title" --label "wayfinder:map" --body-file "$tmp")
+  out=$(run_gh gh issue create --repo "$OWNER/$REPO" --title "$title" --label "wayfinder:map" --body-file "$tmp")
   rm -f "$tmp"
   url=$(printf '%s\n' "$out" | tail -n 1)
   num="${url##*/}"
@@ -145,20 +149,20 @@ cmd_create_ticket() {
   esac
   tmp=$(mktemp)
   cat > "$tmp"
-  out=$(run_gh gh issue create --title "$title" --label "wayfinder:${typ}" --body-file "$tmp")
+  out=$(run_gh gh issue create --repo "$OWNER/$REPO" --title "$title" --label "wayfinder:${typ}" --body-file "$tmp")
   rm -f "$tmp"
   url=$(printf '%s\n' "$out" | tail -n 1)
   num="${url##*/}"
   child_id=$(db_id "$num")
   if ! api_write --method POST "repos/${OWNER}/${REPO}/issues/${map}/sub_issues" -F "sub_issue_id=${child_id}"; then
-    body=$(gh issue view "$num" --json body --jq .body)
+    body=$(gh issue view --repo "$OWNER/$REPO" "$num" --json body --jq .body)
     tmp=$(mktemp)
     printf 'Part of #%s\n\n%s\n' "$map" "$body" > "$tmp"
     attach_ec=0
-    try_gh gh issue edit "$num" --body-file "$tmp" || attach_ec=$?
+    try_gh gh issue edit --repo "$OWNER/$REPO" "$num" --body-file "$tmp" || attach_ec=$?
     if [ "$attach_ec" -ne 0 ]; then
       rm -f "$tmp"
-      gh issue close "$num" >/dev/null 2>&1 || true
+      gh issue close --repo "$OWNER/$REPO" "$num" >/dev/null 2>&1 || true
       exit "$attach_ec"
     fi
     rm -f "$tmp"
@@ -171,10 +175,10 @@ cmd_wire() {
   local blocker_id body tmp
   blocker_id=$(db_id "$blocker")
   if ! api_write --method POST "repos/${OWNER}/${REPO}/issues/${child}/dependencies/blocked_by" -F "issue_id=${blocker_id}"; then
-    body=$(gh issue view "$child" --json body --jq .body)
+    body=$(gh issue view --repo "$OWNER/$REPO" "$child" --json body --jq .body)
     tmp=$(mktemp)
     printf 'Blocked by: #%s\n\n%s\n' "$blocker" "$body" > "$tmp"
-    run_gh gh issue edit "$child" --body-file "$tmp"
+    run_gh gh issue edit --repo "$OWNER/$REPO" "$child" --body-file "$tmp"
     rm -f "$tmp"
   fi
 }
@@ -191,11 +195,11 @@ is_blocked() {
     [ "${raw:-0}" -gt 0 ]
     return
   fi
-  body=$(gh issue view "$n" --json body --jq .body)
+  body=$(gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body)
   ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
   for id in $ids; do
     [ -n "$id" ] || continue
-    st=$(gh issue view "$id" --json state --jq .state 2>/dev/null || true)
+    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state 2>/dev/null || true)
     if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
       return 0
     fi
@@ -206,7 +210,7 @@ is_blocked() {
 has_assignee() {
   local n="$1"
   local count
-  count=$(gh issue view "$n" --json assignees --jq '.assignees | length')
+  count=$(gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '.assignees | length')
   [ "${count:-0}" -gt 0 ]
 }
 
@@ -220,10 +224,10 @@ child_numbers() {
       return
     fi
   fi
-  body=$(gh issue view "$map" --json body --jq .body)
+  body=$(gh issue view --repo "$OWNER/$REPO" "$map" --json body --jq .body)
   {
     printf '%s\n' "$body" | grep -E '^[[:space:]]*[-*][[:space:]]*\[[ xX]\]' | grep -oE '#[0-9]+' | tr -d '#' || true
-    gh issue list --state open --limit 100 --json number,body --jq '.[] | select(.body | test("Part of #'"$map"'(\\s|$)")) | .number' 2>/dev/null || true
+    gh issue list --repo "$OWNER/$REPO" --state open --limit 100 --json number,body --jq '.[] | select(.body | test("Part of #'"$map"'(\\s|$)")) | .number' 2>/dev/null || true
   } | awk 'NF && !seen[$0]++'
 }
 
@@ -232,7 +236,7 @@ cmd_frontier() {
   local n typ title url state
   while IFS= read -r n; do
     [ -n "$n" ] || continue
-    state=$(gh issue view "$n" --json state --jq .state)
+    state=$(gh issue view --repo "$OWNER/$REPO" "$n" --json state --jq .state)
     case "$state" in
       OPEN|open) ;;
       *) continue ;;
@@ -244,15 +248,15 @@ cmd_frontier() {
       continue
     fi
     typ=$(ticket_type "$n")
-    title=$(gh issue view "$n" --json title --jq .title)
-    url=$(gh issue view "$n" --json url --jq .url)
+    title=$(gh issue view --repo "$OWNER/$REPO" "$n" --json title --jq .title)
+    url=$(gh issue view --repo "$OWNER/$REPO" "$n" --json url --jq .url)
     printf '%s\t%s\t%s\t%s\n' "$n" "$title" "$typ" "$url"
   done < <(child_numbers "$map")
 }
 
 assignees_except() {
   local n="$1" me="$2"
-  gh issue view "$n" --json assignees --jq '[.assignees[].login] | map(select(. != "'"$me"'")) | join(",")'
+  gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '[.assignees[].login] | map(select(. != "'"$me"'")) | join(",")'
 }
 
 cmd_claim() {
@@ -263,17 +267,17 @@ cmd_claim() {
   if [ -n "$others" ]; then
     die "already claimed by $others"
   fi
-  run_gh gh issue edit "$n" --add-assignee "$login"
+  run_gh gh issue edit --repo "$OWNER/$REPO" "$n" --add-assignee "$login"
   others=$(assignees_except "$n" "$login")
   if [ -n "$others" ]; then
-    gh issue edit "$n" --remove-assignee "$login" >/dev/null 2>&1 || true
+    gh issue edit --repo "$OWNER/$REPO" "$n" --remove-assignee "$login" >/dev/null 2>&1 || true
     die "already claimed by $others"
   fi
 }
 
 cmd_view() {
   local n="$1"
-  gh issue view "$n" --json number,title,url,state,body,labels,assignees --jq '
+  gh issue view --repo "$OWNER/$REPO" "$n" --json number,title,url,state,body,labels,assignees --jq '
     [
       "number\t\(.number)",
       "title\t\(.title)",
@@ -300,7 +304,7 @@ cmd_parent() {
     printf '%s\n' "$p"
     return
   fi
-  body=$(gh issue view "$n" --json body --jq .body)
+  body=$(gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body)
   printf '%s\n' "$body" | sed -n '1,12p' | grep -E '^Part of #' | head -n 1 | grep -oE '[0-9]+' || true
 }
 
@@ -308,12 +312,12 @@ cmd_comment() {
   local n="$1"
   local body
   body=$(cat)
-  run_gh gh issue comment "$n" --body "$body"
+  run_gh gh issue comment --repo "$OWNER/$REPO" "$n" --body "$body"
 }
 
 cmd_close() {
   local n="$1"
-  run_gh gh issue close "$n"
+  run_gh gh issue close --repo "$OWNER/$REPO" "$n"
 }
 
 cmd_update_body() {
@@ -321,7 +325,7 @@ cmd_update_body() {
   local tmp
   tmp=$(mktemp)
   cat > "$tmp"
-  run_gh gh issue edit "$n" --body-file "$tmp"
+  run_gh gh issue edit --repo "$OWNER/$REPO" "$n" --body-file "$tmp"
   rm -f "$tmp"
 }
 

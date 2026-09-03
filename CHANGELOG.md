@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+- `cast` loads a spec path or the conversation before writing intent, stages only this session's diff, and classifies suite failures against the pre-change baseline. `map.sh` passes `--repo` on every `gh issue` and `gh label` call, and label create fails through to exit 3 unless the label already exists. `scry` examples set `GH_HOST`. `sift` will not apply a state-only override until the issue has one category.
+
 ## 0.8.1
 
 - `map.sh`: a 403 on attach or wire writes `Part of #` / `Blocked by:` instead of aborting into a second local map. Frontier discovers children from those links and task-list lines, not every `#N` in the map body. `claim` refuses when someone else already holds the ticket.

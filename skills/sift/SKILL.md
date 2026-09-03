@@ -96,7 +96,7 @@ Load `references/agent-brief.md` before posting a brief.
 
 ## Stage 3: Override
 
-When the maintainer names the state, trust them. Confirm the label change, the comment, and any close, then act. Skip grilling. If the destination is `ready-for-agent` and there was no grilling session, ask whether they want a brief written.
+When the maintainer names the state, trust them. A state-only override requires exactly one valid category already on the issue (`bug` or `enhancement`, or the mapped strings from `docs/agents/triage-labels.md` when that file exists). If there is no category, or category labels conflict, stop and ask. Then confirm the label change, the comment, and any close, then act. Skip grilling. If the destination is `ready-for-agent` and there was no grilling session, ask whether they want a brief written.
 
 ## Needs-info template
 

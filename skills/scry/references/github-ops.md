@@ -18,7 +18,7 @@
 | `close` | `NUMBER` | Closes the issue |
 | `update-body` | `NUMBER`, body on stdin | Replaces the issue body |
 
-Without `owner/repo`, the script uses `gh repo view` in this checkout.
+Without `owner/repo`, the script uses `gh repo view` in this checkout. The script passes `--repo` to every `gh issue` and `gh label` call so an explicit owner/repo wins.
 
 ## Exit codes
 
