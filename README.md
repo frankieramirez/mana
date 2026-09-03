@@ -78,7 +78,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`wringer` and `no-comment` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` was inspired by the comment-removal tooling in Cursor's plugin collection. The Cloudflare skills I also use are not here; install them with `npx skills add cloudflare/skills`.
+`wringer` and `no-comment` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` was inspired by the comment-removal tooling in Cursor's plugin collection.
 
 ## License
 
