@@ -19,11 +19,11 @@ pairs = [
     ("skills/wringer/references/findings-schema.json", "ce-code-review/references/findings-schema.json"),
     ("skills/wringer/references/finish-review.md", "ce-code-review/references/finish-review.md"),
     ("skills/wringer/SKILL.md", "ce-code-review/SKILL.md"),
-    ("skills/no-comment/SKILL.md", "ce-resolve-pr-feedback/SKILL.md"),
-    ("skills/no-comment/SKILL.md", "ce-resolve-pr-feedback/references/full-mode.md"),
-    ("skills/no-comment/references/evaluation-rubric.md", "ce-resolve-pr-feedback/references/evaluation-rubric.md"),
-    ("skills/no-comment/references/fixer-prompt.md", "ce-resolve-pr-feedback/references/agents/pr-comment-resolver.md"),
-    ("skills/no-comment/scripts/pr-threads", "ce-resolve-pr-feedback/scripts/get-pr-comments"),
+    ("skills/settle/SKILL.md", "ce-resolve-pr-feedback/SKILL.md"),
+    ("skills/settle/SKILL.md", "ce-resolve-pr-feedback/references/full-mode.md"),
+    ("skills/settle/references/evaluation-rubric.md", "ce-resolve-pr-feedback/references/evaluation-rubric.md"),
+    ("skills/settle/references/fixer-prompt.md", "ce-resolve-pr-feedback/references/agents/pr-comment-resolver.md"),
+    ("skills/settle/scripts/pr-threads", "ce-resolve-pr-feedback/scripts/get-pr-comments"),
 ]
 for p in ["correctness", "adversarial", "api-contract", "data-migration", "security", "performance",
           "reliability", "testing", "maintainability", "project-standards"]:

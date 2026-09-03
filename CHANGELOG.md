@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- `no-comment` renamed to `settle`. The old name read like it was about code comments, which is what `scrap` does, and it named the one rule instead of the job.
+
 ## 0.5.0
 
 - `be-me setup` and `be-me refresh`: a new Ghost agent mines the user's own writing (session messages, prompts typed to the coding agent in its local logs, PR comments, PR descriptions, commits) and returns a filled-in voice profile draft for approval. Text written by a tool under the user's name is dropped as evidence.

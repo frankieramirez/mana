@@ -11,7 +11,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install fr@frankieramirez
 ```
 
-Skills are then invoked as `/fr:wringer`, `/fr:no-comment`, `/fr:spit`, `/fr:be-me`, `/fr:scrap`.
+Skills are then invoked as `/fr:wringer`, `/fr:settle`, `/fr:spit`, `/fr:be-me`, `/fr:scrap`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -33,14 +33,14 @@ Multi-reviewer code review for a branch or PR. Picks a roster of reviewer person
 /fr:wringer base:main fix      # diff against main, fix everything actionable
 ```
 
-### no-comment
+### settle
 
 Resolves review feedback already on a PR. Fetches every unresolved thread, top-level comment, and review body, judges each one centrally (bots and humans alike), fixes what is real in parallel subagents, validates once, commits, pushes, and resolves the handled threads. It never writes to the PR conversation. Anything it would have said goes into the summary for you to paste or ignore.
 
 ```
-/fr:no-comment               # the current branch's PR
-/fr:no-comment 123 dry-run   # judge and plan only
-/fr:no-comment <comment-url> # one thread
+/fr:settle               # the current branch's PR
+/fr:settle 123 dry-run   # judge and plan only
+/fr:settle <comment-url> # one thread
 ```
 
 ### spit
@@ -83,7 +83,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`wringer` and `no-comment` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
+`wringer` and `settle` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
 
 ## License
 
