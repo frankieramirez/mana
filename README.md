@@ -15,7 +15,7 @@
       ║       test everything       ║
       ║                             ║
       ╚═════════════════════════════╝
-          MP [█████████░] 90/100
+          MP [██████████] 100/100
       ·       .                     *
           ┌────── command ──────┐
           │  > Scan             │
@@ -25,6 +25,7 @@
           │    Banish           │    ·
           │    Scry             │
           │    Cast             │
+          │    Reveal           │
           │    Sift             │
           │    Mend             │
           └─────────────────────┘
@@ -42,7 +43,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:sift`, `/mana:mend`.
+Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -115,11 +116,21 @@ Charts a chunk of work too big for one session as a GitHub map of decision ticke
 
 ### cast
 
-Builds one ready ticket or spec on the current branch. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Pushes only if the branch already tracks a remote. Stays off other branches.
+Builds one ready ticket or spec on the current branch. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence. Pass `no-pr` to stop after the commit. Stays off other branches.
 
 ```
 /mana:cast                        # the ticket already in this conversation
 /mana:cast 181                    # GitHub issue 181
+/mana:cast 181 no-pr              # commit only
+```
+
+### reveal
+
+Opens or updates a pull request for the current branch. The description is a sentence plus a compact tree or structural diff a reviewer can scan, and a screenshot, recording, or command-output image. Uses `gh --attach` so the file lands inline. A docs or backend change still gets a file: an SVG of the proving command. Stays off other branches.
+
+```
+/mana:reveal                      # current branch
+/mana:reveal 42                   # PR 42, if its head is this branch
 ```
 
 ### sift
@@ -154,6 +165,8 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 `scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
 
 `scry`, `cast`, `sift`, and `mend` were inspired by the engineering skills in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Existing GitHub maps keep the `wayfinder:*` labels that loop already shipped.
+
+The scannable PR body in `reveal` (trees, call stacks, structural diffs) was inspired by the `show-me` skill in [humanlayer/skills](https://github.com/humanlayer/skills) (MIT) and written from scratch here.
 
 ## License
 
