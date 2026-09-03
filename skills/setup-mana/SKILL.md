@@ -40,6 +40,8 @@ ls docs/agents docs/adr .scratch 2>/dev/null
 gh auth status 2>&1 | head -5
 gh --version | head -1
 env | grep -o -E '^(LINEAR_API_KEY|LINEAR_TEAM|JIRA_BASE_URL|JIRA_EMAIL|JIRA_API_TOKEN|JIRA_PROJECT)=' | sort
+[ -n "${ORCA_WORKTREE_ID:-}" ] && command -v orca >/dev/null && echo orca: yes
+ls orca.yaml .worktreeinclude 2>/dev/null
 ```
 
 Then:
@@ -47,7 +49,8 @@ Then:
 - **Tracker signals.** A GitHub remote suggests GitHub. `LINEAR_API_KEY` set suggests Linear. `JIRA_BASE_URL` set suggests Jira. A populated `.scratch/` suggests local files. Existing `docs/agents/issue-tracker.md`: read its `Tracker:` line; that is the current choice.
 - **Labels.** `gh label list --limit 200 --json name --jq '.[].name'` on GitHub. Look for names that already mean bug, enhancement, or a triage state (`kind/bug`, `status: blocked`, `triage`). Existing `docs/agents/triage-labels.md`: read it.
 - **Validation command.** In this order, stop at the first hit: a `Validation:` line in an existing `## Agent skills` block; `package.json` scripts named `test`, `typecheck`, `lint`, `check`; `Makefile` or `justfile` targets with those names; `pyproject.toml`, `Cargo.toml`, `go.mod` defaults. Run the candidate once. It must exit 0 or fail on a test, never on "command not found".
-- **Proof capture.** Whether the host offers a screenshot or recording tool, and whether `gh --version` is 2.99.0 or newer (needed for `--attach`).
+- **Proof capture.** Whether the host offers a screenshot or recording tool, and whether `gh --version` is 2.99.0 or newer (needed for `--attach`). Inside an Orca worktree, `orca screenshot` is such a tool.
+- **Orca.** `orca: yes` means the session runs inside an Orca worktree. Then `orca linear team list --json` succeeding is a Linear signal and counts as a connector. Note whether `orca.yaml` and `.worktreeinclude` exist, and whether the validation command needs installed dependencies or gitignored files (`.env`, `node_modules`) that a fresh worktree would not have.
 - **Monorepo signals.** `pnpm-workspace.yaml`, a `workspaces` field, or `packages/*` with their own `src/`. Absent in almost every repo.
 - **Pointer file.** Which of `CLAUDE.md` or `AGENTS.md` exists, whether one is a symlink to the other, and whether an `## Agent skills` block is already present.
 
@@ -62,7 +65,7 @@ Take the sections in order. One section, one answer, then the next. Skip a secti
 | Choice | Needs |
 |--------|-------|
 | GitHub | `gh` logged in with write access to the repo |
-| Linear | A Linear connector the host exposes, or `LINEAR_API_KEY` in the environment. Plus the team key (the prefix on issue identifiers, like `ENG`) |
+| Linear | A Linear connector the host exposes (`orca linear` inside an Orca worktree counts), or `LINEAR_API_KEY` in the environment. Plus the team key (the prefix on issue identifiers, like `ENG`) |
 | Jira | A Jira connector the host exposes, or `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` in the environment. Plus the project key. Optional `JIRA_ISSUE_TYPE`, default `Task` |
 | Local | nothing. Tickets are markdown files under `.scratch/` |
 | Other | one paragraph from the user describing how to create, read, label, assign, and close a ticket |
@@ -75,6 +78,13 @@ A connector covers this session. The environment variables cover a scheduled age
 
 **D. Domain docs.** Single-context is the default: `CONTEXT.md` at the root and ADRs in `docs/adr/`. Write it without asking. Offer multi-context (`CONTEXT-MAP.md` pointing at per-area files) only when Stage 1 found monorepo signals.
 
+**E. Worktree files.** Only when Stage 1 found Orca. Every Orca worktree is a fresh checkout without gitignored files, so a validation command that needs `.env` or `node_modules` fails there until someone sets them up. Recommend two files Orca reads, and skip the section when the command needs neither:
+
+- `.worktreeinclude` at the repo root: one gitignored file or directory per line to copy into each new worktree (`.env`, `.env.local`). Small files only; a copied `node_modules` stalls creation.
+- `orca.yaml` at the repo root: `scripts.setup` holding the install command, and `worktree.sharedDirectories` listing large rebuildable gitignored directories (`node_modules`, `.cache`) that exist in the primary checkout, so they are shared rather than rebuilt.
+
+An existing file is shown and left alone unless the user wants it changed.
+
 ## Stage 3: Draft, confirm, write
 
 Load the template for the chosen tracker and `references/triage-labels.md`. Fill them from the answers. Show the user the three drafts together:
@@ -82,6 +92,7 @@ Load the template for the chosen tracker and `references/triage-labels.md`. Fill
 1. `docs/agents/issue-tracker.md`
 2. `docs/agents/triage-labels.md` (GitHub, Linear, Jira only)
 3. The `## Agent skills` block for `CLAUDE.md` or `AGENTS.md`
+4. `.worktreeinclude` and `orca.yaml`, when section E applied
 
 Let them edit. Then write. An existing `## Agent skills` block is replaced in place; the rest of the file is untouched. When neither pointer file exists, ask which one to create.
 
@@ -93,7 +104,7 @@ The block:
 Issue tracker: <GitHub owner/repo | Linear team KEY | Jira project KEY | local files under .scratch/ | other>. See `docs/agents/issue-tracker.md`.
 Triage labels: <defaults | mapped>. See `docs/agents/triage-labels.md`.
 Validation: `<the command>`
-Proof: <screenshots and recordings via the host's browser tool | command output as an image>
+Proof: <screenshots and recordings via the host's browser tool | Orca's embedded browser | command output as an image>
 Domain docs: <single-context: CONTEXT.md and docs/adr/ | multi-context: CONTEXT-MAP.md>
 ```
 

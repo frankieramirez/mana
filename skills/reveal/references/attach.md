@@ -4,16 +4,16 @@ Ship the pull request with `scripts/open-pr.sh`. That script is the only place t
 
 ## Body
 
-Write the body per `references/body.md`. Then put the proof in with ordinary local paths. Those paths must match the files you pass as `--attach`:
+Write the body per `references/body.md`. Then put the proof in by the same path string you pass as `--attach`. `gh` rewrites a reference only when the two match character for character, and appends a second copy when they do not, so use the absolute temp path in both places:
 
 ```markdown
-![the settings page after the save](./settings.png)
+![the settings page after the save](/tmp/proof/settings.png)
 ```
 
 A video that should play as a player sits alone in its paragraph:
 
 ```markdown
-![](./demo.mp4)
+![](/tmp/proof/demo.mp4)
 ```
 
 Video has no alt text.
@@ -25,8 +25,8 @@ SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 bash "$SKILL_DIR/scripts/open-pr.sh" \
   --title "Title from the branch or ticket" \
   --body-file /tmp/pr-body.md \
-  --attach '/tmp/settings.png#the settings page after the save' \
-  --attach /tmp/tests.svg
+  --attach '/tmp/proof/settings.png#the settings page after the save' \
+  --attach /tmp/proof/tests.svg
 ```
 
 `--title` is required when this branch has no pull request yet. The script looks up the current branch's PR. Existing: `gh pr edit --body-file` and `--attach`. None: `gh pr create`.

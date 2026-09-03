@@ -14,6 +14,7 @@ Open or update a pull request for the current branch. Every description carries 
 - **Committed work.** Uncommitted project files stop the run. Capture files live in a temp directory.
 - **Always a file.** `--attach` gets at least one PNG, JPEG, GIF, WebP, SVG, MP4, MOV, or WebM. A failed run is discarded.
 - **Never force-push.**
+- **Orca is optional.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), Stage 4 also moves the worktree card to in review with the PR URL. Without Orca nothing changes. A failed `orca` call is noted in the report and never stops the run.
 
 ## Arguments
 
@@ -41,7 +42,7 @@ Confirm you are in a git checkout and `gh repo view` works. Record:
 
 ```
 Branch: <current branch>
-Base: <default branch, or the PR base when one exists>
+Base: <the PR base when one exists, else `git config branch.<current>.base` when set, else the default branch>
 ```
 
 **Number or URL.** Fetch it:
@@ -82,6 +83,12 @@ Read `references/capture.md` and follow it. You need at least one file before St
 
 Read `references/body.md` and `references/attach.md`. Write the body to a temp file. Run `scripts/open-pr.sh`.
 
+Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), move the card once the PR exists:
+
+```bash
+orca worktree set --worktree active --workspace-status in-review --comment "PR <url>" --json
+```
+
 ## Report
 
 ```
@@ -89,6 +96,7 @@ Reveal: <title>
 PR: <url>
 Attach: <yes | skipped: reason>
 Evidence: <file list>
+Orca: <in-review | not present | failed: reason>
 ```
 
 ## References

@@ -112,7 +112,7 @@ On success set `PR_HEAD_REF=refs/review/pr-<number>-head` and `PR_BASE_REF=$(git
 
 **Branch name given.** Do not check it out. If it equals the current branch, use the standalone path. Otherwise: if a PR exists for it (`gh pr view <branch> --json baseRefName,url,headRefName`), prefer the PR path. Else resolve `origin/<branch>` (fetching if needed), compute `BASE=$(git merge-base <base-ref> <branch-ref>)`, and diff `$BASE <branch-ref>`. If the ref cannot be resolved locally, stop: "Cannot diff branch `<branch>` without checkout. Check out that branch, pass its PR URL, or review the current branch with `base:`." This is **`branch-remote`** scope, with the same no-workspace-inspection rule as `pr-remote`.
 
-**No argument (standalone).** Resolve the base from `gh pr view --json baseRefName,url` for the current branch, falling back to the repo's default branch. If no base resolves, **stop**. Do not fall back to `git diff HEAD`: that shows only uncommitted changes and silently misses every committed change on the branch.
+**No argument (standalone).** Resolve the base from `gh pr view --json baseRefName,url` for the current branch, then `git config branch.<current>.base` when it is set (worktree tools write it), then the repo's default branch. If no base resolves, **stop**. Do not fall back to `git diff HEAD`: that shows only uncommitted changes and silently misses every committed change on the branch.
 
 ```bash
 echo "BASE:$BASE" && echo "FILES:" && git diff --name-only $BASE && echo "DIFF:" && git diff -U10 $BASE && echo "UNTRACKED:" && git ls-files --others --exclude-standard
