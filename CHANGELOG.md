@@ -3,6 +3,7 @@
 ## 0.13.2
 
 - `tickets.sh`: a GitHub, Linear, or Jira issue URL is reduced to the tracker id before `view`, `claim`, `wire`, `label`, `comment`, and `close`.
+- `tickets.sh next`: GitHub and Linear page every matching ready issue before sorting by `createdAt`, so an older eligible ticket past the first 100 is not starved.
 
 ## 0.13.1
 

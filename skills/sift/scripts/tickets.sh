@@ -252,8 +252,9 @@ gh_wire() {
 
 gh_next() {
   local label="$1"
-  local n title url state
-  while IFS=$'\t' read -r n title url; do
+  local encoded n title url created state
+  encoded=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "$label")
+  while IFS=$'\t' read -r created n title url; do
     [ -n "$n" ] || continue
     # The listing can lag a close by a few seconds; read the issue itself before trusting it.
     state=$(gh issue view --repo "$OWNER/$REPO" "$n" --json state --jq .state)
@@ -266,9 +267,13 @@ gh_next() {
     fi
     printf '%s\t%s\t%s\n' "$n" "$title" "$url"
     return
-  done < <(gh issue list --repo "$OWNER/$REPO" --state open --label "$label" --limit 100 \
-    --json number,title,url,assignees,createdAt \
-    --jq 'sort_by(.createdAt) | .[] | select((.assignees | length) == 0) | [.number, .title, .url] | @tsv')
+  done < <(gh api --paginate "repos/${OWNER}/${REPO}/issues?state=open&labels=${encoded}&per_page=100" --jq '
+    .[]
+    | select(.pull_request == null)
+    | select((.assignees | length) == 0)
+    | [.created_at, (.number|tostring), .title, .html_url]
+    | @tsv
+  ' | LC_ALL=C sort)
 }
 
 gh_assignees_except() {
@@ -485,11 +490,19 @@ class Linear:
             flt["labels"] = {"name": {"eq": label}}
         if unassigned:
             flt["assignee"] = {"null": True}
-        nodes = self.gql(
-            "query($f:IssueFilter){issues(filter:$f,first:100){nodes{identifier title url createdAt updatedAt "
-            "labels{nodes{name}} inverseRelations{nodes{type issue{state{type}}}}}}}",
-            {"f": flt},
-        )["issues"]["nodes"]
+        q = (
+            "query($f:IssueFilter,$a:String){issues(filter:$f,first:100,after:$a){"
+            "pageInfo{hasNextPage endCursor} "
+            "nodes{identifier title url createdAt updatedAt "
+            "labels{nodes{name}} inverseRelations{nodes{type issue{state{type}}}}}}}"
+        )
+        nodes, after = [], None
+        while True:
+            conn = self.gql(q, {"f": flt, "a": after})["issues"]
+            nodes.extend(conn["nodes"])
+            if not conn["pageInfo"]["hasNextPage"] or not conn["pageInfo"].get("endCursor"):
+                break
+            after = conn["pageInfo"]["endCursor"]
         if unlabeled:
             nodes = [n for n in nodes if not n["labels"]["nodes"]]
         return nodes
