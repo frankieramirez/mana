@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.7.2
+
+- The marketplace is named `frankieramirez`, so the install is `mana@frankieramirez`. A marketplace names a publisher, not a product, and it shows up where provenance is the useful thing to know. `mana` carries the brand in every slash command. The plugin name and every skill are unchanged.
+
 ## 0.7.1
 
-- The marketplace is now `ark`, so the install is `mana@ark`. The ark is the vessel the manna was kept in. The plugin name and every slash command are unchanged.
+- The marketplace was briefly `ark`.
 
 ## 0.7.0
 
