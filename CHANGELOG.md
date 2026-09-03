@@ -1,11 +1,15 @@
 # Changelog
 
-## 0.11.0
+## 0.12.0
 
 - `augur`: find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code. Five-rung evidence ladder; anything below "ran it" is reported as unproven. The proving script stays on disk. Inspired by the blast-radius skill in Cursor's pstack plugin (MIT), written from scratch.
 - `dispel`: a plain-speech pass after the register ban. Metaphor nouns (substrate, wedge, vector, ratchet) get their concrete word, passive voice names its actor, adverbs become the number, and a sentence that could appear unchanged in another project's docs is cut. Inspired by pstack's unslop rules, written from scratch.
 - `scan`: the report gains a Dismissed section listing every finding synthesis dropped and why, so the user can override it. Three lead-judgment filters run before validation: nitpick gravity, consistent with the codebase, and code the diff did not touch. The header and `metadata.json` carry base SHA, head SHA, and a `git patch-id` stamp, and a rerun on the same diff points at the earlier report. Inspired by pstack's interrogate lead-judgment notes, written from scratch.
 - `remedy`: reads CI before judging. A failure in code the PR touched joins the fix list and the same push; a failure in untouched code is checked for a stale base with `git merge-base --is-ancestor`; a suspected flake gets at most one `gh run rerun --failed` after the push. Comment text never reaches a shell command as an argument or interpolation.
+
+## 0.11.0
+
+- `scry` files maps and tickets under its own labels, `scry:map` and `scry:<type>`, instead of the `wayfinder:*` names carried over from the loop it replaced. `ensure-labels` creates only the new set. Reads still accept `wayfinder:*`, so a map you already have walks without relabelling; that fallback goes away in a later release.
 
 ## 0.10.0
 

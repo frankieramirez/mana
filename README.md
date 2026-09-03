@@ -107,7 +107,7 @@ Removes comments that do not earn their place. Spawns the Comment Reaper on your
 
 ### scry
 
-Charts a chunk of work too big for one session as a GitHub map of decision tickets, then walks the frontier one ticket at a time. Charting names the destination, files the questions that are already sharp, and fires research in parallel. Walking claims the next unblocked ticket, resolves it, and files whatever the answer made specifiable. Tracker labels stay `wayfinder:map` and `wayfinder:<type>` so maps you already have keep working. If GitHub refuses the write (403), the same shape lands under `.scratch/<slug>/`.
+Charts a chunk of work too big for one session as a GitHub map of decision tickets, then walks the frontier one ticket at a time. Charting names the destination, files the questions that are already sharp, and fires research in parallel. Walking claims the next unblocked ticket, resolves it, and files whatever the answer made specifiable. Tracker labels are `scry:map` and `scry:<type>`. Maps that still carry the older `wayfinder:*` labels walk unchanged. If GitHub refuses the write (403), the same shape lands under `.scratch/<slug>/`.
 
 ```
 /mana:scry                        # chart a map from the idea in the conversation
@@ -175,7 +175,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 `scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs. The same plugin's `blast-radius` skill inspired `augur` (one safety fact, an evidence ladder, prove it by running code), its `unslop` skill inspired the plain-speech rules in `dispel`, and its `interrogate` lead-judgment notes inspired the Dismissed section in `scan`. All three were written from scratch here.
 
-`scry`, `cast`, `sift`, and `mend` were inspired by the engineering skills in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Existing GitHub maps keep the `wayfinder:*` labels that loop already shipped.
+`scry`, `cast`, `sift`, and `mend` were inspired by the engineering skills in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Maps filed under that loop's `wayfinder:*` labels still walk.
 
 The scannable PR body in `reveal` (trees, call stacks, structural diffs) was inspired by the `show-me` skill in [humanlayer/skills](https://github.com/humanlayer/skills) (MIT) and written from scratch here.
 
