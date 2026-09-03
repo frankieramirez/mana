@@ -15,7 +15,7 @@ The deciding is done. A map, a spec, or the plan in this conversation says what 
 - **One session per ticket.** A slice that needs two sessions is two tickets with a blocking edge.
 - **The brief is the contract.** A later build session reads the brief and nothing else. Write it for a reader who has none of this conversation.
 - **Refer by name.** In anything a person reads, use the ticket title with the link wrapped inside it.
-- **Write to the tracker through the script.** `scripts/tickets.sh` is the only way to create labels, issues, edges, and comments. Do not improvise `gh issue create`.
+- **Write to the tracker through the contract.** On Linear or Jira, use the host's connector for `create`, `ensure-labels`, `wire`, and `comment` when one is present. Otherwise run `scripts/tickets.sh`. GitHub always goes through the script. Never write the tracker any other way.
 
 `SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
 
@@ -54,14 +54,28 @@ The operations below are `view`, `ensure-labels`, `create`, `wire`, and `comment
 
 ## Stage 1: Load
 
-**A map.** Fetch it with `tickets.sh view ID`. `ID` is a tracker id or a GitHub, Linear, or Jira issue URL; the script extracts the id. Read Destination, Notes, Decisions so far, and every owning document Notes names. Then check for unfinished deciding: on GitHub,
+**A map.** Fetch it:
+
+```bash
+SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view ID
+```
+
+`ID` is a tracker id or a GitHub, Linear, or Jira issue URL; the script extracts the id. Read Destination, Notes, Decisions so far, and every owning document Notes names. Then check for unfinished deciding: on GitHub,
 
 ```bash
 gh issue list --state open --search "Part of #NUMBER" --json number,title,labels
-gh api --paginate repos/OWNER/REPO/issues/NUMBER/sub_issues --jq '.[] | select(.state == "open") | "\(.number)\t\(.title)"' 2>/dev/null
+if ! children="$(
+  gh api --paginate repos/OWNER/REPO/issues/NUMBER/sub_issues \
+    --jq '.[] | select(.state == "open") | "\(.number)\t\(.title)\t\([.labels[].name] | join(","))"'
+)"; then
+  echo "Unable to verify map children" >&2
+  exit 1
+fi
+printf '%s\n' "$children"
 ```
 
-and elsewhere the way the tracker file's Wayfinding operations section lists a map's children. An open child still labelled `scry:*` or `wayfinder:*` means a decision is still pending. Stop, name those tickets, and say the map is not ready to build from.
+and elsewhere the way the tracker file's Wayfinding operations section lists a map's children. An open child still labelled `scry:*` or `wayfinder:*` means a decision is still pending. Stop, name those tickets, and say the map is not ready to build from. A failed `gh api` call stops the workflow.
 
 **A spec path or another issue.** Read it in full.
 

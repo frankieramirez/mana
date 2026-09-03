@@ -4,6 +4,7 @@
 
 - README closing line is tracker-specific: GitHub `#N`, Linear `ENG-N`, Jira `PLAT-N` (automation), local file named and left open on merge.
 - Reveal/cast closing line: a commit-subject fallback is used only when exactly one ticket id appears; otherwise the line is omitted and the conflict is reported.
+- `conjure`: Stage 1 `view` uses the bundled `tickets.sh` path. GitHub map-child listing includes labels and stops when `gh api` fails. Linear and Jira writes go through the host connector when one is present.
 
 ## 0.13.2
 
