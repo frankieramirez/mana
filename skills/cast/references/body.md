@@ -126,7 +126,7 @@ If the repo has a pull request template (`PULL_REQUEST_TEMPLATE.md`, `.github/PU
 
 ## Closing line
 
-When the work resolves a ticket, the last line of the body is a closing line, so the merge closes it. Take the id from the ticket the session built, then from a `cast/<id>-` branch name, then from a ticket id in the commit subjects. No id anywhere: no closing line.
+When the work resolves a ticket, the last line of the body is a closing line, so the merge closes it. Take the id from the ticket the session built, then from a `cast/<id>-` branch name. If neither is present, take a ticket id from the commit subjects only when exactly one distinct id appears (`#N`, `ENG-42`, `PLAT-42`, or a `.scratch/.../tickets/` path). Two or more distinct ids: omit the line and name the ones that conflicted. No id anywhere: no closing line.
 
 | Tracker | Line | Closes on merge |
 |---------|------|-----------------|
