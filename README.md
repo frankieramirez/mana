@@ -15,7 +15,7 @@
       ║       test everything       ║
       ║                             ║
       ╚═════════════════════════════╝
-          MP [████████░░] 80/100
+          MP [█████████░] 90/100
       ·       .                     *
           ┌────── command ──────┐
           │  > Scan             │
@@ -26,6 +26,7 @@
           │    Scry             │
           │    Cast             │
           │    Sift             │
+          │    Mend             │
           └─────────────────────┘
            .     *           ·     .
 ```
@@ -34,14 +35,14 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 
 ## Install
 
-**Claude Code** (plugin, includes the Comment Reaper and Ghost agents):
+**Claude Code** (plugin, includes the Comment Reaper, Ghost, and Weaver agents):
 
 ```
 /plugin marketplace add frankieramirez/mana
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:sift`.
+Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:sift`, `/mana:mend`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -131,6 +132,14 @@ Moves unlabeled and `needs-triage` issues through the existing inbox states (`ne
 /mana:sift move 42 to ready-for-agent
 ```
 
+### mend
+
+Finishes an in-progress merge, rebase, cherry-pick, or revert that has unmerged paths. Reads both sides of every hunk, keeps both intents when they commute, runs the project's checks, and continues the git operation. It never aborts. Weaver is the agent that resolves the hunks; the skill audits, regenerates lockfiles, and finishes the sequence.
+
+```
+/mana:mend                        # the conflicted merge or rebase already in progress
+```
+
 ## Layout
 
 ```
@@ -144,7 +153,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 `scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
 
-`scry`, `cast`, and `sift` were inspired by the planning loop in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Existing GitHub maps keep the `wayfinder:*` labels that loop already shipped.
+`scry`, `cast`, `sift`, and `mend` were inspired by the engineering skills in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Existing GitHub maps keep the `wayfinder:*` labels that loop already shipped.
 
 ## License
 

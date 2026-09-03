@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- `mend` and the Weaver agent: finish an in-progress merge, rebase, cherry-pick, or revert by reading both sides of each hunk, keeping both intents when they commute, running the project's checks, and continuing the git operation. Never aborts. Inspired by the merge-conflict skill in mattpocock/skills (MIT), written from scratch.
+
 ## 0.8.2
 
 - `cast` loads a spec path or the conversation before writing intent, stages only this session's diff, and classifies suite failures against the pre-change baseline. `map.sh` passes `--repo` on every `gh issue` and `gh label` call, and label create fails through to exit 3 unless the label already exists. `scry` examples set `GH_HOST`. `sift` will not apply a state-only override until the issue has one category.
