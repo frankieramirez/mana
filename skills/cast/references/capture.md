@@ -50,4 +50,4 @@ orca click --element @e3 --json
 orca screenshot --json | python3 -c 'import base64,json,sys; open(sys.argv[1],"wb").write(base64.b64decode(json.load(sys.stdin)["result"]["data"]))' "$DIR/feature.png"
 ```
 
-`full-screenshot` captures beyond the viewport. The JSON carries the image as base64 under `result.data`; the one-liner writes it to a file. `DIR` is the temp directory from `mktemp -d`. A failed call falls through to the next preference; it is never a stop.
+`full-screenshot` captures beyond the viewport. The JSON carries the image as base64 under `result.data`; the one-liner writes it to a file. `DIR` is the temp directory from `mktemp -d`. The tab has to be visible in the app: a `Screenshot timed out` error means the browser pane is hidden or another worktree is in front, and `orca tab switch --index 0 --json` is the one retry worth making. A call that still fails falls through to the next preference; it is never a stop.
