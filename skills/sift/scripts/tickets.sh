@@ -7,7 +7,8 @@
 #   view ID                                   fields, body, and comments
 #   create TITLE --label L... [--dry-run]     body on stdin; prints id<TAB>url
 #   wire CHILD BLOCKER                        CHILD is blocked by BLOCKER
-#   next READY_LABEL                          oldest open, unassigned, unblocked issue
+#   next READY_LABEL [--claim]                oldest open, unassigned, unblocked issue;
+#                                             --claim assigns it only while it stays eligible
 #   claim ID                                  assign yourself; refuse if someone else holds it
 #   label ID [--add L]... [--remove L]...     change labels
 #   comment ID                                body on stdin
@@ -40,8 +41,9 @@ usage: tickets.sh [--tracker github|linear|jira] [--project KEY] [--repo OWNER/R
   view ID                                id, title, url, state, labels, assignees, body, comments
   create TITLE --label L... [--dry-run]  body on stdin; prints id<TAB>url
   wire CHILD BLOCKER                     CHILD is blocked by BLOCKER
-  next READY_LABEL                       id<TAB>title<TAB>url of the oldest open, unassigned,
-                                         unblocked issue; empty when none
+  next READY_LABEL [--claim]             id<TAB>title<TAB>url of the oldest open, unassigned,
+                                         unblocked issue; empty when none. --claim assigns
+                                         it, re-reads, and releases if it is no longer eligible
   claim ID                               assign yourself; exit 1 if someone else holds it
   label ID [--add L]... [--remove L]...  change labels
   comment ID                             body on stdin
@@ -250,10 +252,36 @@ gh_wire() {
   fi
 }
 
+gh_still_ready() {
+  local n="$1" label="$2" me="$3"
+  local state
+  state=$(gh issue view --repo "$OWNER/$REPO" "$n" --json state --jq .state)
+  case "$state" in
+    OPEN|open) ;;
+    *) return 1 ;;
+  esac
+  gh issue view --repo "$OWNER/$REPO" "$n" --json labels --jq '.labels[].name' | grep -qxF "$label" || return 1
+  gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '.assignees[].login' | grep -qxF "$me" || return 1
+  [ -z "$(gh_assignees_except "$n" "$me")" ] || return 1
+  if gh_is_blocked "$n"; then
+    return 1
+  fi
+  return 0
+}
+
+gh_unclaim() {
+  local n="$1" me="$2"
+  gh issue edit --repo "$OWNER/$REPO" "$n" --remove-assignee "$me" >/dev/null 2>&1 || true
+}
+
 gh_next() {
-  local label="$1"
-  local encoded n title url created state
+  local label="$1" do_claim="${2:-0}"
+  local encoded n title url created state login others ec
   encoded=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "$label")
+  login=""
+  if [ "$do_claim" = "1" ]; then
+    login=$(gh api user --jq .login)
+  fi
   while IFS=$'\t' read -r created n title url; do
     [ -n "$n" ] || continue
     # The listing can lag a close by a few seconds; read the issue itself before trusting it.
@@ -264,6 +292,25 @@ gh_next() {
     esac
     if gh_is_blocked "$n"; then
       continue
+    fi
+    if [ "$do_claim" = "1" ]; then
+      others=$(gh_assignees_except "$n" "$login")
+      if [ -n "$others" ]; then
+        continue
+      fi
+      ec=0
+      try_gh gh issue edit --repo "$OWNER/$REPO" "$n" --add-assignee "$login" >/dev/null || ec=$?
+      if [ "$ec" -eq 3 ]; then
+        exit 3
+      fi
+      if [ "$ec" -ne 0 ]; then
+        continue
+      fi
+      others=$(gh_assignees_except "$n" "$login")
+      if [ -n "$others" ] || ! gh_still_ready "$n" "$label" "$login"; then
+        gh_unclaim "$n" "$login"
+        continue
+      fi
     fi
     printf '%s\t%s\t%s\n' "$n" "$title" "$url"
     return
@@ -548,11 +595,47 @@ class Linear:
                 return True
         return False
 
-    def next(self, label):
+    def still_ready(self, ident, label, me_id):
+        d = self.issue(ident)
+        if d["state"]["type"] in DONE_TYPES:
+            return False
+        if label not in [l["name"] for l in d["labels"]["nodes"]]:
+            return False
+        a = d.get("assignee")
+        if not a or a["id"] != me_id:
+            return False
+        if self.blocked(d):
+            return False
+        return True
+
+    def unclaim(self, ident):
+        d = self.issue(ident)
+        self.gql(
+            "mutation($id:String!,$i:IssueUpdateInput!){issueUpdate(id:$id,input:$i){success}}",
+            {"id": d["id"], "i": {"assigneeId": None}},
+        )
+
+    def next(self, label, do_claim=False):
+        me = self.me() if do_claim else None
         for n in sorted(self.open_issues(label=label, unassigned=True), key=lambda n: n["createdAt"]):
-            if not self.blocked(n):
-                out(n["identifier"], n["title"], n["url"])
-                return
+            if self.blocked(n):
+                continue
+            ident = n["identifier"]
+            if do_claim:
+                d = self.issue(ident)
+                a = d.get("assignee")
+                if a and a["id"] != me["id"]:
+                    continue
+                if not a:
+                    self.gql(
+                        "mutation($id:String!,$i:IssueUpdateInput!){issueUpdate(id:$id,input:$i){success}}",
+                        {"id": d["id"], "i": {"assigneeId": me["id"]}},
+                    )
+                if not self.still_ready(ident, label, me["id"]):
+                    self.unclaim(ident)
+                    continue
+            out(n["identifier"], n["title"], n["url"])
+            return
 
     def claim(self, ident):
         me = self.me(); d = self.issue(ident)
@@ -707,13 +790,42 @@ class Jira:
                     return True
         return False
 
-    def next(self, label):
+    def still_ready(self, key, label, me_id):
+        i = self.api("GET", f"/issue/{key}?fields=status,labels,assignee,issuelinks")
+        f = i["fields"]
+        if (f.get("status") or {}).get("statusCategory", {}).get("key") == "done":
+            return False
+        if label not in (f.get("labels") or []):
+            return False
+        a = f.get("assignee")
+        if not a or a.get("accountId") != me_id:
+            return False
+        if self.blocked(i):
+            return False
+        return True
+
+    def unclaim(self, key):
+        self.api("PUT", f"/issue/{key}/assignee", {"accountId": None})
+
+    def next(self, label, do_claim=False):
         p = self.need_project()
+        me = self.api("GET", "/myself") if do_claim else None
         jql = f'project = {p} AND labels = "{label}" AND statusCategory != Done AND assignee is EMPTY ORDER BY created ASC'
         for i in self.search(jql, ["summary", "issuelinks", "created"]):
-            if not self.blocked(i):
-                out(i["key"], i["fields"]["summary"], self.url_of(i["key"]))
-                return
+            if self.blocked(i):
+                continue
+            key = i["key"]
+            if do_claim:
+                cur = self.api("GET", f"/issue/{key}?fields=assignee")["fields"].get("assignee")
+                if cur and cur.get("accountId") != me["accountId"]:
+                    continue
+                if not cur:
+                    self.api("PUT", f"/issue/{key}/assignee", {"accountId": me["accountId"]})
+                if not self.still_ready(key, label, me["accountId"]):
+                    self.unclaim(key)
+                    continue
+            out(i["key"], i["fields"]["summary"], self.url_of(i["key"]))
+            return
 
     def claim(self, key):
         me = self.api("GET", "/myself")
@@ -759,7 +871,7 @@ def main():
     elif cmd == "wire":
         t.wire(rest[0], rest[1])
     elif cmd == "next":
-        t.next(rest[0])
+        t.next(rest[0], "--claim" in rest[1:])
     elif cmd == "claim":
         t.claim(rest[0])
     elif cmd == "label":
@@ -824,6 +936,7 @@ esac
 # Subcommand argument shaping shared by every tracker.
 color="ededed"
 labels=()
+NEXT_CLAIM=0
 case "$cmd" in
   ensure-labels)
     while [ $# -gt 0 ]; do
@@ -847,7 +960,15 @@ case "$cmd" in
     done
     [ ${#labels[@]} -ge 1 ] || die "create needs at least one --label"
     ;;
-  list|view|next|claim|comment|close) [ $# -ge 1 ] || die "$cmd needs an argument" ;;
+  next)
+    [ $# -ge 1 ] || die "next needs a label"
+    case "${2:-}" in
+      --claim) NEXT_CLAIM=1 ;;
+      "") ;;
+      *) die "next READY_LABEL [--claim]" ;;
+    esac
+    ;;
+  list|view|claim|comment|close) [ $# -ge 1 ] || die "$cmd needs an argument" ;;
   wire) [ $# -ge 2 ] || die "wire CHILD BLOCKER" ;;
   label) [ $# -ge 2 ] || die "label ID [--add L]... [--remove L]..." ;;
   check) ;;
@@ -885,7 +1006,7 @@ case "$cmd" in
   view) gh_view "$1" ;;
   create) gh_create "$title" "$DRY" "${labels[@]}" ;;
   wire) gh_wire "$1" "$2" ;;
-  next) gh_next "$1" ;;
+  next) gh_next "$1" "$NEXT_CLAIM" ;;
   claim) gh_claim "$1" ;;
   label)
     n="$1"; shift

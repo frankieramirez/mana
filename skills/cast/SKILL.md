@@ -49,7 +49,7 @@ Parse tokens, then treat the remainder as the target.
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too. Ticket ids are whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`).
 
-The operations below are `next`, `claim`, and `view`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. Otherwise run the script with the adapter flags, which does exactly that. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered file with `Status: ready-for-agent` and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. For `other`, follow the tracker file's Conventions by hand.
+The operations below are `next`, `claim`, and `view`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered file with `Status: ready-for-agent` and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
 
 ## Stage 1: Load
 
@@ -57,12 +57,12 @@ The operations below are `next`, `claim`, and `view`. On Linear or Jira, when th
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> next <ready string>
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> next <ready string> --claim
 ```
 
-Empty output means nothing is ready. Say so in one line and stop; a loop that calls this on a schedule should stay quiet. Otherwise the first field is the ticket id, and the rest of this stage treats it as one.
+Empty output means nothing is ready. Say so in one line and stop; a loop that calls this on a schedule should stay quiet. `--claim` assigns the ticket only while it is still open, still carries the ready label, and is still unblocked; otherwise the script releases it and tries the next candidate. The first field is the ticket id. Do not call `claim` again on this path.
 
-**Id or URL.** Claim it before reading further:
+**Id or URL.** Claim it before reading further. An explicit id does not have to carry the ready label:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
