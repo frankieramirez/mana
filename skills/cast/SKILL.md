@@ -1,0 +1,112 @@
+---
+name: cast
+description: "Implement one ready ticket or spec on the current branch. Use when asked to cast a ticket, implement this ticket, build this issue, or /cast."
+argument-hint: "[ticket number | issue URL | spec path | blank for the conversation]"
+disable-model-invocation: true
+---
+
+# Cast
+
+Build the work described by one ticket, spec, or the current conversation. Stay on the current branch. Commit when the work matches the ticket. Push only if that branch already tracks a remote.
+
+## Operating principles
+
+- **One ticket.** The invocation names the work. Do not wander onto adjacent issues.
+- **Never switch branches.** `git checkout`, `git switch`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so.
+- **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
+- **Leave the review to a later pass.** This skill commits the implementation. It does not run a multi-reviewer critique.
+
+## Arguments
+
+The remainder after any tokens is the target.
+
+| Input | Target |
+|-------|--------|
+| none | The ticket or spec already in this conversation. If none is obvious, stop and ask for a number. |
+| number or issue URL | That GitHub issue |
+| a path | That file, treated as the spec |
+
+## Execution spine
+
+1. Load the ticket (Stage 1).
+2. Build it (Stage 2).
+3. Check the diff against the ticket (Stage 3).
+4. Commit, and push only when the branch already has an upstream (Stage 4).
+
+---
+
+## Stage 1: Load
+
+If the target is a number or URL:
+
+```bash
+gh issue view NUMBER --comments
+```
+
+Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the issue body itself.
+
+Read `CONTEXT.md` when it exists, and any ADR that sits in the same area as the change. Use the project's words for types and names.
+
+Write a 2 to 4 line intent you will implement:
+
+```
+Intent: <what will be true when this ticket is done>
+Seams: <public interfaces you will test at, or "none: no test harness">
+```
+
+Do not start coding until that intent is written. If the ticket is still a question (a decision, not a build), stop. This skill builds ready work.
+
+## Stage 2: Build
+
+If the repo has a test harness, read `references/tdd.md` and follow it at the seams you wrote down. If it does not, build without a red-green loop and say so once.
+
+Typecheck and the tests around the files you touch as you go. Run the project's full suite once the slice is in.
+
+Stay inside the ticket's scope. Adjacent cleanup waits.
+
+## Stage 3: Spec check
+
+Read `references/spec-check.md` and walk it against the diff and the ticket. If a criterion fails, fix it before committing. If a criterion cannot be met on this branch, stop and report it. Do not commit a partial that pretends to be the ticket.
+
+## Stage 4: Commit
+
+Stage only the files this session changed.
+
+```bash
+git add <files you changed>
+git commit -m "$(cat <<'EOF'
+<subject from the ticket title>
+
+<one or two lines on what landed, with the issue number>
+EOF
+)"
+```
+
+Follow the repo's commit conventions when it has them.
+
+Push only when an upstream is already configured:
+
+```bash
+if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  git push
+fi
+```
+
+If the push is rejected because the remote moved, `git pull --rebase` only when the tree is otherwise clean and the rebase is conflict-free. Otherwise stop. Never force-push.
+
+## Report
+
+```
+Cast: <ticket title> (#NUMBER)
+Commit: <sha>
+Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
+Validation: <one line>
+Open: <any criterion left unmet, or none>
+```
+
+## References
+
+| Reference | Load at | Purpose |
+|-----------|---------|---------|
+| `references/tdd.md` | Stage 2, when a test harness exists | Red-green at agreed seams |
+| `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |

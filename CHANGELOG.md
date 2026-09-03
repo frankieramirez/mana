@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- `scry`, `cast`, and `sift`: the planning loop I actually run. `scry` charts a GitHub map of decision tickets and walks them one at a time. `cast` builds a ready ticket on the current branch. `sift` moves the inbox through the same triage states. Inspired by the engineering skills in mattpocock/skills (MIT), written from scratch. Existing maps keep the `wayfinder:*` labels.
+
 ## 0.7.3
 
 - `scripts/validate.sh` checks that the plugin name agrees across both manifests, that no README slash command points at a skill that does not exist, and that every skill directory is shown in the README.

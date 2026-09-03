@@ -23,6 +23,9 @@
           │    Dispel           │
           │    Mimic            │
           │    Banish           │    ·
+          │    Scry             │
+          │    Cast             │
+          │    Sift             │
           └─────────────────────┘
            .     *           ·     .
 ```
@@ -38,7 +41,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`.
+Skills are then invoked as `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:cast`, `/mana:sift`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -99,6 +102,35 @@ Removes comments that do not earn their place. Spawns the Comment Reaper on your
 /mana:banish src/api/             # a path
 ```
 
+### scry
+
+Charts a chunk of work too big for one session as a GitHub map of decision tickets, then walks the frontier one ticket at a time. Charting names the destination, files the questions that are already sharp, and fires research in parallel. Walking claims the next unblocked ticket, resolves it, and files whatever the answer made specifiable. Tracker labels stay `wayfinder:map` and `wayfinder:<type>` so maps you already have keep working. If GitHub refuses the write (403), the same shape lands under `.scratch/<slug>/`.
+
+```
+/mana:scry                        # chart a map from the idea in the conversation
+/mana:scry 92                     # walk map #92, or claim ticket #92
+/mana:scry 92 you-pick            # accept recommended answers
+```
+
+### cast
+
+Builds one ready ticket or spec on the current branch. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Pushes only if the branch already tracks a remote. Stays off other branches.
+
+```
+/mana:cast                        # the ticket already in this conversation
+/mana:cast 181                    # GitHub issue 181
+```
+
+### sift
+
+Moves unlabeled and `needs-triage` issues through the existing inbox states (`needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). Verifies the claim, grills when the request is thin, and posts an agent brief when the work can be delegated. Rejected enhancements land in `.out-of-scope/`. Tracker comments start with a triage disclaimer.
+
+```
+/mana:sift                        # what needs attention
+/mana:sift 42                     # one issue
+/mana:sift move 42 to ready-for-agent
+```
+
 ## Layout
 
 ```
@@ -111,6 +143,8 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 ## Acknowledgements
 
 `scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs.
+
+`scry`, `cast`, and `sift` were inspired by the planning loop in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Existing GitHub maps keep the `wayfinder:*` labels that loop already shipped.
 
 ## License
 
