@@ -42,13 +42,16 @@ die() {
 try_gh() {
   local ec
   ERR=$(mktemp)
+  LAST_ERR=""
   set +e
   "$@" 2>"$ERR"
   ec=$?
   set -e
+  LAST_ERR=$(cat "$ERR")
   if [ "$ec" -eq 0 ]; then
     rm -f "$ERR"
     ERR=""
+    LAST_ERR=""
     return 0
   fi
   cat "$ERR" >&2
@@ -96,6 +99,20 @@ repo_host() {
   url="${url#http://}"
   host="${url%%/*}"
   printf '%s\n' "$host"
+}
+
+# Media upload accepts OAuth (gho_) and classic PATs (ghp_). Installation
+# tokens (ghs_) and user-to-server / refresh tokens fail with
+# "unsupported authentication type".
+token_kind() {
+  local t
+  t=$(gh auth token 2>/dev/null || true)
+  case "$t" in
+    ghs_*) echo ghs ;;
+    ghu_*) echo ghu ;;
+    ghr_*) echo ghr ;;
+    *) echo ok ;;
+  esac
 }
 
 file_kind() {
@@ -185,12 +202,20 @@ if [ "$ATTACH_OK" -eq 1 ]; then
       ;;
   esac
 fi
+if [ "$ATTACH_OK" -eq 1 ]; then
+  case "$(token_kind)" in
+    ghs|ghu|ghr)
+      ATTACH_OK=0
+      REASON="this token cannot upload media (need OAuth or a classic PAT)"
+      ;;
+  esac
+fi
 
 if [ "$ATTACH_OK" -eq 1 ] && [ "${#ATTACH[@]}" -eq 0 ]; then
   die "need at least one --attach"
 fi
 if [ "$ATTACH_OK" -eq 0 ]; then
-  echo "open-pr.sh: attach skipped ($REASON). Upgrade gh to 2.99.0 or newer." >&2
+  echo "open-pr.sh: attach skipped ($REASON)." >&2
 fi
 
 existing=$(gh pr view --json number,url --jq '[.number, .url] | @tsv' 2>/dev/null || true)
@@ -236,7 +261,30 @@ if [ "$DRY" -eq 1 ]; then
   exit 0
 fi
 
-run_gh "${cmd[@]}" >/dev/null
+cmd_plain=(gh)
+if [ "$action" = create ]; then
+  cmd_plain+=(pr create --title "$TITLE" --body-file "$BODY")
+else
+  cmd_plain+=(pr edit --body-file "$BODY")
+fi
+
+if [ "$ATTACH_OK" -eq 1 ]; then
+  if ! try_gh "${cmd[@]}" >/dev/null; then
+    ec=$?
+    [ "$ec" -eq 3 ] && exit 3
+    if printf '%s' "${LAST_ERR:-}" | grep -qiE 'unsupported authentication type|failed to upload|401 Unauthorized'; then
+      echo "open-pr.sh: attach failed; retrying without upload." >&2
+      ATTACH_OK=0
+      REASON="upload refused: unsupported authentication type"
+      attach_field=skipped
+      run_gh "${cmd_plain[@]}" >/dev/null
+    else
+      exit "$ec"
+    fi
+  fi
+else
+  run_gh "${cmd_plain[@]}" >/dev/null
+fi
 
 url=$(gh pr view --json url --jq .url)
 number=$(gh pr view --json number --jq .number)

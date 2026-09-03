@@ -2,7 +2,7 @@
 
 ## 0.10.0
 
-- `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit.
+- `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit. Installation tokens, an old `gh`, and GitHub Enterprise Server skip the upload and still open the PR.
 
 ## 0.9.0
 
