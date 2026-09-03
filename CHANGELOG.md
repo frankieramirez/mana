@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.0
+
+- `scry` files maps and tickets under its own labels, `scry:map` and `scry:<type>`, instead of the `wayfinder:*` names carried over from the loop it replaced. `ensure-labels` creates only the new set. Reads still accept `wayfinder:*`, so a map you already have walks without relabelling; that fallback goes away in a later release.
+
 ## 0.10.0
 
 - `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. The body is a sentence plus a compact tree or structural diff a reviewer can scan. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit. When attach cannot run, the PR still opens and the script prints why.
