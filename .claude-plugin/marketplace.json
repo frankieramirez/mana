@@ -1,0 +1,23 @@
+{
+  "name": "frankieramirez",
+  "owner": {
+    "name": "Frankie Ramirez",
+    "url": "https://github.com/frankieramirez"
+  },
+  "description": "Frankie Ramirez's personal agent skills, installable as a Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "fr",
+      "source": "./",
+      "description": "Multi-reviewer code review, PR feedback resolution, human-sounding prose and replies, and comment removal.",
+      "category": "engineering",
+      "keywords": [
+        "code-review",
+        "pull-requests",
+        "writing",
+        "voice",
+        "comments"
+      ]
+    }
+  ]
+}

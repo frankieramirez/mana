@@ -1,0 +1,24 @@
+{
+  "name": "fr",
+  "displayName": "Frankie's skills",
+  "version": "0.1.0",
+  "description": "Frankie Ramirez's agent skills: multi-reviewer code review, PR feedback resolution without comment noise, replies that read like you typed them, and comment removal.",
+  "author": {
+    "name": "Frankie Ramirez",
+    "url": "https://github.com/frankieramirez"
+  },
+  "homepage": "https://github.com/frankieramirez/skills",
+  "repository": "https://github.com/frankieramirez/skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "code-review",
+    "pull-requests",
+    "writing",
+    "voice",
+    "comments"
+  ],
+  "agents": [
+    "./agents/comment-reaper.md"
+  ]
+}
