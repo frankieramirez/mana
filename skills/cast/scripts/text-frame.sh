@@ -17,13 +17,13 @@ die() {
 }
 
 xml_escape() {
-  local s=$1
-  s=${s//&/&amp;}
-  s=${s//</&lt;}
-  s=${s//>/&gt;}
-  s=${s//\"/&quot;}
-  s=${s//\'/&apos;}
-  printf '%s' "$s"
+  # sed, so a literal & in the replacement is \&. Bash ${var/a/&b} treats & as the match.
+  printf '%s' "$1" | sed \
+    -e 's/&/\&amp;/g' \
+    -e 's/</\&lt;/g' \
+    -e 's/>/\&gt;/g' \
+    -e 's/"/\&quot;/g' \
+    -e "s/'/\&apos;/g"
 }
 
 [ $# -eq 1 ] || { usage; exit 2; }
