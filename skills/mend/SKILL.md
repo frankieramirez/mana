@@ -1,6 +1,6 @@
 ---
 name: mend
-description: "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, or /mend."
+description: "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, /mend, or /resolve-merge-conflicts."
 argument-hint: "[blank for the in-progress operation]"
 ---
 
