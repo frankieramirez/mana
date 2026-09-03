@@ -123,3 +123,16 @@ The sentence above the shape is how a person talks.
 - Contractions are fine.
 
 If the repo has a pull request template (`PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE/*`, `docs/PULL_REQUEST_TEMPLATE.md`), start from that file and fill it. Keep the shape and the evidence.
+
+## Closing line
+
+When the work resolves a ticket, the last line of the body is a closing line, so the merge closes it. Take the id from the ticket the session built, then from a `cast/<id>-` branch name, then from a ticket id in the commit subjects. No id anywhere: no closing line.
+
+| Tracker | Line | Closes on merge |
+|---------|------|-----------------|
+| GitHub | `Closes #42` | yes |
+| Linear | `Closes ENG-42` | yes, through Linear's GitHub integration, when the key is also in the branch name or title |
+| Jira | `Closes PLAT-42` | only when a Jira automation rule reads it; say so in the report |
+| local file | `Closes .scratch/<slug>/tickets/02-<name>.md` | no, the builder sets `Status: closed` |
+
+`docs/agents/issue-tracker.md` names the tracker when it exists.

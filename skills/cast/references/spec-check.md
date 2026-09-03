@@ -18,4 +18,4 @@ Read the diff once more for work the ticket did not ask for. Revert drive-by edi
 
 ## Validation
 
-Re-run the project's suite (or the commands you already used in Stage 2) after the last edit. Classify each failure against the pre-change baseline: the same command before this session's edits, or a failure recorded at the start. A new failure: fix it or do not commit. A failure proven to have existed before this session: proceed, and add a commit footer `Note: <test> was already failing before these changes.`
+Re-run the project's suite after the last edit: the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else the commands you already used in Stage 2. Classify each failure against the pre-change baseline: the same command before this session's edits, or a failure recorded at the start. A new failure: fix it or do not commit. A failure proven to have existed before this session: proceed, and add a commit footer `Note: <test> was already failing before these changes.`

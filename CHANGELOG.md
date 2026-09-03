@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.13.0
+
+- `setup-mana`: one skill that sets a repository up for the rest. Explores first, then asks in sections with a recommended answer: which issue tracker (GitHub, Linear, Jira, local files, or one you describe), which label names, what command proves the project works, and how proof gets captured. Writes `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` exists. Nothing is written until the tracker answers a read-only check. Secrets stay in the environment.
+- Linear and Jira as issue trackers. `sift`, `conjure`, and `cast` read the tracker file, use the host's Linear or Jira connector when one is present, and otherwise pass the adapter flags to `tickets.sh`, which now speaks GitHub (`git` and `gh`), Linear (GraphQL, `LINEAR_API_KEY`), and Jira Cloud (REST, `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`) with the same subcommands. `scry` on those trackers follows the wayfinding prose in the tracker file. Pull requests stay on GitHub, and the closing line uses the tracker's key.
+- `conjure`: turn a finished decision map, a spec, or the plan in the conversation into `ready-for-agent` issues. Each ticket is one vertical slice sized to one build session, carries an agent brief, and is wired to the tickets it waits on. Posts the build order on the map. Falls back to `.scratch/<slug>/tickets/` when the token cannot write issues.
+- `cast next` claims the oldest unclaimed, unblocked `ready-for-agent` issue and builds it. Every ticket gets claimed before work, so two sessions cannot build the same one. A session that starts on the default branch creates `cast/<id>-<slug>` before any edit; nothing commits to `main`. The pull request body ends with a closing line for the ticket.
+- `sift you-pick` triages without waiting, at most 10 issues per run, and never closes an issue as rejected on its own.
+- `cast`, `mend`, and `remedy` run the `Validation:` command from the `## Agent skills` block before guessing a test command.
+- README gains a lifecycle section: where to start, the order the skills hand off in, and the tokens that make each one safe to run on a schedule.
+
 ## 0.12.0
 
 - `augur`: find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code. Five-rung evidence ladder; anything below "ran it" is reported as unproven. The proving script stays on disk. Inspired by the blast-radius skill in Cursor's pstack plugin (MIT), written from scratch.

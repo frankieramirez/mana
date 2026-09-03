@@ -154,7 +154,7 @@ Aggregate `files_changed` across fixers. Empty means skip to step 7.
 
 Each fixer ran only the tests around its own edit. Now run the project's full validation **once** over the combined diff, since that is the only way to see two fixes interacting.
 
-1. Run the project's validation command (test suite, typecheck, lint, per the project's active conventions). Run it once for the whole diff.
+1. Run the project's validation command: the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else the test suite, typecheck, and lint the project's conventions name. Run it once for the whole diff.
 2. **Green** → step 6.
 3. **Red on files fixers changed** → one inline diagnose-and-fix pass, then re-run. Still red: do **not** commit; report it as a blocker in the summary with the test output.
 4. **Red only on files no fixer touched** → pre-existing. Proceed, and add a commit footer: `Note: <test> was already failing before these changes.`
