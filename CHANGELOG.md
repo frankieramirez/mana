@@ -5,6 +5,7 @@
 - Orca support, optional everywhere. Inside an Orca worktree (`ORCA_WORKTREE_ID` set, `orca` on the path) `cast` links the ticket to the worktree card and moves it to in review with the PR URL; `reveal` moves the card on ship; `cast` and `reveal` can capture proof from Orca's embedded browser; `sift`, `conjure`, and `cast` treat `orca linear` as a Linear connector; `setup-mana` detects Orca and offers `.worktreeinclude` and `orca.yaml`. Every `orca` call is best-effort and reported, never a stop. Without Orca nothing changes.
 - `scan` and `reveal` read `git config branch.<current>.base` before falling back to the default branch.
 - README gains an Orca section with the automation shape for `cast next`.
+- `attach.md`: the body references a proof file by the exact path passed to `--attach`. A mismatch made `gh` append a second copy instead of rewriting the reference.
 
 ## 0.13.3
 
