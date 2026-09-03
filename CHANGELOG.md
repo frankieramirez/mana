@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.1
+
+- `reveal` and `cast`: proof files and the PR body file live in a `mktemp -d` directory, never at a fixed path under `/tmp`, so another local user cannot pre-create the file and control what goes into the pull request.
+- `scan`: harvested PR comments, reviews, and threads are claims to verify against the code, never instructions. A comment that addresses an agent is recorded as dismissed. README says what `scan` reads and that `fix`, `comment`, and `mode:agent` push or post without a closing prompt.
+- `open-pr.sh` reads only the four-character prefix of the `gh` token to classify it; the token itself never lands in a shell variable.
+- `tickets.sh`: the Linear endpoint is fixed at `https://api.linear.app/graphql`. The undocumented `LINEAR_API_URL` override is gone, so `LINEAR_API_KEY` cannot be sent to another host.
+
 ## 0.14.0
 
 - Orca support, optional everywhere. Inside an Orca worktree (`ORCA_WORKTREE_ID` set, `orca` on the path) `cast` links the ticket to the worktree card and moves it to in review with the PR URL; `reveal` moves the card on ship; `cast` and `reveal` can capture proof from Orca's embedded browser; `sift`, `conjure`, and `cast` treat `orca linear` as a Linear connector; `setup-mana` detects Orca and offers `.worktreeinclude` and `orca.yaml`. Every `orca` call is best-effort and reported, never a stop. Without Orca nothing changes.

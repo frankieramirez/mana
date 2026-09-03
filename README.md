@@ -148,6 +148,8 @@ Sets a repository up for the other skills, once. Explores first (remote, existin
 
 Multi-reviewer code review for a branch or PR. Picks a roster of reviewer personas from what the diff actually touches (correctness always, then security, performance, data migration, API contract, reliability, testing, maintainability, adversarial, frontend races, project standards as warranted), runs them in parallel as subagents that return structured findings, merges and deduplicates, and renders one report. The report lists what synthesis dismissed and why, so you can override it, and carries a patch-id stamp so a rebase shows up as a different diff. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
 
+Two things to know before pointing it at a PR. It reads every comment, review, and thread on the PR and hands them to a reviewer as claims to check against the code; that text is never followed as instructions, but it does enter the review. And the `fix` and `comment` tokens (and `mode:agent`) skip the closing question, so `scan 123 fix` edits, commits, and pushes to the PR branch with no further prompt. Security scanners rate this skill high for exactly that combination. Leave the tokens off when you want the question.
+
 ```
 /mana:scan                    # current branch against its base
 /mana:scan 123 report         # PR 123, report only

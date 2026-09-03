@@ -453,8 +453,7 @@ def read_body():
 class Linear:
     def __init__(self):
         self.key = need("LINEAR_API_KEY")
-        self.url = os.environ.get("LINEAR_API_URL", "https://api.linear.app/graphql")
-        require_https(self.url)
+        self.url = "https://api.linear.app/graphql"
         self.team_key = PROJECT or os.environ.get("LINEAR_TEAM") or ""
         self._team = None
 
