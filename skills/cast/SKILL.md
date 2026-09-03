@@ -112,7 +112,7 @@ If the push is rejected because the remote moved, `git pull --rebase` only when 
 
 Skip this stage when `no-pr` was passed. Stage 4 has already committed, and pushed only when an upstream existed. Stage 5 never runs if Stage 4 did not commit.
 
-Read `references/capture.md` and `references/attach.md`. Push so the branch exists on the remote:
+Read `references/capture.md`, `references/body.md`, and `references/attach.md`. Push so the branch exists on the remote:
 
 ```bash
 if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
@@ -145,4 +145,5 @@ Open: <any criterion left unmet, or none>
 | `references/tdd.md` | Stage 2, when a test harness exists | Red-green at agreed seams |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
 | `references/capture.md` | Stage 5 | What to record, and the SVG stand-in |
-| `references/attach.md` | Stage 5 | Body, `--attach`, `open-pr.sh` |
+| `references/body.md` | Stage 5 | Scannable PR body: trees and diffs |
+| `references/attach.md` | Stage 5 | Image paths, `--attach`, `open-pr.sh` |

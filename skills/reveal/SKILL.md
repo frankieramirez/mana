@@ -1,12 +1,12 @@
 ---
 name: reveal
-description: "Open or update a pull request and put a screenshot, recording, or command-output image in the description. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, attaching evidence to a pull request, or /reveal."
+description: "Open or update a pull request with a scannable description (compact trees and diffs) plus a screenshot, recording, or command-output image. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, writing a visual PR description, attaching evidence to a pull request, or /reveal."
 argument-hint: "[blank for current branch | PR number | PR URL]"
 ---
 
 # Reveal
 
-Open or update a pull request for the current branch. Every description carries a real image or video of the change.
+Open or update a pull request for the current branch. Every description carries a real image or video, and a shape a reviewer can scan.
 
 ## Operating principles
 
@@ -80,7 +80,7 @@ Read `references/capture.md` and follow it. You need at least one file before St
 
 ## Stage 4: Ship
 
-Read `references/attach.md` and follow it. Write the body to a temp file. Run `scripts/open-pr.sh`.
+Read `references/body.md` and `references/attach.md`. Write the body to a temp file. Run `scripts/open-pr.sh`.
 
 ## Report
 
@@ -96,4 +96,5 @@ Evidence: <file list>
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
 | `references/capture.md` | Stage 3 | What to record, and the SVG stand-in |
-| `references/attach.md` | Stage 4 | Body, `--attach`, `open-pr.sh` |
+| `references/body.md` | Stage 4 | Scannable PR body: trees and diffs |
+| `references/attach.md` | Stage 4 | Image paths, `--attach`, `open-pr.sh` |

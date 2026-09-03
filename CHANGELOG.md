@@ -2,7 +2,7 @@
 
 ## 0.10.0
 
-- `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit. When attach cannot run, the PR still opens and the script prints why.
+- `reveal`: open or update a pull request and put a screenshot, recording, or command-output SVG in the description via `gh --attach`. The body is a sentence plus a compact tree or structural diff a reviewer can scan. `cast` now ships the same way after a successful build (push, creating the upstream if needed). Pass `no-pr` to stop after the commit. When attach cannot run, the PR still opens and the script prints why.
 
 ## 0.9.0
 

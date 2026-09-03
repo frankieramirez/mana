@@ -85,6 +85,7 @@ while read -r a b; do
   cmp -s "$a" "$b" || err "$a and $b differ; edit skills/reveal/ and copy to skills/cast/"
 done <<'EOF'
 skills/reveal/references/capture.md skills/cast/references/capture.md
+skills/reveal/references/body.md skills/cast/references/body.md
 skills/reveal/references/attach.md skills/cast/references/attach.md
 skills/reveal/scripts/open-pr.sh skills/cast/scripts/open-pr.sh
 skills/reveal/scripts/text-frame.sh skills/cast/scripts/text-frame.sh

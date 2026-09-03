@@ -4,9 +4,7 @@ Ship the pull request with `scripts/open-pr.sh`. That script is the only place t
 
 ## Body
 
-Write the body to a temp file. Lead with what changed and why a reviewer should care. Then the evidence.
-
-Local paths in the Markdown must match the paths you pass as `--attach`:
+Write the body per `references/body.md`. Then put the proof in with ordinary local paths. Those paths must match the files you pass as `--attach`:
 
 ```markdown
 ![the settings page after the save](./settings.png)
@@ -19,18 +17,6 @@ A video that should play as a player sits alone in its paragraph:
 ```
 
 Video has no alt text.
-
-## Prose
-
-Write the body the way a person talks.
-
-- Lead with the point.
-- No em dashes or en dashes.
-- No "not X but Y", no "isn't A, it's B".
-- No lists of three for rhythm, no throat clearing, no landing line.
-- Contractions are fine.
-
-If the repo has a pull request template (`PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE/*`, `docs/PULL_REQUEST_TEMPLATE.md`), start from that file and fill it. Keep the evidence section.
 
 ## open-pr.sh
 
