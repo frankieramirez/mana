@@ -15,7 +15,7 @@ This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin 
 ## Checks
 
 - `scripts/validate.sh` before every commit. CI runs the same script.
-- `scripts/similarity.py` when touching `wringer` or `address-feedback`: those started as forks and the rewrite is only done while every ratio stays under 0.30.
+- `scripts/similarity.py` when touching `wringer` or `no-comment`: those started as forks and the rewrite is only done while every ratio stays under 0.30.
 
 ## Local development
 

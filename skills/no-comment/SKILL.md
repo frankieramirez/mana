@@ -1,10 +1,10 @@
 ---
-name: address-feedback
-description: Resolve PR review feedback by fixing the code and pushing, with no PR comments. Use when addressing review comments, resolving review threads, or fixing code-review feedback on a pull request.
+name: no-comment
+description: Resolve PR review feedback by fixing the code and pushing, with no PR comments. Use when addressing review comments, resolving review threads, fixing code-review feedback on a pull request, or asked to handle PR feedback with no comment.
 argument-hint: "[PR number, PR URL, comment URL, or blank for current branch's PR] [no-push] [dry-run] [keep-open]"
 ---
 
-# Address Feedback
+# No Comment
 
 Evaluate PR review feedback, fix what's real, commit, and push. **This skill never writes to the PR conversation.** It posts no replies, no top-level comments, no review bodies, and never edits the PR description. The only GitHub write it performs is silently marking handled review threads resolved.
 

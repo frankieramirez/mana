@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `address-feedback` renamed to `no-comment`.
+
 ## 0.3.0
 
 - `deep-review` renamed to `wringer`.
