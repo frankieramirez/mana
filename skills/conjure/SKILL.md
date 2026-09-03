@@ -54,7 +54,7 @@ The operations below are `view`, `ensure-labels`, `create`, `wire`, and `comment
 
 ## Stage 1: Load
 
-**A map.** Fetch it with `tickets.sh view ID`. Read Destination, Notes, Decisions so far, and every owning document Notes names. Then check for unfinished deciding: on GitHub,
+**A map.** Fetch it with `tickets.sh view ID`. `ID` is a tracker id or a GitHub, Linear, or Jira issue URL; the script extracts the id. Read Destination, Notes, Decisions so far, and every owning document Notes names. Then check for unfinished deciding: on GitHub,
 
 ```bash
 gh issue list --state open --search "Part of #NUMBER" --json number,title,labels

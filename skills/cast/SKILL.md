@@ -69,7 +69,7 @@ SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> claim ID
 ```
 
-Exit 1 with "already claimed by" names the other holder: stop and say who has it. A ticket already assigned to you is fine. Exit 3 means the token cannot write; note it in the report and continue unclaimed.
+`ID` is a tracker id (`42`, `ENG-42`, `PLAT-42`) or a GitHub, Linear, or Jira issue URL; the script extracts the id. Exit 1 with "already claimed by" names the other holder: stop and say who has it. A ticket already assigned to you is fine. Exit 3 means the token cannot write; note it in the report and continue unclaimed.
 
 Fetch the ticket with its comments:
 

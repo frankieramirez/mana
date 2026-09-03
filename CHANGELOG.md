@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.2
+
+- `tickets.sh`: a GitHub, Linear, or Jira issue URL is reduced to the tracker id before `view`, `claim`, `wire`, `label`, `comment`, and `close`.
+
 ## 0.13.1
 
 - `tickets.sh`: refuse non-HTTPS Linear and Jira URLs, and refuse redirects that change host or scheme, so Authorization is not forwarded elsewhere. Jira search pages on `nextPageToken` (Jira Cloud may omit `isLast`). `create --dry-run` leaves the body file in place and says to delete it.

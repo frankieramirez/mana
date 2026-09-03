@@ -23,6 +23,7 @@
 # JIRA_API_TOKEN, and optionally JIRA_ISSUE_TYPE (default Task). Both exit 3 on 401 or 403.
 # Label strings are arguments. The calling skill resolves them from docs/agents/triage-labels.md;
 # this script never reads that file. IDs are whatever the tracker uses: 42, ENG-42, PROJ-42.
+# A GitHub, Linear, or Jira issue URL is reduced to that id before view, claim, wire, label, comment, close.
 
 set -euo pipefail
 
@@ -53,6 +54,32 @@ EOF
 die() {
   echo "tickets.sh: $*" >&2
   exit 1
+}
+
+# GitHub .../issues/N or .../pull/N, Linear .../issue/KEY-N, Jira .../browse/KEY-N or .../issues/KEY-N.
+normalize_id() {
+  local id="$1"
+  case "$id" in
+    *://*)
+      id="${id%%\?*}"
+      id="${id%%\#*}"
+      id="${id%/}"
+      case "$id" in
+        */issues/*|*/pull/*)
+          id="${id##*/}"
+          ;;
+        */browse/*)
+          id="${id##*/browse/}"
+          id="${id%%/*}"
+          ;;
+        */issue/*)
+          id="${id##*/issue/}"
+          id="${id%%/*}"
+          ;;
+      esac
+      ;;
+  esac
+  printf '%s\n' "$id"
 }
 
 # ---------------------------------------------------------------- GitHub (git + gh only)
@@ -812,6 +839,20 @@ case "$cmd" in
   label) [ $# -ge 2 ] || die "label ID [--add L]... [--remove L]..." ;;
   check) ;;
   *) die "unknown subcommand: $cmd" ;;
+esac
+
+case "$cmd" in
+  view|claim|comment|close)
+    set -- "$(normalize_id "$1")"
+    ;;
+  wire)
+    set -- "$(normalize_id "$1")" "$(normalize_id "$2")"
+    ;;
+  label)
+    _nid="$(normalize_id "$1")"; shift
+    set -- "$_nid" "$@"
+    unset _nid
+    ;;
 esac
 
 if [ "$TRACKER" != "github" ]; then
