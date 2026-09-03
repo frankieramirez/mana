@@ -6,7 +6,7 @@ Read this before writing a single word of PR comment text.
 
 ## The user's own profile
 
-Check for `.be-me.md` in the project, then `~/.be-me.md`. When one exists, read it before this file's targets. Its samples show how the user actually writes a review comment, and its rules win over the voice targets below wherever they differ. The hard rules still apply.
+Check for `.mimic.md` in the project, then `~/.mimic.md`. When one exists, read it before this file's targets. Its samples show how the user actually writes a review comment, and its rules win over the voice targets below wherever they differ. The hard rules still apply.
 
 ## Hard rules
 

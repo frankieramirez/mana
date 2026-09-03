@@ -7,8 +7,8 @@ cd "$(dirname "$0")/.."
 
 # name | source reference | description
 AGENTS='
-comment-reaper|skills/scrap/references/comment-reaper.md|Deletes comments that do not earn their place and flags the code they were covering for. Report-only on code; edits comments only.
-ghost|skills/be-me/references/ghost.md|Builds a voice profile from the user'"'"'s own writing (session messages, PR comments, PR descriptions, commits) and returns a filled-in draft with the evidence. Read-only; never writes the profile.
+comment-reaper|skills/banish/references/comment-reaper.md|Deletes comments that do not earn their place and flags the code they were covering for. Report-only on code; edits comments only.
+ghost|skills/mimic/references/ghost.md|Builds a voice profile from the user'"'"'s own writing (session messages, PR comments, PR descriptions, commits) and returns a filled-in draft with the evidence. Read-only; never writes the profile.
 '
 
 render() {

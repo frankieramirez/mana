@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+
+- The plugin is now `mana` and the marketplace is `mana`, installed from `frankieramirez/mana`. Every skill is renamed after the spell it casts: `wringer` to `scan`, `settle` to `remedy`, `spit` to `dispel`, `be-me` to `mimic`, `scrap` to `banish`. Slash commands become `/mana:scan` and the rest. Frontmatter descriptions are unchanged in meaning, so model invocation still fires on the same plain-English triggers.
+- The voice profile moves from `.be-me.md` to `.mimic.md`. Rename any existing file by hand.
+
 ## 0.6.0
 
 - `no-comment` renamed to `settle`. The old name read like it was about code comments, which is what `scrap` does, and it named the one rule instead of the job.

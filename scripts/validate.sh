@@ -34,7 +34,7 @@ done
 scripts/sync-agent.sh --check || err "generated agents are out of sync"
 
 # 3. Manifests parse.
-for j in .claude-plugin/plugin.json .claude-plugin/marketplace.json skills/wringer/references/findings-schema.json; do
+for j in .claude-plugin/plugin.json .claude-plugin/marketplace.json skills/scan/references/findings-schema.json; do
   python3 -c "import json,sys;json.load(open('$j'))" 2>/dev/null || err "$j is not valid JSON"
 done
 
@@ -42,9 +42,9 @@ done
 banned='EveryInc|compound-engineering|\bce-[a-z]|\blfg\b|babysit|julik|\bcora\b|pr-comment-resolver|Comment Sicko|Sicko|pr-feedback|MUST KILL|pstack|safe_auto|/how\b|/why\b|/architect\b'
 hits=$(grep -rnE "$banned" skills agents CLAUDE.md 2>/dev/null || true)   # README names the origins on purpose
 [ -z "$hits" ] || { err "origin residue found:"; echo "$hits" >&2; }
-# spit/SKILL.md and wringer voice.md quote dashes as examples of what not to write.
+# dispel/SKILL.md and scan voice.md quote dashes as examples of what not to write.
 dashes=$(grep -rn --include='*.md' -e '—' -e '–' skills agents README.md CLAUDE.md 2>/dev/null \
-  | grep -v -e 'skills/spit/SKILL.md' -e 'skills/wringer/references/voice.md' || true)
+  | grep -v -e 'skills/dispel/SKILL.md' -e 'skills/scan/references/voice.md' || true)
 [ -z "$dashes" ] || { err "em/en dashes found:"; echo "$dashes" >&2; }
 
 # 5. Scripts are executable and parse.

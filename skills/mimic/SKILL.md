@@ -1,10 +1,10 @@
 ---
-name: be-me
-description: "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /be-me. Pulls the user's voice from examples in context and applies the spit register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing."
+name: mimic
+description: "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /mimic. Pulls the user's voice from examples in context and applies the dispel register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing."
 argument-hint: "[what to reply to, or blank to use the message in context] [any instruction about the answer] | setup [project] [profile URL] | refresh"
 ---
 
-# Be me
+# Mimic
 
 Someone sent the user a message. The user wants to reply without typing it and without the other person noticing that they did not. Your output is the reply text, ready to paste. Nothing else.
 
@@ -21,7 +21,7 @@ Note the medium. A Slack reply, a GitHub comment, a text, and an email have diff
 Look for the user's own writing before writing anything:
 
 1. Their earlier messages in the same thread or conversation. This is the best evidence there is.
-2. A voice profile, if one exists: `.be-me.md` in the current project, then `~/.be-me.md`. `references/voice-profile.md` is the template for that file, and `be-me setup` fills it in. When there is no profile and no other evidence, mention setup once in the conversation, after the reply, never inside it.
+2. A voice profile, if one exists: `.mimic.md` in the current project, then `~/.mimic.md`. `references/voice-profile.md` is the template for that file, and `mimic setup` fills it in. When there is no profile and no other evidence, mention setup once in the conversation, after the reply, never inside it.
 3. Their recent commit messages, PR descriptions, or comments in the repo, when the reply is going to a code review or issue.
 4. What the user told you in the request ("keep it short", "be firm", "say no nicely").
 
@@ -35,7 +35,7 @@ Match the other person. Agree where the user would, push back where they would, 
 
 ## 4. Write it like a person
 
-Apply the `spit` register: no em dashes, no "not X but Y", no rule of three, no throat clearing, no landing line, no hedging words, no performed enthusiasm. If the `spit` skill is installed, follow its full list. Then the reply-specific rules:
+Apply the `dispel` register: no em dashes, no "not X but Y", no rule of three, no throat clearing, no landing line, no hedging words, no performed enthusiasm. If the `dispel` skill is installed, follow its full list. Then the reply-specific rules:
 
 - Length matches the medium and the incoming message. A one-line question gets one or two lines back. Nobody replies to a Slack message with four paragraphs.
 - No structure in chat replies. No headers, no bullet lists, no bold. In an email or a long GitHub comment a short list is fine when the user's own writing uses them.
@@ -78,7 +78,7 @@ A subagent starts blank, so hand over the things only this conversation holds:
   Take recent items over old ones, keep replies as well as top-level posts, and pass the date with each item. Never pass another person's words.
 
   Scrub before passing anything from a work source. The samples end up in a file on disk, so drop any item carrying a customer or client name, a credential, an internal link, or a plan that has not been announced. Prefer short items, which carry the voice and rarely carry the secret. When the user is on a work machine, say in one line that the profile you are about to build will hold their work voice and their work samples, and let them decide where it goes.
-- The existing profile's contents, when `.be-me.md` or `~/.be-me.md` exists.
+- The existing profile's contents, when `.mimic.md` or `~/.mimic.md` exists.
 - The contents of `references/voice-profile.md`, as the shape to fill.
 
 ### 2. Spawn Ghost
@@ -102,4 +102,4 @@ Show the draft in full and Ghost's report under it. When a profile already exist
 
 ### 5. Write it
 
-Write to `~/.be-me.md`, or to `.be-me.md` in the current project when `project` was passed. The project file carries samples from whatever repos Ghost read, so say in one line that it should be ignored in git unless the user wants it committed. Report where the file went and stop.
+Write to `~/.mimic.md`, or to `.mimic.md` in the current project when `project` was passed. The project file carries samples from whatever repos Ghost read, so say in one line that it should be ignored in git unless the user wants it committed. Report where the file went and stop.

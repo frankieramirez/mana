@@ -1,10 +1,10 @@
 ---
-name: wringer
-description: Deep multi-reviewer code review for bugs, regressions, tests, and standards. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, then asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to put a branch through the wringer, or to review a PR.
+name: scan
+description: Deep multi-reviewer code review for bugs, regressions, tests, and standards. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, then asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to scan a branch, or to review a PR.
 argument-hint: "[blank for current branch | PR number | PR URL | branch] [base:<ref>] [depth:full] [report|fix|comment] [mode:agent]"
 ---
 
-# Wringer
+# Scan
 
 Reviews code changes with dynamically selected reviewer personas. Dispatches bounded specialist subagents that return structured JSON, merges and deduplicates their findings into a single report, then asks what to do with them.
 
@@ -214,7 +214,7 @@ Lite roster: `correctness`, `existing-feedback` when a PR exists, and `project-s
 ### Stage 3d: Create the run directory
 
 ```bash
-SCRATCH_ROOT="/tmp/wringer-$(id -u)";
+SCRATCH_ROOT="/tmp/scan-$(id -u)";
 if [ -L "$SCRATCH_ROOT" ]; then echo "unsafe scratch root symlink: $SCRATCH_ROOT" >&2; exit 1; fi;
 install -d -m 700 "$SCRATCH_ROOT" || exit 1;
 if [ -L "$SCRATCH_ROOT" ] || [ ! -O "$SCRATCH_ROOT" ]; then echo "scratch root not owned by current user" >&2; exit 1; fi;

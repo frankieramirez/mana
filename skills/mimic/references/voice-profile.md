@@ -1,6 +1,6 @@
 # Voice profile
 
-Copy this file to `.be-me.md` in a project (for that project) or `~/.be-me.md` (everywhere) and fill it in, or run `be-me setup` and let Ghost fill it from your own writing. Delete lines you do not care about. Anything left is treated as a rule when `be-me` writes a reply.
+Copy this file to `.mimic.md` in a project (for that project) or `~/.mimic.md` (everywhere) and fill it in, or run `mimic setup` and let Ghost fill it from your own writing. Delete lines you do not care about. Anything left is treated as a rule when `mimic` writes a reply.
 
 ## Basics
 
