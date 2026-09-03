@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- `deep-review` renamed to `wringer`.
+
 ## 0.2.0
 
 - `decomment` renamed to `scrap`.

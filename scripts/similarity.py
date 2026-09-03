@@ -14,11 +14,11 @@ if not origin or not os.path.isdir(origin):
 
 root = os.path.join(os.path.dirname(__file__), "..")
 pairs = [
-    ("skills/deep-review/references/diff-scope.md", "ce-code-review/references/diff-scope.md"),
-    ("skills/deep-review/references/subagent-template.md", "ce-code-review/references/subagent-template.md"),
-    ("skills/deep-review/references/findings-schema.json", "ce-code-review/references/findings-schema.json"),
-    ("skills/deep-review/references/finish-review.md", "ce-code-review/references/finish-review.md"),
-    ("skills/deep-review/SKILL.md", "ce-code-review/SKILL.md"),
+    ("skills/wringer/references/diff-scope.md", "ce-code-review/references/diff-scope.md"),
+    ("skills/wringer/references/subagent-template.md", "ce-code-review/references/subagent-template.md"),
+    ("skills/wringer/references/findings-schema.json", "ce-code-review/references/findings-schema.json"),
+    ("skills/wringer/references/finish-review.md", "ce-code-review/references/finish-review.md"),
+    ("skills/wringer/SKILL.md", "ce-code-review/SKILL.md"),
     ("skills/address-feedback/SKILL.md", "ce-resolve-pr-feedback/SKILL.md"),
     ("skills/address-feedback/SKILL.md", "ce-resolve-pr-feedback/references/full-mode.md"),
     ("skills/address-feedback/references/evaluation-rubric.md", "ce-resolve-pr-feedback/references/evaluation-rubric.md"),
@@ -27,7 +27,7 @@ pairs = [
 ]
 for p in ["correctness", "adversarial", "api-contract", "data-migration", "security", "performance",
           "reliability", "testing", "maintainability", "project-standards"]:
-    pairs.append((f"skills/deep-review/references/personas/{p}.md",
+    pairs.append((f"skills/wringer/references/personas/{p}.md",
                   f"ce-code-review/references/personas/{p}-reviewer.md"))
 
 worst = 0.0

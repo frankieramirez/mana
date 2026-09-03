@@ -13,7 +13,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install fr@frankieramirez
 ```
 
-Skills are then invoked as `/fr:deep-review`, `/fr:address-feedback`, `/fr:spit`, `/fr:be-me`, `/fr:scrap`.
+Skills are then invoked as `/fr:wringer`, `/fr:address-feedback`, `/fr:spit`, `/fr:be-me`, `/fr:scrap`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -25,14 +25,14 @@ npx skills add frankieramirez/skills -a codex   # one agent only
 
 ## Skills
 
-### deep-review
+### wringer
 
 Multi-reviewer code review for a branch or PR. Picks a roster of reviewer personas from what the diff actually touches (correctness always, then security, performance, data migration, API contract, reliability, testing, maintainability, adversarial, frontend races, project standards as warranted), runs them in parallel as subagents that return structured findings, merges and deduplicates, and renders one report. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
 
 ```
-/fr:deep-review                    # current branch against its base
-/fr:deep-review 123 report         # PR 123, report only
-/fr:deep-review base:main fix      # diff against main, fix everything actionable
+/fr:wringer                    # current branch against its base
+/fr:wringer 123 report         # PR 123, report only
+/fr:wringer base:main fix      # diff against main, fix everything actionable
 ```
 
 ### address-feedback
@@ -78,7 +78,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`deep-review` and `address-feedback` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` was inspired by the comment-removal tooling in Cursor's plugin collection. The Cloudflare skills I also use are not here; install them with `npx skills add cloudflare/skills`.
+`wringer` and `address-feedback` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `scrap` was inspired by the comment-removal tooling in Cursor's plugin collection. The Cloudflare skills I also use are not here; install them with `npx skills add cloudflare/skills`.
 
 ## License
 
