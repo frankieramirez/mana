@@ -1,7 +1,5 @@
 # skills
 
-[![skills.sh](https://skills.sh/b/frankieramirez/skills)](https://skills.sh/frankieramirez/skills)
-
 Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in any agent that reads `SKILL.md` files (Codex, Cursor, Copilot, Gemini CLI, and the rest of the skills.sh list).
 
 ## Install
