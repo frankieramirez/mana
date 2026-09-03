@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.1
+
+- `tickets.sh`: refuse non-HTTPS Linear and Jira URLs, and refuse redirects that change host or scheme, so Authorization is not forwarded elsewhere. Jira search pages on `nextPageToken` (Jira Cloud may omit `isLast`). `create --dry-run` leaves the body file in place and says to delete it.
+
 ## 0.13.0
 
 - `setup-mana`: one skill that sets a repository up for the rest. Explores first, then asks in sections with a recommended answer: which issue tracker (GitHub, Linear, Jira, local files, or one you describe), which label names, what command proves the project works, and how proof gets captured. Writes `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` exists. Nothing is written until the tracker answers a read-only check. Secrets stay in the environment.

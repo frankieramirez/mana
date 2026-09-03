@@ -199,7 +199,7 @@ gh_create() {
     printf 'command\tgh issue create --repo %s --title %q' "$OWNER/$REPO" "$title"
     printf ' --label %q' "$@"
     printf ' --body-file %s\n' "$tmp"
-    rm -f "$tmp"
+    echo "tickets.sh: dry-run left the body file at $tmp; delete it after running the command" >&2
     return
   fi
   set -- "${@/#/--label=}"
@@ -297,6 +297,7 @@ run_adapter() {
   TICKETS_TRACKER="$TRACKER" TICKETS_PROJECT="$PROJECT" TICKETS_DRY="${DRY:-0}" TICKETS_BODY_FILE="$body_file" \
     python3 - "$@" <<'PY' || ec=$?
 import base64, json, os, sys, urllib.error, urllib.request
+from urllib.parse import urlparse
 
 TRACKER = os.environ["TICKETS_TRACKER"]
 PROJECT = os.environ.get("TICKETS_PROJECT") or ""
@@ -316,13 +317,34 @@ def need(var):
     return v
 
 
+class SameOriginHTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        old = urlparse(req.full_url)
+        new = urlparse(newurl)
+        if new.scheme != "https" or (new.netloc or "").lower() != (old.netloc or "").lower():
+            die(f"refusing redirect from {req.full_url} to {newurl}")
+        return urllib.request.HTTPRedirectHandler.redirect_request(
+            self, req, fp, code, msg, headers, newurl
+        )
+
+
+_opener = urllib.request.build_opener(SameOriginHTTPSRedirectHandler())
+
+
+def require_https(url):
+    p = urlparse(url)
+    if p.scheme != "https" or not p.netloc:
+        die(f"tracker URL must be https (got {url})")
+
+
 def http(method, url, headers, payload=None):
+    require_https(url)
     data = json.dumps(payload).encode() if payload is not None else None
     h = {"Content-Type": "application/json", "Accept": "application/json"}
     h.update(headers)
     req = urllib.request.Request(url, data=data, method=method, headers=h)
     try:
-        with urllib.request.urlopen(req, timeout=60) as r:
+        with _opener.open(req, timeout=60) as r:
             raw = r.read()
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
@@ -353,6 +375,7 @@ class Linear:
     def __init__(self):
         self.key = need("LINEAR_API_KEY")
         self.url = os.environ.get("LINEAR_API_URL", "https://api.linear.app/graphql")
+        require_https(self.url)
         self.team_key = PROJECT or os.environ.get("LINEAR_TEAM") or ""
         self._team = None
 
@@ -564,6 +587,7 @@ def adf_text(node):
 class Jira:
     def __init__(self):
         self.base = need("JIRA_BASE_URL").rstrip("/")
+        require_https(self.base)
         email = need("JIRA_EMAIL"); token = need("JIRA_API_TOKEN")
         self.auth = "Basic " + base64.b64encode(f"{email}:{token}".encode()).decode()
         self.project = PROJECT or os.environ.get("JIRA_PROJECT") or ""
@@ -598,7 +622,7 @@ class Jira:
             r = self.api("POST", "/search/jql", payload)
             issues.extend(r.get("issues", []))
             token = r.get("nextPageToken")
-            if not token or r.get("isLast", True):
+            if not token:
                 break
         return issues
 
