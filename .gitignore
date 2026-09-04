@@ -1,3 +1,10 @@
 .DS_Store
 node_modules/
 .mimic.md
+
+.claude/settings.local.json
+
+# skills.sh install of this repo's own skills; skills/ is the source of truth
+.agents/
+.claude/skills/
+skills-lock.json

@@ -24,3 +24,11 @@ This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin 
 ## Local development
 
 `scripts/link-local.sh` symlinks this checkout into `~/.claude/skills` and `~/.claude/agents`. Uninstall the `mana` plugin first (`claude plugin uninstall mana@frankieramirez`) or every skill appears twice.
+
+## Agent skills
+
+Issue tracker: GitHub frankieramirez/mana. See `docs/agents/issue-tracker.md`.
+Triage labels: defaults. See `docs/agents/triage-labels.md`.
+Validation: `scripts/validate.sh`
+Proof: command output as an image
+Domain docs: single-context: CONTEXT.md and docs/adr/
