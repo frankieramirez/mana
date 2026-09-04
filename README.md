@@ -160,7 +160,7 @@ Three things to know before pointing it at a PR. It reads every comment, review,
 
 ### remedy
 
-Resolves review feedback already on a PR. Fetches every unresolved thread, top-level comment, and review body, judges each one centrally (bots and humans alike), fixes what is real in parallel subagents, validates once, commits, pushes, and resolves the handled threads. It never writes to the PR conversation. Anything it would have said goes into the summary for you to paste or ignore. Failing checks get classified before anything runs: a failure in code the PR touched joins the fix list, a failure in untouched code is checked for a stale base, and a suspected flake gets one rerun at most.
+Resolves review feedback already on a PR. Fetches every unresolved thread, top-level comment, and review body, judges each one centrally (bots and humans alike), fixes what is real in parallel subagents, checks every fix against its ask, validates once, commits, pushes, and resolves the handled threads. On a large batch, read-only scouts gather the evidence per file while the verdicts stay in one place. Each run leaves `items.json`, `summary.md`, and `metadata.json` under `/tmp/remedy-<uid>/`, and the next run on the same PR reads them so a reopened thread or a decision still waiting on you is named rather than re-judged. It never writes to the PR conversation. Anything it would have said goes into the summary for you to paste or ignore. Failing checks get classified before anything runs: a failure in code the PR touched joins the fix list, a failure in untouched code is checked for a stale base, and a suspected flake gets one rerun at most.
 
 ```
 /mana:remedy               # the current branch's PR
