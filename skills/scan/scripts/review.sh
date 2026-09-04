@@ -327,8 +327,9 @@ def normalize(f, reviewer, hydration):
         return None
     if conf not in ANCHORS:
         conf = max(a for a in ANCHORS if a <= conf) if conf > 0 else 0
-    evidence = f.get("evidence") if isinstance(f.get("evidence"), list) else []
-    first = f.get("first_evidence") or (evidence[0] if evidence else None)
+    evidence = [e for e in f.get("evidence", [])] if isinstance(f.get("evidence"), list) else []
+    first = f.get("first_evidence") if isinstance(f.get("first_evidence"), str) else None
+    first = first or (evidence[0] if evidence and isinstance(evidence[0], str) else None)
     return {
         "title": str(f["title"]).strip(),
         "severity": sev,
@@ -383,6 +384,29 @@ if reconciled:
     for f in doc.get("findings", []) + doc.get("soft_candidates", []) + doc.get("pre_existing", []):
         if not isinstance(f, dict):
             continue
+        # the reconciled file was edited by hand: re-apply the type and enum rules before any gate
+        if str(f.get("severity", "")).upper() not in SEVERITY or not f.get("title") or not f.get("file"):
+            counts["malformed"] += 1
+            dismissed.append({"title": str(f.get("title", "?"))[:80], "reviewers": f.get("reviewers", []),
+                              "reason": "malformed after reconciliation", "stage": "merge"})
+            continue
+        f["severity"] = str(f["severity"]).upper()
+        try:
+            c = int(f.get("confidence", 50))
+        except (TypeError, ValueError):
+            c = 50
+        f["confidence"] = c if c in ANCHORS else (max(a for a in ANCHORS if a <= c) if c > 0 else 0)
+        if f.get("autofix_class") not in CLASS_RANK:
+            f["autofix_class"] = "manual"
+        if f.get("owner") not in OWNER_RANK:
+            f["owner"] = "downstream-resolver"
+        if not isinstance(f.get("first_evidence"), str):
+            ev = f.get("evidence") if isinstance(f.get("evidence"), list) else []
+            f["first_evidence"] = ev[0] if ev and isinstance(ev[0], str) else None
+        if not isinstance(f.get("evidence"), list):
+            f["evidence"] = []
+        f["pre_existing"] = bool(f.get("pre_existing", False))
+        f["requires_verification"] = bool(f.get("requires_verification", False))
         f.setdefault("reviewers", [])
         f.setdefault("independent_reviewers", [])
         f.setdefault("contribs", [{"reviewer": r, "confidence": 50} for r in f["reviewers"]])
@@ -785,6 +809,9 @@ with open(raw_path, "w") as fh:
     fh.write(raw)
 if rc is None:
     out(f"peer: {cli} timed out after {timeout}s (raw output in {raw_path})", 3)
+if rc != 0 and not re.search(r'"reviewer"\s*:', raw):
+    tail = " ".join(raw.split())[-200:]
+    out(f"peer: {cli} exited {rc} with no output: {tail} (raw output in {raw_path})", 2)
 
 texts = [raw]
 if last_msg and os.path.exists(last_msg):
