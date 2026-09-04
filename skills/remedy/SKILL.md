@@ -29,7 +29,7 @@ Parse the invocation for these tokens, then treat the remainder as the target.
 | Token | Effect |
 |-------|--------|
 | `no-push` | Fix and commit, but do not push. Step 8b does not run. |
-| `dry-run` | Fetch, judge, and report the plan. Touch nothing: no edits, no commits, no push, no resolves. `items.json` and `metadata.json` are still written to the run directory. |
+| `dry-run` | Fetch, judge, and report the plan. Touch nothing: no edits, no commits, no push, no resolves. `items.json`, `summary.md`, and `metadata.json` are still written to the run directory. |
 | `keep-open` | Do not resolve threads whose verdict was `not-addressing` or `declined` (leave them open so you can reply in your own words). Threads with actual code fixes are still resolved. |
 
 ## Platform
@@ -90,12 +90,15 @@ If no PR number was given, detect it:
 gh pr view --json number -q .number
 ```
 
-Then pull everything in one call and keep a copy. `SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool runs in the user's project and forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line, and every block that touches the run directory sets `RUN_DIR` the same way:
+Then pull everything in one call and keep a copy. `SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool runs in the user's project and forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again at the top, and every block that touches the run directory sets `RUN_DIR` the same way:
 
 ```bash
+set -o pipefail
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>"; RUN_DIR="<the run directory>";
 GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/pr-threads" fetch PR_NUMBER OWNER/REPO | tee "$RUN_DIR/fetch.json"
 ```
+
+A non-zero exit from that pipeline stops the run. `tee` can leave an empty or partial `fetch.json` behind, so never triage the file a failed fetch wrote.
 
 Record `HEAD` now as `head_before` for `metadata.json`.
 
@@ -178,7 +181,7 @@ Record every judged item in `$RUN_DIR/items.json`: `id` (thread node id or comme
 
 If the fix-list is empty, skip to step 7.
 
-Under `dry-run`, report the two lists, write `metadata.json` as step 9 describes with `dry-run` in `tokens`, and stop. `items.json` is the plan and stays on disk.
+Under `dry-run`, report the two lists, write `summary.md` and `metadata.json` as step 9 describes with `dry-run` in `tokens`, and stop. The summary holds the two lists in the step 9 shape. `items.json` is the plan and stays on disk.
 
 ### 4. Fix (parallel, fix-list only)
 
@@ -215,7 +218,10 @@ Save the return to `$RUN_DIR/verify.json` and record `verified` per item in `ite
 
 - **`addressed: false`** and every **`unexplained`** hunk go through the `blocked` path above: take the verifier's reason as new evidence, judge the item again, and either send it back to the same fixer with a corrected change note that names what to adjust or revert, or move it to the skip-list with the explanation and tell that fixer to revert its edit. A fixer owns its own hunks and never reverts another fixer's.
 - **`conventions`** entries ride along on that re-dispatch as part of the note.
-- One re-dispatch round, then the verifier runs once more on those items alone. Still `false` after that: skip-list with the verifier's reason, edit reverted, named in the summary.
+- A re-dispatched fixer's return replaces that item's `outcome` in `items.json`: `status`, `files_changed`, `summary`, `tests_run`. A `reverted` return leaves the first pass's values wrong.
+- One re-dispatch round, then the verifier runs once more on those items alone. Still `false` after that: change that item's verdict in `items.json` to its skip-list entry with the explanation written there, revert the edit, and name it in the summary.
+
+Any edit that lands after a verification rebuilds `fixes.diff` and reruns the check over the whole fix-list, including a step 5 inline diagnose-and-fix pass. Step 6 stages from the refreshed `files_changed`. Re-verification never opens a new fix round beyond the one re-dispatch round above.
 
 ### 5. Validate combined state
 
@@ -225,7 +231,7 @@ Each fixer ran only the tests around its own edit. Now run the project's full va
 
 1. Run the project's validation command: the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else the test suite, typecheck, and lint the project's conventions name. Run it once for the whole diff.
 2. **Green** → step 6.
-3. **Red on files fixers changed** → one inline diagnose-and-fix pass, then re-run. Still red: do **not** commit; report it as a blocker in the summary with the test output.
+3. **Red on files fixers changed** → one inline diagnose-and-fix pass, then re-run. That fix landed after verification, so rebuild `fixes.diff` and rerun the step 4b check over the whole fix-list. Still red: do **not** commit; report it as a blocker in the summary with the test output.
 4. **Red only on files no fixer touched** → pre-existing. Proceed, and add a commit footer: `Note: <test> was already failing before these changes.`
 
 Record the outcome for the summary.
@@ -374,7 +380,7 @@ Before printing, write the summary block verbatim to `$RUN_DIR/summary.md`, then
   "counts": {"fixed": 0, "fixed-differently": 0, "not-addressing": 0, "declined": 0, "question": 0, "needs-human": 0},
   "resolved_thread_ids": [],
   "left_open_thread_ids": [],
-  "pushed": true,
+  "pushed": "<true only when step 6 pushed, false under no-push or a failed push>",
   "validation": "<the Validation line>",
   "ci": "<the CI line>",
   "completed_at": "<ISO 8601 UTC>"
@@ -408,7 +414,7 @@ GH_HOST=<host> bash "$SKILL_DIR/scripts/pr-threads" thread PR_NUMBER COMMENT_NOD
 
 Skip any draft-review check. Nothing gets posted, so a pending review has nothing to swallow.
 
-Create the run directory with the snippet from Full mode step 1. The same artifacts (`items.json`, `summary.md`, `metadata.json`) are written for this one item, with `mode` set to `targeted`.
+Create the run directory with the snippet from Full mode step 1. Save both responses above to `$RUN_DIR/fetch.json` before judging, the comment lookup under `comment` and the thread lookup under `review_threads`. The same artifacts (`items.json`, `summary.md`, `metadata.json`) are written for this one item, with `mode` set to `targeted`.
 
 ### 2. Judge, fix, push, resolve
 
