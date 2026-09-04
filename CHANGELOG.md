@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.0
+
+- `setup-mana` asks one question: where the tickets live. GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or a tracker described in a paragraph. The question is asked every run, and the detected answer is listed first and labelled as detected. Detection now ranks its signals and puts a GitHub remote last, since nearly every repo has one and that alone is not evidence of where the tickets are. A ticket key prefix in recent commit subjects (`ENG-12`) is a Linear or Jira signal.
+- `setup-mana` writes the tracker file even when the key or the token is missing. The report marks the check unverified and names the variable to set, instead of stopping on that tracker. It never falls back to a tracker the user did not pick.
+- `setup-mana` records `Validation:` only when the detected command runs clean, and never asks about it. It writes no `Proof:`, `Domain docs:`, or `Peer reviewer:` line, so a review still sends nothing off the machine unless someone asks for it. Triage labels default to the role name, and `docs/agents/triage-labels.md` is written only when the repo already has a label that means the same thing. With neither `CLAUDE.md` nor `AGENTS.md` present, it creates `AGENTS.md` without asking.
+- New skill `attune` changes one setting after setup: the triage label names, the validation command, proof capture, domain docs, a second opinion reviewer CLI, the worktree files, whether pull requests enter triage as requests, the tracker key, and which file holds the block. Run bare it lists every current setting and which skills read it. `attune <setting> <value>` writes one and asks nothing. `attune key` is the repair path for a setup run that wrote the config before the key was there. Switching trackers stays in `setup-mana`.
+- `attune` carries `tickets.sh` for `check` and `ensure-labels`, plus a copy of the label template. `.worktreeinclude` and `orca.yaml` move out of setup into `attune worktree`.
+
 ## 0.16.0
 
 - `remedy`: on a large batch (more than 12 new items, or more than 6 files) read-only scouts gather the evidence per file cluster in one foreground batch, and the orchestrator still judges every item from their returns. `references/scout-prompt.md` is the brief; the rubric says which scout field feeds which verdict.

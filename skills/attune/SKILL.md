@@ -1,0 +1,144 @@
+---
+name: attune
+description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, and the tracker key. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, rename the triage labels, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, or /attune."
+argument-hint: "[blank to list every setting] [labels | validation | proof | docs | peer | worktree | pr-surface | key | pointer] [new value]"
+---
+
+# Attune
+
+Change one thing the other skills read. This skill edits files that already exist. It does not pick the tracker, and it does not write `docs/agents/issue-tracker.md` from scratch.
+
+## Operating principles
+
+- **One setting per run.** Named on the invocation, or picked from the table. Never walk the user through all of them.
+- **Edit the line, keep the file.** Change only the line or the rows this setting owns. Every other line keeps its text and its order, byte for byte. Never re-render a file from a template.
+- **Show a file, write a line.** A one-line change is written, and the before and after goes in the report. A whole file (`docs/agents/triage-labels.md`, `orca.yaml`, `.worktreeinclude`) is shown first.
+- **Secrets stay in the environment.** The files name the variable, never the value.
+- **Nothing here is required.** Every setting has a working default, and every skill that reads one falls back when it is missing. Removing a setting is always allowed, and for the second opinion reviewer it is the safe direction.
+
+`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
+
+## Execution spine
+
+1. Read the current state (Stage 1).
+2. Pick one setting (Stage 2).
+3. Change it (Stage 3).
+4. Write one thing and report (Stage 4).
+
+---
+
+## Stage 1: Read the current state
+
+```bash
+ls -l CLAUDE.md AGENTS.md 2>/dev/null
+sed -n '/^## Agent skills/,/^## /p' CLAUDE.md AGENTS.md 2>/dev/null
+sed -n '1,12p' docs/agents/issue-tracker.md 2>/dev/null
+cat docs/agents/triage-labels.md 2>/dev/null
+ls -l .worktreeinclude orca.yaml CONTEXT.md CONTEXT-MAP.md 2>/dev/null
+[ -n "${ORCA_WORKTREE_ID:-}" ] && command -v orca >/dev/null && echo orca: yes
+for c in codex gemini cursor-agent opencode grok; do command -v "$c" >/dev/null && echo "peer available: $c"; done
+```
+
+`docs/agents/issue-tracker.md` is missing: say so in one line and stop. There is no tracker to attune, and the repo has never been set up. Without that file the other skills default to GitHub with no flags, which may be all this repo needs.
+
+Read `references/settings.md` at this stage. It carries every setting, the exact file and line it lives on, its default when unset, which skills read it, and what the edit is.
+
+## Stage 2: Pick one setting
+
+A setting named on the invocation skips this stage. A setting and a value both named on the invocation skip Stage 2 and every question in Stage 3: write it and report.
+
+Otherwise print the table first, filled in from Stage 1. The table is the whole answer to a bare run:
+
+```
+Setting      Current                                   Read by
+labels       role name equals label string (no file)   triage, ticket filing, building
+validation   pnpm test && pnpm typecheck               review, feedback, building, merges
+proof        unset, the host picks                     pull request bodies
+docs         unset, CONTEXT.md at the root             anything reading project vocabulary
+peer         unset, the diff stays on this machine     review
+worktree     .worktreeinclude present, no orca.yaml    fresh worktrees
+pr-surface   No, issues only                           triage
+key          ENG, verified as frankie                  every tracker call
+pointer      AGENTS.md                                 everything above
+```
+
+Then ask one question with the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded), falling back to the conversation where no such tool exists. Four options is the tool's maximum, so order the settings this way and offer the first four: every setting whose check failed or whose value is stale, then every setting with no value, then the rest in table order. The free text answer takes any other name from the table. Nothing to change is a fine answer, because the table was the point.
+
+## Stage 3: The flows
+
+One setting, one flow. Stop when it is written.
+
+**labels.** Show the current mapping, or say the roles use their own names. List the labels that already exist on the tracker, through the connector or by reading with the bundled script. Ask for the mapping in one question, with the roles that already have a good match filled in. Write `docs/agents/triage-labels.md` from `references/triage-labels.md`, keeping the prose above and below the table and rewriting only the rows. Then create every string that does not exist yet:
+
+```bash
+SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags from the tracker file> ensure-labels --color d73a4a <the category strings>
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the state strings>
+```
+
+Existing labels are never renamed or deleted on the tracker. The report names the ones that are now unused. Jira has no label registry, so `ensure-labels` is a no-op there and any string works. On `local` and `other` the role names are the strings and there is nothing to change: say so and stop.
+
+**validation.** Show the current line. Run the proposed command once before writing it, always, including a value passed on the invocation. It is written only when it runs clean. It refuses to run: say what failed and write nothing.
+
+**proof.** Three choices: a screenshot or recording tool the host offers, Orca's embedded browser (`orca screenshot`, only inside an Orca worktree), or command output rendered to an image. Report whether `gh` is 2.99.0 or newer, since `--attach` needs it. Writing nothing is a choice, and it is the default.
+
+**docs.** Single context is `CONTEXT.md` at the root with decision records in `docs/adr/`. Multi context is `CONTEXT-MAP.md` pointing at per-area files, worth it only in a monorepo. Picking multi context writes the `CONTEXT-MAP.md` skeleton, since presence is what the reading skills check.
+
+**peer.** List which of `codex`, `gemini`, `cursor-agent`, `opencode`, and `grok` are on the PATH. Print the consequence in one line before the question, because writing this line is the consent: `A second opinion reviewer sends the diff and a brief to that CLI on every review. The diff leaves this machine.` The options are the installed CLIs plus removing the line. `claude` is not offered, because a repo line cannot know which host will read it. Removing the line is always offered, and it is the default state.
+
+**worktree.** Only inside an Orca worktree, or when the user asks anyway. Read `references/worktree.md` and follow it. Show the draft. An existing file is edited key by key, never replaced.
+
+**pr-surface.** Flip the body of `## Pull requests as a request surface` in `docs/agents/issue-tracker.md` between `No.` and the paragraph that makes external pull requests enter triage as requests with attached code. GitHub only. On any other tracker, say it does not apply and stop.
+
+**key.** Rewrite `Project:` and `Adapter flags:` in the tracker file, then verify:
+
+```bash
+SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> check
+```
+
+This is the repair path for a setup run that wrote the config before the key was there. Running it with no change, just to verify, is a useful run: the user exports `LINEAR_API_KEY`, comes back, and confirms. Exit 3 or a missing variable: name the variable and leave the file as it is.
+
+**pointer.** Move the `## Agent skills` block between `CLAUDE.md` and `AGENTS.md`, removing it from the file it left. A symlink pair is one file: report that and stop.
+
+## Editing the block without clobbering it
+
+The `## Agent skills` block runs from its heading to the next `## ` heading or the end of the file. Change only the one line this setting owns. Keep every other line's text and order exactly. The line is absent: insert it in the order below. The block is absent: create it in the pointer file, under the existing content, holding only the line being set.
+
+```markdown
+## Agent skills
+
+Issue tracker: ...
+Triage labels: ...
+Validation: ...
+Proof: ...
+Domain docs: ...
+Peer reviewer: ...
+```
+
+Removing a setting removes its whole line. Never leave a key with an empty value: `scan` reads an empty reviewer as a CLI name it cannot find.
+
+## Stage 4: Report
+
+```
+Attuned
+Setting: <name>
+Was: <old value, or unset>
+Now: <new value, or unset>
+Wrote: <file, and which line or rows>
+Check: <only for labels and key>
+```
+
+New sessions read this. Switching trackers is a different job: run the repo setup skill again for that.
+
+## References
+
+| Reference | Load at | Purpose |
+|-----------|---------|---------|
+| `references/settings.md` | Stage 1 | Every setting, its file and line, its default, and which skills read it |
+| `references/triage-labels.md` | Stage 3, labels | Label mapping template |
+| `references/worktree.md` | Stage 3, worktree | `.worktreeinclude` and `orca.yaml` shapes |
+
+## Scripts
+
+`scripts/tickets.sh` talks to the tracker: `check` for the key flow and `ensure-labels` for the labels flow. GitHub needs `git` and `gh`. Linear and Jira need `python3` and their environment variables. `tickets.sh -h` prints usage.

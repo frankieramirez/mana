@@ -1,19 +1,19 @@
 ---
 name: setup-mana
-description: "Set up a repository for the other skills: pick the issue tracker (GitHub, Linear, Jira, local files, or your own), map the triage labels, record the command that proves the project works, and write the docs/agents files the skills read. Run once per repo, and again to switch trackers. Use when asked to set up mana, configure the issue tracker, set up triage labels, or /setup-mana."
-argument-hint: "[blank] [you-pick]"
+description: "Set up a repository for the other skills in one question: where the tickets live, on GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Everything else is detected and written for you, the triage labels, the command that proves the project works, the docs/agents files, and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana."
+argument-hint: "[blank] [github | linear | jira | local] [you-pick]"
 disable-model-invocation: true
 ---
 
 # Setup
 
-Write the per-repo configuration the other skills read. Explore first, ask only what exploration left open, show the draft, then write. Re-running updates the same files in place.
+Pick the tracker, then write the per-repo configuration the other skills read. One question, then files. Re-running updates the same files in place.
 
 ## Operating principles
 
-- **Explore before asking.** Every question you can answer from the checkout is not a question.
-- **Recommended answer first.** Each section leads with the answer you would pick, so the user can accept it in a word. `you-pick` accepts every recommendation.
-- **Never record a value you did not confirm.** A tracker the token cannot read, a label that does not exist, or a validation command that does not run stays out of the files. Say what is missing instead.
+- **One question.** Where the tickets live is the only thing the checkout cannot tell you. Everything else is detected, defaulted, written, and reported. Never turn a detected value into a question.
+- **Write the answer, report the doubt.** The files get written on the answer, not on a passing check. A refused token or a missing key does not stop the run: write the config, mark the check unverified in the report, and name the exact variable to set. Never invent a value nobody gave you. Leave the template placeholder and say which line to fill.
+- **A detected line is written only when it ran.** The validation command is found, run once, and recorded only when it finishes without a missing binary. Otherwise the line is left out, which costs nothing, because every skill that reads it falls back to detecting a command itself.
 - **Secrets stay in the environment.** The files name the variable, never the value.
 - **Edit the file that exists.** `CLAUDE.md` or `AGENTS.md`, whichever is already there. Never create the second one, and when one is a symlink to the other, edit once.
 
@@ -21,129 +21,127 @@ Write the per-repo configuration the other skills read. Explore first, ask only 
 
 ## Execution spine
 
-1. Explore (Stage 1).
-2. Ask the open sections (Stage 2).
-3. Draft, confirm, write (Stage 3).
-4. Verify (Stage 4).
+1. Detect (Stage 1).
+2. Ask where the tickets live (Stage 2).
+3. Write (Stage 3).
+4. Verify and report (Stage 4).
 
 ---
 
-## Stage 1: Explore
+## Stage 1: Detect
 
 Read, do not assume:
 
 ```bash
 git remote -v
-gh repo view --json url,defaultBranchRef --jq '{url, default: .defaultBranchRef.name}' 2>&1 | head -3
-ls -l CLAUDE.md AGENTS.md CONTEXT.md CONTEXT-MAP.md 2>/dev/null
-ls docs/agents docs/adr .scratch 2>/dev/null
+gh repo view --json url,nameWithOwner --jq '{url, repo: .nameWithOwner}' 2>&1 | head -3
+ls -l CLAUDE.md AGENTS.md 2>/dev/null
+sed -n '1,12p' docs/agents/issue-tracker.md 2>/dev/null
+cat docs/agents/triage-labels.md 2>/dev/null
 gh auth status 2>&1 | head -5
-gh --version | head -1
 env | grep -o -E '^(LINEAR_API_KEY|LINEAR_TEAM|JIRA_BASE_URL|JIRA_EMAIL|JIRA_API_TOKEN|JIRA_PROJECT)=' | sort
+git log --oneline -50 | grep -o -E '\b[A-Z][A-Z0-9]{1,9}-[0-9]+\b' | cut -d- -f1 | sort | uniq -c | sort -rn | head -3
+ls .scratch 2>/dev/null | head -5
 [ -n "${ORCA_WORKTREE_ID:-}" ] && command -v orca >/dev/null && echo orca: yes
-ls orca.yaml .worktreeinclude 2>/dev/null
 ```
 
-Then:
+**Detection order.** Exactly one tracker is marked as detected. Take the first rule that fires. GitHub is last on purpose: nearly every repo has a GitHub remote, and that alone is not evidence of where the tickets are.
 
-- **Tracker signals.** A GitHub remote suggests GitHub. `LINEAR_API_KEY` set suggests Linear. `JIRA_BASE_URL` set suggests Jira. A populated `.scratch/` suggests local files. Existing `docs/agents/issue-tracker.md`: read its `Tracker:` line; that is the current choice.
-- **Labels.** `gh label list --limit 200 --json name --jq '.[].name'` on GitHub. Look for names that already mean bug, enhancement, or a triage state (`kind/bug`, `status: blocked`, `triage`). Existing `docs/agents/triage-labels.md`: read it.
-- **Validation command.** In this order, stop at the first hit: a `Validation:` line in an existing `## Agent skills` block; `package.json` scripts named `test`, `typecheck`, `lint`, `check`; `Makefile` or `justfile` targets with those names; `pyproject.toml`, `Cargo.toml`, `go.mod` defaults. Run the candidate once. It must exit 0 or fail on a test, never on "command not found".
-- **Proof capture.** Whether the host offers a screenshot or recording tool, and whether `gh --version` is 2.99.0 or newer (needed for `--attach`). Inside an Orca worktree, `orca screenshot` is such a tool.
-- **Orca.** `orca: yes` means the session runs inside an Orca worktree. Then `orca linear team list --json` succeeding is a Linear signal and counts as a connector. Note whether `orca.yaml` and `.worktreeinclude` exist, and whether the validation command needs installed dependencies or gitignored files (`.env`, `node_modules`) that a fresh worktree would not have.
-- **Monorepo signals.** `pnpm-workspace.yaml`, a `workspaces` field, or `packages/*` with their own `src/`. Absent in almost every repo.
-- **Pointer file.** Which of `CLAUDE.md` or `AGENTS.md` exists, whether one is a symlink to the other, and whether an `## Agent skills` block is already present.
+1. An existing `docs/agents/issue-tracker.md`. Its `Tracker:` line is the current choice.
+2. A live Linear or Jira connector the host exposes, or `orca linear team list --json` succeeding inside an Orca worktree.
+3. `LINEAR_API_KEY` set, or `JIRA_BASE_URL` set.
+4. A ticket key prefix in the last 50 commit subjects or in the branch names, like `ENG-12`. That points at Linear or Jira. Pick whichever of the two has any other signal, and Linear when neither does.
+5. A `.scratch/` directory with ticket files in it.
+6. A GitHub remote with `gh` logged in.
+7. Nothing fires: no option is marked detected, and GitHub is listed first.
 
-Summarise what is present and what is missing in a few lines.
+**Validation command.** In this order, stop at the first hit: the `Validation:` line in an existing `## Agent skills` block; `package.json` scripts named `test`, `typecheck`, `lint`, `check`; `Makefile` or `justfile` targets with those names; `pyproject.toml`, `Cargo.toml`, `go.mod` defaults. Run the candidate once. Keep it only when it exits 0 or fails on a test. A missing binary, or any failure before a test runs, means there is no candidate. Do not look for a second one, and do not ask.
 
-## Stage 2: Ask
+**Existing labels.** `gh label list --limit 200 --json name --jq '.[].name'` on GitHub, or the connector's label list. A label maps to a role only on an exact match after stripping a leading `kind/`, `type/`, `status/`, `status: `, or `state:` and normalizing separators to `-`. So `kind/bug` maps to bug, and `status: blocked` maps to nothing. Two candidates for one role means neither wins and the role name is used.
 
-Take the sections in order. One section, one answer, then the next. Skip a section exploration already settled and say so in one line. Under `you-pick`, show each recommendation and continue.
+Say what is present in two or three lines. Do not ask about any of it.
 
-**A. Issue tracker.** Lead with the signal from Stage 1.
+## Stage 2: Where do the tickets live
 
-| Choice | Needs |
-|--------|-------|
-| GitHub | `gh` logged in with write access to the repo |
-| Linear | A Linear connector the host exposes (`orca linear` inside an Orca worktree counts), or `LINEAR_API_KEY` in the environment. Plus the team key (the prefix on issue identifiers, like `ENG`) |
-| Jira | A Jira connector the host exposes, or `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` in the environment. Plus the project key. Optional `JIRA_ISSUE_TYPE`, default `Task` |
-| Local | nothing. Tickets are markdown files under `.scratch/` |
-| Other | one paragraph from the user describing how to create, read, label, assign, and close a ticket |
+Ask this every run. Do not settle it from Stage 1, do not skip it because a file already answers it, and do not skip it because the repo has a GitHub remote. A bare `github`, `linear`, `jira`, or `local` on the invocation is the answer and skips the question. Under `you-pick` there is nobody to ask, so take the detected option and say in one line which it was.
 
-A connector covers this session. The environment variables cover a scheduled agent, another host, or CI, where no connector exists. When only the connector is present, say so: the loop works here, and an unattended run will need the variables set where it runs. A required variable that is not set and no connector either: tell the user the variable name and where to get the value, and do not continue to Stage 4 for that tracker. Do not ask for the value itself.
+Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded), falling back to the conversation where no such tool exists. One question, headed `Tracker`, with these four options and the detected one moved to the top:
 
-**B. Triage labels.** Ask one question: keep the default names? The defaults are `bug`, `enhancement`, `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`, each string equal to its role. Only on no, or when Stage 1 found labels that already mean the same thing, collect the mapping. Jira has no label registry, so any string works there. Skip this section for `local` and `other`; the role names are the strings.
+| Option | Description |
+|--------|-------------|
+| GitHub Issues | Issues in this repo. Needs `gh` logged in with write access. Issues and pull requests share one number space. |
+| Linear | Needs a Linear connector the host exposes, or `LINEAR_API_KEY`, plus the team key, like `ENG`. |
+| Jira | Needs a Jira connector, or `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`, plus the project key. |
+| Local files | Markdown under `.scratch/`. Nothing to log in to and nothing to configure. |
 
-**C. Proof.** Confirm the validation command from Stage 1, or ask for one when nothing ran. Then how proof gets captured for pull requests: a screenshot or recording tool the host offers, or command output rendered to an image. Record both.
+The detected option's description starts with `Detected: ` and the signal in plain words, such as `Detected: commits reference ENG-118.` Exactly one option carries that prefix, and none does when nothing fired. Never write the word recommended.
 
-**D. Domain docs.** Single-context is the default: `CONTEXT.md` at the root and ADRs in `docs/adr/`. Write it without asking. Offer multi-context (`CONTEXT-MAP.md` pointing at per-area files) only when Stage 1 found monorepo signals.
+Four options is the tool's maximum, so any other tracker arrives through the free text answer the tool always offers. Treat what the user types there as the `other` tracker: their sentence becomes the Conventions paragraph. A bare name gets one follow up for that paragraph, because the tracker file is useless without it.
 
-**E. Worktree files.** Only when Stage 1 found Orca. Every Orca worktree is a fresh checkout without gitignored files, so a validation command that needs `.env` or `node_modules` fails there until someone sets them up. Recommend two files Orca reads, and skip the section when the command needs neither:
+**The key, for Linear and Jira only.** Take the first that hits, and ask nothing when one does:
 
-- `.worktreeinclude` at the repo root: one gitignored file or directory per line to copy into each new worktree (`.env`, `.env.local`). Small files only; a copied `node_modules` stalls creation.
-- `orca.yaml` at the repo root: `scripts.setup` holding the install command, and `worktree.sharedDirectories` listing large rebuildable gitignored directories (`node_modules`, `.cache`) that exist in the primary checkout, so they are shared rather than rebuilt.
+1. The `Project:` line of an existing `docs/agents/issue-tracker.md`.
+2. `LINEAR_TEAM` or `JIRA_PROJECT` in the environment. The bundled script already falls back to these.
+3. The connector. `orca linear team list --json`, or the host's Linear or Jira tool set. One team or project comes back: take it. Several come back: that is the one follow up this skill is allowed, as a pick from the list. It is a fact, not a judgment, so it stays fast.
+4. The most common ticket key prefix from Stage 1.
 
-An existing file is shown and left alone unless the user wants it changed.
+All four miss: ask once in plain words, `What is the Linear team key? It is the prefix on your issue ids, like ENG.` No answer: leave the template placeholder in `Project:` and `Adapter flags:`, write the file anyway, and name that line in the report. Never fall back to GitHub. GitHub and local files never get a follow up.
 
-## Stage 3: Draft, confirm, write
+## Stage 3: Write
 
-Load the template for the chosen tracker and `references/triage-labels.md`. Fill them from the answers. Show the user the three drafts together:
+Load the template for the chosen tracker, fill it, write it. Nothing is shown for approval first. The report says what landed, and the files are ordinary markdown to edit.
 
-1. `docs/agents/issue-tracker.md`
-2. `docs/agents/triage-labels.md` (GitHub, Linear, Jira only)
-3. The `## Agent skills` block for `CLAUDE.md` or `AGENTS.md`
-4. `.worktreeinclude` and `orca.yaml`, when section E applied
+1. `docs/agents/issue-tracker.md` from the matching template. On `other`, the user's paragraph goes under `## Conventions` and `Adapter flags:` stays `none`.
+2. `docs/agents/triage-labels.md`, only when Stage 1 matched an existing label to a role. When every role uses its own name, write no file: a missing file already means the label string equals the role name, so the file would say nothing.
+3. The `## Agent skills` block, in `CLAUDE.md` or `AGENTS.md`. An existing block is replaced in place and the rest of the file is untouched. Both files exist independently: edit `CLAUDE.md` and say so. Neither exists: create `AGENTS.md`, because every agent reads it, and say in the report that renaming it to `CLAUDE.md` works just as well.
 
-Let them edit. Then write. An existing `## Agent skills` block is replaced in place; the rest of the file is untouched. When neither pointer file exists, ask which one to create.
-
-The block:
+The block, carrying only the lines that have a value:
 
 ```markdown
 ## Agent skills
 
 Issue tracker: <GitHub owner/repo | Linear team KEY | Jira project KEY | local files under .scratch/ | other>. See `docs/agents/issue-tracker.md`.
-Triage labels: <defaults | mapped>. See `docs/agents/triage-labels.md`.
+Triage labels: mapped. See `docs/agents/triage-labels.md`.
 Validation: `<the command>`
-Proof: <screenshots and recordings via the host's browser tool | Orca's embedded browser | command output as an image>
-Domain docs: <single-context: CONTEXT.md and docs/adr/ | multi-context: CONTEXT-MAP.md>
-Peer reviewer: <codex | gemini | cursor-agent | opencode | grok, or omit the line>
 ```
 
-Other skills read the `Validation:` line before guessing a test command, and the tracker file before touching a ticket. `scan` sends the diff to the `Peer reviewer:` CLI as a second-opinion reviewer only when that line is present or the user passes `peer:<cli>`; omit the line to keep every review on the machine.
+The `Triage labels:` line is written only alongside its file. The `Validation:` line is written only when the command ran clean in Stage 1. No other line is written here. How pull request proof is captured, the domain docs layout, a second opinion reviewer, and the Orca worktree files all have working defaults, and none of them is a question this skill asks.
 
-For `other`, write `docs/agents/issue-tracker.md` from `references/issue-tracker-other.md` with the user's paragraph under Conventions. There is no adapter; the skills follow the prose.
+## Stage 4: Verify and report
 
-## Stage 4: Verify
+Skip this whole stage for `local` and `other`. The bundled script rejects both trackers, and there is nothing to log in to.
 
-Nothing is done until the tracker answers. With a connector, read the team or project through it and list its labels. Without one:
+With a connector, read the team or project through it and list its labels. Otherwise:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags from the tracker file> check
 ```
 
-Exit 3 means the token was refused: say which variable or login to fix, and stop. Then create the missing labels, through the connector or the script:
+Exit 3 means the token was refused. A missing key makes the script exit before it asks. Neither is a stop, because the files are already written: record `unverified` with the exact variable and carry on to the report.
+
+The check passed: create every label the roles need, using the mapping when one was written and the role names otherwise. Never create labels against a tracker that did not answer.
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <category strings>
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <state strings>
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <the bug and enhancement strings>
+bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the five state strings>
 ```
 
-Skip both for `local` and `other`. When the variables are set as well as the connector, run `check` through the script too, so the unattended path is known to work before a routine depends on it. Run the validation command once more if Stage 1 did not.
+On `local`, one thing is worth a line: say whether `.scratch/` is gitignored, since tickets there are committed otherwise.
 
 ## Report
 
 ```
 Setup
-Tracker: <choice and project>
-Check: <user, project | refused: what to fix>
-Labels: <created: list | all present | none: local>
-Validation: <command, and its result>
-Wrote: <files written | updated in place>
+Tracker: <choice, and the key or repo>
+Check: <user, project | unverified: set LINEAR_API_KEY, then run this again>
+Labels: <created: a, b, c | already present | not needed on this tracker>
+Validation: <the command and its result | none recorded, each skill detects one>
+Wrote: <files written or updated in place>
 ```
 
-Say that the files apply to new sessions, that editing them by hand is fine, and that re-running this skill is only needed to switch trackers.
+Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again.
 
 ## References
 

@@ -46,7 +46,7 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:setup-mana`, `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:conjure`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`, `/mana:augur`.
+Skills are then invoked as `/mana:setup-mana`, `/mana:attune`, `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:conjure`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`, `/mana:augur`.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
@@ -62,7 +62,7 @@ Start where the work is. A repo the skills have not seen starts at `setup-mana`.
 
 | Stage | Skill | What it leaves behind |
 |-------|-------|-----------------------|
-| Set up a repo | `setup-mana` | The tracker choice, triage labels, the validation command, `docs/agents/*.md`, a pointer block in `CLAUDE.md` or `AGENTS.md` |
+| Set up a repo | `setup-mana`, `attune` | The tracker choice in `docs/agents/issue-tracker.md`, the triage labels created on it, the validation command, a pointer block in `CLAUDE.md` or `AGENTS.md`; `attune` changes one of those later |
 | Decide | `scry` | A map of decision tickets, `CONTEXT.md`, ADRs, a spec |
 | Triage the inbox | `sift` | Each issue in one state, `ready-for-agent` ones with a brief |
 | File the build tickets | `conjure` | One `ready-for-agent` issue per slice, wired in build order |
@@ -77,7 +77,7 @@ An existing project runs setup once and then skips the first two rows. Its stead
 
 ### Trackers
 
-Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` records the choice in `docs/agents/issue-tracker.md`, and `sift`, `conjure`, and `cast` read it before touching a ticket. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
+Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` asks which one, every run, and records the choice in `docs/agents/issue-tracker.md`, where `sift`, `conjure`, and `cast` read it before touching a ticket. A GitHub remote is never taken as the answer, since nearly every repo has one. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A missing key does not stop setup: the choice is recorded, the report names the variable to set, and `attune key` verifies it once that variable is there. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
 
 Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
 
@@ -87,7 +87,8 @@ Every skill that would ask a question has a token that answers it, so the same s
 
 | Skill | Token | What it does without a person |
 |-------|-------|-------------------------------|
-| `setup-mana` | `you-pick` | Accepts every recommended answer; still stops when a required variable is unset |
+| `setup-mana` | `you-pick`, or a bare `github`, `linear`, `jira`, `local` | Takes the detected tracker without asking and writes everything else at its default; an unset variable is reported, never a stop |
+| `attune` | `<setting> <value>` | Writes that one setting and asks nothing |
 | `scry` | `you-pick` | Accepts every recommended answer while charting or walking |
 | `sift` | `you-pick` | Triages up to 10 issues, never closes one as rejected |
 | `conjure` | `you-pick` | Accepts the recommended slices and order |
@@ -121,7 +122,7 @@ Nothing here needs [Orca](https://github.com/stablyai/orca). When a skill runs i
 - `cast` and `reveal` can capture proof from Orca's embedded browser (`orca screenshot`).
 - `sift`, `conjure`, and `cast` treat `orca linear` as a Linear connector, so no `LINEAR_API_KEY` is needed there. `cast` also attaches the PR to the Linear issue.
 - `scan` and `reveal` read the base branch Orca records in git config before falling back to the default branch.
-- `setup-mana` offers `.worktreeinclude` and `orca.yaml`, so a fresh worktree can run the validation command.
+- `attune worktree` writes `.worktreeinclude` and `orca.yaml`, so a fresh worktree can run the validation command. `setup-mana` says in its report when they are needed.
 
 Orca already creates each worktree on its own branch off the base, so `cast` never makes one there. That fits Orca automations, which run a prompt in a new worktree per run and skip the run when a precheck fails:
 
@@ -137,11 +138,39 @@ orca automations create --name "cast next" --trigger hourly --provider claude \
 
 ### setup-mana
 
-Sets a repository up for the other skills, once. Explores first (remote, existing docs, labels, a test command, which tracker variables are set), then asks in sections with a recommended answer: the issue tracker, the label names, the command that proves the project works, how proof gets captured. Shows the drafts, writes `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`, and puts an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. Nothing counts as done until the tracker answers a read-only check. Re-run it to switch trackers.
+Sets a repository up for the other skills, in one question. It detects what it can (the remote, existing docs, the labels already on the tracker, a test command, which tracker variables are set, whether a connector is live) and then asks the one thing a checkout cannot tell it: where the tickets live. GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected, and the question is asked every run, so a repo with a GitHub remote is never assumed to keep its tickets there.
+
+Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it to switch trackers, and use `attune` for anything else.
 
 ```
-/mana:setup-mana                  # explore, ask, write, verify
-/mana:setup-mana you-pick         # take every recommendation
+/mana:setup-mana                  # one question, then write
+/mana:setup-mana linear           # skip the question
+/mana:setup-mana you-pick         # take the detected tracker
+```
+
+### attune
+
+Changes one setting the other skills read, after setup, without redoing it. Run it bare and it prints every setting with its current value and which skills read it, then asks which one to change. Name a setting to jump straight there, and name a value too and it writes without asking anything.
+
+| Setting | What it changes |
+|---------|-----------------|
+| `labels` | The label strings the seven triage roles map to, and creates any that the tracker does not have |
+| `validation` | The `Validation:` line, after running the command once to prove it works |
+| `proof` | How pull request proof gets captured |
+| `docs` | Single context (`CONTEXT.md`) or multi context (`CONTEXT-MAP.md`) |
+| `peer` | Which installed CLI gets the diff as a second opinion on every review, or removes the line |
+| `worktree` | `.worktreeinclude` and `orca.yaml`, so a fresh Orca worktree can run the validation command |
+| `pr-surface` | Whether external pull requests enter triage as requests with attached code |
+| `key` | The Linear team or Jira project key, then verifies it against the tracker |
+| `pointer` | Whether the block lives in `CLAUDE.md` or `AGENTS.md` |
+
+Every setting has a working default and every skill that reads one falls back when it is missing, so removing a setting is always allowed. `peer` prints what leaving the machine means before it writes anything, because that line is the consent. Switching trackers is not here: re-run `setup-mana` for that.
+
+```
+/mana:attune                      # list every setting and its current value
+/mana:attune validation           # change one, with the current value shown
+/mana:attune peer codex           # write it and ask nothing
+/mana:attune key                  # re-verify the tracker after exporting a key
 ```
 
 ### scan

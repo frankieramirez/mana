@@ -1,8 +1,8 @@
 {
   "name": "mana",
   "displayName": "mana",
-  "version": "0.16.0",
-  "description": "Frankie Ramirez's agent skills, cast as spells: multi-reviewer code review, PR feedback resolution without comment noise, replies that read like you typed them, comment removal, repo setup for GitHub, Linear, or Jira, maps of decision tickets, filing build tickets from a plan, building a ready ticket, opening a pull request with visual evidence, inbox triage, merge conflict resolution, and blast radius proofs.",
+  "version": "0.17.0",
+  "description": "Frankie Ramirez's agent skills, cast as spells: multi-reviewer code review, PR feedback resolution without comment noise, replies that read like you typed them, comment removal, one question repo setup for GitHub, Linear, or Jira with a settings skill to change any of it, maps of decision tickets, filing build tickets from a plan, building a ready ticket, opening a pull request with visual evidence, inbox triage, merge conflict resolution, and blast radius proofs.",
   "author": {
     "name": "Frankie Ramirez",
     "url": "https://github.com/frankieramirez"
@@ -25,7 +25,8 @@
     "blast-radius",
     "linear",
     "jira",
-    "setup"
+    "setup",
+    "settings"
   ],
   "agents": [
     "./agents/comment-reaper.md",
