@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.16.0
+
+- `remedy`: on a large batch (more than 12 new items, or more than 6 files) read-only scouts gather the evidence per file cluster in one foreground batch, and the orchestrator still judges every item from their returns. `references/scout-prompt.md` is the brief; the rubric says which scout field feeds which verdict.
+- `remedy`: a verifier reads the combined diff against every fix-list item before the validation run: site changed, ask answered, in the file's conventions, and no hunk nobody asked for. A miss goes back to the same fixer once with a corrected note, then to the skip-list with the edit reverted. `references/verifier-prompt.md` is the brief; a single fix is checked inline.
+- `remedy`: every run writes `fetch.json`, `items.json`, `summary.md`, and `metadata.json` under `/tmp/remedy-<uid>/<run-id>/`. The next run on the same PR reads them: a reopened thread, a `needs-human` still waiting, and a comment already fixed are named instead of re-judged.
+- `remedy`: fixers dispatch as one foreground batch sized to the host's agent cap, with an explicit one-at-a-time path when the host cannot spawn subagents.
+
 ## 0.15.0
 
 - `scan`: reviewer personas are class specializations with one shared file shape: Protection Warrior (correctness), Subtlety Rogue (security), Havoc Demon Hunter (adversarial), Marksmanship Hunter (testing), Fire Mage (performance), Restoration Shaman (reliability), Retribution Paladin (project standards), Unholy Death Knight (data migration), Balance Druid (maintainability), Demonology Warlock (API contract), Windwalker Monk (frontend races), Lore Bard (existing PR feedback). Two new ones: Augmentation Evoker checks that an agent can do and see what a user can, Discipline Priest checks instruction prose for hedges, contradictions, and dangling references.
