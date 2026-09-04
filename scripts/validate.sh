@@ -80,7 +80,7 @@ for s in skills/*/scripts/* scripts/*.sh; do
 done
 
 # 5b. Shared files stay identical. reveal owns the ship files cast copies; sift owns the
-# ticket files conjure and cast copy. Edit the owner and copy.
+# ticket files conjure, cast, setup-mana, and scan copy. Edit the owner and copy.
 while read -r a b; do
   [ -n "${a:-}" ] || continue
   cmp -s "$a" "$b" || err "$a and $b differ; edit $(dirname "$(dirname "$a")")/ and copy to $(dirname "$(dirname "$b")")/"
@@ -94,7 +94,17 @@ skills/sift/references/agent-brief.md skills/conjure/references/agent-brief.md
 skills/sift/scripts/tickets.sh skills/conjure/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/cast/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/setup-mana/scripts/tickets.sh
+skills/sift/scripts/tickets.sh skills/scan/scripts/tickets.sh
 EOF
+
+# 5c. Every scan persona has the shared shape and its stub names its own file.
+for p in skills/scan/references/personas/*.md; do
+  stem=$(basename "$p" .md)
+  for h in '## Mandate' '## Where to look' '## Not a finding' '## Evidence bar' '## Output'; do
+    grep -qF "$h" "$p" || err "$p lacks '$h'"
+  done
+  grep -qF "\"reviewer\": \"$stem\"" "$p" || err "$p stub does not name $stem"
+done
 
 # 6. Claude Code's own validator, when available.
 if command -v claude >/dev/null 2>&1; then

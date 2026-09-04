@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tickets.sh: build-ticket operations shared by setup-mana, sift, conjure, and cast.
+# tickets.sh: build-ticket operations shared by setup-mana, sift, conjure, cast, and scan.
 #
 #   check                                     who the token is, and that it can read the project
 #   ensure-labels [--color HEX] LABEL...      create each missing label

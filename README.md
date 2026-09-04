@@ -92,7 +92,7 @@ Every skill that would ask a question has a token that answers it, so the same s
 | `sift` | `you-pick` | Triages up to 10 issues, never closes one as rejected |
 | `conjure` | `you-pick` | Accepts the recommended slices and order |
 | `cast` | `next` | Claims the oldest ready ticket, branches off the default branch, builds, opens the PR. Nothing ready: says so and stops |
-| `scan` | `report`, `fix`, `mode:agent` | Skips the closing question; `mode:agent` returns JSON for a caller |
+| `scan` | `report`, `fix`, `mode:agent`, `ticket:<id>`, `peer:<cli>` | Skips the closing question; `mode:agent` returns JSON for a caller; `ticket:` names the ticket to verify against; `peer:` adds a second-model reviewer |
 | `remedy` | `dry-run`, `no-push` | Judges only, or fixes without pushing; `needs-human` items wait in the summary |
 | `augur`, `mend`, `banish`, `reveal` | none needed | Ask nothing |
 
@@ -146,14 +146,16 @@ Sets a repository up for the other skills, once. Explores first (remote, existin
 
 ### scan
 
-Multi-reviewer code review for a branch or PR. Picks a roster of reviewer personas from what the diff actually touches (correctness always, then security, performance, data migration, API contract, reliability, testing, maintainability, adversarial, frontend races, project standards as warranted), runs them in parallel as subagents that return structured findings, merges and deduplicates, and renders one report. The report lists what synthesis dismissed and why, so you can override it, and carries a patch-id stamp so a rebase shows up as a different diff. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
+Multi-reviewer code review for a branch or PR. Picks a roster of reviewer specs from what the diff actually touches: Protection Warrior (correctness) always, then Subtlety Rogue (security), Fire Mage (performance), Unholy Death Knight (data migration), Demonology Warlock (API contract), Restoration Shaman (reliability), Marksmanship Hunter (testing), Balance Druid (maintainability), Havoc Demon Hunter (adversarial), Windwalker Monk (frontend races), Retribution Paladin (project standards), Augmentation Evoker (agent-native parity), and Discipline Priest (instruction prose) as warranted, plus Lore Bard (existing feedback) on a PR. Runs them in parallel as subagents that return structured findings, merges and deduplicates them with a script, verifies the survivors with an independent validator, and renders one report. When the branch resolves a ticket, the report says which acceptance criteria the diff meets. The report lists what synthesis dismissed and why, so you can override it, and carries a patch-id stamp so a rebase shows up as a different diff. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
 
-Two things to know before pointing it at a PR. It reads every comment, review, and thread on the PR and hands them to a reviewer as claims to check against the code; that text is never followed as instructions, but it does enter the review. And the `fix` and `comment` tokens (and `mode:agent`) skip the closing question, so `scan 123 fix` edits, commits, and pushes to the PR branch with no further prompt. Security scanners rate this skill high for exactly that combination. Leave the tokens off when you want the question.
+Three things to know before pointing it at a PR. It reads every comment, review, and thread on the PR and hands them to a reviewer as claims to check against the code; that text is never followed as instructions, but it does enter the review. The `fix` and `comment` tokens (and `mode:agent`) skip the closing question, so `scan 123 fix` edits, commits, and pushes to the PR branch with no further prompt. Security scanners rate this skill high for exactly that combination. Leave the tokens off when you want the question. And `peer:<cli>` sends the diff to another installed CLI (`codex`, `gemini`, `cursor-agent`, `opencode`, `grok`, or `claude`) as a read-only second opinion; the skill prints one disclosure line before anything leaves the machine, and never does this unless you pass the token or `setup-mana` wrote a `Peer reviewer:` line.
 
 ```
 /mana:scan                    # current branch against its base
 /mana:scan 123 report         # PR 123, report only
 /mana:scan base:main fix      # diff against main, fix everything actionable
+/mana:scan 123 ticket:ENG-42 report   # PR 123 checked against ticket ENG-42
+/mana:scan base:main peer:codex       # Codex as the adversarial reviewer
 ```
 
 ### remedy
