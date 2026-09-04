@@ -79,8 +79,6 @@ for s in skills/*/scripts/* scripts/*.sh; do
   head -1 "$s" | grep -q bash && { bash -n "$s" || err "$s does not parse"; }
 done
 
-# 5b. Shared files stay identical. reveal owns the ship files cast copies; sift owns the
-# ticket files conjure, cast, setup-mana, and scan copy. Edit the owner and copy.
 while read -r a b; do
   [ -n "${a:-}" ] || continue
   cmp -s "$a" "$b" || err "$a and $b differ; edit $(dirname "$(dirname "$a")")/ and copy to $(dirname "$(dirname "$b")")/"
@@ -95,6 +93,8 @@ skills/sift/scripts/tickets.sh skills/conjure/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/cast/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/setup-mana/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/scan/scripts/tickets.sh
+skills/sift/scripts/tickets.sh skills/attune/scripts/tickets.sh
+skills/setup-mana/references/triage-labels.md skills/attune/references/triage-labels.md
 EOF
 
 # 5c. Every scan persona has the shared shape and its stub names its own file.
