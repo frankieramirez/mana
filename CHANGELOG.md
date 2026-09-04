@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.0
+
+- `scan`: reviewer personas are class specializations with one shared file shape: Protection Warrior (correctness), Subtlety Rogue (security), Havoc Demon Hunter (adversarial), Marksmanship Hunter (testing), Fire Mage (performance), Restoration Shaman (reliability), Retribution Paladin (project standards), Unholy Death Knight (data migration), Balance Druid (maintainability), Demonology Warlock (API contract), Windwalker Monk (frontend races), Lore Bard (existing PR feedback). Two new ones: Augmentation Evoker checks that an agent can do and see what a user can, Discipline Priest checks instruction prose for hedges, contradictions, and dangling references.
+- `scan`: `scripts/review.sh` does the deterministic merge (fast-pass clamp, suppression, quote-the-line demotion, exact dedup, cross-reviewer promotion, confidence gate, stable numbering) and the diff signals that drive the lite path; the model keeps semantic dedup, soft buckets, lead judgment, and grouping. A manual path remains when `python3` is absent.
+- `scan`: Stage 2c reads the ticket the change resolves (`ticket:<id>`, a `Closes` line, a `cast/<id>-` branch, or an id in the branch or commits) through the tracker file and `tickets.sh`, hands every reviewer and the validator a numbered requirements block, and reports each requirement as met, unmet, deferred, or cannot tell. An unmet requirement on an explicitly resolved ticket blocks the verdict.
+- `scan`: the validator brief is `references/validator.md`, with three questions per finding and no commitment to the original claim. `mode:agent` has a documented contract, also written to `review.json`. Apply mode runs the `Validation:` line from the `## Agent skills` block. `references/report-example.md` shows one good report and one bad one.
+- `scan`: opt-in `peer:<cli>` (or a `Peer reviewer:` line written by `setup-mana`) sends the diff to a second CLI (`codex`, `gemini`, `cursor-agent`, `opencode`, `grok`, or `claude`) as the adversarial reviewer, read-only, after a disclosure line. Peer findings raise another reviewer's confidence only when the serving model is from a different family than the host. `scan` carries its own copy of `tickets.sh`.
+
 ## 0.14.1
 
 - `reveal` and `cast`: proof files and the PR body file live in a `mktemp -d` directory, never at a fixed path under `/tmp`, so another local user cannot pre-create the file and control what goes into the pull request.

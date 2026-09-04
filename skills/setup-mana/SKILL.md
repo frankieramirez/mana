@@ -106,9 +106,10 @@ Triage labels: <defaults | mapped>. See `docs/agents/triage-labels.md`.
 Validation: `<the command>`
 Proof: <screenshots and recordings via the host's browser tool | Orca's embedded browser | command output as an image>
 Domain docs: <single-context: CONTEXT.md and docs/adr/ | multi-context: CONTEXT-MAP.md>
+Peer reviewer: <codex | gemini | cursor-agent | opencode | grok, or omit the line>
 ```
 
-Other skills read the `Validation:` line before guessing a test command, and the tracker file before touching a ticket.
+Other skills read the `Validation:` line before guessing a test command, and the tracker file before touching a ticket. `scan` sends the diff to the `Peer reviewer:` CLI as a second-opinion reviewer only when that line is present or the user passes `peer:<cli>`; omit the line to keep every review on the machine.
 
 For `other`, write `docs/agents/issue-tracker.md` from `references/issue-tracker-other.md` with the user's paragraph under Conventions. There is no adapter; the skills follow the prose.
 

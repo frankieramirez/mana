@@ -25,10 +25,17 @@ pairs = [
     ("skills/remedy/references/fixer-prompt.md", "ce-resolve-pr-feedback/references/agents/pr-comment-resolver.md"),
     ("skills/remedy/scripts/pr-threads", "ce-resolve-pr-feedback/scripts/get-pr-comments"),
 ]
-for p in ["correctness", "adversarial", "api-contract", "data-migration", "security", "performance",
-          "reliability", "testing", "maintainability", "project-standards"]:
-    pairs.append((f"skills/scan/references/personas/{p}.md",
-                  f"ce-code-review/references/personas/{p}-reviewer.md"))
+for ours, theirs in [
+    ("protection-warrior", "correctness"), ("subtlety-rogue", "security"),
+    ("havoc-demon-hunter", "adversarial"), ("marksmanship-hunter", "testing"),
+    ("fire-mage", "performance"), ("restoration-shaman", "reliability"),
+    ("retribution-paladin", "project-standards"), ("unholy-death-knight", "data-migration"),
+    ("balance-druid", "maintainability"), ("demonology-warlock", "api-contract"),
+    ("windwalker-monk", "julik-frontend-races"), ("lore-bard", "previous-comments"),
+    ("augmentation-evoker", "agent-native"),
+]:
+    pairs.append((f"skills/scan/references/personas/{ours}.md",
+                  f"ce-code-review/references/personas/{theirs}-reviewer.md"))
 
 worst = 0.0
 for ours, theirs in pairs:
