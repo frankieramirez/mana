@@ -1,39 +1,8 @@
 # mana
 
-```
-                  .       *
-          ·           *          ·
-       *             †              .
-     ·               ║          ·
-           *        ═╬═           *
-        *            ║      .
-    ·          .     ║               ·
-      ╔══════════════╩══════════════╗
-      ║                             ║
-      ║         M  A  N  A          ║
-      ║         ──────────          ║
-      ║       test everything       ║
-      ║                             ║
-      ╚═════════════════════════════╝
-          MP [██████████] 100/100
-      ·       .                     *
-          ┌────── command ──────┐
-          │  > Scan             │
-          │    Remedy           │  *
-          │    Dispel           │
-          │    Mimic            │
-          │    Banish           │    ·
-          │    Scry             │
-          │    Cast             │
-          │    Reveal           │
-          │    Sift             │
-          │    Mend             │
-          │    Augur            │
-          │    Conjure          │
-          │    Setup            │
-          └─────────────────────┘
-           .     *           ·     .
-```
+<p align="center">
+  <img src="docs/assets/mana.svg" alt="Mana" width="688">
+</p>
 
 Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in agents that read `SKILL.md` files, including Codex, Cursor, Copilot, and Gemini CLI.
 
