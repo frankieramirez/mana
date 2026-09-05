@@ -1,41 +1,12 @@
 # mana
 
-```
-                  .       *
-          ·           *          ·
-       *             †              .
-     ·               ║          ·
-           *        ═╬═           *
-        *            ║      .
-    ·          .     ║               ·
-      ╔══════════════╩══════════════╗
-      ║                             ║
-      ║         M  A  N  A          ║
-      ║         ──────────          ║
-      ║       test everything       ║
-      ║                             ║
-      ╚═════════════════════════════╝
-          MP [██████████] 100/100
-      ·       .                     *
-          ┌────── command ──────┐
-          │  > Scan             │
-          │    Remedy           │  *
-          │    Dispel           │
-          │    Mimic            │
-          │    Banish           │    ·
-          │    Scry             │
-          │    Cast             │
-          │    Reveal           │
-          │    Sift             │
-          │    Mend             │
-          │    Augur            │
-          │    Conjure          │
-          │    Setup            │
-          └─────────────────────┘
-           .     *           ·     .
-```
+<p align="center">
+  <img src="docs/assets/mana.svg" alt="Mana" width="688">
+</p>
 
-Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in any agent that reads `SKILL.md` files (Codex, Cursor, Copilot, Gemini CLI, and the rest of the skills.sh list).
+Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in agents that read `SKILL.md` files, including Codex, Cursor, Copilot, and Gemini CLI.
+
+[Install](#install) · [The loop](#the-loop) · [Skills](#skills) · [Trackers](#trackers) · [Unattended](#unattended) · [Orca](#orca)
 
 ## Install
 
@@ -46,85 +17,590 @@ Agent skills I use across personal and work projects. They work in Claude Code a
 /plugin install mana@frankieramirez
 ```
 
-Skills are then invoked as `/mana:setup-mana`, `/mana:attune`, `/mana:scan`, `/mana:remedy`, `/mana:dispel`, `/mana:mimic`, `/mana:banish`, `/mana:scry`, `/mana:conjure`, `/mana:cast`, `/mana:reveal`, `/mana:sift`, `/mana:mend`, `/mana:augur`.
+Invoke a skill by name, for example `/mana:scan` to review the current branch.
 
 **Everything else** via [skills.sh](https://skills.sh):
 
-```
-npx skills add frankieramirez/mana            # this project
-npx skills add frankieramirez/mana -g         # every project on this machine
-npx skills add frankieramirez/mana -a codex   # one agent only
+```bash
+# This project
+npx skills add frankieramirez/mana
+
+# Every project on this machine
+npx skills add frankieramirez/mana -g
+
+# One agent only
+npx skills add frankieramirez/mana -a codex
 ```
 
 ## The loop
 
-Start where the work is. A repo the skills have not seen starts at `setup-mana`. A new idea starts at `scry`. A bug report from someone else starts at `sift`. Everything meets at a `ready-for-agent` issue with an agent brief, and from there the skills hand off in this order.
+Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, [sift](#sift) for an incoming report, or [cast](#cast) for a ready ticket.
 
 | Stage | Skill | What it leaves behind |
 |-------|-------|-----------------------|
-| Set up a repo | `setup-mana`, `attune` | The tracker choice in `docs/agents/issue-tracker.md`, the triage labels created on it, the validation command, a pointer block in `CLAUDE.md` or `AGENTS.md`; `attune` changes one of those later |
-| Decide | `scry` | A map of decision tickets, `CONTEXT.md`, ADRs, a spec |
-| Triage the inbox | `sift` | Each issue in one state, `ready-for-agent` ones with a brief |
-| File the build tickets | `conjure` | One `ready-for-agent` issue per slice, wired in build order |
-| Build | `cast` | A branch, a commit, a pull request with proof and a tracker closing line |
-| Review | `scan`, `augur` | A findings report, or the fixes pushed; a proof the change is safe |
-| Answer feedback | `remedy`, `mimic` | Fixes pushed, threads resolved, paste-ready replies |
-| Repair along the way | `mend`, `banish`, `reveal`, `dispel` | A finished merge, fewer comments, a PR body, prose that reads like you |
+| Set up a repo | [setup-mana](#setup-mana), [attune](#attune) | Tracker configuration and repo defaults |
+| Decide | [scry](#scry) | A decision map and a spec |
+| Triage the inbox | [sift](#sift) | Issues sorted by state, ready ones with an agent brief |
+| File the build tickets | [conjure](#conjure) | Session-sized tickets in build order |
+| Build | [cast](#cast) | A committed change and a PR with proof |
+| Review | [scan](#scan), [augur](#augur) | Findings, optional fixes, and evidence the change is safe |
+| Answer feedback | [remedy](#remedy), [mimic](#mimic) | Resolved feedback and paste-ready replies |
+| Repair along the way | [mend](#mend), [banish](#banish), [reveal](#reveal), [dispel](#dispel) | Finished merges, fewer comments, PR bodies, and edited prose |
 
-A person merges. GitHub and Linear close from the line (`Closes #42`, `Closes ENG-42`). Jira does only when an automation rule reads `Closes PLAT-42`. A local ticket stays open until the builder sets `Status: closed`. `cast next` picks up the one behind it.
+Build work meets at a `ready-for-agent` issue with an agent brief. A person merges the PR; [tracker closing rules](#trackers) determine when the ticket closes. `cast next` picks up the next ready ticket.
 
-An existing project runs setup once and then skips the first two rows. Its steady state is `sift` for what arrives, `cast next` for what is ready, `scan` and `remedy` on every pull request, and `augur` when a small diff looks riskier than its size.
+After setup, use `sift` for incoming work and `cast next` for ready tickets. Review PRs with `scan`, handle feedback with `remedy`, and use `augur` when a small diff looks risky.
 
-### Trackers
+## Skills
 
-Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` reuses your tracker choice from the conversation or `docs/agents/issue-tracker.md`, and asks when the choice is missing or you request a switch without naming the destination. `sift`, `conjure`, and `cast` read that file before touching a ticket. A GitHub remote is only a detection signal. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A missing key does not stop setup: the choice is recorded, the report names the variable to set, and `attune key` verifies it once that variable is there. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
+### setup-mana
 
-Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
+Configures a repository so the other skills know where tickets live and how to check their work.
 
-### Unattended
+- Records the tracker choice and configures triage labels.
+- Runs a detected validation command and writes repo instructions.
 
-Every skill that would ask a question has a token that answers it, so the same skill runs from a laptop with a person watching or from a scheduled agent with nobody there.
+```text
+# Reuse the choice, or ask once
+/mana:setup-mana
 
-| Skill | Token | What it does without a person |
-|-------|-------|-------------------------------|
-| `setup-mana` | `you-pick`, or a bare `github`, `linear`, `jira`, `local` | Takes the detected tracker without asking and writes everything else at its default. An unset variable is reported, never a stop. With nothing detected it writes nothing and reports the missing choice |
-| `attune` | `<setting> <value>` | Writes that one setting and asks nothing |
-| `scry` | `you-pick` | Accepts every recommended answer while charting or walking |
-| `sift` | `you-pick` | Triages up to 10 issues, never closes one as rejected |
-| `conjure` | `you-pick` | Accepts the recommended slices and order |
-| `cast` | `next` | Claims the oldest ready ticket, branches off the default branch, builds, opens the PR. Nothing ready: says so and stops |
-| `scan` | `report`, `fix`, `mode:agent`, `ticket:<id>`, `peer:<cli>` | Skips the closing question; `mode:agent` returns JSON for a caller; `ticket:` names the ticket to verify against; `peer:` adds a second-model reviewer |
-| `remedy` | `dry-run`, `no-push` | Judges only, or fixes without pushing; `needs-human` items wait in the summary |
-| `augur`, `mend`, `banish`, `reveal` | none needed | Ask nothing |
-
-When the token cannot write issues (a 403), `scry` and `conjure` write the same shape under `.scratch/` and say so. `cast` and `reveal` still open the PR when `--attach` is refused, and say why.
-
-Two shapes that work:
-
+# Choose Linear without the question
+/mana:setup-mana linear
 ```
-# on a laptop, while you do something else
+
+<details>
+<summary>Setup details and additional commands</summary>
+
+Setup detects the remote, existing docs and labels, a test command, tracker variables, and live connectors. It reuses the latest explicit tracker choice or the choice saved in `docs/agents/issue-tracker.md`. With no choice yet, it asks where tickets live; the detected option appears first and is marked as detected. A GitHub remote alone never settles the choice. If you request a switch without naming the destination, it asks for one.
+
+Choose from the [supported trackers](#trackers), or describe your own in a paragraph. Re-run setup and name the tracker to switch trackers. Use [attune](#attune) to change another setting later.
+
+| Setup output | What happens |
+|--------------|--------------|
+| `docs/agents/issue-tracker.md` | Records the tracker and its conventions |
+| Triage labels | Ensures the seven roles have labels after the tracker check passes; local and custom trackers skip this step |
+| `docs/agents/triage-labels.md` | Records a mapping when setup reuses existing label names |
+| `## Agent skills` block | Updates the existing `CLAUDE.md` or `AGENTS.md`; creates `AGENTS.md` when neither exists |
+| Validation command | Runs the detected command once; omits it if a missing binary or startup failure prevents tests |
+
+Proof capture and domain docs keep their defaults. Setup leaves the peer reviewer unset; use `attune peer` to configure one.
+
+A missing Linear or Jira credential still allows setup to write the configuration. The report marks the check unverified and names the variable to set. Once it is available, `attune key` verifies the tracker.
+
+```text
+/mana:setup-mana you-pick   # take the detected tracker
+```
+
+</details>
+
+### attune
+
+Changes one repo setting after setup and shows which skills read it.
+
+- Run it bare to see current values and choose a setting.
+- Name the setting and value to write it without a question.
+
+```text
+# List settings and current values
+/mana:attune
+
+# Change the validation command
+/mana:attune validation
+```
+
+<details>
+<summary>Available settings and additional commands</summary>
+
+| Setting | What it changes |
+|---------|-----------------|
+| `labels` | Names for the seven triage roles; creates missing tracker labels |
+| `validation` | The `Validation:` line, after the command runs clean |
+| `proof` | How pull request proof gets captured |
+| `docs` | Single context (`CONTEXT.md`) or multi context (`CONTEXT-MAP.md`) |
+| `peer` | The installed CLI that receives the diff for a second opinion on every review |
+| `worktree` | `.worktreeinclude` and `orca.yaml` for fresh Orca worktrees |
+| `pr-surface` | Whether external GitHub PRs enter triage as requests with attached code |
+| `key` | The Linear team or Jira project key; verifies it against the tracker |
+| `pointer` | Whether the instructions block lives in `CLAUDE.md` or `AGENTS.md` |
+
+Every setting has a default, so removing a setting is allowed. To switch trackers, re-run [setup-mana](#setup-mana) with the new tracker name.
+
+**Setting `peer` sends the diff and a brief to another CLI on every review.** The skill explains that consequence before writing the setting. Remove the setting to turn it off.
+
+```text
+/mana:attune peer codex   # configure a second opinion on every review
+/mana:attune key          # verify after exporting a tracker credential
+```
+
+</details>
+
+### scan
+
+Reviews a branch or PR with specialist reviewers and returns one verified report.
+
+- Selects reviewers for the diff and checks ticket acceptance criteria when available.
+- Includes dismissed findings and reasons, so you can challenge the report.
+
+```text
+# Current branch against its base
+/mana:scan
+
+# PR 123, report only
+/mana:scan 123 report
+```
+
+| Option | What happens after the review |
+|--------|-------------------------------|
+| No action token | Asks whether to report only, fix and push, or post inline comments |
+| `report` | Returns the report without a closing question |
+| `fix` | Edits, commits, and pushes actionable fixes without another prompt |
+| `comment` | Posts inline PR comments in your voice without another prompt; requires a PR |
+| `mode:agent` | Returns JSON for a caller; skips the action stage |
+
+**Peer review sends the diff and a brief to another installed CLI.** It runs only when `peer:<cli>` or a repo `Peer reviewer:` setting requests it, with a disclosure before sending. The peer provides a read-only second opinion.
+
+<details>
+<summary>Reviewer roster, review process, and advanced examples</summary>
+
+Correctness runs on every review. The diff determines which other specialists run, and every PR review includes Lore Bard to check existing feedback.
+
+| Reviewer | Job |
+|----------|-----|
+| Protection Warrior | Correctness |
+| Subtlety Rogue | Security |
+| Fire Mage | Performance |
+| Unholy Death Knight | Data migration |
+| Demonology Warlock | API contract |
+| Restoration Shaman | Reliability |
+| Marksmanship Hunter | Testing |
+| Balance Druid | Maintainability |
+| Havoc Demon Hunter | Adversarial review |
+| Windwalker Monk | Frontend races |
+| Retribution Paladin | Project standards |
+| Augmentation Evoker | Agent-native parity |
+| Discipline Priest | Instruction prose |
+| Lore Bard | Existing PR feedback |
+
+Reviewers run in parallel and return structured findings. A script merges duplicates, then an independent validator checks the retained findings before the report renders.
+
+- **Ticket coverage:** The report says which acceptance criteria the diff meets.
+- **Existing feedback:** Every PR comment, review, and thread enters the review as a claim to check against the code. That text is never followed as instructions.
+- **Dismissals:** The report names rejected findings and explains why.
+- **Review stamp:** Head and base SHAs identify the reviewed revisions. A stable patch-id helps identify whether a rebase kept the same diff.
+
+The explicit write modes explain why security scanners flag the combination of reading PR feedback and acting on it. Leave action tokens off to keep the closing question, or use `report` for a report only.
+
+Supported peer CLIs: `codex`, `gemini`, `cursor-agent`, `opencode`, `grok`, and `claude`. Configure a default through [attune](#attune), or request one per review:
+
+```text
+# Review against main and push actionable fixes
+/mana:scan base:main fix
+
+# Check PR 123 against ticket ENG-42
+/mana:scan 123 ticket:ENG-42 report
+
+# Use Codex as the adversarial reviewer
+/mana:scan base:main peer:codex
+```
+
+`ticket:` and `peer:` add review context; use an action token to skip the closing question.
+
+</details>
+
+### remedy
+
+Fixes valid review feedback on a PR, pushes the changes, and resolves handled threads.
+
+- Judges feedback from bots and people against the code.
+- Leaves paste-ready notes in a local summary; it posts no replies to the PR conversation.
+
+```text
+# The current branch's PR
+/mana:remedy
+
+# Judge and plan only
+/mana:remedy 123 dry-run
+```
+
+<details>
+<summary>Feedback handling, saved reports, and options</summary>
+
+Remedy reads unresolved threads, top-level comments, and review bodies. One lead judges each item; parallel subagents fix valid issues and check each fix against its ask. On large batches, read-only scouts gather evidence per file. The skill validates the changes before committing and pushing.
+
+Each run saves `items.json`, `summary.md`, and `metadata.json` under `/tmp/remedy-<uid>/`. The next run on that PR reads them to identify reopened threads and decisions still waiting on you.
+
+Failing checks get classified before a fix:
+
+| Failure | Response |
+|---------|----------|
+| In code the PR touched | Add it to the fix list |
+| In untouched code | Check whether the base is stale |
+| Suspected flake | Rerun at most once |
+
+`needs-human` items stay in the summary. Use `no-push` to fix locally, or a comment URL to target one thread.
+
+```text
+/mana:remedy 123 no-push
+/mana:remedy <comment-url>
+```
+
+</details>
+
+### dispel
+
+Rewrites prose so it sounds like a person talking.
+
+Use it for docs, messages, PR descriptions, or other writing. It also triggers on “no em dashes,” “sounds like AI,” “make it sound human,” and “strip the AI voice.”
+
+```text
+# Rewrite the prose in context
+/mana:dispel
+```
+
+<details>
+<summary>What the prose pass removes</summary>
+
+- Essay habits: em dashes, antithesis, rule of three, setup and payoff, hedging, and performed enthusiasm.
+- Vague language: metaphor nouns such as substrate and vector, passive voice with a nameable actor, adverbs standing in for a number, and sentences that could fit any project's docs.
+
+</details>
+
+### mimic
+
+Drafts a reply in your voice, ready to paste into the conversation.
+
+- Uses your own writing and an optional voice profile to match the medium.
+- Returns the reply text; unknown facts get bracketed placeholders.
+
+```text
+# Reply to the last message
+/mana:mimic
+```
+
+<details>
+<summary>Voice sources, profile setup, and additional commands</summary>
+
+Mimic reads your messages in the thread, a project `.mimic.md` or personal `~/.mimic.md`, and relevant commits or comments in the repo. The profile template lives at `skills/mimic/references/voice-profile.md`. [Scan](#scan) uses the same profile for PR comments.
+
+Replies follow the [dispel](#dispel) prose rules and fit the medium's length. Chat replies skip lists, acknowledgement openers, and helpful closers. Missing facts stay as placeholders.
+
+`setup` spawns Ghost to build a profile from your own writing:
+
+- Local agent logs supply prompts you typed; your PR comments, descriptions, and commits add repo context. Text a tool wrote under your name is excluded.
+- Sent messages from a connected Slack workspace show how you write to people. A named public profile, such as X or a blog, works too.
+- Work samples are scrubbed before they enter the profile.
+- You review and approve the draft before it is written to `~/.mimic.md`, or `.mimic.md` with `project`.
+
+```text
+/mana:mimic setup                  # build your personal profile
+/mana:mimic setup slack            # include your sent Slack messages
+/mana:mimic setup x.com/yourhandle  # include your public posts
+/mana:mimic setup project          # build this project's profile
+/mana:mimic refresh                # rebuild and show the diff
+```
+
+You can also give an instruction for the reply:
+
+```text
+/mana:mimic "say no, we're at capacity until next sprint"
+```
+
+</details>
+
+### banish
+
+Removes comments that do not earn their place and fixes the code they were covering for.
+
+```text
+# Current diff against main
+/mana:banish
+
+# One path
+/mana:banish src/api/
+```
+
+<details>
+<summary>Comment review and the keep list</summary>
+
+The Comment Reaper audits the diff. The skill checks its report before deleting comments and repairing the code.
+
+Comments survive for license headers, public API contracts, quirks in third-party code we cannot change, formatter directives, style-only lint suppressions, and links to constraints the code cannot express.
+
+</details>
+
+### scry
+
+Turns work too large for one session into a map of decision tickets, then resolves them one at a time.
+
+- Charting starts from the goal and researches questions in parallel.
+- Walking claims the next unblocked ticket and files new questions as answers emerge.
+
+```text
+# Chart the idea in the conversation
+/mana:scry
+
+# Walk map #92, or claim ticket #92
+/mana:scry 92
+```
+
+<details>
+<summary>Decision records, tracker labels, and unattended use</summary>
+
+The map lives on GitHub, with project context in `CONTEXT.md`, decision records in `docs/adr/`, and a spec for the build. Charting files questions that are ready to investigate; walking resolves one and files whatever its answer makes specific enough to tackle.
+
+Tracker labels are `scry:map` and `scry:<type>`. Existing maps with `wayfinder:*` labels still work. If GitHub refuses a write with 403, the same map structure lands under `.scratch/<slug>/`.
+
+```text
+/mana:scry 92 you-pick   # accept recommended answers
+```
+
+</details>
+
+### conjure
+
+Turns a finished map, spec, or conversation plan into build tickets in dependency order.
+
+- Each ticket is a session-sized vertical slice with an agent brief and blocking dependencies.
+- Shows the proposed slices and order before filing; `you-pick` accepts the recommendation.
+
+```text
+# Create tickets from a spec
+/mana:conjure docs/spec.md
+
+# Use the plan in this conversation
+/mana:conjure you-pick
+```
+
+<details>
+<summary>Map handoff and write fallback</summary>
+
+On a decision map, conjure posts the build order as a comment. If the token cannot create issues, it saves the same tickets under `.scratch/<slug>/tickets/`.
+
+```text
+/mana:conjure 92   # file build tickets once the map is decided
+```
+
+</details>
+
+### cast
+
+Builds one ready ticket or spec, commits the change, and opens a PR with visual proof.
+
+- Claims the ticket first so another session skips it.
+- Pushes and opens the PR by default. With `no-pr`, it skips the PR and pushes only if the branch already has an upstream.
+
+```text
+# Oldest unblocked ready ticket
+/mana:cast next
+
+# Build issue 181 without opening a PR
+/mana:cast 181 no-pr
+```
+
+<details>
+<summary>Branch handling, validation, and additional commands</summary>
+
+Cast uses the current branch. Starting on the default branch creates `cast/<number>-<slug>` before any edit; it never switches to an existing branch. An Orca worktree already has its branch.
+
+The build loads the agent brief when available and uses TDD at named seams for meaningful behavior changes when a test harness exists. Required project checks still run; successful validation is reused when no later edit or unresolved concern needs a fresh run. It checks the diff against the ticket before committing, then the default PR flow pushes, creating an upstream if needed; with `no-pr`, it pushes only when an upstream already exists.
+
+The PR includes visual evidence and the [tracker's closing line](#trackers). In [Orca](#orca), the ticket, status, and PR also appear on the worktree card.
+
+```text
+/mana:cast       # ticket or spec already in the conversation
+/mana:cast 181   # GitHub issue 181, including the PR
+```
+
+</details>
+
+### reveal
+
+Opens or updates a PR for the current branch with a scannable description and visual proof.
+
+- The body combines a short explanation with a compact tree or structural diff.
+- Proof can be a screenshot, recording, or command-output image. Docs and backend changes get an SVG of the proving command.
+
+```text
+# Current branch
+/mana:reveal
+
+# PR 42, if its head is this branch
+/mana:reveal 42
+```
+
+It uses `gh --attach` for inline proof and stays on the current branch. If attachment is refused, it still opens the PR and explains why.
+
+### sift
+
+Triages incoming issues and adds an agent brief when the work is ready to delegate.
+
+- Uses the configured tracker and checks the claim before assigning a state.
+- `you-pick` handles up to 10 issues per run and leaves rejection decisions for a person.
+
+```text
+# Find what needs attention
+/mana:sift
+
+# Triage unattended
+/mana:sift you-pick
+```
+
+<details>
+<summary>Inbox states and targeted commands</summary>
+
+Sift starts with unlabeled and `needs-triage` issues, moving them through `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. It asks for detail when a request is thin and puts rejected enhancements in `.out-of-scope/`. Tracker comments start with a triage disclaimer.
+
+It works on GitHub, Linear, Jira, or local files according to the tracker file. Under `you-pick`, it never closes an issue as rejected.
+
+```text
+/mana:sift 42                       # one GitHub issue
+/mana:sift ENG-42                   # one Linear issue
+/mana:sift move 42 to ready-for-agent
+```
+
+</details>
+
+### mend
+
+Finishes a conflicted merge, rebase, cherry-pick, or revert while preserving both sides' intent where possible.
+
+Weaver resolves the hunks; the skill audits the result, regenerates lockfiles, and runs the project's checks before continuing the git operation. It never aborts the operation.
+
+```text
+# Finish the conflicted operation
+/mana:mend
+```
+
+### augur
+
+Finds what a change could break beyond its diff and runs code to prove the fact that makes it safe.
+
+- Traces dependencies beyond text search, including wire formats and distant callers.
+- Leaves the proving script on disk so a reviewer can rerun it.
+
+```text
+# Current branch against its base
+/mana:augur
+
+# PR 123, without checking it out
+/mana:augur 123
+```
+
+<details>
+<summary>Evidence levels and targeted checks</summary>
+
+Augur names one fact the change is safe because of and moves it through five evidence levels: asserted, cited, walked, ran, reproduced. Anything below “ran it” stays unproven.
+
+The search includes pinned library source, wire formats, database columns, feature flags, and callers three hops out.
+
+```text
+/mana:augur base:main src/cache/   # check one path against main
+```
+
+</details>
+
+## Trackers
+
+Tickets use the tracker you choose; pull requests stay on GitHub.
+
+| Tracker | Where tickets live |
+|---------|--------------------|
+| GitHub Issues | The repository's issues |
+| Linear | A Linear team |
+| Jira Cloud | A Jira project |
+| Local files | Markdown under `.scratch/` |
+| Your own tracker | Follow the conventions you describe in a paragraph |
+
+[Setup-mana](#setup-mana) records the choice in `docs/agents/issue-tracker.md` and reuses the latest explicit or saved choice. It asks when the choice is missing or a switch has no named destination. The GitHub remote alone never selects the tracker. Ticket skills read that file before acting.
+
+<details>
+<summary>Credentials, connectors, and missing keys</summary>
+
+When the host exposes a Linear or Jira connector, skills use it without a separate API key. Inside an Orca worktree, `orca linear` serves as the Linear connector.
+
+Otherwise, `tickets.sh` provides the same eleven operations across GitHub, Linear, and Jira:
+
+| Tracker | Authentication for the script |
+|---------|-------------------------------|
+| GitHub | `gh` logged in |
+| Linear | `LINEAR_API_KEY` |
+| Jira | `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN` |
+
+Credentials come from the environment and are never written to a file. Set them wherever a scheduled agent runs.
+
+A missing credential allows setup to record the choice and report what is missing. Set the named variable, then run `/mana:attune key` to verify the tracker.
+
+</details>
+
+<details>
+<summary>PR closing rules</summary>
+
+`scan`, `remedy`, and `reveal` keep their GitHub PR workflow with any tracker. A person merges the PR.
+
+| Tracker | PR body | What closes the ticket |
+|---------|---------|------------------------|
+| GitHub | `Closes #42` | Merge |
+| Linear | `Closes ENG-42` | Merge |
+| Jira | `Closes PLAT-42` | An automation rule that reads the closing line |
+| Local files | Name the ticket file | The builder sets `Status: closed`; merge leaves it unchanged |
+
+</details>
+
+## Unattended
+
+Use explicit tokens to run skills without waiting for answers. Point each scheduled run at one skill; a run with nothing to do exits quietly.
+
+<details>
+<summary>Unattended tokens and scheduling examples</summary>
+
+| Skill | Token | What happens |
+|-------|-------|--------------|
+| `setup-mana` | `you-pick` or a tracker name | Uses the detected or named tracker and writes defaults; reports missing variables. With no explicit choice and nothing detected, writes nothing and reports the missing choice |
+| `attune` | `<setting> <value>` | Writes that setting without a question |
+| `scry` | `you-pick` | Accepts recommended answers while charting or walking |
+| `sift` | `you-pick` | Triages up to 10 issues; leaves rejections for a person |
+| `conjure` | `you-pick` | Accepts the recommended slices and order |
+| `cast` | `next` | Claims the oldest ready, unblocked ticket and builds its PR; stops when none is ready |
+| `scan` | `report`, `fix`, or `comment` | Reports, pushes fixes, or posts PR comments without a closing question |
+| `scan` | `mode:agent` | Returns JSON and leaves action to the caller |
+| `remedy` | `dry-run` or `no-push` | Judges only, or fixes without pushing; leaves `needs-human` items in the summary |
+| `augur`, `mend`, `banish`, `reveal` | None needed | Ask nothing |
+
+For setup, a tracker name is `github`, `linear`, `jira`, or `local`. For scan, `ticket:<id>` and `peer:<cli>` add context; neither skips the action question by itself. See [scan](#scan) for write modes and peer disclosure.
+
+If a token cannot write issues (403), `scry` and `conjure` save the same structure under `.scratch/` and say so. `cast` and `reveal` still open the PR when `--attach` is refused and explain why.
+
+```text
+# On a laptop, while you do something else
 /loop 30m /mana:cast next
 /loop 30m /mana:scan fix
 
-# as scheduled agents
+# As scheduled agents
 nightly       /mana:sift you-pick
 on a new PR   /mana:scan <pr> report
 on a review   /mana:remedy <pr>
 ```
 
-Point a routine at one skill per run. A skill that finds nothing to do exits quietly, so a tight schedule costs little.
+</details>
 
-### Orca
+## Orca
 
-Nothing here needs [Orca](https://github.com/stablyai/orca). When a skill runs inside an Orca worktree (Orca sets `ORCA_WORKTREE_ID` and puts `orca` on the path), it does a little more, and every extra step is best-effort: a failed `orca` call is reported, never a stop.
+[Orca](https://github.com/stablyai/orca) is optional. Inside its worktrees, skills can update worktree cards and capture browser proof. Failed Orca calls are reported while the skill continues.
 
-- `cast` links the ticket to the worktree card after the claim, and moves the card to in review with the PR URL after the ship. `reveal` moves the card the same way.
-- `cast` and `reveal` can capture proof from Orca's embedded browser (`orca screenshot`).
-- `sift`, `conjure`, and `cast` treat `orca linear` as a Linear connector, so no `LINEAR_API_KEY` is needed there. `cast` also attaches the PR to the Linear issue.
-- `scan` and `reveal` read the base branch Orca records in git config before falling back to the default branch.
-- `attune worktree` writes `.worktreeinclude` and `orca.yaml`, so a fresh worktree can run the validation command. `setup-mana` says in its report when they are needed.
+<details>
+<summary>Worktree integration and automation example</summary>
 
-Orca already creates each worktree on its own branch off the base, so `cast` never makes one there. That fits Orca automations, which run a prompt in a new worktree per run and skip the run when a precheck fails:
+Skills detect Orca through `ORCA_WORKTREE_ID` and the `orca` command on the path.
+
+| Integration | Behavior |
+|-------------|----------|
+| Worktree cards | `cast` links the claimed ticket. `cast` and `reveal` move the card to in review with the PR URL. |
+| Browser proof | `cast` and `reveal` can use `orca screenshot`. |
+| Linear | `sift`, `conjure`, and `cast` use `orca linear` without `LINEAR_API_KEY`. `cast` also attaches the PR to the issue. |
+| Base branch | `scan` and `reveal` use Orca's base from git config before the default branch. |
+| Worktree setup | `attune worktree` writes `.worktreeinclude` and `orca.yaml` so validation can run. `setup-mana` reports when they are needed. |
+
+Orca creates each worktree on its own branch off the base, so `cast` uses that branch. Automations start a new worktree per run and skip runs whose precheck fails:
 
 ```
 orca automations create --name "cast next" --trigger hourly --provider claude \
@@ -132,171 +608,9 @@ orca automations create --name "cast next" --trigger hourly --provider claude \
   --precheck "bash <skill dir>/scripts/tickets.sh next ready-for-agent | grep -q ."
 ```
 
-`<skill dir>` is wherever `cast` is installed. The same shape runs `sift you-pick` nightly or `scan <pr> report` hourly with a precheck that lists open pull requests.
+`<skill dir>` is where `cast` is installed. The same pattern runs `sift you-pick` nightly, or `scan <pr> report` hourly with a precheck that lists open PRs.
 
-## Skills
-
-### setup-mana
-
-Sets a repository up for the other skills. It detects the existing configuration and reuses your tracker choice from the conversation or tracker file. With no choice yet, it asks where the tickets live: GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected. A request to switch trackers asks for a destination only when you have not named one.
-
-Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it and name the tracker (`setup-mana linear`) to switch trackers, and use `attune` for anything else.
-
-```
-/mana:setup-mana                  # reuse the choice, or ask once
-/mana:setup-mana linear           # skip the question
-/mana:setup-mana you-pick         # take the detected tracker
-```
-
-### attune
-
-Changes one setting the other skills read, after setup, without redoing it. Run it bare and it prints every setting with its current value and which skills read it, then asks which one to change. Name a setting to jump straight there, and name a value too and it writes without asking anything.
-
-| Setting | What it changes |
-|---------|-----------------|
-| `labels` | The label strings the seven triage roles map to, and creates any that the tracker does not have |
-| `validation` | The `Validation:` line, after running the command once to prove it works |
-| `proof` | How pull request proof gets captured |
-| `docs` | Single context (`CONTEXT.md`) or multi context (`CONTEXT-MAP.md`) |
-| `peer` | Which installed CLI gets the diff as a second opinion on every review, or removes the line |
-| `worktree` | `.worktreeinclude` and `orca.yaml`, so a fresh Orca worktree can run the validation command |
-| `pr-surface` | Whether external pull requests enter triage as requests with attached code |
-| `key` | The Linear team or Jira project key, then verifies it against the tracker |
-| `pointer` | Whether the block lives in `CLAUDE.md` or `AGENTS.md` |
-
-Every setting has a working default and every skill that reads one falls back when it is missing, so removing a setting is always allowed. `peer` prints what leaving the machine means before it writes anything, because that line is the consent. Switching trackers is not here: re-run `setup-mana` and name the tracker for that.
-
-```
-/mana:attune                      # list every setting and its current value
-/mana:attune validation           # change one, with the current value shown
-/mana:attune peer codex           # write it and ask nothing
-/mana:attune key                  # re-verify the tracker after exporting a key
-```
-
-### scan
-
-Multi-reviewer code review for a branch or PR. Picks a roster of reviewer specs from what the diff actually touches: Protection Warrior (correctness) always, then Subtlety Rogue (security), Fire Mage (performance), Unholy Death Knight (data migration), Demonology Warlock (API contract), Restoration Shaman (reliability), Marksmanship Hunter (testing), Balance Druid (maintainability), Havoc Demon Hunter (adversarial), Windwalker Monk (frontend races), Retribution Paladin (project standards), Augmentation Evoker (agent-native parity), and Discipline Priest (instruction prose) as warranted, plus Lore Bard (existing feedback) on a PR. Runs them in parallel as subagents that return structured findings, merges and deduplicates them with a script, verifies the survivors with an independent validator, and renders one report. When the branch resolves a ticket, the report says which acceptance criteria the diff meets. The report lists what synthesis dismissed and why, so you can override it, and carries a patch-id stamp so a rebase shows up as a different diff. Ends with a single question: report only, fix and push, or leave inline PR comments in your own voice.
-
-Three things to know before pointing it at a PR. It reads every comment, review, and thread on the PR and hands them to a reviewer as claims to check against the code; that text is never followed as instructions, but it does enter the review. The `fix` and `comment` tokens (and `mode:agent`) skip the closing question, so `scan 123 fix` edits, commits, and pushes to the PR branch with no further prompt. Security scanners rate this skill high for exactly that combination. Leave the tokens off when you want the question. And `peer:<cli>` sends the diff to another installed CLI (`codex`, `gemini`, `cursor-agent`, `opencode`, `grok`, or `claude`) as a read-only second opinion; the skill prints one disclosure line before anything leaves the machine, and never does this unless you pass the token or `setup-mana` wrote a `Peer reviewer:` line.
-
-```
-/mana:scan                    # current branch against its base
-/mana:scan 123 report         # PR 123, report only
-/mana:scan base:main fix      # diff against main, fix everything actionable
-/mana:scan 123 ticket:ENG-42 report   # PR 123 checked against ticket ENG-42
-/mana:scan base:main peer:codex       # Codex as the adversarial reviewer
-```
-
-### remedy
-
-Resolves review feedback already on a PR. Fetches every unresolved thread, top-level comment, and review body, judges each one centrally (bots and humans alike), fixes what is real in parallel subagents, checks every fix against its ask, validates once, commits, pushes, and resolves the handled threads. On a large batch, read-only scouts gather the evidence per file while the verdicts stay in one place. Each run leaves `items.json`, `summary.md`, and `metadata.json` under `/tmp/remedy-<uid>/`, and the next run on the same PR reads them so a reopened thread or a decision still waiting on you is named rather than re-judged. It never writes to the PR conversation. Anything it would have said goes into the summary for you to paste or ignore. Failing checks get classified before anything runs: a failure in code the PR touched joins the fix list, a failure in untouched code is checked for a stale base, and a suspected flake gets one rerun at most.
-
-```
-/mana:remedy               # the current branch's PR
-/mana:remedy 123 dry-run   # judge and plan only
-/mana:remedy <comment-url> # one thread
-```
-
-### dispel
-
-Rewrites anything a person will read (Slack messages, PR descriptions, tickets, docs, commit bodies) so it sounds like someone talking. Bans the essay register: em dashes, antithesis, rule of three, setup and payoff, hedging, performed enthusiasm. Then the plain-speech pass: metaphor nouns like substrate and vector, passive voice with a nameable actor, adverbs standing in for a number, and sentences that could sit unchanged in any other project's docs. Triggers on "no em dashes", "sounds like AI", "make it sound human", "strip the AI voice".
-
-### mimic
-
-Replies to a message, comment, or email as you, so the other person does not notice you did not type it. Pulls your voice from your own messages in the thread, an optional `.mimic.md` profile (template in `skills/mimic/references/voice-profile.md`), and your commits or comments in the repo. Applies the `dispel` register plus reply rules: match the medium's length, no acknowledgement openers or helpful closers, no lists in chat, no invented facts (a bracketed placeholder instead). Output is the reply text only.
-
-`setup` fills the profile for you. It spawns Ghost, an agent that reads the prompts you have typed to your coding agent in its local logs, plus your own PR comments, PR descriptions, and commits, drops anything a tool wrote under your name, and returns a draft with the evidence. Point it at somewhere you write to people and that goes in too, which matters because everything else on the machine is you talking to a tool. A connected Slack workspace is the best source there is, since your sent messages are the same medium most replies go back into. A public profile (X, Mastodon, Bluesky, a blog) works when there is no connector. Work sources get scrubbed before anything lands in the file. You approve the draft before it is written to `~/.mimic.md`. `scan` reads the same profile when it leaves PR comments.
-
-```
-/mana:mimic                          # answer the last message from someone else
-/mana:mimic "say no, we're at capacity until next sprint"
-/mana:mimic setup                    # build ~/.mimic.md from your own writing
-/mana:mimic setup slack              # include your own sent messages from Slack
-/mana:mimic setup x.com/yourhandle   # include your own posts from a public profile
-/mana:mimic setup project            # build .mimic.md for this project only
-/mana:mimic refresh                  # rebuild and show the diff
-```
-
-### banish
-
-Removes comments that do not earn their place. Spawns the Comment Reaper on your diff, audits its report, applies the deletions, and then fixes the code the comments were covering for. A comment survives only under a short keep list: license headers, public API contracts, quirks of third-party code we cannot change, formatter directives, style-only lint suppressions, and links to constraints code cannot express.
-
-```
-/mana:banish                      # current diff against main
-/mana:banish src/api/             # a path
-```
-
-### scry
-
-Charts a chunk of work too big for one session as a GitHub map of decision tickets, then walks the frontier one ticket at a time. Charting names the destination, files the questions that are already sharp, and fires research in parallel. Walking claims the next unblocked ticket, resolves it, and files whatever the answer made specifiable. Tracker labels are `scry:map` and `scry:<type>`. Maps that still carry the older `wayfinder:*` labels walk unchanged. If GitHub refuses the write (403), the same shape lands under `.scratch/<slug>/`.
-
-```
-/mana:scry                        # chart a map from the idea in the conversation
-/mana:scry 92                     # walk map #92, or claim ticket #92
-/mana:scry 92 you-pick            # accept recommended answers
-```
-
-### conjure
-
-Turns a finished map, a spec, or the plan in the conversation into build tickets. Each one is a vertical slice sized to one session, with an agent brief and the tickets it waits on wired as blocking edges. Presents the slices and a recommended order as one round before filing anything. On a map, posts the build order as a comment. When the token cannot create issues, the same tickets land under `.scratch/<slug>/tickets/`.
-
-```
-/mana:conjure 92                  # the map, once nothing is left to decide
-/mana:conjure docs/spec.md        # a spec file
-/mana:conjure you-pick            # the plan in this conversation, no questions
-```
-
-### cast
-
-Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one and uses TDD at named seams for meaningful behavior changes when a test harness exists. Required project checks still run; successful validation is reused when no later edit or unresolved concern needs a fresh run. Checks the diff against the ticket and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch. Inside an Orca worktree the branch already exists, and the ticket, the status, and the PR land on the worktree card.
-
-```
-/mana:cast                        # the ticket already in this conversation
-/mana:cast 181                    # GitHub issue 181
-/mana:cast next                   # the oldest unclaimed ready-for-agent issue
-/mana:cast 181 no-pr              # commit only
-```
-
-### reveal
-
-Opens or updates a pull request for the current branch. The description is a sentence plus a compact tree or structural diff a reviewer can scan, and a screenshot, recording, or command-output image. Uses `gh --attach` so the file lands inline. A docs or backend change still gets a file: an SVG of the proving command. Stays off other branches.
-
-```
-/mana:reveal                      # current branch
-/mana:reveal 42                   # PR 42, if its head is this branch
-```
-
-### sift
-
-Moves unlabeled and `needs-triage` issues through the existing inbox states (`needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). Verifies the claim, grills when the request is thin, and posts an agent brief when the work can be delegated. Rejected enhancements land in `.out-of-scope/`. Tracker comments start with a triage disclaimer.
-
-Works on GitHub, Linear, Jira, or local files, whichever the tracker file names. `you-pick` triages without waiting, at most 10 issues per run, and leaves any rejection for a person.
-
-```
-/mana:sift                        # what needs attention
-/mana:sift 42                     # one issue
-/mana:sift ENG-42                 # the same on Linear
-/mana:sift move 42 to ready-for-agent
-/mana:sift you-pick               # triage the inbox unattended
-```
-
-### mend
-
-Finishes an in-progress merge, rebase, cherry-pick, or revert that has unmerged paths. Reads both sides of every hunk, keeps both intents when they commute, runs the project's checks, and continues the git operation. It never aborts. Weaver is the agent that resolves the hunks; the skill audits, regenerates lockfiles, and finishes the sequence.
-
-```
-/mana:mend                        # the conflicted merge or rebase already in progress
-```
-
-### augur
-
-Finds what a change could break beyond its diff and proves it is safe by running code. Names the one fact the change is safe because of, pushes it up a five-rung evidence ladder (asserted, cited, walked, ran, reproduced), and reports anything below "ran it" as unproven. Looks where grep stops: pinned library source, wire formats, database columns, feature flags, callers three hops out. The proving script is left on disk so a reviewer can rerun it.
-
-```
-/mana:augur                       # current branch against its base
-/mana:augur 123                   # PR 123, without checking it out
-/mana:augur base:main src/cache/  # one path against main
-```
+</details>
 
 ## Layout
 
@@ -309,11 +623,10 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
-`scan` and `remedy` began as forks of the review skills in Every's [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) plugin (MIT) and were rewritten from there. `banish` and its Comment Reaper agent were inspired by the `no-comments` skill and Comment Sicko agent in [pstack](https://github.com/cursor/plugins/tree/main/pstack), from Cursor's plugin collection (MIT). Both were written from scratch here, but the idea of handing a diff to an agent that hates comments and then acting on what it finds is theirs. The same plugin's `blast-radius` skill inspired `augur` (one safety fact, an evidence ladder, prove it by running code), its `unslop` skill inspired the plain-speech rules in `dispel`, and its `interrogate` lead-judgment notes inspired the Dismissed section in `scan`. All three were written from scratch here.
-
-`scry`, `cast`, `sift`, and `mend` were inspired by the engineering skills in [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) and written from scratch here. Maps filed under that loop's `wayfinder:*` labels still walk.
-
-The scannable PR body in `reveal` (trees, call stacks, structural diffs) was inspired by the `show-me` skill in [humanlayer/skills](https://github.com/humanlayer/skills) (MIT) and written from scratch here.
+- [Every's compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) (MIT): `scan` and `remedy` began as forks of its review skills and were rewritten here.
+- [Cursor's pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT): `no-comments` and Comment Sicko inspired `banish` and Comment Reaper. Its `blast-radius` inspired `augur`'s safety fact and evidence ladder; `unslop` inspired `dispel`'s plain-speech rules; `interrogate` inspired `scan`'s Dismissed section. These implementations were written from scratch.
+- [mattpocock/skills](https://github.com/mattpocock/skills) (MIT): inspired `scry`, `cast`, `sift`, and `mend`, all written from scratch here.
+- [humanlayer/skills](https://github.com/humanlayer/skills) (MIT): `show-me` inspired `reveal`'s scannable PR bodies, including trees, call stacks, and structural diffs. The implementation was written from scratch.
 
 ## License
 

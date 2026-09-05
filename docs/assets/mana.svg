@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 688 184" role="img" aria-labelledby="title desc">
+  <title id="title">Mana, Prism wordmark</title>
+  <desc id="desc">A faceted blue crystal beside angular MANA lettering, with diamond cutouts, cyan highlights and violet pixel shading.</desc>
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efffff"/>
+      <stop offset=".24" stop-color="#efffff"/>
+      <stop offset=".245" stop-color="#8ff5ff"/>
+      <stop offset=".59" stop-color="#56d5fa"/>
+      <stop offset=".595" stop-color="#8292ff"/>
+      <stop offset="1" stop-color="#7470f3"/>
+    </linearGradient>
+    <pattern id="dither" width="8" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 0h4v4H0zM4 4h4v4H4z" fill="#393fc2"/>
+    </pattern>
+    <g id="letters" fill-rule="evenodd">
+      <path d="M0 112V8L8 0H28L64 36L100 0H120L128 8V112H100V44L64 80L28 44V112Z"/>
+      <path transform="translate(144)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/>
+      <path transform="translate(264)" d="M0 112V8L8 0H28L84 64V0H104L112 8V112H84L28 48V112Z"/>
+      <path transform="translate(392)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/>
+    </g>
+    <clipPath id="letter-clip">
+      <path d="M0 112V8L8 0H28L64 36L100 0H120L128 8V112H100V44L64 80L28 44V112Z"/>
+      <path clip-rule="evenodd" transform="translate(144)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/>
+      <path transform="translate(264)" d="M0 112V8L8 0H28L84 64V0H104L112 8V112H84L28 48V112Z"/>
+      <path clip-rule="evenodd" transform="translate(392)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/>
+    </clipPath>
+    <g id="crystal">
+      <path d="M66 8L114 64V104L66 168L18 104V64Z" fill="#272c83" stroke="#272c83" stroke-width="3" stroke-linejoin="miter"/>
+      <path d="M66 8L18 64L42 72Z" fill="#e5ffff"/>
+      <path d="M66 8L90 72L114 64Z" fill="#8af2ff"/>
+      <path d="M66 8L42 72H90Z" fill="#b5faff"/>
+      <path d="M18 64V104L42 72Z" fill="#8af2ff"/>
+      <path d="M114 64V104L90 72Z" fill="#438ae9"/>
+      <path d="M42 72L66 128L90 72Z" fill="#5bcded"/>
+      <path d="M18 104L66 168L42 72Z" fill="#666aef"/>
+      <path d="M114 104L66 168L90 72Z" fill="#5044c1"/>
+      <path d="M42 72L66 168L66 128Z" fill="#a4acff"/>
+      <path d="M90 72L66 168L66 128Z" fill="#7774f7"/>
+      <path d="M66 44L78 76L66 100L54 76Z" fill="#f0ffff"/>
+    </g>
+  </defs>
+  <use href="#crystal"/>
+  <g transform="translate(164 36)">
+    <use href="#letters" transform="translate(8 8)" fill="#343491"/>
+    <use href="#letters" stroke="#343491" stroke-width="3" fill="url(#face)"/>
+    <g clip-path="url(#letter-clip)">
+      <path d="M0 28H496V36H0ZM0 66H496V82H0ZM0 96H496V108H0Z" fill="url(#dither)" opacity=".42"/>
+      <path d="M0 108H496V112H0Z" fill="#4142aa"/>
+    </g>
+  </g>
+</svg>
