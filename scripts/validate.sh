@@ -32,6 +32,8 @@ for p in $(python3 -c 'import json;print(" ".join(json.load(open(".claude-plugin
   [ -f "$p" ] || err "plugin.json agent path missing: $p"
 done
 scripts/sync-agent.sh --check || err "generated agents are out of sync"
+scripts/sync-persona.sh --check || err "persona references or activation blocks are out of sync"
+scripts/test-persona.sh || err "persona synchronization fixtures failed"
 
 # 2b. The plugin prefix agrees across both manifests and every /prefix:skill in the README exists.
 python3 - <<'PY' || err "plugin naming is inconsistent"

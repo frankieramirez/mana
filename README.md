@@ -95,7 +95,7 @@ A missing Linear or Jira credential still allows setup to write the configuratio
 
 ### attune
 
-Changes one repo setting after setup and shows which skills read it.
+Changes one repo setting after setup and shows which skills read it. Persona configuration also works before setup.
 
 - Run it bare to see current values and choose a setting.
 - Name the setting and value to write it without a question.
@@ -122,6 +122,7 @@ Changes one repo setting after setup and shows which skills read it.
 | `pr-surface` | Whether external GitHub PRs enter triage as requests with attached code |
 | `key` | The Linear team or Jira project key; verifies it against the tracker |
 | `pointer` | Whether the instructions block lives in `CLAUDE.md` or `AGENTS.md` |
+| `persona` | Enable Archmage narration for the project, or turn it off |
 
 Every setting has a default, so removing a setting is allowed. To switch trackers, re-run [setup-mana](#setup-mana) with the new tracker name.
 
@@ -130,7 +131,25 @@ Every setting has a default, so removing a setting is allowed. To switch tracker
 ```text
 /mana:attune peer codex   # configure a second opinion on every review
 /mana:attune key          # verify after exporting a tracker credential
+/mana:attune persona archmage  # enable the project persona, even before setup
+/mana:attune persona off       # return to ordinary narration
 ```
+
+#### Archmage
+
+Archmage is an optional voice inspired by Khadgar from Warcraft. The lead agent stays in character during a skill's explanations and progress reports, with arcane imagery and dry humor tied to the work:
+
+> Very well. Let's see what you've brought into the tower. I'll cast Scan over the branch and call in the specialists. The Rogue can inspect authentication; she has a gift for finding doors their owners insist are locked.
+>
+> The integration suite needs a database, and this environment hasn't one. Even I must occasionally contend with a missing prerequisite. The unit tests pass; the database behavior remains unverified.
+
+`attune persona archmage` saves `Persona: archmage` in the project's `## Agent skills` block. `attune persona off` removes it. With no setting, skills use their ordinary voice. Each invocation reads the setting again, and a request in the conversation can override it temporarily. The persona ends with the workflow unless you ask to keep it.
+
+This works through skill instructions in Claude Code, Codex, Cursor, Copilot, and Gemini CLI wherever the harness can read the project files. Each skill carries its own voice reference, so an individual skill install works too: add the setting to `AGENTS.md` or `CLAUDE.md` yourself if you did not install attune. When both exist, the file containing the block wins; ties use `CLAUDE.md`. Setup reruns preserve the preference. A chat without project-file access can use an explicit request for Archmage for that workflow instead. There is no global harness setting to install or change, and instruction following still depends on the host and model.
+
+PR text and replies written as you keep your voice. Findings stay technical, JSON-only modes remain JSON, and reply-only modes add no narration. Specialist agents keep their own roles. The full voice guide includes original examples of findings and completed work as well as the examples above.
+
+Maintainers edit `skills/attune/references/archmage.md` and the adjacent `persona-activation.md`, then run `scripts/sync-persona.sh`. Validation checks every skill's local reference and activation section for drift.
 
 </details>
 

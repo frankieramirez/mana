@@ -3,6 +3,16 @@ name: dispel
 description: "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel."
 ---
 
+<!-- BEGIN MANA PERSONA -->
+## Persona at invocation
+
+Before conversational narration, read `Persona:` in the active project's `## Agent skills` block from `CLAUDE.md` or `AGENTS.md`. Prefer the file containing the block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. Read the saved value anew on each invocation, including from a subdirectory using the project root. No accessible project or no line means ordinary behavior. Do not search another project or global settings for this preference.
+
+During the `Persona at invocation` stage, `archmage` loads this skill's own [references/archmage.md](references/archmage.md) for the active workflow. `off` or an absent value leaves ordinary behavior active. An unknown value leaves ordinary behavior active and gets a brief explanation when conversational output is allowed; it does not stop the work. Explicit conversation instructions override the saved voice without writing settings. A request to enable Archmage for this workflow also loads the local reference.
+
+Apply the voice only to lead-agent conversation. Deliverables, specialist roles, reply-only responses, and JSON-only output retain their contracts, with no added narration. End the persona with this workflow unless the user requests otherwise.
+<!-- END MANA PERSONA -->
+
 Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
@@ -10,6 +20,8 @@ If a skill rule requires a pause or leaves requested work unfinished, name and l
 Write like a person talking. Not like an essay performing.
 
 Apply the ban list below to prose. Code, code comments, config, quoted error text, and verbatim samples or evidence are exempt. Preserve exempt text exactly.
+
+When a conversational persona is active, preserve its intentional openings in agent narration. Arcane imagery and humorous asides belong to that voice too. Keep punctuation rules and technical evidence intact. This exception does not apply to deliverables or replies written as the user; return-only output still gets no narration.
 
 ## Banned constructions
 
