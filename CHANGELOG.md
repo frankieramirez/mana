@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.19.0
+
+- The plugin ships Archmage as a Claude Code output style. It appears as `mana:archmage` under `/config`, Output style, keeps the coding instructions, and stays on for every turn of the session. `scripts/sync-persona.sh` generates `output-styles/archmage.md` from the attune references, and `scripts/link-local.sh` links it for local development.
+- New `attune style` setting for hosts without an output style. `attune style archmage` writes `docs/agents/archmage.md` and a `Style:` line in the `## Agent skills` block that tells Codex, Cursor, Copilot, and Gemini CLI to read the voice at session start; `attune style off` removes both. Skills keep the voice on after a workflow when the line is set, and setup reruns preserve it.
+- The voice guide no longer ends the persona itself; the setting that loaded it says how long it lasts.
+
 ## 0.18.1
 
 - Persona synchronization preserves text outside its managed block and rejects symlink destinations before writing. Fixtures cover blank-line preservation and external targets.

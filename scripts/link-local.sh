@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Dev loop: symlink this checkout's skills and agents into ~/.claude so edits are live.
+# Dev loop: symlink this checkout's skills, agents, and output styles into ~/.claude so edits are live.
 # Do not use this while the `fr` plugin is installed, or every skill shows up twice.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 root=$(pwd)
-mkdir -p ~/.claude/skills ~/.claude/agents
+mkdir -p ~/.claude/skills ~/.claude/agents ~/.claude/output-styles
 for dir in "$root"/skills/*/; do
   name=$(basename "$dir")
   ln -sfn "$dir" ~/.claude/skills/"$name"
@@ -13,4 +13,8 @@ done
 for f in "$root"/agents/*.md; do
   ln -sfn "$f" ~/.claude/agents/"$(basename "$f")"
   echo "~/.claude/agents/$(basename "$f") -> $f"
+done
+for f in "$root"/output-styles/*.md; do
+  ln -sfn "$f" ~/.claude/output-styles/"$(basename "$f")"
+  echo "~/.claude/output-styles/$(basename "$f") -> $f"
 done

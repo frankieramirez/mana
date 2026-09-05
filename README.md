@@ -122,7 +122,8 @@ Changes one repo setting after setup and shows which skills read it. Persona con
 | `pr-surface` | Whether external GitHub PRs enter triage as requests with attached code |
 | `key` | The Linear team or Jira project key; verifies it against the tracker |
 | `pointer` | Whether the instructions block lives in `CLAUDE.md` or `AGENTS.md` |
-| `persona` | Enable Archmage narration for the project, or turn it off |
+| `persona` | Enable Archmage narration during skill workflows, or turn it off |
+| `style` | Keep Archmage on for every turn of a session, on hosts without an output style |
 
 Every setting has a default, so removing a setting is allowed. To switch trackers, re-run [setup-mana](#setup-mana) with the new tracker name.
 
@@ -131,8 +132,10 @@ Every setting has a default, so removing a setting is allowed. To switch tracker
 ```text
 /mana:attune peer codex   # configure a second opinion on every review
 /mana:attune key          # verify after exporting a tracker credential
-/mana:attune persona archmage  # enable the project persona, even before setup
+/mana:attune persona archmage  # narrate skill workflows as Archmage, even before setup
 /mana:attune persona off       # return to ordinary narration
+/mana:attune style archmage    # keep the voice on all session, for hosts without an output style
+/mana:attune style off         # remove it
 ```
 
 #### Archmage
@@ -143,13 +146,17 @@ Archmage is an optional voice inspired by Khadgar from Warcraft. The lead agent 
 >
 > The integration suite needs a database, and this environment hasn't one. Even I must occasionally contend with a missing prerequisite. The unit tests pass; the database behavior remains unverified.
 
-`attune persona archmage` saves `Persona: archmage` in the project's `## Agent skills` block. `attune persona off` removes it. With no setting, skills use their ordinary voice. Each invocation reads the setting again, and a request in the conversation can override it temporarily. The persona ends with the workflow unless you ask to keep it.
+There are two ways to turn it on.
 
-This works through skill instructions in Claude Code, Codex, Cursor, Copilot, and Gemini CLI wherever the harness can read the project files. Each skill carries its own voice reference, so an individual skill install works too: add the setting to `AGENTS.md` or `CLAUDE.md` yourself if you did not install attune. When both exist, the file containing the block wins; ties use `CLAUDE.md`. Setup reruns preserve the preference. A chat without project-file access can use an explicit request for Archmage for that workflow instead. There is no global harness setting to install or change, and instruction following still depends on the host and model.
+**As an output style, for the whole session.** In Claude Code the plugin ships the voice as the `mana:archmage` output style. Run `/config`, open Output style, and pick it, or set `outputStyle` to `mana:archmage` in `.claude/settings.local.json`. It keeps the coding instructions and applies to every turn until you switch back. Other hosts have no output style setting, so `attune style archmage` does the same job through the project files: it writes the voice to `docs/agents/archmage.md` and adds a `Style:` line to the `## Agent skills` block that tells the host to read it before the first reply. Codex, Cursor, and Copilot read that line from `AGENTS.md`, and Copilot and Claude Code read it from `CLAUDE.md`. Gemini CLI reads only `GEMINI.md`, so add a line `@docs/agents/archmage.md` there. `attune style off` removes the line and the file.
+
+**During skill workflows only.** `attune persona archmage` saves `Persona: archmage` in the block. Each skill reads the setting when it starts, narrates in the voice while it runs, and returns to ordinary behavior when the workflow ends unless you ask to keep it or the style setting is on. `attune persona off` removes it. Each skill carries its own voice reference, so an individual skill install works too: add the line to `AGENTS.md` or `CLAUDE.md` yourself if you did not install attune. When both files exist, the one containing the block wins; ties use `CLAUDE.md`.
+
+A request in the conversation overrides either setting for that session without writing anything. Setup reruns preserve both. A chat without project-file access can ask for Archmage directly. Instruction following still depends on the host and model.
 
 PR text and replies written as you keep your voice. Findings stay technical, JSON-only modes remain JSON, and reply-only modes add no narration. Specialist agents keep their own roles. The full voice guide includes original examples of findings and completed work as well as the examples above.
 
-Maintainers edit `skills/attune/references/archmage.md` and the adjacent `persona-activation.md`, then run `scripts/sync-persona.sh`. Validation checks every skill's local reference and activation section for drift.
+Maintainers edit `skills/attune/references/archmage.md` and the adjacent `archmage-session.md` and `persona-activation.md`, then run `scripts/sync-persona.sh`. That script also generates `output-styles/archmage.md`. Validation checks every skill's local reference, every activation section, and the output style for drift.
 
 </details>
 

@@ -15,7 +15,7 @@ with tempfile.TemporaryDirectory(prefix='mana persona ') as temporary:
     shutil.copy2(repository / 'scripts/sync-persona.sh', root / 'scripts/sync-persona.sh')
     source = root / 'skills/attune/references'
     source.mkdir(parents=True)
-    for name in ('archmage.md', 'persona-activation.md'):
+    for name in ('archmage.md', 'archmage-session.md', 'persona-activation.md'):
         shutil.copy2(repository / 'skills/attune/references' / name, source / name)
     original = '---\nname: {name}\ndescription: Test skill\n---\n\n# Test\n\nKeep this body exactly.\n'
     for name in ('attune', 'isolated'):
@@ -50,6 +50,17 @@ with tempfile.TemporaryDirectory(prefix='mana persona ') as temporary:
         assert text.count('<!-- END MANA PERSONA -->') == 1
         assert '[references/archmage.md](references/archmage.md)' in text
         assert (skill / 'references/archmage.md').read_bytes() == (source / 'archmage.md').read_bytes()
+
+    style = root / 'output-styles/archmage.md'
+    style_text = style.read_bytes()
+    assert style_text.startswith(b'---\nname: archmage\ndescription: '), 'output style lacks frontmatter'
+    assert b'\nkeep-coding-instructions: true\n---\n\n' in style_text, 'output style drops coding instructions'
+    assert (source / 'archmage-session.md').read_bytes().strip() in style_text, 'output style lacks the session scope'
+    assert style_text.endswith((source / 'archmage.md').read_bytes()), 'output style lacks the voice'
+    style.write_text('stale style\n')
+    run('--check', success=False)
+    run()
+    assert snapshot() == synced, 'output style was not regenerated'
 
     voice = root / 'skills/isolated/references/archmage.md'
     voice.write_text('stale voice\n')
@@ -154,6 +165,17 @@ with tempfile.TemporaryDirectory(prefix='mana persona ') as temporary:
     run(success=False)
     assert snapshot() == before, 'skill directory symlink caused partial writes'
     linked_skill.unlink()
+
+    linked_styles = root / 'output-styles'
+    shutil.rmtree(linked_styles)
+    linked_styles.symlink_to(external, target_is_directory=True)
+    before = snapshot()
+    run(success=False)
+    assert snapshot() == before, 'output-styles symlink caused writes'
+    assert not (external / 'archmage.md').exists(), 'output style escaped the repository'
+    linked_styles.unlink()
+    run()
+    run('--check')
 
     # A symlinked skills root is rejected before its contents are inspected.
     root_fixture = root / 'root-symlink-fixture'

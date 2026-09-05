@@ -35,6 +35,14 @@ scripts/sync-agent.sh --check || err "generated agents are out of sync"
 scripts/sync-persona.sh --check || err "persona references or activation blocks are out of sync"
 scripts/test-persona.sh || err "persona synchronization fixtures failed"
 
+# 2a. Every output style has the frontmatter the Claude Code picker needs.
+for f in output-styles/*.md; do
+  [ -e "$f" ] || continue
+  for key in name description keep-coding-instructions; do
+    sed -n '2,10p' "$f" | grep -q "^$key:[[:space:]]*.\+" || err "$f frontmatter lacks $key"
+  done
+done
+
 # 2b. The plugin prefix agrees across both manifests and every /prefix:skill in the README exists.
 python3 - <<'PY' || err "plugin naming is inconsistent"
 import json, pathlib, re, sys
@@ -70,7 +78,7 @@ banned='EveryInc|compound-engineering|\bce-[a-z]|\blfg\b|babysit|julik|\bcora\b|
 hits=$(grep -rnE "$banned" skills agents CLAUDE.md 2>/dev/null || true)   # README names the origins on purpose
 [ -z "$hits" ] || { err "origin residue found:"; echo "$hits" >&2; }
 # dispel/SKILL.md and scan voice.md quote dashes as examples of what not to write.
-dashes=$(grep -rn --include='*.md' -e '—' -e '–' skills agents README.md CLAUDE.md 2>/dev/null \
+dashes=$(grep -rn --include='*.md' -e '—' -e '–' skills agents output-styles README.md CLAUDE.md 2>/dev/null \
   | grep -v -e 'skills/dispel/SKILL.md' -e 'skills/scan/references/voice.md' || true)
 [ -z "$dashes" ] || { err "em/en dashes found:"; echo "$dashes" >&2; }
 

@@ -8,11 +8,11 @@ disable-model-invocation: true
 <!-- BEGIN MANA PERSONA -->
 ## Persona at invocation
 
-Before conversational narration, read `Persona:` in the active project's `## Agent skills` block from `CLAUDE.md` or `AGENTS.md`. Prefer the file containing the block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. Read the saved value anew on each invocation, including from a subdirectory using the project root. No accessible project or no line means ordinary behavior. Do not search another project or global settings for this preference.
+Before conversational narration, read `Persona:` and `Style:` in the active project's `## Agent skills` block from `CLAUDE.md` or `AGENTS.md`. Prefer the file containing the block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. Read the saved value anew on each invocation, including from a subdirectory using the project root. No accessible project or no line means ordinary behavior. Do not search another project or global settings for this preference.
 
-During the `Persona at invocation` stage, `archmage` loads this skill's own [references/archmage.md](references/archmage.md) for the active workflow. `off` or an absent value leaves ordinary behavior active. An unknown value leaves ordinary behavior active and gets a brief explanation when conversational output is allowed; it does not stop the work. Explicit conversation instructions override the saved voice without writing settings. A request to enable Archmage for this workflow also loads the local reference.
+During the `Persona at invocation` stage, `archmage` on either line loads this skill's own [references/archmage.md](references/archmage.md) for the active workflow. `off` or an absent value leaves ordinary behavior active. An unknown value leaves ordinary behavior active and gets a brief explanation when conversational output is allowed; it does not stop the work. Explicit conversation instructions override the saved voice without writing settings. A request to enable Archmage for this workflow also loads the local reference.
 
-Apply the voice only to lead-agent conversation. Deliverables, specialist roles, reply-only responses, and JSON-only output retain their contracts, with no added narration. End the persona with this workflow unless the user requests otherwise.
+Apply the voice only to lead-agent conversation. Deliverables, specialist roles, reply-only responses, and JSON-only output retain their contracts, with no added narration. End the persona with this workflow unless the user requests otherwise or a `Style:` line names `archmage`, which keeps the voice on for the whole session.
 <!-- END MANA PERSONA -->
 
 # Setup
@@ -107,7 +107,7 @@ Load the template for the chosen tracker, fill it, write it. Nothing is shown fo
 
 1. `docs/agents/issue-tracker.md` from the matching template. On `other`, the user's paragraph goes under `## Conventions` and `Adapter flags:` stays `none`.
 2. `docs/agents/triage-labels.md`, only when Stage 1 matched an existing label to a role. When every role uses its own name, write no file: a missing file already means the label string equals the role name, so the file would say nothing.
-3. The `## Agent skills` block, in the selected pointer file. Merge the setup-owned lines into an existing block in place and leave every other line, including `Persona: archmage`, in its original order. Both files exist independently: prefer the file that already has the block, or `CLAUDE.md` when both do, and say so. If neither file has a block, use the existing file, preferring `CLAUDE.md` when both exist. Neither file exists: create `AGENTS.md`, because every agent reads it, and say in the report that renaming it to `CLAUDE.md` works just as well. A rerun never disables or removes a persona setting.
+3. The `## Agent skills` block, in the selected pointer file. Merge the setup-owned lines into an existing block in place and leave every other line, including `Persona:` and `Style:`, in its original order. Both files exist independently: prefer the file that already has the block, or `CLAUDE.md` when both do, and say so. If neither file has a block, use the existing file, preferring `CLAUDE.md` when both exist. Neither file exists: create `AGENTS.md`, because every agent reads it, and say in the report that renaming it to `CLAUDE.md` works just as well. A rerun never disables or removes a persona or style setting.
 
 The block, carrying only the lines that have a value:
 
@@ -119,7 +119,7 @@ Triage labels: mapped. See `docs/agents/triage-labels.md`.
 Validation: `<the command>`
 ```
 
-The `Triage labels:` line is written only alongside its file. The `Validation:` line is written only when the command ran clean in Stage 1. Update or remove only setup-owned lines according to those conditions; preserve all other existing lines exactly, including `Persona:`. Setup never adds a persona setting. How pull request proof is captured, the domain docs layout, a second opinion reviewer, and the Orca worktree files all have working defaults, and none of them is a question this skill asks.
+The `Triage labels:` line is written only alongside its file. The `Validation:` line is written only when the command ran clean in Stage 1. Update or remove only setup-owned lines according to those conditions; preserve all other existing lines exactly, including `Persona:` and `Style:`. Setup never adds a persona or style setting. How pull request proof is captured, the domain docs layout, a second opinion reviewer, and the Orca worktree files all have working defaults, and none of them is a question this skill asks.
 
 ## Stage 4: Verify and report
 
@@ -155,7 +155,7 @@ Validation: <the command and its result | none recorded, each skill detects one>
 Wrote: <files written or updated in place>
 ```
 
-Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker and any existing persona setting was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a persona, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
+Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker and any existing persona or style setting was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a persona or session style, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
 
 ## References
 
