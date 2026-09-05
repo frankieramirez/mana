@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.1
+
+- Skills honor explicit user instructions and decisions already supplied in the conversation, and explain any skill rule that still requires a pause. Setup reuses the selected tracker; comment cleanup reuses authorization for constraint enforcement.
+- Review and feedback workflows collect asynchronous agent results through the host's supported wait mechanism. Reviewer model routing uses available tiers and inherits the session model when an override is unavailable.
+- Building applies TDD to testable behavior changes and reuses successful validation when no later edit or unresolved concern calls for another run. Required project checks still run.
+- Ghost reads `.mimic.md` on refresh and preserves punctuation in verbatim samples. Reply drafting keeps its reply-only output contract, and prose style rules exempt verbatim evidence.
+
 ## 0.17.0
 
 - `setup-mana` asks one question: where the tickets live. GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or a tracker described in a paragraph. The question is asked every run, and the detected answer is listed first and labelled as detected. Detection now ranks its signals and puts a GitHub remote last, since nearly every repo has one and that alone is not evidence of where the tickets are. A ticket key prefix in recent commit subjects (`ENG-12`) is a Linear or Jira signal.

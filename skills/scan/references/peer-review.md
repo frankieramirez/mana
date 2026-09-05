@@ -70,9 +70,9 @@ You are one reviewer inside a larger code review run by another agent. Rules:
 | 0 (from `--check`) | CLI present, family rule passed, disclosure printed | Drop the local Havoc Demon Hunter from the batch; run the peer in the batch |
 | 2 (from `--check` or a start failure) | Could not start: CLI missing, same family without the token, flag rejected | Keep the local Havoc Demon Hunter in the batch; Coverage says `peer: not started (<reason>)` |
 | 0 (full run) | `havoc-demon-hunter-peer.json` written and schema-valid | Merge as usual |
-| 3 (full run) | Started, then timed out, returned no JSON, failed the schema, or returned findings that were all malformed | Coverage says `peer: no usable output (<reason>)`; dispatch the local Havoc Demon Hunter in one more foreground call, then merge |
+| 3 (full run) | Started, then timed out, returned no JSON, failed the schema, or returned findings that were all malformed | Coverage says `peer: no usable output (<reason>)`; dispatch the local Havoc Demon Hunter in one more capacity-aware call, then collect it before merge |
 
-The peer runs inside the same foreground batch as the reviewer spawns: one Bash call with a timeout, alongside the Agent calls, in a single message. The Bash timeout is the wait. No background job, no polling, no status turns.
+The peer runs through the same capacity-aware collection path as reviewer spawns. Retain the command's completion handle or result and use the host's supported wait mechanism before synthesis. The command timeout bounds that one operation. Do not run it as an untracked background job, busy-poll, or invent an Agent wait contract.
 
 ## After fold-in
 

@@ -6,6 +6,10 @@ argument-hint: "[blank to list every setting] [labels | validation | proof | doc
 
 # Attune
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+
 Change one thing the other skills read. This skill edits files that already exist. It does not pick the tracker, and it does not write `docs/agents/issue-tracker.md` from scratch.
 
 ## Operating principles

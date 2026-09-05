@@ -6,6 +6,10 @@ argument-hint: "[blank for current branch | PR number | PR URL | branch] [base:<
 
 # Scan
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+
 Reviews code changes with dynamically selected reviewer personas. Dispatches bounded specialist subagents that return structured JSON, merges and deduplicates their findings with a script, verifies the survivors with an independent validator, checks the change against its ticket, and renders a single report. Then it asks what to do with the findings.
 
 ## When to use
@@ -25,7 +29,7 @@ Follow these boundaries in order. References supply detail but never change the 
 2. **When the target is a PR, harvest existing PR feedback unconditionally** (Stage 2b). This is not a conditional lens; it always runs for a PR.
 3. Resolve the ticket the change claims to finish and turn it into a requirements block (Stage 2c). No ticket is a normal outcome, never a question.
 4. Select the risk-driven reviewer roster and discover applicable standards paths (Stage 3).
-5. Read `references/subagent-template.md`, `references/diff-scope.md`, `references/findings-schema.json`, the selected persona files, and `references/peer-review.md` when a peer was requested, then dispatch the roster as one foreground concurrent batch and collect every reviewer before synthesis (Stage 4).
+5. Read `references/subagent-template.md`, `references/diff-scope.md`, `references/findings-schema.json`, the selected persona files, and `references/peer-review.md` when a peer was requested, then dispatch the roster in capacity-sized batches and collect every reviewer before synthesis (Stage 4).
 6. Read `references/finish-review.md` and follow it to merge, validate, and render the report (Stage 5). Never synthesize directly from raw reviewer artifacts.
 7. Ask what to do with the findings, then do it (Stage 6). This is the one blocking question this skill asks.
 
@@ -295,7 +299,7 @@ Reconcile it in the final report: a preliminary item that did not survive gets a
 
 ### Model tiering
 
-`protection-warrior`, `subtlety-rogue`, and `havoc-demon-hunter` inherit the session model with no override; they do the highest-stakes analysis. Every other reviewer uses the platform's mid-tier model (Sonnet class in Claude Code). Record each reviewer's tier when you select it and apply the override on **every** dispatch call. A missed override silently runs a cheap lens at the expensive tier. Do not print tiers to the user.
+`protection-warrior`, `subtlety-rogue`, and `havoc-demon-hunter` inherit the session model with no override; they do the highest-stakes analysis. For every other reviewer, use a supported mid-tier model exposed by the host, while preserving explicit user or repository model routing. Resolve the model from the host's available choices; never invent an identifier or assume that every host has the same tiers. Apply an override only when the host supports it and the active routing permits it. If no suitable mid-tier choice is available, omit the override and inherit the session model. Record the effective routing when the host reports it, but do not print tiers to the user.
 
 ### Cross-model peer, only when requested
 
@@ -314,7 +318,7 @@ Write `full.diff` and `files.txt` into `$RUN_DIR` and pass those **paths** inste
 
 Before assembling any prompt, read these from this skill's directory, in one parallel wave along with the selected persona files: `references/subagent-template.md`, `references/diff-scope.md`, `references/findings-schema.json`.
 
-Spawn each selected reviewer as a **generic subagent** seeded with its persona file. Do not use typed agent names. Omit the `mode` parameter so the user's permission settings apply. Dispatch the whole roster as one **foreground concurrent batch** (multiple spawns in a single message, background execution off) and let that single wait return every reviewer's JSON. When a peer passed preflight, one Bash call in that same message runs it, with the Bash timeout as the wait:
+Spawn each selected reviewer as a **generic subagent** seeded with its persona file. Do not use typed agent names. Omit the `mode` parameter so the user's permission settings apply. Launch reviewers up to the host's active-agent capacity; read-only reviewers can inspect the same files. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and use the host's supported wait or completion mechanism to collect its result. Individual asynchronous spawn calls can run concurrently without a batch tool. When a peer passed preflight, launch its read-only command and track its completion alongside the reviewers:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
@@ -323,9 +327,9 @@ bash "$SKILL_DIR/scripts/review.sh" peer --cli <cli> --run-dir "$RUN_DIR" --brie
 
 Set the Bash tool's own timeout on that call to its maximum (600000 ms in Claude Code) so the harness never kills the shell before the script's `--timeout` fires; a killed shell leaves no output file and no exit code to act on.
 
-Size the batch to the host's active-agent cap and refill as slots free; never hard-code a number. Treat concurrency-limit spawn errors as backpressure to retry, not reviewer failure. Where the harness does not run same-message calls concurrently, this degrades to serial, which is the correct floor.
+Refill as slots free until the roster is exhausted; never hard-code a batch size. On a concurrency-limit error, keep the unlaunched reviewer queued and retry after a running reviewer completes. If the host offers only serial blocking calls, run the roster sequentially. Never fabricate task IDs or force an unsupported model or dispatch parameter.
 
-No polling, status calls, sleeps, shell no-ops, scheduled wakeups, or "still waiting" turns. Collect **every** spawned reviewer before synthesis; synthesis on a partial roster is a defect. A peer that exits 2 or 3 after preflight passed (could not start after all, or started and returned nothing usable) gets one more foreground call dispatching the local `havoc-demon-hunter`, and Coverage says `peer: not started (<reason>)` or `peer: no usable output (<reason>)`.
+Prefer completion events or bounded waits over repeated status reads. Use a status read when needed to recover a task's state; avoid busy polling and unchanged status updates. Collect **every** spawned reviewer before synthesis; synthesis on a partial roster is a defect. A peer that exits 2 or 3 after preflight passed (could not start after all, or started and returned nothing usable) gets one more dispatch of the local `havoc-demon-hunter` when capacity permits, and Coverage says `peer: not started (<reason>)` or `peer: no usable output (<reason>)`.
 
 After collection, for any reviewer whose artifact file is missing or fails to parse, write its compact return to `$RUN_DIR/returns/<reviewer_name>.json` so the merge can still use it. A reviewer that returned nothing usable is a failed reviewer: name it in Coverage, never invent its findings.
 

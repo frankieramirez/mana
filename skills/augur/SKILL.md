@@ -6,6 +6,10 @@ argument-hint: "[blank for current branch's diff | base:<ref> | PR number | path
 
 # Augur
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+
 Listing the callers is not the job. Any grep does that in a second. The job is the breakage grep will not show, and then a proof that the change is safe, produced by running code rather than by writing a convincing paragraph.
 
 A writeup that sounds right is worthless on its own. It reads as convincing whether or not it is true. So the deliverable is one or two facts the whole thing depends on, each pushed as far up the evidence ladder as is cheap, with the rung named.

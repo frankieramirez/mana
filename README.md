@@ -77,7 +77,7 @@ An existing project runs setup once and then skips the first two rows. Its stead
 
 ### Trackers
 
-Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` asks which one, every run, and records the choice in `docs/agents/issue-tracker.md`, where `sift`, `conjure`, and `cast` read it before touching a ticket. A GitHub remote is never taken as the answer, since nearly every repo has one. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A missing key does not stop setup: the choice is recorded, the report names the variable to set, and `attune key` verifies it once that variable is there. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
+Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` reuses your tracker choice from the conversation or `docs/agents/issue-tracker.md`, and asks when the choice is missing or you request a switch without naming the destination. `sift`, `conjure`, and `cast` read that file before touching a ticket. A GitHub remote is only a detection signal. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A missing key does not stop setup: the choice is recorded, the report names the variable to set, and `attune key` verifies it once that variable is there. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
 
 Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
 
@@ -138,12 +138,12 @@ orca automations create --name "cast next" --trigger hourly --provider claude \
 
 ### setup-mana
 
-Sets a repository up for the other skills, in one question. It detects what it can (the remote, existing docs, the labels already on the tracker, a test command, which tracker variables are set, whether a connector is live) and then asks the one thing a checkout cannot tell it: where the tickets live. GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected, and the question is asked every run, so a repo with a GitHub remote is never assumed to keep its tickets there.
+Sets a repository up for the other skills. It detects the existing configuration and reuses your tracker choice from the conversation or tracker file. With no choice yet, it asks where the tickets live: GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected. A request to switch trackers asks for a destination only when you have not named one.
 
 Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it to switch trackers, and use `attune` for anything else.
 
 ```
-/mana:setup-mana                  # one question, then write
+/mana:setup-mana                  # reuse the choice, or ask once
 /mana:setup-mana linear           # skip the question
 /mana:setup-mana you-pick         # take the detected tracker
 ```

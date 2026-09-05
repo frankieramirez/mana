@@ -7,6 +7,10 @@ disable-model-invocation: true
 
 # Cast
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+
 Build the work described by one ticket, spec, or the current conversation. Stay on the current branch. Commit when the work matches the ticket. Push and open a pull request with visual evidence. Pass `no-pr` to stop after the commit (and push only if an upstream already exists).
 
 ## Operating principles
@@ -115,9 +119,9 @@ Do not start coding until that intent is written. If the ticket is still a quest
 
 ## Stage 2: Build
 
-If the repo has a test harness, read `references/tdd.md` and follow it at the seams you wrote down. If it does not, build without a red-green loop and say so once.
+When the change has meaningful behavior to verify and the repo has a test harness, read `references/tdd.md` and follow it at the seams you wrote down. Docs, configuration, and other changes with no behavioral effect do not require a TDD loop just because a harness exists. If there is no harness, build without a red-green loop and say so once.
 
-Typecheck and the tests around the files you touch as you go. Run the project's full suite once the slice is in: the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name.
+Typecheck and run meaningful behavior tests around the files you touch as you go. Run the project's required validation: use the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name. A successful validation may be reused when no edits have happened since it ran. Rerun it after new edits, a failure, or an unresolved concern.
 
 Stay inside the ticket's scope. Adjacent cleanup waits.
 
@@ -202,7 +206,7 @@ Open: <any criterion left unmet, or none>
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
-| `references/tdd.md` | Stage 2, when a test harness exists | Red-green at agreed seams |
+| `references/tdd.md` | Stage 2, for meaningful behavior changes with a test harness | Red-green at agreed seams |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
 | `references/capture.md` | Stage 5 | What to record, and the SVG stand-in |
 | `references/body.md` | Stage 5 | Scannable PR body: trees and diffs |

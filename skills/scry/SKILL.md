@@ -7,6 +7,10 @@ disable-model-invocation: true
 
 # Scry
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+
 A loose idea has arrived, too big for one session. The way to the destination is still fog. This skill charts that way as a shared map on GitHub, then works **decision tickets** (questions whose answer is a decision) one at a time until the route is clear.
 
 The destination is named first. It might be a spec, a locked decision, or a change made in place. Name it, because every ticket hangs off it.

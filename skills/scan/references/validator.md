@@ -1,6 +1,6 @@
 # Validator batch template
 
-Load at Stage 5b. One generic subagent, one batch, foreground. The orchestrator fills every `{slot}` and sends the result as the subagent's entire prompt. Same model tier as the session.
+Load at Stage 5b. One generic subagent. The orchestrator fills every `{slot}` and sends the result as the subagent's entire prompt. Retain the returned task ID and collect completion through the host's supported wait mechanism before judging the result. Same model tier as the session.
 
 ---
 
