@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Synchronize the standalone persona references and skill entrypoint blocks.
+# Synchronize the standalone persona references, skill entrypoint blocks, and the plugin output style.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 case "${1:-}" in
@@ -35,15 +35,19 @@ def reject_symlink_components(path):
 if root.is_symlink():
     sys.exit(f'{root}: symlink destination is not allowed')
 reject_symlink_components(source)
-for path in (source / 'archmage.md', source / 'persona-activation.md'):
+for path in (source / 'archmage.md', source / 'archmage-session.md', source / 'persona-activation.md'):
     reject_symlink_components(path)
+style = repo / 'output-styles/archmage.md'
+reject_symlink_components(style)
 
 voice = (source / 'archmage.md').read_bytes()
+session = (source / 'archmage-session.md').read_bytes().strip()
+frontmatter_style = b'---\nname: archmage\ndescription: Narrates as Archmage, an experienced mage working beside you\nkeep-coding-instructions: true\n---\n\n'
 block = (source / 'persona-activation.md').read_bytes().decode('utf-8').strip()
 if block.count(begin) != 1 or block.count(end) != 1 or not block.startswith(begin) or not block.endswith(end):
     sys.exit('invalid canonical persona activation block')
 pattern = re.compile(re.escape(begin) + r'.*?' + re.escape(end), re.S)
-updates = []
+updates = [(style, frontmatter_style + session + b'\n\n' + voice)]
 for directory in sorted(root.iterdir()):
     if not directory.is_dir():
         continue

@@ -16,6 +16,7 @@ Nothing here is required. Every reader falls back, so removing a setting is alwa
 | key | The `Project:` and `Adapter flags:` lines of `docs/agents/issue-tracker.md` | The bundled script falls back to `LINEAR_TEAM` or `JIRA_PROJECT` | Every tracker call in every skill |
 | pointer | Which of `CLAUDE.md` and `AGENTS.md` holds the block | Whichever one exists | Every setting above |
 | persona | The `Persona:` line in the `## Agent skills` block | Off, with ordinary skill behavior | Every skill's lead agent |
+| style | The `Style:` line in the block plus `docs/agents/archmage.md`; under Claude Code, the `mana:archmage` output style | Off, with the host's ordinary voice | The host at session start, and every skill's lead agent |
 
 ## The seven roles
 
@@ -31,3 +32,4 @@ Worth putting first in the Stage 2 question, because these are the ones a user c
 - `peer` names a CLI that is not on the PATH.
 - `pointer` names a file that does not exist.
 - `persona` contains a value other than `archmage` or `off`.
+- `style` names `archmage` while `docs/agents/archmage.md` is missing.
