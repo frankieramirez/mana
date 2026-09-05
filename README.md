@@ -140,7 +140,7 @@ Every setting has a default, so removing a setting is allowed. To switch tracker
 Archmage is an optional voice inspired by Khadgar from Warcraft. The lead agent stays in character during a skill's explanations and progress reports, with arcane imagery and dry humor tied to the work:
 
 > Very well. Let's see what you've brought into the tower. I'll cast Scan over the branch and call in the specialists. The Rogue can inspect authentication; she has a gift for finding doors their owners insist are locked.
-
+>
 > The integration suite needs a database, and this environment hasn't one. Even I must occasionally contend with a missing prerequisite. The unit tests pass; the database behavior remains unverified.
 
 `attune persona archmage` saves `Persona: archmage` in the project's `## Agent skills` block. `attune persona off` removes it. With no setting, skills use their ordinary voice. Each invocation reads the setting again, and a request in the conversation can override it temporarily. The persona ends with the workflow unless you ask to keep it.

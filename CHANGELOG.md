@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.18.1
+
+- Persona synchronization preserves text outside its managed block and rejects symlink destinations before writing. Fixtures cover blank-line preservation and external targets.
+- Attune records the project root before reading settings and uses it for later edits. Persona references name their loading stage, and the narration exception follows the prose conventions.
+
 ## 0.18.0
 
 - Add an opt-in Archmage persona inspired by Khadgar from Warcraft. `attune persona archmage` enables immersive lead-agent narration for the project; `attune persona off` removes the setting. Persona configuration works without a tracker, and setup reruns preserve existing preferences.

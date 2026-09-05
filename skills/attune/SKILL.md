@@ -9,7 +9,7 @@ argument-hint: "[blank to list every setting] [labels | validation | proof | doc
 
 Before conversational narration, read `Persona:` in the active project's `## Agent skills` block from `CLAUDE.md` or `AGENTS.md`. Prefer the file containing the block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. Read the saved value anew on each invocation, including from a subdirectory using the project root. No accessible project or no line means ordinary behavior. Do not search another project or global settings for this preference.
 
-`archmage` loads this skill's own [references/archmage.md](references/archmage.md) for the active workflow. `off` or an absent value leaves ordinary behavior active. An unknown value leaves ordinary behavior active and gets a brief explanation when conversational output is allowed; it does not stop the work. Explicit conversation instructions override the saved voice without writing settings. A request to enable Archmage for this workflow also loads the local reference.
+During the `Persona at invocation` stage, `archmage` loads this skill's own [references/archmage.md](references/archmage.md) for the active workflow. `off` or an absent value leaves ordinary behavior active. An unknown value leaves ordinary behavior active and gets a brief explanation when conversational output is allowed; it does not stop the work. Explicit conversation instructions override the saved voice without writing settings. A request to enable Archmage for this workflow also loads the local reference.
 
 Apply the voice only to lead-agent conversation. Deliverables, specialist roles, reply-only responses, and JSON-only output retain their contracts, with no added narration. End the persona with this workflow unless the user requests otherwise.
 <!-- END MANA PERSONA -->
@@ -43,11 +43,21 @@ Change one thing the other skills read. This skill edits existing configuration,
 
 ## Stage 1: Read the current state
 
-Read from the project root, even when invoked in a subdirectory. Prefer the instruction file that contains the `## Agent skills` block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. For persona configuration with neither file present, use `AGENTS.md`.
+Resolve the project root before reading settings, even when invoked in a subdirectory:
+
+```bash
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+printf '%s\n' "$PROJECT_ROOT"
+```
+
+Outside Git, use the host's known workspace root when available in place of the current-directory fallback. Retain the resolved absolute path for this invocation. Shell state does not persist between calls: set `PROJECT_ROOT` to that recorded path and use it as the working directory for every later read, edit, and command, including Stage 3. Do not resolve it again from a later shell's directory.
+
+Prefer the instruction file that contains the `## Agent skills` block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. For persona configuration with neither file present, use `AGENTS.md`.
 
 A named persona invocation skips tracker inspection and CLI discovery; read the instruction files and the settings reference. Other invocations inspect:
 
 ```bash
+PROJECT_ROOT="<absolute project root recorded above>"; cd "$PROJECT_ROOT" || exit 1
 ls -l CLAUDE.md AGENTS.md 2>/dev/null
 awk 'FNR==1 {show=0} /^## Agent skills$/ {show=1; print; next} /^## / {show=0} show' CLAUDE.md AGENTS.md 2>/dev/null
 sed -n '1,12p' docs/agents/issue-tracker.md 2>/dev/null
@@ -85,12 +95,13 @@ Then ask one question with the platform's blocking question tool (`AskUserQuesti
 
 ## Stage 3: The flows
 
-One setting, one flow. Stop when it is written.
+One setting, one flow. Stop when it is written. Resolve project configuration paths below against the absolute project root recorded in Stage 1, including paths passed to file-editing tools. Supporting references and bundled scripts still resolve from `SKILL_DIR`.
 
 **labels.** Show the current mapping, or say the roles use their own names. List the labels that already exist on the tracker, through the connector or by reading with the bundled script. Ask for the mapping in one question, with the roles that already have a good match filled in. Write `docs/agents/triage-labels.md` from `references/triage-labels.md`, keeping the prose above and below the table and rewriting only the rows. Then create every string that does not exist yet:
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+PROJECT_ROOT="<absolute project root from Stage 1>"; cd "$PROJECT_ROOT" || exit 1
 bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags from the tracker file> ensure-labels --color d73a4a <the category strings>
 bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the state strings>
 ```
@@ -113,6 +124,7 @@ Existing labels are never renamed or deleted on the tracker. The report names th
 
 ```bash
 SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
+PROJECT_ROOT="<absolute project root from Stage 1>"; cd "$PROJECT_ROOT" || exit 1
 bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> check
 ```
 
