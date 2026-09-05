@@ -6,6 +6,10 @@ argument-hint: "[blank for the in-progress operation]"
 
 # Mend
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
+
 Finish the merge, rebase, cherry-pick, or revert that is already in progress. Read both sides of every conflict, keep both intents where they fit, and complete the git operation. Never abort.
 
 ## Operating principles

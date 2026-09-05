@@ -1,17 +1,21 @@
 ---
 name: setup-mana
-description: "Set up a repository for the other skills in one question: where the tickets live, on GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Everything else is detected and written for you, the triage labels, the command that proves the project works, the docs/agents files, and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana."
+description: "Set up a repository for the other skills using your chosen tracker, asking where tickets live when that choice is missing. Supports GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Detects and writes the configuration and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to refresh configuration or switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana."
 argument-hint: "[blank] [github | linear | jira | local] [you-pick]"
 disable-model-invocation: true
 ---
 
 # Setup
 
-Pick the tracker, then write the per-repo configuration the other skills read. One question, then files. Re-running updates the same files in place.
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
+
+Use the tracker the user chose, then write the per-repo configuration the other skills read. Ask when that choice is missing. Re-running updates the same files in place.
 
 ## Operating principles
 
-- **One question.** Where the tickets live is the only thing the checkout cannot tell you. Everything else is detected, defaulted, written, and reported. Never turn a detected value into a question.
+- **Reuse the answer.** A tracker chosen in this conversation or recorded in the tracker file needs no confirmation. Ask where tickets live only when the choice is missing or the user requests a switch without naming the destination. Everything else is detected, defaulted, written, and reported.
 - **Write the answer, report the doubt.** The files get written on the answer, not on a passing check. A refused token or a missing key does not stop the run: write the config, mark the check unverified in the report, and name the exact variable to set. Never invent a value nobody gave you. Leave the template placeholder and say which line to fill.
 - **A detected line is written only when it ran.** The validation command is found, run once, and recorded only when it finishes without a missing binary. Otherwise the line is left out, which costs nothing, because every skill that reads it falls back to detecting a command itself.
 - **Secrets stay in the environment.** The files name the variable, never the value.
@@ -22,7 +26,7 @@ Pick the tracker, then write the per-repo configuration the other skills read. O
 ## Execution spine
 
 1. Detect (Stage 1).
-2. Ask where the tickets live (Stage 2).
+2. Resolve where the tickets live (Stage 2).
 3. Write (Stage 3).
 4. Verify and report (Stage 4).
 
@@ -63,7 +67,7 @@ Say what is present in two or three lines. Do not ask about any of it.
 
 ## Stage 2: Where do the tickets live
 
-Ask this every run. Do not settle it from Stage 1, do not skip it because a file already answers it, and do not skip it because the repo has a GitHub remote. A bare `github`, `linear`, `jira`, or `local` on the invocation is the answer and skips the question. Under `you-pick` there is nobody to ask, so take the detected option and say in one line which it was.
+Use the latest explicit tracker choice from the request or earlier in this conversation, including `github`, `linear`, `jira`, or `local` on the invocation. Otherwise retain the valid choice in `docs/agents/issue-tracker.md`. A later request to switch trackers supersedes that earlier choice: use the newly named destination, or ask the question below when it is missing. A GitHub remote alone is only a detection signal. Under `you-pick`, use the detected option when no explicit choice exists and report it; with no detection, write nothing and stop, reporting `Tracker: none detected; pass github, linear, jira, or local`. Never ask under `you-pick`.
 
 Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded), falling back to the conversation where no such tool exists. One question, headed `Tracker`, with these four options and the detected one moved to the top:
 
@@ -141,7 +145,7 @@ Validation: <the command and its result | none recorded, each skill detects one>
 Wrote: <files written or updated in place>
 ```
 
-Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again.
+Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
 
 ## References
 

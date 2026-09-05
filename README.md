@@ -77,7 +77,7 @@ An existing project runs setup once and then skips the first two rows. Its stead
 
 ### Trackers
 
-Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` asks which one, every run, and records the choice in `docs/agents/issue-tracker.md`, where `sift`, `conjure`, and `cast` read it before touching a ticket. A GitHub remote is never taken as the answer, since nearly every repo has one. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A missing key does not stop setup: the choice is recorded, the report names the variable to set, and `attune key` verifies it once that variable is there. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
+Tickets can live on GitHub Issues, Linear, Jira Cloud, or as markdown files under `.scratch/`. `setup-mana` reuses your tracker choice from the conversation or `docs/agents/issue-tracker.md`, and asks when the choice is missing or you request a switch without naming the destination. `sift`, `conjure`, and `cast` read that file before touching a ticket. A GitHub remote is only a detection signal. On a laptop where the host already exposes a Linear or Jira connector, the skills use it, so no key is needed. Inside an Orca worktree, `orca linear` is such a connector. Everywhere else, one script, `tickets.sh`, does the same eleven operations on all three services. Linear needs `LINEAR_API_KEY`; Jira needs `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`. Both are read from the environment and never written to a file, and a scheduled agent needs them set where it runs. A missing key does not stop setup: the choice is recorded, the report names the variable to set, and `attune key` verifies it once that variable is there. A tracker not on that list still works: describe how it is used in a paragraph and the skills follow that prose.
 
 Pull requests stay on GitHub. `scan`, `remedy`, and `reveal` are unchanged by the tracker choice, and the closing line in a PR body uses the tracker's key (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`). A local file is named in the body; merge does not rewrite `Status:`.
 
@@ -87,7 +87,7 @@ Every skill that would ask a question has a token that answers it, so the same s
 
 | Skill | Token | What it does without a person |
 |-------|-------|-------------------------------|
-| `setup-mana` | `you-pick`, or a bare `github`, `linear`, `jira`, `local` | Takes the detected tracker without asking and writes everything else at its default; an unset variable is reported, never a stop |
+| `setup-mana` | `you-pick`, or a bare `github`, `linear`, `jira`, `local` | Takes the detected tracker without asking and writes everything else at its default. An unset variable is reported, never a stop. With nothing detected it writes nothing and reports the missing choice |
 | `attune` | `<setting> <value>` | Writes that one setting and asks nothing |
 | `scry` | `you-pick` | Accepts every recommended answer while charting or walking |
 | `sift` | `you-pick` | Triages up to 10 issues, never closes one as rejected |
@@ -138,12 +138,12 @@ orca automations create --name "cast next" --trigger hourly --provider claude \
 
 ### setup-mana
 
-Sets a repository up for the other skills, in one question. It detects what it can (the remote, existing docs, the labels already on the tracker, a test command, which tracker variables are set, whether a connector is live) and then asks the one thing a checkout cannot tell it: where the tickets live. GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected, and the question is asked every run, so a repo with a GitHub remote is never assumed to keep its tickets there.
+Sets a repository up for the other skills. It detects the existing configuration and reuses your tracker choice from the conversation or tracker file. With no choice yet, it asks where the tickets live: GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected. A request to switch trackers asks for a destination only when you have not named one.
 
-Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it to switch trackers, and use `attune` for anything else.
+Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it and name the tracker (`setup-mana linear`) to switch trackers, and use `attune` for anything else.
 
 ```
-/mana:setup-mana                  # one question, then write
+/mana:setup-mana                  # reuse the choice, or ask once
 /mana:setup-mana linear           # skip the question
 /mana:setup-mana you-pick         # take the detected tracker
 ```
@@ -164,7 +164,7 @@ Changes one setting the other skills read, after setup, without redoing it. Run 
 | `key` | The Linear team or Jira project key, then verifies it against the tracker |
 | `pointer` | Whether the block lives in `CLAUDE.md` or `AGENTS.md` |
 
-Every setting has a working default and every skill that reads one falls back when it is missing, so removing a setting is always allowed. `peer` prints what leaving the machine means before it writes anything, because that line is the consent. Switching trackers is not here: re-run `setup-mana` for that.
+Every setting has a working default and every skill that reads one falls back when it is missing, so removing a setting is always allowed. `peer` prints what leaving the machine means before it writes anything, because that line is the consent. Switching trackers is not here: re-run `setup-mana` and name the tracker for that.
 
 ```
 /mana:attune                      # list every setting and its current value
@@ -248,7 +248,7 @@ Turns a finished map, a spec, or the plan in the conversation into build tickets
 
 ### cast
 
-Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one, red-greens at named seams when the repo has tests, checks the diff against the ticket, and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch. Inside an Orca worktree the branch already exists, and the ticket, the status, and the PR land on the worktree card.
+Builds one ready ticket or spec on the current branch. Claims the ticket first so a parallel session skips it. Starting on the default branch creates `cast/<number>-<slug>` before any edit. Loads an agent brief when the issue has one and uses TDD at named seams for meaningful behavior changes when a test harness exists. Required project checks still run; successful validation is reused when no later edit or unresolved concern needs a fresh run. Checks the diff against the ticket and commits. Then pushes (creating the upstream if needed) and opens a pull request with visual evidence and a tracker closing line (`Closes #42`, `Closes ENG-42`, `Closes PLAT-42`; a local file is named in the body). Pass `no-pr` to stop after the commit. Never switches to an existing branch. Inside an Orca worktree the branch already exists, and the ticket, the status, and the PR land on the worktree card.
 
 ```
 /mana:cast                        # the ticket already in this conversation

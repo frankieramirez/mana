@@ -1,6 +1,6 @@
 # Scout dispatch template
 
-Load at step 3, only when the batch is large. One generic subagent per file cluster, read-only, all of them in one foreground batch. The orchestrator fills every `{slot}` and sends the result as the subagent's entire prompt. Scouts gather evidence. The verdict on every item stays with the orchestrator.
+Load at step 3, only when the batch is large. One generic subagent per file cluster, read-only, dispatched in capacity-sized batches. The orchestrator fills every `{slot}` and sends the result as the subagent's entire prompt. Retain each returned task ID and collect every scout through the host's supported completion mechanism before judging. Scouts gather evidence. The verdict on every item stays with the orchestrator.
 
 ---
 
@@ -80,4 +80,4 @@ An item you could not locate gets `site: null` and a `notes` line saying what yo
 
 ## Clustering
 
-Group the new items by `path`. A cluster is one file, or a handful of small files, holding roughly 4 to 8 items; a file with more than 8 items is a cluster on its own. Name each cluster `c<N>-<basename>`, numbering from 1 in the order you pass them, so two clusters whose files share a basename still write to different artifact files. Items with no `path` (rows from a bot's table, review bodies) form the `no-path` cluster, and that scout locates each one from `reviewer_text` and the PR diff before filling the fields. Pass every cluster in one foreground batch, then judge from the returns.
+Group the new items by `path`. A cluster is one file, or a handful of small files, holding roughly 4 to 8 items; a file with more than 8 items is a cluster on its own. Name each cluster `c<N>-<basename>`, numbering from 1 in the order you pass them, so two clusters whose files share a basename still write to different artifact files. Items with no `path` (rows from a bot's table, review bodies) form the `no-path` cluster, and that scout locates each one from `reviewer_text` and the PR diff before filling the fields. Dispatch clusters in capacity-sized batches, wait for every returned task ID through the host's supported completion mechanism, then judge from the returns. Do not busy-poll or fabricate task IDs.

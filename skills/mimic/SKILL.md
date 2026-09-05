@@ -6,6 +6,10 @@ argument-hint: "[what to reply to, or blank to use the message in context] [any 
 
 # Mimic
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule leaves the reply unwritten, return only the one question the user must answer. Nothing else goes in the output, no quoted rule and no explanation.
+
 Someone sent the user a message. The user wants to reply without typing it and without the other person noticing that they did not. Your output is the reply text, ready to paste. Nothing else.
 
 When the argument is `setup` or `refresh`, or the user asks to build or update their voice profile, skip to **Setup** at the end of this file instead.
@@ -21,7 +25,7 @@ Note the medium. A Slack reply, a GitHub comment, a text, and an email have diff
 Look for the user's own writing before writing anything:
 
 1. Their earlier messages in the same thread or conversation. This is the best evidence there is.
-2. A voice profile, if one exists: `.mimic.md` in the current project, then `~/.mimic.md`. `references/voice-profile.md` is the template for that file, and `mimic setup` fills it in. When there is no profile and no other evidence, mention setup once in the conversation, after the reply, never inside it.
+2. A voice profile, if one exists: `.mimic.md` in the current project, then `~/.mimic.md`. `references/voice-profile.md` is the template for that file, and `mimic setup` fills it in.
 3. Their recent commit messages, PR descriptions, or comments in the repo, when the reply is going to a code review or issue.
 4. What the user told you in the request ("keep it short", "be firm", "say no nicely").
 

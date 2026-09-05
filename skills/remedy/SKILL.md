@@ -6,6 +6,10 @@ argument-hint: "[PR number, PR URL, comment URL, or blank for current branch's P
 
 # Remedy
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
+
 Evaluate PR review feedback, fix what's real, commit, and push. **This skill never writes to the PR conversation.** It posts no replies, no top-level comments, no review bodies, and never edits the PR description. The only GitHub write it performs is silently marking handled review threads resolved.
 
 Whatever a reply would have said goes to the user in the final summary instead. The user decides what, if anything, to say on the PR.
@@ -175,7 +179,7 @@ Put the new items in a task list tagged by verdict so the user can watch progres
 
 **At scale: scouts.** The verdict never leaves this context. The reads may. When there are more than 12 new items, or the new items span more than 6 files, send read-only scouts to gather the evidence first and judge every item from their returns. Below that, read the files yourself in file-clustered groups of 8 to 10 and grow the two lists as you go.
 
-Read `references/scout-prompt.md`. Cluster the new items by file as that file describes, fill its slots once per cluster, and dispatch every scout as one foreground concurrent batch under the dispatch rules in step 4. Each scout writes `$RUN_DIR/scouts/<cluster>.json` and returns the same object. Then apply the rubric; its section "When scouts gathered the evidence" says which field feeds which verdict. A scout's claim without a quoted `file:line` is an unread file, so open that one yourself. A scout whose artifact is missing or fails to parse leaves its items to you: judge them inline and say so in the summary. Scouts never see a verdict and never propose one.
+Read `references/scout-prompt.md`. Cluster the new items by file as that file describes, fill its slots once per cluster, and dispatch scouts in capacity-sized batches under the dispatch rules in step 4. Retain each returned task ID and collect every scout through the host's supported completion mechanism before applying the rubric. Each scout writes `$RUN_DIR/scouts/<cluster>.json` and returns the same object. Then apply the rubric; its section "When scouts gathered the evidence" says which field feeds which verdict. A scout's claim without a quoted `file:line` is an unread file, so open that one yourself. A scout whose artifact is missing or fails to parse leaves its items to you: judge them inline and say so in the summary. Scouts never see a verdict and never propose one.
 
 Record every judged item in `$RUN_DIR/items.json`: `id` (thread node id or comment url), `feedback_ids` for a class item, `type`, `author`, `path`, the four location fields, `read_depth` (`hunk`, `file`, `history`, or `scout`), `verdict`, `evidence`, and either `change_note` with `sites` for the fix-list or `explanation` (plus `decision_context` when there is one) for the skip-list. Later steps add `outcome`, `verified`, and `resolved` to the same objects.
 
@@ -189,7 +193,7 @@ Read `references/fixer-prompt.md` and spawn a generic subagent seeded with that 
 
 Each fixer receives the feedback ID and type, the file path and location fields (`line`, `originalLine`, `startLine`, `originalStartLine`), the reviewer's comment text, your step-3 change note, and the PR number. When an item has no file or line, the fixer finds the target from the comment text and the PR diff. It returns `status`, `files_changed`, `summary`, `tests_run`, and `blocked_reason`.
 
-**Dispatch rules.** The same rules govern scouts in step 3 and the verifier in step 4b. Spawn the fixers as one foreground concurrent batch: multiple spawns in a single message, background execution off, and that single wait returns every fixer. Size the batch to the host's active-agent cap and refill as slots free; never hard-code a number. A concurrency-limit error is backpressure to retry, never a failed fixer. No polling, status calls, sleeps, or "still waiting" turns. Where the harness runs same-message calls one after another this degrades to serial, which is the correct floor.
+**Dispatch rules.** The same collection rules govern scouts in step 3 and the verifier in step 4b. Group fixers by disjoint target files and launch up to the host's active-agent capacity. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and use the host's supported wait or completion mechanism to collect its result. Individual asynchronous spawn calls can run concurrently without a batch tool. Refill freed capacity until the queue is empty; never hard-code a batch size. On a concurrency-limit error, keep the item queued and retry after a running agent completes. Prefer completion events or bounded waits; use status reads to recover state, without busy polling or unchanged status updates. If the host offers only serial blocking calls, run the queue sequentially. Collect every result before synthesis or verification. Preserve read-only scopes for scouts and verifiers, and the host's permission settings for fixers.
 
 **Conflict avoidance:** two fixers must never edit the same file at the same time. Step 3 told you every target file, so run the overlapping ones one after another and the rest side by side. A class fix counts every one of its sites in that check.
 
@@ -204,7 +208,7 @@ When the batch returns, copy each fixer's `status`, `files_changed`, `summary`, 
 Aggregate `files_changed` across fixers. Empty means skip to step 7. Otherwise check the combined diff against each ask before the validation run, so a corrected fix does not force a second one. Each fixer reported on its own edit; nobody has yet read the whole diff against the whole fix-list.
 
 - **One item on the fix-list:** read `git diff` yourself and answer the verifier's three questions (site changed, ask answered, in the file's conventions). No spawn.
-- **Two or more:** write the diff, read `references/verifier-prompt.md`, fill its slots, and dispatch one generic subagent, foreground. The Agent call is the wait.
+- **Two or more:** write the diff, read `references/verifier-prompt.md`, fill its slots, and dispatch one generic subagent. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and collect it through the host's supported completion mechanism before reading `verify.json`. Do not busy-poll or sleep.
 
 ```bash
 RUN_DIR="<the run directory>";
@@ -313,7 +317,7 @@ Only when step 6 pushed. Wait for the new head's checks:
 gh pr checks PR_NUMBER --watch --fail-fast
 ```
 
-If the harness cannot block that long, poll `gh pr checks PR_NUMBER` at most three times a minute apart, then report the run as pending. On the result:
+If the host cannot keep the watch open, use its supported bounded wait or status mechanism for the check run, then report the run as pending when it remains incomplete. Do not busy-poll. On the result:
 
 - **Green.** Done.
 - **Red on touched code** that was in the fix-list: one more fix-and-verify round, inside the two-round limit from step 8.
@@ -420,7 +424,7 @@ Create the run directory with the snippet from Full mode step 1. Save both respo
 
 Apply `references/evaluation-rubric.md` to this one thread. Account for `isOutdated` and the location fields. The cross-item reasoning is a no-op for a single thread, but read-depth and the diverts apply in full: deep-read callers, invariants, and `git blame` or PR rationale before accepting a contestable finding or overriding code that looks deliberate.
 
-- **`fixed` / `fixed-differently`**: read `references/fixer-prompt.md` and spawn one generic subagent seeded with it.
+- **`fixed` / `fixed-differently`**: read `references/fixer-prompt.md` and spawn one generic subagent seeded with it. A blocking spawn returns its result directly; an asynchronous spawn returns an ID to retain and collect through the host's supported wait mechanism.
 - **`not-addressing` / `declined` / `question` / `needs-human`**: no subagent. Write the explanation for the summary.
 
 No scouts run for a single thread; read the code yourself. Then follow Full mode steps 4b through 9. With one item the verifier's three questions are answered inline on the diff. Skip validate and commit when no code changed.

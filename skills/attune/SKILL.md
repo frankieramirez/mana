@@ -6,6 +6,10 @@ argument-hint: "[blank to list every setting] [labels | validation | proof | doc
 
 # Attune
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
+
 Change one thing the other skills read. This skill edits files that already exist. It does not pick the tracker, and it does not write `docs/agents/issue-tracker.md` from scratch.
 
 ## Operating principles
@@ -129,7 +133,7 @@ Wrote: <file, and which line or rows>
 Check: <only for labels and key>
 ```
 
-New sessions read this. Switching trackers is a different job: run the repo setup skill again for that.
+New sessions read this. Switching trackers is a different job: run the repo setup skill again and name the tracker for that.
 
 ## References
 

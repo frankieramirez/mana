@@ -6,6 +6,10 @@ disable-model-invocation: true
 
 # Banish
 
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
+
 Comments in a diff are usually the author explaining code that should have explained itself. This skill hands the diff to a reviewer with no attachment to the code, the Comment Reaper, then acts on what comes back.
 
 ## Scope
@@ -35,7 +39,7 @@ Each surviving `RESHAPE` names a symbol whose behavior needed a comment to be un
 
 ### 4. Encode constraints instead of pleading
 
-A comment that says "do not remove", "keep this order", or "talk to someone before changing" is a constraint. Offer the cheapest enforcement that lives in the code: a type, a test, a runtime assertion, or a lint rule. In an interactive session, wait for approval. Unattended, only encode what the caller pre-approved. When approved, add the enforcement and delete the comment. Otherwise delete the comment and report the constraint as unenforced.
+A comment that says "do not remove", "keep this order", or "talk to someone before changing" is a constraint. Find the cheapest enforcement that lives in the code: a type, a test, a runtime assertion, or a lint rule. If the caller already authorized that enforcement, implement it within scope and delete the comment. Otherwise finish the authorized cleanup and present the proposed enforcement with the affected code before asking. Unattended, report the proposal for later. A constraint left unenforced is named in the report when its comment is deleted.
 
 ### 5. Report
 
