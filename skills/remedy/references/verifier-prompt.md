@@ -1,6 +1,6 @@
 # Verifier template
 
-Load at step 4b, after every fixer has returned and before the full validation run. One generic subagent, same model tier as the session. The orchestrator fills every `{slot}` and sends the result as the subagent's entire prompt. Retain the returned task ID and collect it through the host's supported completion mechanism before reading the result. With a single item on the fix-list, skip the spawn and answer the three questions yourself on the diff.
+Load at step 4b, after every fixer has returned and before the full validation run. One generic subagent, same model tier as the session. The orchestrator fills every `{slot}` and sends the result as the subagent's entire prompt. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and collect it through the host's supported completion mechanism before reading the result. With a single item on the fix-list, skip the spawn and answer the three questions yourself on the diff.
 
 ---
 

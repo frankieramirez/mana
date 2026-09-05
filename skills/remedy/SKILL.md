@@ -8,7 +8,7 @@ argument-hint: "[PR number, PR URL, comment URL, or blank for current branch's P
 
 Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
-If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision is missing. Distinguish a required gate from your interpretation.
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
 Evaluate PR review feedback, fix what's real, commit, and push. **This skill never writes to the PR conversation.** It posts no replies, no top-level comments, no review bodies, and never edits the PR description. The only GitHub write it performs is silently marking handled review threads resolved.
 
@@ -208,7 +208,7 @@ When the batch returns, copy each fixer's `status`, `files_changed`, `summary`, 
 Aggregate `files_changed` across fixers. Empty means skip to step 7. Otherwise check the combined diff against each ask before the validation run, so a corrected fix does not force a second one. Each fixer reported on its own edit; nobody has yet read the whole diff against the whole fix-list.
 
 - **One item on the fix-list:** read `git diff` yourself and answer the verifier's three questions (site changed, ask answered, in the file's conventions). No spawn.
-- **Two or more:** write the diff, read `references/verifier-prompt.md`, fill its slots, and dispatch one generic subagent. Retain its returned task ID and use the host's supported completion primitive before reading `verify.json`. Do not busy-poll or sleep.
+- **Two or more:** write the diff, read `references/verifier-prompt.md`, fill its slots, and dispatch one generic subagent. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and collect it through the host's supported completion mechanism before reading `verify.json`. Do not busy-poll or sleep.
 
 ```bash
 RUN_DIR="<the run directory>";
@@ -424,7 +424,7 @@ Create the run directory with the snippet from Full mode step 1. Save both respo
 
 Apply `references/evaluation-rubric.md` to this one thread. Account for `isOutdated` and the location fields. The cross-item reasoning is a no-op for a single thread, but read-depth and the diverts apply in full: deep-read callers, invariants, and `git blame` or PR rationale before accepting a contestable finding or overriding code that looks deliberate.
 
-- **`fixed` / `fixed-differently`**: read `references/fixer-prompt.md` and spawn one generic subagent seeded with it, retaining its returned task ID and collecting completion through the host's supported wait mechanism.
+- **`fixed` / `fixed-differently`**: read `references/fixer-prompt.md` and spawn one generic subagent seeded with it. A blocking spawn returns its result directly; an asynchronous spawn returns an ID to retain and collect through the host's supported wait mechanism.
 - **`not-addressing` / `declined` / `question` / `needs-human`**: no subagent. Write the explanation for the summary.
 
 No scouts run for a single thread; read the code yourself. Then follow Full mode steps 4b through 9. With one item the verifier's three questions are answered inline on the diff. Skip validate and commit when no code changed.

@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
-If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision is missing. Distinguish a required gate from your interpretation.
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
 Build the work described by one ticket, spec, or the current conversation. Stay on the current branch. Commit when the work matches the ticket. Push and open a pull request with visual evidence. Pass `no-pr` to stop after the commit (and push only if an upstream already exists).
 
@@ -121,7 +121,7 @@ Do not start coding until that intent is written. If the ticket is still a quest
 
 When the change has meaningful behavior to verify and the repo has a test harness, read `references/tdd.md` and follow it at the seams you wrote down. Docs, configuration, and other changes with no behavioral effect do not require a TDD loop just because a harness exists. If there is no harness, build without a red-green loop and say so once.
 
-Typecheck and run meaningful behavior tests around the files you touch as you go. Run the project's required validation: use the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name. A successful validation may be reused when no edits have happened since it ran. Rerun it after new edits, a failure, or an unresolved concern.
+Typecheck and run meaningful behavior tests around the files you touch as you go. Run the project's required validation: use the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name. A successful validation may be reused when no edits have happened since it ran. Classify a failure against the pre-change baseline first. Rerun it after a new edit or an unresolved concern that needs a fresh run.
 
 Stay inside the ticket's scope. Adjacent cleanup waits.
 
