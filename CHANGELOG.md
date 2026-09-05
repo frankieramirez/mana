@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.18.0
+
+- Add an opt-in Archmage persona inspired by Khadgar from Warcraft. `attune persona archmage` enables immersive lead-agent narration for the project; `attune persona off` removes the setting. Persona configuration works without a tracker, and setup reruns preserve existing preferences.
+- Every skill bundles the same voice reference and reads the project preference at invocation. Individual installations work without sibling skills. Replies written as the user and structured outputs retain their contracts; specialists keep their own identities.
+- `scripts/sync-persona.sh` synchronizes persona references and activation sections, and validation checks for drift. Plain-language editing allows intentional character dialogue in persona narration while preserving deliverable style and punctuation rules.
+
 ## 0.17.1
 
 - Skills honor explicit user instructions and decisions already supplied in the conversation, and explain any skill rule that still requires a pause. A rule a skill states with never, or as read-only, stays in force whatever the conversation says. Setup reuses the selected tracker, and under `you-pick` with nothing detected it reports the missing choice and stops instead of asking; comment cleanup reuses authorization for constraint enforcement.

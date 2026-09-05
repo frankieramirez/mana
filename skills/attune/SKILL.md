@@ -1,8 +1,18 @@
 ---
 name: attune
-description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, and the tracker key. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, rename the triage labels, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, or /attune."
-argument-hint: "[blank to list every setting] [labels | validation | proof | docs | peer | worktree | pr-surface | key | pointer] [new value]"
+description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, the tracker key, or the Archmage persona. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, rename the triage labels, enable or disable Archmage, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, or /attune."
+argument-hint: "[blank to list every setting] [labels | validation | proof | docs | peer | worktree | pr-surface | key | pointer | persona] [new value]"
 ---
+
+<!-- BEGIN MANA PERSONA -->
+## Persona at invocation
+
+Before conversational narration, read `Persona:` in the active project's `## Agent skills` block from `CLAUDE.md` or `AGENTS.md`. Prefer the file containing the block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. Read the saved value anew on each invocation, including from a subdirectory using the project root. No accessible project or no line means ordinary behavior. Do not search another project or global settings for this preference.
+
+`archmage` loads this skill's own [references/archmage.md](references/archmage.md) for the active workflow. `off` or an absent value leaves ordinary behavior active. An unknown value leaves ordinary behavior active and gets a brief explanation when conversational output is allowed; it does not stop the work. Explicit conversation instructions override the saved voice without writing settings. A request to enable Archmage for this workflow also loads the local reference.
+
+Apply the voice only to lead-agent conversation. Deliverables, specialist roles, reply-only responses, and JSON-only output retain their contracts, with no added narration. End the persona with this workflow unless the user requests otherwise.
+<!-- END MANA PERSONA -->
 
 # Attune
 
@@ -10,7 +20,7 @@ Honor the user's explicit instructions and decisions already made in this conver
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Change one thing the other skills read. This skill edits files that already exist. It does not pick the tracker, and it does not write `docs/agents/issue-tracker.md` from scratch.
+Change one thing the other skills read. This skill edits existing configuration, or creates the instruction file for a first persona setting. It does not pick the tracker, and it does not write `docs/agents/issue-tracker.md` from scratch. The `persona` setting can be configured before a tracker exists.
 
 ## Operating principles
 
@@ -33,9 +43,13 @@ Change one thing the other skills read. This skill edits files that already exis
 
 ## Stage 1: Read the current state
 
+Read from the project root, even when invoked in a subdirectory. Prefer the instruction file that contains the `## Agent skills` block, then an existing file; ties use `CLAUDE.md`. A symlink pair is one file. For persona configuration with neither file present, use `AGENTS.md`.
+
+A named persona invocation skips tracker inspection and CLI discovery; read the instruction files and the settings reference. Other invocations inspect:
+
 ```bash
 ls -l CLAUDE.md AGENTS.md 2>/dev/null
-sed -n '/^## Agent skills/,/^## /p' CLAUDE.md AGENTS.md 2>/dev/null
+awk 'FNR==1 {show=0} /^## Agent skills$/ {show=1; print; next} /^## / {show=0} show' CLAUDE.md AGENTS.md 2>/dev/null
 sed -n '1,12p' docs/agents/issue-tracker.md 2>/dev/null
 cat docs/agents/triage-labels.md 2>/dev/null
 ls -l .worktreeinclude orca.yaml CONTEXT.md CONTEXT-MAP.md 2>/dev/null
@@ -43,7 +57,7 @@ ls -l .worktreeinclude orca.yaml CONTEXT.md CONTEXT-MAP.md 2>/dev/null
 for c in codex gemini cursor-agent opencode grok; do command -v "$c" >/dev/null && echo "peer available: $c"; done
 ```
 
-`docs/agents/issue-tracker.md` is missing: say so in one line and stop. There is no tracker to attune, and the repo has never been set up. Without that file the other skills default to GitHub with no flags, which may be all this repo needs.
+`docs/agents/issue-tracker.md` is missing: persona still works. A bare run can list the settings and offer persona; explain that other settings require setup if one is selected. For a named setting other than persona, report the missing tracker and stop.
 
 Read `references/settings.md` at this stage. It carries every setting, the exact file and line it lives on, its default when unset, which skills read it, and what the edit is.
 
@@ -64,6 +78,7 @@ worktree     .worktreeinclude present, no orca.yaml    fresh worktrees
 pr-surface   No, issues only                           triage
 key          ENG, verified as frankie                  every tracker call
 pointer      AGENTS.md                                 everything above
+persona      off                                      every skill's lead agent
 ```
 
 Then ask one question with the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded), falling back to the conversation where no such tool exists. Four options is the tool's maximum, so order the settings this way and offer the first four: every setting whose check failed or whose value is stale, then every setting with no value, then the rest in table order. The free text answer takes any other name from the table. Nothing to change is a fine answer, because the table was the point.
@@ -103,7 +118,9 @@ bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> check
 
 This is the repair path for a setup run that wrote the config before the key was there. Running it with no change, just to verify, is a useful run: the user exports `LINEAR_API_KEY`, comes back, and confirms. Exit 3 or a missing variable: name the variable and leave the file as it is.
 
-**pointer.** Move the `## Agent skills` block between `CLAUDE.md` and `AGENTS.md`, removing it from the file it left. A symlink pair is one file: report that and stop.
+**pointer.** Move the `## Agent skills` block between `CLAUDE.md` and `AGENTS.md`, removing it from the file it left while preserving every setting line, including `Persona:`. A symlink pair is one file: report that and stop.
+
+**persona.** With `archmage`, add or replace `Persona: archmage` in the block. With `off`, remove the line. An already matching setting is a no-op; disabling an absent setting creates no file or block. A bare `persona` invocation reports the current value and offers `archmage` and `off`; a named supported value writes immediately. Persona works without `docs/agents/issue-tracker.md`. An unsupported requested value writes nothing and explains the supported values. An unknown saved value behaves as off until changed. Apply a successfully changed voice to subsequent narration immediately, including this run's report, while preserving its required fields.
 
 ## Editing the block without clobbering it
 
@@ -118,6 +135,7 @@ Validation: ...
 Proof: ...
 Domain docs: ...
 Peer reviewer: ...
+Persona: archmage
 ```
 
 Removing a setting removes its whole line. Never leave a key with an empty value: `scan` reads an empty reviewer as a CLI name it cannot find.
@@ -133,7 +151,7 @@ Wrote: <file, and which line or rows>
 Check: <only for labels and key>
 ```
 
-New sessions read this. Switching trackers is a different job: run the repo setup skill again and name the tracker for that.
+New sessions read this. Persona is also reread on each skill invocation, so the next invocation in this session sees the change. Switching trackers is a different job: run the repo setup skill again and name the tracker for that.
 
 ## References
 
