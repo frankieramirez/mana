@@ -87,7 +87,7 @@ Every skill that would ask a question has a token that answers it, so the same s
 
 | Skill | Token | What it does without a person |
 |-------|-------|-------------------------------|
-| `setup-mana` | `you-pick`, or a bare `github`, `linear`, `jira`, `local` | Takes the detected tracker without asking and writes everything else at its default; an unset variable is reported, never a stop |
+| `setup-mana` | `you-pick`, or a bare `github`, `linear`, `jira`, `local` | Takes the detected tracker without asking and writes everything else at its default. An unset variable is reported, never a stop. With nothing detected it writes nothing and reports the missing choice |
 | `attune` | `<setting> <value>` | Writes that one setting and asks nothing |
 | `scry` | `you-pick` | Accepts every recommended answer while charting or walking |
 | `sift` | `you-pick` | Triages up to 10 issues, never closes one as rejected |
@@ -140,7 +140,7 @@ orca automations create --name "cast next" --trigger hourly --provider claude \
 
 Sets a repository up for the other skills. It detects the existing configuration and reuses your tracker choice from the conversation or tracker file. With no choice yet, it asks where the tickets live: GitHub Issues, Linear, Jira, markdown files under `.scratch/`, or your own tracker described in a paragraph. The detected answer is listed first and marked as detected. A request to switch trackers asks for a destination only when you have not named one.
 
-Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it to switch trackers, and use `attune` for anything else.
+Everything else is defaulted and written without asking: `docs/agents/issue-tracker.md`, the seven triage labels created on the tracker, and an `## Agent skills` block in whichever of `CLAUDE.md` or `AGENTS.md` already exists. The validation command is detected, run once, and recorded only when it runs clean. Nothing is written about proof capture, domain docs, or a second reviewer, so a review still sends nothing off the machine unless someone asks for it. A missing Linear or Jira key does not stop it: the choice is recorded and the report names the variable to set. Re-run it and name the tracker (`setup-mana linear`) to switch trackers, and use `attune` for anything else.
 
 ```
 /mana:setup-mana                  # reuse the choice, or ask once
@@ -164,7 +164,7 @@ Changes one setting the other skills read, after setup, without redoing it. Run 
 | `key` | The Linear team or Jira project key, then verifies it against the tracker |
 | `pointer` | Whether the block lives in `CLAUDE.md` or `AGENTS.md` |
 
-Every setting has a working default and every skill that reads one falls back when it is missing, so removing a setting is always allowed. `peer` prints what leaving the machine means before it writes anything, because that line is the consent. Switching trackers is not here: re-run `setup-mana` for that.
+Every setting has a working default and every skill that reads one falls back when it is missing, so removing a setting is always allowed. `peer` prints what leaving the machine means before it writes anything, because that line is the consent. Switching trackers is not here: re-run `setup-mana` and name the tracker for that.
 
 ```
 /mana:attune                      # list every setting and its current value

@@ -6,9 +6,9 @@ argument-hint: "[PR number, PR URL, comment URL, or blank for current branch's P
 
 # Remedy
 
-Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
-If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision is missing. Distinguish a required gate from your interpretation.
 
 Evaluate PR review feedback, fix what's real, commit, and push. **This skill never writes to the PR conversation.** It posts no replies, no top-level comments, no review bodies, and never edits the PR description. The only GitHub write it performs is silently marking handled review threads resolved.
 

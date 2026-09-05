@@ -7,9 +7,9 @@ disable-model-invocation: true
 
 # Setup
 
-Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
-If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision is missing. Distinguish a required gate from your interpretation.
 
 Use the tracker the user chose, then write the per-repo configuration the other skills read. Ask when that choice is missing. Re-running updates the same files in place.
 
@@ -67,7 +67,7 @@ Say what is present in two or three lines. Do not ask about any of it.
 
 ## Stage 2: Where do the tickets live
 
-Use the latest explicit tracker choice from the request or earlier in this conversation, including `github`, `linear`, `jira`, or `local` on the invocation. Otherwise retain the valid choice in `docs/agents/issue-tracker.md`. A later request to switch trackers supersedes that earlier choice: use the newly named destination, or ask the question below when it is missing. A GitHub remote alone is only a detection signal. Under `you-pick`, use the detected option when no explicit choice exists and report it; with no detection, ask for the missing choice instead of inventing it.
+Use the latest explicit tracker choice from the request or earlier in this conversation, including `github`, `linear`, `jira`, or `local` on the invocation. Otherwise retain the valid choice in `docs/agents/issue-tracker.md`. A later request to switch trackers supersedes that earlier choice: use the newly named destination, or ask the question below when it is missing. A GitHub remote alone is only a detection signal. Under `you-pick`, use the detected option when no explicit choice exists and report it; with no detection, write nothing and stop, reporting `Tracker: none detected; pass github, linear, jira, or local`. Never ask under `you-pick`.
 
 Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded), falling back to the conversation where no such tool exists. One question, headed `Tracker`, with these four options and the detected one moved to the top:
 
@@ -145,7 +145,7 @@ Validation: <the command and its result | none recorded, each skill detects one>
 Wrote: <files written or updated in place>
 ```
 
-Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again.
+Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
 
 ## References
 

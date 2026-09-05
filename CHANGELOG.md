@@ -2,7 +2,7 @@
 
 ## 0.17.1
 
-- Skills honor explicit user instructions and decisions already supplied in the conversation, and explain any skill rule that still requires a pause. Setup reuses the selected tracker; comment cleanup reuses authorization for constraint enforcement.
+- Skills honor explicit user instructions and decisions already supplied in the conversation, and explain any skill rule that still requires a pause. A rule a skill states with never, or as read-only, stays in force whatever the conversation says. Setup reuses the selected tracker, and under `you-pick` with nothing detected it reports the missing choice and stops instead of asking; comment cleanup reuses authorization for constraint enforcement.
 - Review and feedback workflows collect asynchronous agent results through the host's supported wait mechanism. Reviewer model routing uses available tiers and inherits the session model when an override is unavailable.
 - Building applies TDD to testable behavior changes and reuses successful validation when no later edit or unresolved concern calls for another run. Required project checks still run.
 - Ghost reads `.mimic.md` on refresh and preserves punctuation in verbatim samples. Reply drafting keeps its reply-only output contract, and prose style rules exempt verbatim evidence.

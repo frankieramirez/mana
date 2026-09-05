@@ -6,9 +6,9 @@ argument-hint: "[blank for current branch's diff | base:<ref> | PR number | path
 
 # Augur
 
-Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
-If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md, quote the rule, and explain what decision is missing. Distinguish a required gate from your interpretation.
+If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision is missing. Distinguish a required gate from your interpretation.
 
 Listing the callers is not the job. Any grep does that in a second. The job is the breakage grep will not show, and then a proof that the change is safe, produced by running code rather than by writing a convincing paragraph.
 
