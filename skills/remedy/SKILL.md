@@ -217,8 +217,10 @@ When the batch returns, copy each fixer's `status`, `files_changed`, `summary`, 
 
 Aggregate `files_changed` across fixers. Empty means skip to step 7. Otherwise check the combined diff against each ask before the validation run, so a corrected fix does not force a second one. Each fixer reported on its own edit; nobody has yet read the whole diff against the whole fix-list.
 
-- **One item on the fix-list:** read `git diff` yourself and answer the verifier's three questions (site changed, ask answered, in the file's conventions). No spawn.
-- **Two or more:** write the diff, read `references/verifier-prompt.md`, fill its slots, and dispatch one generic subagent. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and collect it through the host's supported completion mechanism before reading `verify.json`. Do not busy-poll or sleep.
+Read `references/verifier-prompt.md` before choosing how to run verification. Apply its full checks to every non-empty diff, including targeted mode and the no-subagent fallback.
+
+- **One item on the fix-list:** read `git diff` yourself and apply the verifier's checks inline. No spawn.
+- **Two or more:** write the diff, fill the verifier template's slots, and dispatch one generic subagent. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and collect it through the host's supported completion mechanism before reading `verify.json`. Do not busy-poll or sleep.
 
 ```bash
 RUN_DIR="<the run directory>";
@@ -442,7 +444,7 @@ No scouts run for a single thread; read the code yourself. Then follow Full mode
 | `references/evaluation-rubric.md` | Step 3, Targeted step 2 | The verdicts, the diverts and the evidence each one owes, the explanation shapes |
 | `references/scout-prompt.md` | Step 3, only on a large batch | Read-only evidence gatherer, one per file cluster |
 | `references/fixer-prompt.md` | Step 4, Targeted step 2 | The fixer's spec, the `blocked` contract, the return shape |
-| `references/verifier-prompt.md` | Step 4b, two or more fixes | Reads the combined diff against every ask before validation |
+| `references/verifier-prompt.md` | Step 4b, every non-empty fix diff | Checks the combined diff against every ask, inline or through a subagent |
 
 ## Scripts
 
