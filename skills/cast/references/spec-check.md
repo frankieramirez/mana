@@ -16,6 +16,8 @@ From the agent brief, spec, or issue body, list every acceptance criterion and e
 
 Read the diff once more for work the ticket did not ask for. Revert drive-by edits that are unrelated. Keep a change that the ticket's desired behavior required even if the checklist omitted it, and name it in the report.
 
+Then read it for shape the ticket did not need: a parameter no caller passes, a flag with one value, an interface with one implementor, a helper with one call site. Inline or delete each one before committing. What stays has a consumer that exists now.
+
 ## Validation
 
 Run the project's required validation after the last edit: use the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else the commands you already used in Stage 2. If it already passed and no edits happened since, reuse that success. Classify a failure against the pre-change baseline first. Rerun after a new edit or an unresolved concern that needs a fresh run. The baseline is the same command before this session's edits, or a failure recorded at the start. A new failure: fix it or do not commit. A failure proven to have existed before this session: proceed, and add a commit footer `Note: <test> was already failing before these changes.`

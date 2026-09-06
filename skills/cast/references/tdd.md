@@ -16,7 +16,7 @@ Expected values come from an independent source: a known-good literal, a worked 
 
 1. Write one failing test at one seam.
 2. Run it. See it fail for the reason you intended.
-3. Write only enough code to pass it.
+3. Write only enough code to pass it. The plainest code that passes is right even when it looks too small. The next slice decides whether it needs a shape.
 4. Run it. See it pass.
 5. Repeat for the next slice.
 

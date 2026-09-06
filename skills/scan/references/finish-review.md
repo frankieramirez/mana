@@ -189,7 +189,7 @@ Note whether the tree was already dirty (`git status --porcelain`) before touchi
 
 Severity and confidence tell you what to do first, not whether to act.
 
-**Order and mechanics.** Work P0 to P3. For each finding, apply `suggested_fix` when it still holds against the current code (adapted to surrounding style), otherwise implement a fix from `why_it_matters` and the evidence. Re-verify each finding against the current code before editing, since the tree may have moved since dispatch; if the target code no longer exists, mark the finding obsolete.
+**Order and mechanics.** Work P0 to P3. For each finding, apply `suggested_fix` when it still holds against the current code (adapted to surrounding style), otherwise implement a fix from `why_it_matters` and the evidence. Make each fix the plainest edit that answers the finding. Add an abstraction only when a consumer already in the diff needs it; the self-review step below extracts real duplicates on evidence, so do not extract in advance. Re-verify each finding against the current code before editing, since the tree may have moved since dispatch; if the target code no longer exists, mark the finding obsolete.
 
 For a large actionable queue, dispatch fixer subagents in parallel, but never two on the same file at once. Serialize the overlapping ones.
 

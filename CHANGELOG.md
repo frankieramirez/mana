@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.2
+
+- Building, review fixes, and applied findings use the smallest shape that satisfies the ask. A helper, option, or abstraction needs a consumer that exists now, which matches the maintainability reviewer's existing rule against demanding one for variants that may arrive later. Cast names the rule as YAGNI, checks the diff for single-consumer shape before committing, and writes one plain line when one line does the job.
+
 ## 0.19.1
 
 - Skills write the bundled script's absolute path into the command instead of setting `SKILL_DIR` first. A worktree-isolated or sandboxed session refuses `bash "$VAR/script.sh"`, because it cannot resolve the path to read the script, so every skill that ran a bundled script lost turns to a refusal before falling back to the literal path. The path is now a `<SKILL_DIR>` placeholder the model substitutes.
