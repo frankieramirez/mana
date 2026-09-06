@@ -104,12 +104,12 @@ If no PR number was given, detect it:
 gh pr view --json number -q .number
 ```
 
-Then pull everything in one call and keep a copy. `SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool runs in the user's project and forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again at the top, and every block that touches the run directory sets `RUN_DIR` the same way:
+Then pull everything in one call and keep a copy. `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script. The Bash tool runs in the user's project and forgets variables between calls, so every block that touches the run directory sets `RUN_DIR` again at the top:
 
 ```bash
 set -o pipefail
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>"; RUN_DIR="<the run directory>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/pr-threads" fetch PR_NUMBER OWNER/REPO | tee "$RUN_DIR/fetch.json"
+RUN_DIR="<the run directory>";
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/pr-threads" fetch PR_NUMBER OWNER/REPO | tee "$RUN_DIR/fetch.json"
 ```
 
 A non-zero exit from that pipeline stops the run. `tee` can leave an empty or partial `fetch.json` behind, so never triage the file a failed fetch wrote.
@@ -290,16 +290,14 @@ Leave open when:
 **Confirm the thread ID before resolving.** On GitHub Enterprise the node ID for one thread can differ between query paths. Take the numeric ID out of the comment URL (`discussion_r2589700` gives `2589700`) and map it back:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 GH_HOST=<derived-host> GH_REPO=OWNER/REPO gh api repos/{owner}/{repo}/pulls/comments/COMMENT_ID --jq .node_id
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/pr-threads" thread PR_NUMBER COMMENT_NODE_ID OWNER/REPO
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/pr-threads" thread PR_NUMBER COMMENT_NODE_ID OWNER/REPO
 ```
 
 The `id` this returns wins over anything from the fetch. Then resolve:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/pr-threads" resolve THREAD_ID
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/pr-threads" resolve THREAD_ID
 ```
 
 `pr_comments` and `review_bodies` have no resolve mechanism. Nothing happens on GitHub for them at all; they are reported in the summary only.
@@ -311,8 +309,7 @@ Set `resolved` on each thread item in `items.json` as you go, true or false, so 
 Fetch again to check the result:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/pr-threads" fetch PR_NUMBER OWNER/REPO
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/pr-threads" fetch PR_NUMBER OWNER/REPO
 ```
 
 `review_threads` should contain only the threads you intentionally left open. Top-level comments and review bodies still appear; that is expected.
@@ -422,8 +419,7 @@ GH_HOST=<host> gh api repos/OWNER/REPO/pulls/comments/COMMENT_ID --jq '{node_id,
 Map the comment to its thread:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<host> bash "$SKILL_DIR/scripts/pr-threads" thread PR_NUMBER COMMENT_NODE_ID OWNER/REPO
+GH_HOST=<host> bash "<SKILL_DIR>/scripts/pr-threads" thread PR_NUMBER COMMENT_NODE_ID OWNER/REPO
 ```
 
 Skip any draft-review check. Nothing gets posted, so a pending review has nothing to swallow.

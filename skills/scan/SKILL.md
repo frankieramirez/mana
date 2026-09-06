@@ -53,7 +53,7 @@ Follow these boundaries in order. References supply detail but never change the 
 - **Nothing leaves the machine unless asked.** Reviewers are local subagents. A second model sees the diff only under `peer:<cli>` or a `Peer reviewer:` line the repo wrote, and only after one disclosure line.
 - **Untracked files are out of scope** unless staged. List them in Coverage and continue on tracked changes.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs a bundled script sets it again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ## Arguments
 
@@ -146,10 +146,9 @@ echo "BASE:$BASE" && echo "FILES:" && git diff --name-only $BASE && echo "DIFF:"
 Run the bundled classifier on the same range. Working tree modes pass only `--base`; remote modes pass both fetched ends.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/review.sh" signals --base "$BASE"
+bash "<SKILL_DIR>/scripts/review.sh" signals --base "$BASE"
 # pr-remote or branch-remote, when the fetch succeeded:
-bash "$SKILL_DIR/scripts/review.sh" signals --base "$PR_BASE_REF" --head "$PR_HEAD_REF"
+bash "<SKILL_DIR>/scripts/review.sh" signals --base "$PR_BASE_REF" --head "$PR_HEAD_REF"
 ```
 
 It prints `executable_lines`, `prose_lines`, excluded file counts (docs, lock, generated, snapshot), per-file classes, path signals (`migrations`, `frontend`, `api`, `tests`, `agent_surface`, `verification`), risk words found on added lines, and `lite_eligible` with its blockers. Keep the object for Stage 3. When the script exits 4 (no `python3`) or the remote fetch failed, count executable lines yourself from the hunks (excluding docs, lock files, generated output, and snapshots) and treat the lite path as ineligible.
@@ -211,8 +210,7 @@ Sources 1 and 2 make the ticket **explicit**; sources 3 and 4 make it **inferred
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script; a missing file means GitHub with no flags. When the host exposes a connector for that tracker (a Linear or Jira tool set the session can call, or `orca linear` inside an Orca worktree where `ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), read the ticket with it. Otherwise run the bundled script. GitHub always goes through the script. This stage only reads; nothing here labels, comments, claims, or closes.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view <id>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view <id>
 ```
 
 From the body, take the agent brief when one exists (Desired behavior, Acceptance criteria, Out of scope) and otherwise the title plus every checkbox or bullet that states an observable outcome. Number them `R1`, `R2`, and write the block every reviewer and the validator receive:
@@ -316,8 +314,7 @@ Reconcile it in the final report: a preliminary item that did not survive gets a
 When `peer:<cli>` was passed, or the `## Agent skills` block in `CLAUDE.md` or `AGENTS.md` has a `Peer reviewer:` line, read `references/peer-review.md` and preflight the route before staging anything:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/review.sh" peer --check --cli <cli> --run-dir "$RUN_DIR" --host <anthropic|openai|google|xai|unknown> [--named-by-user]
+bash "<SKILL_DIR>/scripts/review.sh" peer --check --cli <cli> --run-dir "$RUN_DIR" --host <anthropic|openai|google|xai|unknown> [--named-by-user]
 ```
 
 `--named-by-user` is set only when the token named the CLI. Exit 0 prints the disclosure line; repeat it to the user verbatim, then drop the local `havoc-demon-hunter` from the batch and run the peer in its place. Exit 2 means the peer cannot start (missing CLI, same family as the host without the token); keep the local `havoc-demon-hunter` and record the reason for Coverage. When a peer was never requested, none of this runs and nothing is printed about it.
@@ -331,8 +328,7 @@ Before assembling any prompt, read these from this skill's directory, in one par
 Spawn each selected reviewer as a **generic subagent** seeded with its persona file. Do not use typed agent names. Omit the `mode` parameter so the user's permission settings apply. Launch reviewers up to the host's active-agent capacity; read-only reviewers can inspect the same files. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and use the host's supported wait or completion mechanism to collect its result. Individual asynchronous spawn calls can run concurrently without a batch tool. When a peer passed preflight, launch its read-only command and track its completion alongside the reviewers:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/review.sh" peer --cli <cli> --run-dir "$RUN_DIR" --brief "$RUN_DIR/peer-brief.md" --constraints "$RUN_DIR/peer-constraints.md" --host <family> --timeout 540 [--named-by-user]
+bash "<SKILL_DIR>/scripts/review.sh" peer --cli <cli> --run-dir "$RUN_DIR" --brief "$RUN_DIR/peer-brief.md" --constraints "$RUN_DIR/peer-constraints.md" --host <family> --timeout 540 [--named-by-user]
 ```
 
 Set the Bash tool's own timeout on that call to its maximum (600000 ms in Claude Code) so the harness never kills the shell before the script's `--timeout` fires; a killed shell leaves no output file and no exit code to act on.

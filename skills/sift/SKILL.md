@@ -57,13 +57,12 @@ Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names th
 
 Every read and write on the tracker is one of these operations: `list`, `view`, `label`, `comment`, `close`. When the host exposes a connector for that tracker (a Linear or Jira tool set the session can call), use it for them; it is already authenticated and needs no key. Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), `orca linear` is such a connector for Linear; `orca linear --help` lists its operations. Otherwise run `scripts/tickets.sh` with the adapter flags. GitHub always goes through the script. Never mix the two in one run, and never write a credential anywhere. For `local` or `other`, the tracker file's Conventions replace both; do by hand what it says, and report an operation it does not support instead of inventing one. Exit 3 from the script means the token cannot write; report what it would have done and stop.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline on every call.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline on every call.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> list --unlabeled
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view ID
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> label ID --add <state string> --remove <old state>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list --unlabeled
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view ID
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> label ID --add <state string> --remove <old state>
 ```
 
 ## Arguments

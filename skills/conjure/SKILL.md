@@ -31,7 +31,7 @@ The deciding is done. A map, a spec, or the plan in this conversation says what 
 - **Refer by name.** In anything a person reads, use the ticket title with the link wrapped inside it.
 - **Write to the tracker through the contract.** On Linear or Jira, use the host's connector for `create`, `ensure-labels`, `wire`, and `comment` when one is present. Otherwise run `scripts/tickets.sh`. GitHub always goes through the script. Never write the tracker any other way.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ## Scripts
 
@@ -71,8 +71,7 @@ The operations below are `view`, `ensure-labels`, `create`, `wire`, and `comment
 **A map.** Fetch it:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view ID
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view ID
 ```
 
 `ID` is a tracker id or a GitHub, Linear, or Jira issue URL; the script extracts the id. Read Destination, Notes, Decisions so far, and every owning document Notes names. Then check for unfinished deciding: on GitHub,
@@ -117,16 +116,14 @@ If the source still has an open decision that no slice can avoid, stop here and 
 Load `references/agent-brief.md`. Ensure the labels exist once per session:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <category strings>
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <ready string>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <category strings>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <ready string>
 ```
 
 Create one issue per slice. The body is the brief. When the source is a map, the first line of the body is `Builds toward: [<map title>](<map url>)`. Do not write `Part of #` and do not attach the ticket as a child of the map; that would make a map-walking session mistake it for a decision ticket.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> create "<title>" --label <category string> --label <ready string> <<'EOF'
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> create "<title>" --label <category string> --label <ready string> <<'EOF'
 Builds toward: [<map title>](<map url>)
 
 <brief from references/agent-brief.md>
@@ -136,8 +133,7 @@ EOF
 Wire blocking edges in a **second pass**, once every ticket has an id:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> wire CHILD_ID BLOCKER_ID
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> wire CHILD_ID BLOCKER_ID
 ```
 
 Exit 3 from the script means this token cannot write issues (usually HTTP 403). Read `references/scratch.md` and follow it. Do not keep retrying.
@@ -147,8 +143,7 @@ Exit 3 from the script means this token cannot write issues (usually HTTP 403). 
 When the source is a map, post one comment on it listing the tickets in build order, each as its title wrapped around its link:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> comment MAP_ID <<'EOF'
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> comment MAP_ID <<'EOF'
 ## Build order
 
 1. [<title>](<url>)

@@ -11,8 +11,7 @@ The per-reviewer artifacts (`{run_dir}/{reviewer}.json`) are the source of detai
 ### Pass 1: the mechanical gates
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/review.sh" merge "$RUN_DIR" --roster <comma-separated reviewer identifiers you dispatched, fast-pass included>
+bash "<SKILL_DIR>/scripts/review.sh" merge "$RUN_DIR" --roster <comma-separated reviewer identifiers you dispatched, fast-pass included>
 ```
 
 The script writes `{run_dir}/merged.json` and applies, in order:
@@ -48,8 +47,7 @@ Edit the object and write it to `{run_dir}/reconciled.json`. Work through every 
 ### Pass 2: restore the mechanics
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/review.sh" merge "$RUN_DIR" --reconciled "$RUN_DIR/reconciled.json"
+bash "<SKILL_DIR>/scripts/review.sh" merge "$RUN_DIR" --reconciled "$RUN_DIR/reconciled.json"
 ```
 
 The script re-applies the gates idempotently, honors every `bucket` you set, moves `dismissed` items into the `dismissed` array with your reason, appends `testing_gaps` and `residual_risks` items as one-line entries, renumbers `findings` then `pre_existing` from 1, and rewrites `merged.json` as pass 2. Numbers can shift between pass 1 and pass 2; the report is rendered only after the final pass, so nothing the user sees ever renumbers.

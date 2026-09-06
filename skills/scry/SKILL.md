@@ -33,7 +33,7 @@ The destination is named first. It might be a spec, a locked decision, or a chan
 - **Claim before work.** Assign the ticket to the person driving this session first, so a parallel session skips it. An open unassigned ticket is unclaimed.
 - **The map is an index.** A decision lives on its ticket. The map gists it and links. It does not restate the answer.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ## Arguments
 
@@ -74,8 +74,7 @@ Pass `GH_HOST=<host>` inline on every `map.sh` invocation. Derive the host from 
 Ensure labels exist once per session:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" ensure-labels
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" ensure-labels
 ```
 
 Exit 3 from the script means this token cannot write issues (usually HTTP 403). Read `references/scratch.md` and follow it. Do not keep retrying `gh issue create`.
@@ -103,8 +102,7 @@ If this surfaces no fog (the way is already clear, and the whole journey fits on
 Create the map issue, label `scry:map`. Destination and Notes filled in. Decisions so far empty. Fog sketched into **Not yet specified**.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" create-map "Map: <destination in a few words>" <<'EOF'
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" create-map "Map: <destination in a few words>" <<'EOF'
 <body from references/map-shape.md>
 EOF
 ```
@@ -118,8 +116,7 @@ A ticket is ready to file when you can state its **Question** precisely. Sharpne
 Create each one as a child of the map, labelled `scry:<type>` (`research`, `prototype`, `grilling`, `task`). See Ticket types in `references/map-shape.md`.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" create-ticket MAP_NUMBER TYPE "Title" <<'EOF'
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" create-ticket MAP_NUMBER TYPE "Title" <<'EOF'
 ## Question
 
 <the decision or investigation>
@@ -129,8 +126,7 @@ EOF
 Wire blocking edges in a **second pass**, once every ticket has a number:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" wire CHILD_NUMBER BLOCKER_NUMBER
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" wire CHILD_NUMBER BLOCKER_NUMBER
 ```
 
 Everything still too dim to phrase stays in **Not yet specified**. Do not pre-slice fog into ticket-sized pieces.
@@ -152,9 +148,8 @@ Load `references/map-shape.md` if you have not this session.
 Fetch the map issue (the low-resolution view). Do not fetch every child body yet.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" view MAP_NUMBER
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" frontier MAP_NUMBER
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" view MAP_NUMBER
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" frontier MAP_NUMBER
 ```
 
 Orient to Destination and Notes before picking a ticket.
@@ -166,8 +161,7 @@ If the user named a ticket, use it. Otherwise take the first frontier row (open,
 Claim it before any work:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" claim TICKET_NUMBER
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" claim TICKET_NUMBER
 ```
 
 ### 3c. Resolve
@@ -192,13 +186,12 @@ If Notes name more files to read, read them. When the type is unclear, load gril
 Post the answer as a comment, close the ticket, append one gist line to the map's **Decisions so far**.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" comment TICKET_NUMBER <<'EOF'
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" comment TICKET_NUMBER <<'EOF'
 <answer>
 
 Docs impact: <owning doc and what changes, or none>
 EOF
-GH_HOST=<derived-host> bash "$SKILL_DIR/scripts/map.sh" close TICKET_NUMBER
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" close TICKET_NUMBER
 ```
 
 Then `view` the map, splice a line under **Decisions so far**, and `update-body` the map:
