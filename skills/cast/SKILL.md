@@ -56,7 +56,7 @@ Parse tokens, then treat the remainder as the target.
 4. Commit, and push only when the branch already has an upstream (Stage 4).
 5. Capture proof and open the pull request (Stage 5). Skip when `no-pr`.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs a bundled script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ---
 
@@ -71,8 +71,7 @@ The operations below are `next`, `claim`, and `view`. On Linear or Jira, when th
 **`next`.** Resolve the ready label: the string `docs/agents/triage-labels.md` maps for `ready-for-agent` when that file exists, else `ready-for-agent`. Then:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> next <ready string> --claim
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> next <ready string> --claim
 ```
 
 Empty output means nothing is ready. Say so in one line and stop; a loop that calls this on a schedule should stay quiet. `--claim` assigns the ticket only while it is still open, still carries the ready label, and is still unblocked; otherwise the script releases it and tries the next candidate. The first field is the ticket id. Do not call `claim` again on this path.
@@ -80,8 +79,7 @@ Empty output means nothing is ready. Say so in one line and stop; a loop that ca
 **Id or URL.** Claim it before reading further. An explicit id does not have to carry the ready label:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> claim ID
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> claim ID
 ```
 
 `ID` is a tracker id (`42`, `ENG-42`, `PLAT-42`) or a GitHub, Linear, or Jira issue URL; the script extracts the id. Exit 1 with "already claimed by" names the other holder: stop and say who has it. A ticket already assigned to you is fine. Exit 3 means the token cannot write; note it in the report and continue unclaimed.
@@ -89,8 +87,7 @@ bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> claim ID
 Fetch the ticket with its comments:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> view ID
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view ID
 ```
 
 Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the ticket body itself.

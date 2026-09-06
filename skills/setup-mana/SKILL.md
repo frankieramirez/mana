@@ -31,7 +31,7 @@ Use the tracker the user chose, then write the per-repo configuration the other 
 - **Secrets stay in the environment.** The files name the variable, never the value.
 - **Edit the file that exists.** Prefer the file that already contains the `## Agent skills` block. When both files contain independent blocks, use `CLAUDE.md`. If neither contains the block, use the existing file, preferring `CLAUDE.md` when both exist. When neither file exists, create `AGENTS.md`. Never create the second file, and when one is a symlink to the other, edit once.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ## Execution spine
 
@@ -128,8 +128,7 @@ Skip this whole stage for `local` and `other`. The bundled script rejects both t
 With a connector, read the team or project through it and list its labels. Otherwise:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags from the tracker file> check
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags from the tracker file> check
 ```
 
 Exit 3 means the token was refused. A missing key makes the script exit before it asks. Neither is a stop, because the files are already written: record `unverified` with the exact variable and carry on to the report.
@@ -137,9 +136,8 @@ Exit 3 means the token was refused. A missing key makes the script exit before i
 The check passed: create every label the roles need, using the mapping when one was written and the role names otherwise. Never create labels against a tracker that did not answer.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <the bug and enhancement strings>
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the five state strings>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <the bug and enhancement strings>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the five state strings>
 ```
 
 On `local`, one thing is worth a line: say whether `.scratch/` is gitignored, since tickets there are committed otherwise.

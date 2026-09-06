@@ -42,11 +42,10 @@ Finish the merge, rebase, cherry-pick, or revert that is already in progress. Re
 
 ## Stage 1: State
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
-bash "$SKILL_DIR/scripts/conflict-state"
+bash "<SKILL_DIR>/scripts/conflict-state"
 ```
 
 The script prints:

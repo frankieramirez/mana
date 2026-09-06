@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.1
+
+- Skills write the bundled script's absolute path into the command instead of setting `SKILL_DIR` first. A worktree-isolated or sandboxed session refuses `bash "$VAR/script.sh"`, because it cannot resolve the path to read the script, so every skill that ran a bundled script lost turns to a refusal before falling back to the literal path. The path is now a `<SKILL_DIR>` placeholder the model substitutes.
+
 ## 0.19.0
 
 - The plugin ships Archmage as a Claude Code output style. It appears as `mana:archmage` under `/config`, Output style, keeps the coding instructions, and stays on for every turn of the session. `scripts/sync-persona.sh` generates `output-styles/archmage.md` from the attune references, and `scripts/link-local.sh` links it for local development.

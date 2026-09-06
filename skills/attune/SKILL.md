@@ -30,7 +30,7 @@ Change one thing the other skills read. This skill edits existing configuration,
 - **Secrets stay in the environment.** The files name the variable, never the value.
 - **Nothing here is required.** Every setting has a working default, and every skill that reads one falls back when it is missing. Removing a setting is always allowed, and for the second opinion reviewer it is the safe direction.
 
-`SKILL_DIR` is the absolute directory this SKILL.md lives in. The Bash tool forgets variables between calls, so every block that runs the bundled script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ## Execution spine
 
@@ -96,15 +96,14 @@ Then ask one question with the platform's blocking question tool (`AskUserQuesti
 
 ## Stage 3: The flows
 
-One setting, one flow. Stop when it is written. Resolve project configuration paths below against the absolute project root recorded in Stage 1, including paths passed to file-editing tools. Supporting references and bundled scripts still resolve from `SKILL_DIR`.
+One setting, one flow. Stop when it is written. Resolve project configuration paths below against the absolute project root recorded in Stage 1, including paths passed to file-editing tools. Supporting references and bundled scripts still resolve from `<SKILL_DIR>`.
 
 **labels.** Show the current mapping, or say the roles use their own names. List the labels that already exist on the tracker, through the connector or by reading with the bundled script. Ask for the mapping in one question, with the roles that already have a good match filled in. Write `docs/agents/triage-labels.md` from `references/triage-labels.md`, keeping the prose above and below the table and rewriting only the rows. Then create every string that does not exist yet:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 PROJECT_ROOT="<absolute project root from Stage 1>"; cd "$PROJECT_ROOT" || exit 1
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags from the tracker file> ensure-labels --color d73a4a <the category strings>
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the state strings>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags from the tracker file> ensure-labels --color d73a4a <the category strings>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <the state strings>
 ```
 
 Existing labels are never renamed or deleted on the tracker. The report names the ones that are now unused. Jira has no label registry, so `ensure-labels` is a no-op there and any string works. On `local` and `other` the role names are the strings and there is nothing to change: say so and stop.
@@ -124,9 +123,8 @@ Existing labels are never renamed or deleted on the tracker. The report names th
 **key.** Rewrite `Project:` and `Adapter flags:` in the tracker file, then verify:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 PROJECT_ROOT="<absolute project root from Stage 1>"; cd "$PROJECT_ROOT" || exit 1
-bash "$SKILL_DIR/scripts/tickets.sh" <adapter flags> check
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> check
 ```
 
 This is the repair path for a setup run that wrote the config before the key was there. Running it with no change, just to verify, is a useful run: the user exports `LINEAR_API_KEY`, comes back, and confirms. Exit 3 or a missing variable: name the variable and leave the file as it is.
@@ -138,10 +136,9 @@ This is the repair path for a setup run that wrote the config before the key was
 **style.** The voice for every turn of a session, with or without a skill running. This is the output style of hosts that have no output style setting. With `archmage`, write `docs/agents/archmage.md` from the bundled references, then add or replace the `Style:` line in the block:
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>";
 PROJECT_ROOT="<absolute project root from Stage 1>"; cd "$PROJECT_ROOT" || exit 1
 mkdir -p docs/agents
-{ cat "$SKILL_DIR/references/archmage-session.md"; echo; cat "$SKILL_DIR/references/archmage.md"; } > docs/agents/archmage.md
+{ cat "<SKILL_DIR>/references/archmage-session.md"; echo; cat "<SKILL_DIR>/references/archmage.md"; } > docs/agents/archmage.md
 ```
 
 The line is an instruction the host follows at session start, so it keeps this exact wording: `Style: archmage. Read docs/agents/archmage.md before the first reply and use that voice for the whole session.` With `off`, remove the line and delete `docs/agents/archmage.md`. A matching setting is a no-op; disabling an absent setting creates no file or block. A bare `style` invocation reports the current value and offers `archmage` and `off`; a named supported value writes immediately, and an unsupported value writes nothing and explains the supported values. Style and persona are independent: persona narrates during skill workflows only, and style keeps the voice on between them. Apply a successfully enabled voice to this run's report.

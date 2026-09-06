@@ -82,6 +82,12 @@ dashes=$(grep -rn --include='*.md' -e '—' -e '–' skills agents output-styles
   | grep -v -e 'skills/dispel/SKILL.md' -e 'skills/scan/references/voice.md' || true)
 [ -z "$dashes" ] || { err "em/en dashes found:"; echo "$dashes" >&2; }
 
+# 4b. A bundled script is invoked by its literal path. A worktree-isolated session refuses
+# an interpreter whose script path is hidden behind a shell variable.
+indirect=$(grep -rnE '(bash|sh|python3?|node) +"?\$[A-Za-z_][A-Za-z0-9_]*/' --include='*.md' skills agents 2>/dev/null \
+  | grep -v '\$VAR/script\.sh' || true)   # the convention paragraphs quote the refused form
+[ -z "$indirect" ] || { err "script path behind a shell variable, use \"<SKILL_DIR>/...\":"; echo "$indirect" >&2; }
+
 # 5. Scripts are executable and parse.
 for s in skills/*/scripts/* scripts/*.sh; do
   [ -e "$s" ] || continue

@@ -27,11 +27,11 @@ Write every file under a fresh private directory, `DIR=$(mktemp -d)`, and pass i
 
 ## text-frame.sh
 
-`SKILL_DIR` is the absolute directory the `SKILL.md` lives in. The Bash tool forgets variables between calls, so every block that runs the script sets `SKILL_DIR` again on its first line.
+`<SKILL_DIR>` is the absolute directory the `SKILL.md` lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>"; DIR="<the mktemp -d directory>";
-<the proving command> 2>&1 | bash "$SKILL_DIR/scripts/text-frame.sh" "$DIR/tests.svg"
+DIR="<the mktemp -d directory>";
+<the proving command> 2>&1 | bash "<SKILL_DIR>/scripts/text-frame.sh" "$DIR/tests.svg"
 ```
 
 The script reads stdin and writes a dark monospace SVG. It XML-escapes the text and strips ANSI color codes. Long lines wrap. Cap the input at what the command actually printed.

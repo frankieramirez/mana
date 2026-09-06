@@ -2,7 +2,7 @@
 
 `scripts/map.sh` owns every write that shapes the map. It needs `gh` authenticated against this checkout. Set `GH_HOST` on every call when the remote is GitHub Enterprise (derive the host from `gh repo view --json url --jq .url`).
 
-`SKILL_DIR` is the absolute directory of this skill. Set it on the first line of every Bash call.
+`<SKILL_DIR>` is the absolute directory of this skill. Write the real path into every Bash call instead of assigning it to a shell variable.
 
 `frontier` and `view` read the older `wayfinder:*` labels as their `scry:*` equivalents, so a map filed before 0.11.0 still walks. Nothing writes the old names.
 

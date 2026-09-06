@@ -23,8 +23,8 @@ Video has no alt text.
 The body file lives in the same directory. A fixed path such as `/tmp/pr-body.md` is writable by every local user and must not be used.
 
 ```bash
-SKILL_DIR="<absolute path of the directory containing this SKILL.md>"; DIR="<the mktemp -d directory>";
-bash "$SKILL_DIR/scripts/open-pr.sh" \
+DIR="<the mktemp -d directory>";
+bash "<SKILL_DIR>/scripts/open-pr.sh" \
   --title "Title from the branch or ticket" \
   --body-file "$DIR/pr-body.md" \
   --attach "$DIR/settings.png#the settings page after the save" \
