@@ -34,6 +34,7 @@ Then make the smallest edit that satisfies `change_note`:
 
 - Change what the note names. Leave the surrounding code alone, even where you see something you would improve.
 - Match the file's existing conventions: naming, error handling, import order, formatting. A fix that looks foreign to its file is not done.
+- Write the plainest code that answers the note. A new helper, parameter, or abstraction needs a present reason inside the item: the note asks for it, or a class item's sites share the same line. Otherwise inline it.
 - Do not add a comment that explains the fix or references the review. The diff speaks for itself.
 - If the reviewer suggested one approach and a clearly better one exists, take the better one and say why in `summary`. Report it as `fixed-differently`.
 - Add a test when the fix changes behavior and no test would catch a regression. Skip this for docs, comments, and string literals.

@@ -21,7 +21,7 @@ When that value is a path, Read the file first. The path string is never the dif
 
 1. **Site changed?** Does the diff touch the `path` and the location the change note names? A class item lists several sites; every one of them must appear.
 2. **Ask answered?** Does the change do what the reviewer asked, or for a `fixed-differently` item what the change note says instead, rather than something adjacent? Quote the diff line that answers it. Open the surrounding file when the diff alone cannot show it.
-3. **In its file's conventions?** Naming, error handling, import order, and formatting match the code around the edit. A fix that looks foreign to its file is not done.
+3. **In its file's conventions?** Naming, error handling, import order, and formatting match the code around the edit, and the edit adds no shape the note did not call for (a new helper, option, or layer with one consumer). A fix that looks foreign to its file is not done.
 
 `addressed: true` only when all three hold. A `false` needs one sentence naming which question failed and the line that shows it. When you cannot settle a question from the code, answer `false` and say what you could not settle.
 

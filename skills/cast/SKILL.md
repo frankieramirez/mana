@@ -26,6 +26,7 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 ## Operating principles
 
 - **One ticket.** The invocation names the work. Do not wander onto adjacent issues.
+- **Smallest shape that passes.** Build the least structure that satisfies the ticket, and write one plain line when one line does the job. A helper, option, or abstraction needs a consumer that exists now. This is YAGNI: you aren't gonna need it.
 - **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1).
 - **Claim before work.** A ticket from the tracker gets assigned to the person driving this session first, so a parallel session skips it. Held by someone else: stop.
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
@@ -131,6 +132,8 @@ When the change has meaningful behavior to verify and the repo has a test harnes
 Typecheck and run meaningful behavior tests around the files you touch as you go. Run the project's required validation: use the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name. A successful validation may be reused when no edits have happened since it ran. Classify a failure against the pre-change baseline first. Rerun it after a new edit or an unresolved concern that needs a fresh run.
 
 Stay inside the ticket's scope. Adjacent cleanup waits.
+
+Inside that scope, build the smallest shape that satisfies the ticket. When one plain line does the job, write one line. A helper earns its place when the same line appears a second time, and an interface, option, or registry when a second consumer exists in this diff or the codebase. Later is no reason on its own. The signal has to be present now.
 
 ## Stage 3: Spec check
 
