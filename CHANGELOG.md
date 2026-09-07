@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.0
+
+- Mend takes a pull request number or URL, a branch, or `base:<ref>`, and starts the merge when nothing is in progress: it fetches the base, merges it into the current branch, and resolves the conflicts through the existing stages. The PR's head must be the checked-out branch, the tree must be clean, and a clean merge stops with the merge commit reported. A bare `/mend` still refuses to start anything.
+
 ## 0.19.3
 
 - Remedy loads the shared verifier checks before choosing inline or delegated verification. Single-item and fallback runs now check for unnecessary abstractions with the same rules as multi-item runs.

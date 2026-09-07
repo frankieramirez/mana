@@ -1,7 +1,7 @@
 ---
 name: mend
-description: "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, /mend, or /resolve-merge-conflicts."
-argument-hint: "[blank for the in-progress operation]"
+description: "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into the current branch and resolve what conflicts. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts."
+argument-hint: "[blank for the in-progress operation | PR number | PR URL | branch | base:<ref>]"
 ---
 
 <!-- BEGIN MANA PERSONA -->
@@ -20,19 +20,33 @@ Honor the user's explicit instructions and decisions already made in this conver
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Finish the merge, rebase, cherry-pick, or revert that is already in progress. Read both sides of every conflict, keep both intents where they fit, and complete the git operation. Never abort.
+Finish the merge, rebase, cherry-pick, or revert that is already in progress. With a pull request, branch, or `base:` target, start the merge on the current branch first. Read both sides of every conflict, keep both intents where they fit, and complete the git operation. Never abort.
 
 ## Operating principles
 
-- **Already in progress.** This skill finishes a conflicted operation. It does not start one. If there is no merge state, stop.
+- **Already in progress, or named.** With no argument this skill finishes a conflicted operation and never starts one: no merge state means stop. A target is the one thing that lets it start a merge, and only into the branch that is checked out.
+- **This branch only.** `git checkout`, `git switch`, and `gh pr checkout` are out. A PR whose head is another branch is a stop that names both branches.
 - **Always resolve. Never abort.** `git merge --abort`, `git rebase --abort`, `git cherry-pick --abort`, and `git revert --abort` are out.
 - **Both intents stay.** A hunk is two changes talking. Keep both when they commute. When they cannot, keep the change that matches the operation's goal and record the trade-off.
 - **Invent nothing.** The resolved file contains only behavior that already lived on one side or both. No new feature, no drive-by cleanup.
 - **Ours and theirs follow the operation.** On a rebase, HEAD is the branch you are rebasing onto. The script names both sides. Trust it over memory.
 
+## Arguments
+
+The argument is the target. It only matters when Stage 1 finds no operation in progress; a conflict already in the tree is mended as is.
+
+| Input | Target |
+|-------|--------|
+| none | The in-progress operation |
+| number or PR URL | That pull request's base, if the PR's head is this branch |
+| `base:<ref>` | That ref, on the current checkout, with no `gh` call |
+| branch name | That branch, fetched from `origin` |
+
+The operation started is a merge of the base into the current branch. An instruction in the conversation to rebase instead is honored, and Stage 5's rebase loop takes it from there.
+
 ## Execution spine
 
-1. Read the operation (Stage 1).
+1. Read the operation, or start it from the target (Stage 1).
 2. Learn why each side changed (Stage 2).
 3. Spawn Weaver on the conflicted files (Stage 3).
 4. Audit, then run the project's checks (Stage 4).
@@ -61,11 +75,29 @@ The script prints:
 | `goal` | Subject of the operation (merge message, or the commit being replayed) |
 | `files` | Unmerged paths as `path<TAB>kind`, one per line after the field |
 
-`phase=clear` (or empty `operation`): stop. There is nothing to mend.
+`phase=clear` (or empty `operation`) with no target: stop. There is nothing to mend.
+
+`phase=clear` with a target: start the merge, below, then run the script again.
 
 `phase=continue` and an empty `files` list: the markers are gone and the operation still needs a commit or `--continue`. Jump to Stage 4, then Stage 5.
 
-Read `git status` as a second look. Do not start a merge or rebase to create work.
+Read `git status` as a second look. A target is the only reason to start a merge; never start one to create work.
+
+### Starting from a target
+
+Every check here is a stop, reported in one line, with the tree untouched.
+
+1. `git status --porcelain` prints anything: stop. Git refuses to merge into a dirty tree, and so does this skill.
+2. Resolve the base ref.
+   - PR number or URL: `gh pr view <n> --json baseRefName,headRefName`. `headRefName` must equal `git branch --show-current`; otherwise stop and name both branches. The base is `baseRefName`.
+   - `base:<ref>`: use the ref as given. No fetch.
+   - Branch name: that branch. Fetch it.
+3. `git fetch --no-tags origin <base>` for a PR or branch target. The ref to merge is `origin/<base>`.
+4. `git merge --no-edit <ref>`.
+
+Exit 0 means the merge was clean: report the new merge commit under `Commit`, `Resolved: 0 files`, and stop. The branch is up to date, which is what the target asked for. Do not push.
+
+A non-zero exit with unmerged paths is the conflict this skill exists for. Run the script again and continue with Stage 2.
 
 ---
 
