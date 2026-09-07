@@ -104,7 +104,7 @@ A person reads this at triage and again months later without opening the file.
 
 - First sentence is the effect: what a user, attacker, operator, or caller experiences. Function names come later, for locating it.
 - Say why the fix works. If the repo already guards the same class of problem somewhere, cite that spot. A fix grounded in the project's own convention beats general advice.
-- Two to four sentences plus the minimum inline code. Long entries get truncated downstream.
+- Long enough that a reader at triage understands the effect and why the fix works without opening the file, plus the minimum inline code.
 - Never empty, null, or a fragment. If it was worth flagging you can explain it.
 
 ## Not a finding

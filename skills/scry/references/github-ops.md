@@ -4,7 +4,7 @@
 
 `<SKILL_DIR>` is the absolute directory of this skill. Write the real path into every Bash call instead of assigning it to a shell variable.
 
-`frontier` and `view` read the older `wayfinder:*` labels as their `scry:*` equivalents, so a map filed before 0.11.0 still walks. Nothing writes the old names.
+`frontier` and `view` read `wayfinder:*` labels as their `scry:*` equivalents. Nothing writes the old names.
 
 | Subcommand | Arguments | What it does |
 |------------|-----------|--------------|

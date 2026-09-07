@@ -17,7 +17,7 @@ Assume the reviewer is right. Most comments, including nitpicks and P2s, describ
 
 Who wrote the comment and where it appeared carry no weight. A bot's table row and a lead engineer's inline note get the same test: does the code bear it out?
 
-The checks in this file are tripwires. Run down the list, and when none fires, mark the item to fix and move on. Do not invent risk to get out of work. A feeling of unease is worthless; "I opened the three callers and this breaks the second one" is a reason.
+The checks in this file are tripwires. Run down the list, and when none fires, mark the item to fix and move on. A feeling of unease is not a reason; "I opened the three callers and this breaks the second one" is a reason.
 
 ## How much to read
 
