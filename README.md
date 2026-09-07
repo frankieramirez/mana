@@ -488,13 +488,19 @@ It works on GitHub, Linear, Jira, or local files according to the tracker file. 
 
 ### mend
 
-Finishes a conflicted merge, rebase, cherry-pick, or revert while preserving both sides' intent where possible.
+Finishes a conflicted merge, rebase, cherry-pick, or revert while preserving both sides' intent where possible. Given a pull request, it merges the PR's base into the current branch first and resolves what conflicts.
 
-Weaver resolves the hunks; the skill audits the result, regenerates lockfiles, and runs the project's checks before continuing the git operation. It never aborts the operation.
+Weaver resolves the hunks; the skill audits the result, regenerates lockfiles, and runs the project's checks before continuing the git operation. It never aborts the operation, and it never switches branches: a PR whose head is another branch is a stop.
 
 ```text
 # Finish the conflicted operation
 /mana:mend
+
+# Merge PR 823's base into this branch, then resolve the conflicts
+/mana:mend 823
+
+# Same, without a gh call
+/mana:mend base:main
 ```
 
 ### augur
