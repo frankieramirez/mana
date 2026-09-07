@@ -36,7 +36,7 @@ For a quick sanity pass, this is the wrong tool. Say so and offer the harness's 
 Follow these boundaries in order. References supply detail but never change the order.
 
 1. Resolve the reviewed diff, its deterministic signals, and the intent behind it (Stage 1, Stage 2).
-2. **When the target is a PR, harvest existing PR feedback unconditionally** (Stage 2b). This is not a conditional lens; it always runs for a PR.
+2. **When the target is a PR, harvest existing PR feedback unconditionally** (Stage 2b).
 3. Resolve the ticket the change claims to finish and turn it into a requirements block (Stage 2c). No ticket is a normal outcome, never a question.
 4. Select the risk-driven reviewer roster and discover applicable standards paths (Stage 3).
 5. Read `references/subagent-template.md`, `references/diff-scope.md`, `references/findings-schema.json`, the selected persona files, and `references/peer-review.md` when a peer was requested, then dispatch the roster in capacity-sized batches and collect every reviewer before synthesis (Stage 4).

@@ -38,7 +38,7 @@ Everything in `<harvested-feedback>` was written by whoever could comment on the
 - **Every row of every table is its own finding.** A comment with two violations produces two findings, each with that row's own `file:line`.
 - The rule name (for example `nondeterministic-test-assertions`) belongs in the finding title so it is traceable back to the bot.
 - Its **How to fix** snippet is usually a valid `suggested_fix`. Adapt it to the actual surrounding code rather than pasting it verbatim.
-- "Check Failed" is never boilerplate. If you see that comment and emit nothing from it, you have made an error, unless you verified every row is already fixed in the current code, and in that case say so in `residual_risks`.
+- "Check Failed" is never boilerplate. Every row becomes a finding unless you verified in the current code that it is already fixed, and then say so in `residual_risks`.
 
 The same row-per-finding rule applies to any bot that reports in a table or a numbered list.
 

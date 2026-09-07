@@ -14,7 +14,7 @@ Count changed lines in the hunks (additions plus deletions), ignoring tests, gen
 
 | Depth | When | Run |
 |-------|------|-----|
-| Quick | Under 50 lines, no risk words | Assumption violation only. Name two or three assumptions and whether they hold. At most 3 findings. |
+| Quick | Under 50 lines, no risk words | Assumption violation only. Name two or three assumptions and whether they hold; only a broken one becomes a finding. |
 | Standard | 50 to 199 lines, or minor risk words | Assumption violation, composition failures, abuse cases. Findings proportional to the diff. |
 | Deep | 200+ lines, or strong risk words such as auth or payments | All five lenses, cascades included. Trace multi-step chains and make more than one pass over busy interaction points. |
 

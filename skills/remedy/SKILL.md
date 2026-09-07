@@ -25,7 +25,7 @@ Evaluate PR review feedback, fix what's real, commit, and push. **This skill nev
 Whatever a reply would have said goes to the user in the final summary instead. The user decides what, if anything, to say on the PR.
 
 > **Fix first. Skip only with evidence.**
-> Assume the reviewer is right. Nitpicks count. Work down the list and make the changes. Treat the rubric's checks as tripwires: you have to read the code to make the fix anyway, so leave the default only when something concrete fires. Never invent doubt to skip work. Who wrote the comment (human or bot) and where it sits (inline thread, review body, top-level comment) change nothing about how you judge it.
+> Assume the reviewer is right. Nitpicks count. Work down the list and make the changes. Treat the rubric's checks as tripwires: you have to read the code to make the fix anyway, so leave the default only when something concrete fires. Who wrote the comment (human or bot) and where it sits (inline thread, review body, top-level comment) change nothing about how you judge it.
 >
 > **Judge centrally, fan out the reads and the fixes.** The validity decision is made here, in the one context that holds every thread from a single fetch, so it can dedup reads, catch a systematically wrong reviewer across threads, and weigh the author's design intent against the finding. A confidently wrong review bot gets caught at this gate before any subagent touches the code. Subagents have two jobs: scouts gather evidence on a large batch (step 3) and fixers implement approved changes (step 4). Neither one produces a verdict. A verifier then reads the combined diff against every ask before anything is committed (step 4b).
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.1
+
+- Prompt audit against the current model generation. Dropped two anti-laziness boosters from remedy's judgment rule and rubric, the findings cap on Havoc Demon Hunter's quick depth, a reinforcement sentence in scan's execution spine, the scolding phrasing in Lore Bard's check-failed rule, and a version pin in the scry GitHub operations note. The reviewer template no longer tells subagents that long `why_it_matters` entries are truncated downstream, since the merge script keeps the longest one and never truncates.
+
 ## 0.20.0
 
 - Mend takes a pull request number or URL, a branch, or `base:<ref>`, and starts the merge when nothing is in progress: it fetches the base, merges it into the current branch, and resolves the conflicts through the existing stages. The PR's head must be the checked-out branch, the tree must be clean, and a clean merge stops with the merge commit reported. A bare `/mend` still refuses to start anything.
