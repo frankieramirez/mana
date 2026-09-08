@@ -37,6 +37,7 @@ scripts/test-persona.sh || err "persona synchronization fixtures failed"
 scripts/test-ward.sh || err "PR attendance fixtures failed"
 scripts/test-scry-map.sh || err "scry map closeout fixtures failed"
 scripts/test-open-pr.sh || err "open-pr conflict fixtures failed"
+scripts/test-ultima.sh || err "ultima audit fixtures failed"
 
 # 2a. Every output style has the frontmatter the Claude Code picker needs.
 for f in output-styles/*.md; do
@@ -72,7 +73,7 @@ sys.exit(1 if bad else 0)
 PY
 
 # 3. Manifests parse.
-for j in .claude-plugin/plugin.json .claude-plugin/marketplace.json skills/scan/references/findings-schema.json; do
+for j in .claude-plugin/plugin.json .claude-plugin/marketplace.json skills/scan/references/findings-schema.json skills/ultima/references/candidates-schema.json; do
   python3 -c "import json,sys;json.load(open('$j'))" 2>/dev/null || err "$j is not valid JSON"
 done
 
@@ -114,6 +115,8 @@ skills/sift/scripts/tickets.sh skills/cast/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/setup-mana/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/scan/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/attune/scripts/tickets.sh
+skills/sift/scripts/tickets.sh skills/ultima/scripts/tickets.sh
+skills/sift/references/agent-brief.md skills/ultima/references/agent-brief.md
 skills/setup-mana/references/triage-labels.md skills/attune/references/triage-labels.md
 EOF
 
@@ -124,6 +127,15 @@ for p in skills/scan/references/personas/*.md; do
     grep -qF "$h" "$p" || err "$p lacks '$h'"
   done
   grep -qF "\"reviewer\": \"$stem\"" "$p" || err "$p stub does not name $stem"
+done
+
+# 5d. Every ultima lens has the shared shape and its stub names its own file.
+for p in skills/ultima/references/lenses/*.md; do
+  stem=$(basename "$p" .md)
+  for h in '## Mandate' '## Where to look' '## Not a finding' '## Evidence bar' '## Output'; do
+    grep -qF "$h" "$p" || err "$p lacks '$h'"
+  done
+  grep -qF "\"lens\": \"$stem\"" "$p" || err "$p stub does not name $stem"
 done
 
 # 6. Claude Code's own validator, when available.
