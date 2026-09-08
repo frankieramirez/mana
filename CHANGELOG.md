@@ -1,8 +1,14 @@
 # Changelog
 
-## 0.21.1
+## 0.21.2
 
 - Mend pushes completed changes by default after successful checks when invoked directly, including clean merges. It honors requests to hold changes locally and asks when the push destination or a history rewrite needs a decision. Delegated resolutions return to the caller unless pushing is authorized, and the report includes the push outcome.
+
+## 0.21.1
+
+- Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
+
+- Scry map body updates can guard against a stale snapshot and expose a raw body read for closeout. The guard rejects missing snapshots, read failures, and concurrent edits before writing, while documenting the residual read/write race.
 
 ## 0.21.0
 
