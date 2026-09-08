@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.1
+
+- Cast reconsiders the implementation from first principles before committing, challenges weak assumptions, and prefers deletion before simplification. Changes need a concrete benefit within scope; a clean pass leaves good work alone instead of forcing every single-consumer helper or interface to be removed.
+
 ## 0.22.0
 
 - PR shipping checks for conflicts against the fetched base before writing and verifies GitHub mergeability afterward. Conflicts block ready PR creation, drafts can preserve blocked work, and unknown results stay explicit. Cast resolves conflicts within the implementation scope and refreshes validation and proof; reveal reports a concrete resolution handoff.
