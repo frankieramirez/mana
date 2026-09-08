@@ -855,7 +855,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);te
 a{color:var(--cyan);text-decoration:none}a:hover{color:#fff;text-decoration:underline}
 .page{min-height:100vh;background:radial-gradient(60rem 28rem at 50% -8rem,rgba(57,63,194,.32),transparent 70%),var(--bg)}
 main{max-width:66rem;margin:0 auto;padding:3rem 1.5rem 6rem}
-.mark{height:44px;width:auto;display:block}
+.mark{height:44px;width:165px;display:block;align-self:flex-start}
 .kicker{font-family:var(--pixel);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo)}
 h1{margin:0;font-size:2.4rem;line-height:1.1;font-weight:600;letter-spacing:-.02em;overflow-wrap:anywhere}
 h2{margin:0 0 .9rem;font-family:var(--pixel);font-size:.8rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo)}
