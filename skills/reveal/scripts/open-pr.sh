@@ -2,35 +2,47 @@
 # open-pr.sh: create or edit the current branch's pull request, with --attach.
 # git + gh only. JSON shaping is gh --jq.
 #
-#   open-pr.sh [--dry-run] [--title TITLE] --body-file PATH [--attach PATH|#alt]...
+#   open-pr.sh --check [--base BRANCH]
+#   open-pr.sh [--dry-run] [--draft] [--base BRANCH] [--title TITLE] --body-file PATH [--attach PATH|#alt]...
 #
 # Looks up the current branch's PR. Existing: edit. None: create (title required).
-# Prints TSV fields. Exit 3 when GitHub refuses a write (403).
+# Prints TSV fields. Exit 3 on write refusal, 4 on conflicts, 5 on unknown mergeability.
 # Honors GH_HOST.
 set -euo pipefail
 
 ERR=""
-trap '[ -n "${ERR:-}" ] && rm -f "$ERR"' EXIT
+WRITE_OUT=""
+trap 'rm -f "${ERR:-}" "${WRITE_OUT:-}"' EXIT
 
 usage() {
   cat <<'EOF'
-usage: open-pr.sh [--dry-run] [--title TITLE] --body-file PATH [--attach SPEC]...
+usage: open-pr.sh --check [--base BRANCH]
+       open-pr.sh [--dry-run] [--draft] [--base BRANCH] [--title TITLE] --body-file PATH [--attach SPEC]...
 
   SPEC is path or path#alt. Repeat --attach. Paths must not contain #.
+  --check runs only the fetched-base preflight; no body or attach required.
+  --base sets the creation base; an existing PR's base is authoritative.
+  --draft allows conflicting preflight and creates new PRs as drafts.
+  Existing PR review state is unchanged. The working tree must be clean.
 
   Looks up the current branch's PR.
     existing  gh pr edit --body-file --attach
     none      gh pr create --title --body-file --attach
 
   Prints:
+    base, base_sha, head_sha  the checked snapshot
+    preflight clean|conflicting
     action   create|edit
     url      PR url (empty on dry-run create)
     number   PR number (empty on dry-run create)
     attach   yes|skipped
     reason   empty, or why attach was skipped
     command  the gh invocation (dry-run only)
+    mergeability clean|conflicting|unknown (after writing)
 
   Exit 3 means this token cannot write the PR.
+  Exit 4 means conflicts; exit 5 means post-write mergeability is unknown.
+  A PR can exist after exit 4 or 5; retain its URL.
 EOF
 }
 
@@ -145,6 +157,9 @@ check_attach() {
 }
 
 DRY=0
+CHECK=0
+DRAFT=0
+BASE=""
 TITLE=""
 BODY=""
 ATTACH=()
@@ -153,6 +168,13 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help|help) usage; exit 0 ;;
     --dry-run) DRY=1; shift ;;
+    --check) CHECK=1; shift ;;
+    --draft) DRAFT=1; shift ;;
+    --base)
+      [ $# -ge 2 ] || die "--base needs a value"
+      BASE=$2
+      shift 2
+      ;;
     --title)
       [ $# -ge 2 ] || die "--title needs a value"
       TITLE=$2
@@ -171,6 +193,52 @@ while [ $# -gt 0 ]; do
     *) die "unknown flag: $1" ;;
   esac
 done
+
+command -v gh >/dev/null 2>&1 || die "gh is not on PATH"
+
+# Resolve through the same repository gh will write to, including fork upstreams.
+branch=$(git symbolic-ref --quiet --short HEAD) || die "need a branch"
+[ -z "$(git status --porcelain)" ] || die "need a clean working tree"
+repo=$(gh repo view --json url --jq .url) || die "cannot resolve repository"
+existing=$(gh pr list --head "$branch" --state open --json number,url,baseRefName,headRefName,isCrossRepository --jq '.[0] // empty | [.number, .url, .baseRefName, .headRefName, .isCrossRepository] | @tsv') || die "cannot look up pull request"
+action=create
+number=""
+url=""
+if [ -n "$existing" ]; then
+  IFS=$'\t' read -r number url pr_base pr_head cross <<<"$existing"
+  [ "$pr_head" = "$branch" ] && [ "$cross" = false ] || die "PR head must be this branch in this repository"
+  [ -z "$BASE" ] || [ "$BASE" = "$pr_base" ] || die "--base differs from existing PR base"
+  BASE=$pr_base
+  action=edit
+fi
+if [ -z "$BASE" ]; then
+  BASE=$(git config "branch.$branch.base" || true)
+fi
+if [ -z "$BASE" ]; then
+  BASE=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name) || die "cannot resolve base"
+fi
+git check-ref-format "refs/heads/$BASE" >/dev/null || die "invalid base branch: $BASE"
+git fetch --no-tags -- "$repo" "refs/heads/$BASE" >&2 || die "cannot fetch base"
+base_sha=$(git rev-parse FETCH_HEAD)
+head_sha=$(git rev-parse HEAD)
+preflight=clean
+if git merge-tree --write-tree "$head_sha" "$base_sha" >&2; then
+  :
+else
+  ec=$?
+  [ "$ec" -eq 1 ] || die "mergeability check failed (requires git merge-tree --write-tree)"
+  preflight=conflicting
+fi
+printf 'base\t%s\nbase_sha\t%s\nhead_sha\t%s\npreflight\t%s\n' "$BASE" "$base_sha" "$head_sha" "$preflight"
+if [ "$CHECK" -eq 1 ]; then
+  [ "$preflight" = clean ] && exit 0
+  exit 4
+fi
+if [ "$preflight" = conflicting ] && [ "$DRAFT" -eq 0 ]; then
+  [ -z "$url" ] || printf 'url\t%s\nnumber\t%s\n' "$url" "$number"
+  echo "open-pr.sh: resolve base conflicts before shipping, or use --draft to preserve progress." >&2
+  exit 4
+fi
 
 [ -n "$BODY" ] || die "need --body-file PATH"
 [ -f "$BODY" ] || die "body file missing: $BODY"
@@ -219,25 +287,16 @@ if [ "$ATTACH_OK" -eq 0 ]; then
   echo "open-pr.sh: attach skipped ($REASON)." >&2
 fi
 
-existing=$(gh pr view --json number,url --jq '[.number, .url] | @tsv' 2>/dev/null || true)
-action=create
-number=""
-url=""
-if [ -n "$existing" ]; then
-  action=edit
-  number=${existing%%$'\t'*}
-  url=${existing#*$'\t'}
-fi
-
 if [ "$action" = create ] && [ -z "$TITLE" ]; then
   die "need --title when this branch has no pull request"
 fi
 
 cmd=(gh)
 if [ "$action" = create ]; then
-  cmd+=(pr create --title "$TITLE" --body-file "$BODY")
+  cmd+=(pr create --base "$BASE" --title "$TITLE" --body-file "$BODY")
+  [ "$DRAFT" -eq 0 ] || cmd+=(--draft)
 else
-  cmd+=(pr edit --body-file "$BODY")
+  cmd+=(pr edit "$number" --body-file "$BODY")
 fi
 if [ "$ATTACH_OK" -eq 1 ]; then
   for spec in "${ATTACH[@]}"; do
@@ -264,13 +323,17 @@ fi
 
 cmd_plain=(gh)
 if [ "$action" = create ]; then
-  cmd_plain+=(pr create --title "$TITLE" --body-file "$BODY")
+  cmd_plain+=(pr create --base "$BASE" --title "$TITLE" --body-file "$BODY")
+  [ "$DRAFT" -eq 0 ] || cmd_plain+=(--draft)
 else
-  cmd_plain+=(pr edit --body-file "$BODY")
+  cmd_plain+=(pr edit "$number" --body-file "$BODY")
 fi
 
+WRITE_OUT=$(mktemp)
 if [ "$ATTACH_OK" -eq 1 ]; then
-  if ! try_gh "${cmd[@]}" >/dev/null; then
+  if try_gh "${cmd[@]}" >"$WRITE_OUT"; then
+    :
+  else
     ec=$?
     [ "$ec" -eq 3 ] && exit 3
     if printf '%s' "${LAST_ERR:-}" | grep -qiE 'unsupported authentication type|failed to upload|401 Unauthorized'; then
@@ -278,20 +341,43 @@ if [ "$ATTACH_OK" -eq 1 ]; then
       ATTACH_OK=0
       REASON="upload refused: unsupported authentication type"
       attach_field=skipped
-      run_gh "${cmd_plain[@]}" >/dev/null
+      run_gh "${cmd_plain[@]}" >"$WRITE_OUT"
     else
       exit "$ec"
     fi
   fi
 else
-  run_gh "${cmd_plain[@]}" >/dev/null
+  run_gh "${cmd_plain[@]}" >"$WRITE_OUT"
 fi
 
-url=$(gh pr view --json url --jq .url)
-number=$(gh pr view --json number --jq .number)
+if [ -z "$url" ]; then
+  url=$(awk '/^https?:\/\// {print; exit}' "$WRITE_OUT")
+  [ -n "$url" ] || url=$(gh pr view --json url --jq .url 2>/dev/null || true)
+  number=${url##*/}
+fi
 
 printf 'action\t%s\n' "$action"
 printf 'url\t%s\n' "$url"
 printf 'number\t%s\n' "$number"
 printf 'attach\t%s\n' "$attach_field"
 printf 'reason\t%s\n' "$REASON"
+
+# GitHub computes this asynchronously. A clean result must describe this HEAD.
+mergeability=unknown
+for attempt in 1 2 3; do
+  [ -n "$number" ] || break
+  state=$(gh pr view "$number" --json mergeable,headRefOid,baseRefName --jq '[.mergeable, .headRefOid, .baseRefName] | @tsv' 2>/dev/null || true)
+  IFS=$'\t' read -r mergeable remote_head remote_base <<<"$state"
+  if [ "$remote_head" = "$head_sha" ] && [ "$remote_base" = "$BASE" ]; then
+    case "$mergeable" in
+      MERGEABLE) mergeability=clean; break ;;
+      CONFLICTING) mergeability=conflicting; break ;;
+    esac
+  fi
+  [ "$attempt" -eq 3 ] || sleep 2
+done
+printf 'mergeability\t%s\n' "$mergeability"
+case "$mergeability" in
+  conflicting) exit 4 ;;
+  unknown) exit 5 ;;
+esac

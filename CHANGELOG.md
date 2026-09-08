@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.0
+
+- PR shipping checks for conflicts against the fetched base before writing and verifies GitHub mergeability afterward. Conflicts block ready PR creation, drafts can preserve blocked work, and unknown results stay explicit. Cast resolves conflicts within the implementation scope and refreshes validation and proof; reveal reports a concrete resolution handoff.
+
 ## 0.21.2
 
 - Mend pushes completed changes by default after successful checks when invoked directly, including clean merges. It honors requests to hold changes locally and asks when the push destination or a history rewrite needs a decision. Delegated resolutions return to the caller unless pushing is authorized, and the report includes the push outcome.

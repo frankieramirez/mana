@@ -35,6 +35,7 @@ scripts/sync-agent.sh --check || err "generated agents are out of sync"
 scripts/sync-persona.sh --check || err "persona references or activation blocks are out of sync"
 scripts/test-persona.sh || err "persona synchronization fixtures failed"
 scripts/test-scry-map.sh || err "scry map closeout fixtures failed"
+scripts/test-open-pr.sh || err "open-pr conflict fixtures failed"
 
 # 2a. Every output style has the frontmatter the Claude Code picker needs.
 for f in output-styles/*.md; do
