@@ -2,7 +2,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Offline contract tests for the simplified ward protocol.
 python3 - <<'PY'
 import json, os, pathlib, subprocess, tempfile
 watch=pathlib.Path("skills/ward/scripts/pr-watch.sh")
@@ -61,7 +60,6 @@ with tempfile.TemporaryDirectory(prefix='ward-') as td:
  fixture(r,state='CLOSED',fail='checks'); before=(r/'calls.log').read_text().count('"pr", "checks"'); assert snap(r)['pr']['state']=='CLOSED'; assert (r/'calls.log').read_text().count('"pr", "checks"')==before
  fixture(r,state='OPEN',headRefOid='sha-a'); snap(r); run(r,'reserve','retry',s['pr']['url'],'sha-a'); run(r,'reserve','retry',s['pr']['url'],'sha-a',ok=False); run(r,'reserve','fix',s['pr']['url'],'sha-a','BUG-1'); fixture(r,headRefOid='sha-b'); snap(r); run(r,'reserve','fix',s['pr']['url'],'sha-b','BUG-1'); fixture(r,headRefOid='sha-c'); snap(r); run(r,'reserve','fix',s['pr']['url'],'sha-c','BUG-1',ok=False)
  fixture(r,views=[dict(url=s['pr']['url'],headRefOid='x',state='OPEN'),dict(url=s['pr']['url'],headRefOid='y',state='OPEN')]); run(r,'snapshot',s['pr']['url'],ok=False)
- # Green checks still surface late feedback; repeated observations preserve exact versions.
  green='[{"name":"test","state":"SUCCESS","bucket":"pass","link":""}]'
  fixture(r,checks=green); empty=snap(r); assert not empty['feedback']
  def thread(resolved=False):
@@ -71,7 +69,6 @@ with tempfile.TemporaryDirectory(prefix='ward-') as td:
  old=item['key']+'@'+item['version']; run(r,'ack',s['pr']['url'],old)
  fixture(r,thread_pages=[[thread(True)]],nested=[dict(id='later',body='later page')]); snap(r)
  fixture(r,thread_pages=[[thread()]],nested=[dict(id='later',body='later page')]); reopened=snap(r)['feedback'][0]; assert not reopened['acknowledged'] and reopened['version']!=item['version']; run(r,'ack',s['pr']['url'],old,ok=False)
- # Failed checks are data. Transport failures and head races cannot commit partial observations.
  state=pathlib.Path(first['state_path']); before=(state/'state.tsv').read_bytes()
  fixture(r,checks='',checks_exit=1,comments=[json.dumps(dict(id='lost',body='partial'))]); run(r,'snapshot',s['pr']['url'],ok=False); assert (state/'state.tsv').read_bytes()==before
  fixture(r,checks='[]',checks_exit=8); assert snap(r)['checks']==[]
@@ -80,7 +77,6 @@ with tempfile.TemporaryDirectory(prefix='ward-') as td:
  fixture(r,headRefOid='sha-a'); snap(r); run(r,'reserve','retry',s['pr']['url'],'sha-a',ok=False)
  for terminal in ('MERGED','CLOSED'):
   fixture(r,state=terminal,headRefOid=None,checks='',checks_exit=97); assert snap(r)['pr']['state']==terminal
- # Only read operations reached GitHub.
  calls=[json.loads(line) for line in (r/'calls.log').read_text().splitlines()]
  assert all(a[:2] in (['pr','view'],['pr','checks'],['api','graphql'],['api','--paginate']) for a in calls)
  fixture(r)

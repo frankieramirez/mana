@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Read one PR and remember evaluated feedback and spent repair attempts.
-# GitHub writes belong to the agent, never to this helper.
 set -euo pipefail
 umask 077
 
@@ -57,7 +55,6 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 locate() {
-  # gh resolves numbers and branches. Only canonical URLs reach local state.
   local pattern='^https?://([A-Za-z0-9.:-]+)/([A-Za-z0-9_-]+)/([A-Za-z0-9_.-]+)/pull/([0-9]+)$'
   [[ "$1" =~ $pattern ]] || die "expected a canonical PR URL: $1"
   HOST="${BASH_REMATCH[1]}" OWNER="${BASH_REMATCH[2]}"
@@ -287,7 +284,7 @@ fetch_checks() {
   local rc=0
   gh_call pr checks "$URL" --json name,state,bucket,link --jq . > "$TMP/checks.json" || rc=$?
   case "$rc" in 0|1|8) ;; *) die "check fetch failed (exit $rc)" ;; esac
-  # Failure=1 and pending=8 are data only when gh actually returned JSON.
+  # gh uses exit 1 for failing checks and 8 for pending checks while still returning JSON.
   local data
   data=$(cat "$TMP/checks.json")
   [[ "$data" == \[*\] ]] || die "check fetch returned no JSON array (exit $rc)"
@@ -296,28 +293,26 @@ fetch_checks() {
 observe_feedback() {
   cat "$TMP/threads.records" "$TMP/comments.records" "$TMP/reviews.records" > "$TMP/items"
   awk -F '\t' 'NF!=2 || $1!~/^[A-Za-z0-9_:=\/-]+$/ {bad=1} {if(seen[$1]++) bad=1} END{exit bad}' "$TMP/items" || die "duplicate or malformed feedback"
-  # Preserve budgets and absent historical items. Only observations change.
   awk -F '\t' -v sha="$HEAD_SHA" 'BEGIN{OFS="\t"} $1=="head" {$2=sha} {print}' "$DIR/state.tsv" > "$TMP/state.tsv"
   : > "$TMP/feedback.jsonl"
-  local key data digest prior old_digest version acknowledged row
+  local key data content_hash prior previous_content_hash observation_version acknowledged row
   while IFS=$'\t' read -r key data; do
-    digest=$(printf '%s' "$data" | git hash-object --stdin)
+    content_hash=$(printf '%s' "$data" | git hash-object --stdin)
     prior=$(awk -F '\t' -v key="$key" '$1=="item" && $2==key {print}' "$DIR/state.tsv")
-    version="$digest" acknowledged=0
+    observation_version="$content_hash" acknowledged=0
     if [ -n "$prior" ]; then
-      IFS=$'\t' read -r row row old_digest version acknowledged <<< "$prior"
-      if [ "$digest" != "$old_digest" ]; then
-        # A resolved-then-reopened item gets a new version even if its body returns unchanged.
-        version=$(printf '%s\n%s' "$version" "$data" | git hash-object --stdin)
+      IFS=$'\t' read -r row row previous_content_hash observation_version acknowledged <<< "$prior"
+      if [ "$content_hash" != "$previous_content_hash" ]; then
+        observation_version=$(printf '%s\n%s' "$observation_version" "$data" | git hash-object --stdin)
         acknowledged=0
       fi
     fi
     awk -F '\t' -v key="$key" '!($1=="item" && $2==key)' "$TMP/state.tsv" > "$TMP/next.tsv"
-    printf 'item\t%s\t%s\t%s\t%s\n' "$key" "$digest" "$version" "$acknowledged" >> "$TMP/next.tsv"
+    printf 'item\t%s\t%s\t%s\t%s\n' "$key" "$content_hash" "$observation_version" "$acknowledged" >> "$TMP/next.tsv"
     mv "$TMP/next.tsv" "$TMP/state.tsv"
     local boolean=false
     [ "$acknowledged" = 0 ] || boolean=true
-    printf '{"key":"%s","version":"%s","acknowledged":%s,"data":%s}\n' "$key" "$version" "$boolean" "$data" >> "$TMP/feedback.jsonl"
+    printf '{"key":"%s","version":"%s","acknowledged":%s,"data":%s}\n' "$key" "$observation_version" "$boolean" "$data" >> "$TMP/feedback.jsonl"
   done < "$TMP/items"
 }
 
@@ -348,7 +343,6 @@ snapshot() {
     printf '],"state_path":%s,"snapshot_path":%s}\n' "$(json_quote "$DIR")" "$(json_quote "$path")"
   } > "$TMP/snapshot.json"
   mv "$TMP/snapshot.json" "$path"
-  # State has a single commit point. An interrupted snapshot is just an unused artifact.
   mv "$TMP/state.tsv" "$DIR/state.tsv"
   cat "$path"
 }
