@@ -188,7 +188,7 @@ Reviews a branch or PR with specialist reviewers and returns one verified report
 <details>
 <summary>Reviewer roster, review process, and advanced examples</summary>
 
-Correctness runs on every review. The diff determines which other specialists run, and every PR review includes Lore Bard to check existing feedback.
+Correctness runs on every review. The diff determines which other specialists run, and every PR review includes Lore Bard to check existing feedback. Lore Bard reads the PR twice: once before the reviewers start and once after they finish, so a bot that comments while the review is running still lands in the report. Fix mode and comment mode check once more before they act.
 
 | Reviewer | Job |
 |----------|-----|

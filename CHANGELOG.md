@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.0
+
+- Scan reads the pull request a second time. Bots comment while the reviewers run, so a review that harvested feedback only at the start missed whatever CodeRabbit posted in the meantime and the user had to run remedy afterward to pick it up. The new items go through the same Lore Bard verification, merge gates, and validator as everything else, and the report says which findings arrived mid-review. Fix mode and comment mode check once more before acting, since the question at the end of a review can sit for a while: fix mode adds anything new to its queue, and comment mode stops posting a point a bot already made.
+
 ## 0.20.1
 
 - Prompt audit against the current model generation. Dropped two anti-laziness boosters from remedy's judgment rule and rubric, the findings cap on Havoc Demon Hunter's quick depth, a reinforcement sentence in scan's execution spine, the scolding phrasing in Lore Bard's check-failed rule, and a version pin in the scry GitHub operations note. The reviewer template no longer tells subagents that long `why_it_matters` entries are truncated downstream, since the merge script keeps the longest one and never truncates.
