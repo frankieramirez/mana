@@ -12,11 +12,15 @@ From the agent brief, spec, or issue body, list every acceptance criterion and e
 - **Unmet.** Fix it now, or stop. An unmet criterion is a failed cast.
 - **Out of scope on the ticket.** Leave it. Mention it under Open in the report so it does not look forgotten.
 
-## Extra pass
+## First-principles pass
 
 Read the diff once more for work the ticket did not ask for. Revert drive-by edits that are unrelated. Keep a change that the ticket's desired behavior required even if the checklist omitted it, and name it in the report.
 
-Then read it for shape the ticket did not need: a parameter no caller passes, a flag with one value, an interface with one implementor, a helper with one call site. Inline or delete each one before committing. What stays has a consumer that exists now.
+Restate the intended outcome and interrogate the implementation from first principles. Given what you now know, does the approach still make sense? Which assumptions are weak? What is unnecessary? What can be deleted entirely? After those deletions, what can be simplified?
+
+Make changes where there is a concrete benefit within the agreed scope. Prefer deleting over simplifying, simplifying over optimizing, and optimizing over automating. Preserve required behavior and follow the validation step below after edits.
+
+A clean pass is a valid outcome. If the implementation already serves the goal clearly, leave it alone.
 
 ## Validation
 
