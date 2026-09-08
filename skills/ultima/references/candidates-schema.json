@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Frontend Audit Candidates",
+  "description": "What each lens subagent writes to its artifact file. A candidate is a pattern across files, with every instance quoted, never a single point finding.",
+  "type": "object",
+  "required": ["lens", "candidates", "residual_risks", "coverage"],
+  "properties": {
+    "lens": {
+      "description": "Lens identifier; matches the artifact filename stem.",
+      "type": "string",
+      "enum": ["design-system", "interaction-states", "accessibility", "component-architecture"]
+    },
+    "candidates": {
+      "description": "Each pattern this lens will stand behind at strength 50 or above. Empty when there are none. At most 8.",
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["title", "problem", "fix", "effort", "strength", "instances"],
+        "properties": {
+          "title": {
+            "description": "The pattern, twelve words or fewer, naming the wrong thing and the right thing.",
+            "type": "string",
+            "maxLength": 120
+          },
+          "problem": {
+            "description": "What a user or a maintainer experiences because of this pattern, effect first. Two to four sentences. Never empty.",
+            "type": "string"
+          },
+          "fix": {
+            "description": "The concrete change, naming the token, component, prop shape, or attribute to use. Never 'be consistent'.",
+            "type": "string"
+          },
+          "wins": {
+            "description": "Short bullets, six words or fewer each, on what improves once the fix lands.",
+            "type": "array",
+            "items": { "type": "string" },
+            "maxItems": 8
+          },
+          "effort": {
+            "description": "S: mechanical edits at every instance in one sitting. M: edits plus a small local change per instance. L: needs a new shared piece or a design decision first.",
+            "type": "string",
+            "enum": ["S", "M", "L"]
+          },
+          "strength": {
+            "description": "100: every quoted instance is mechanically checkable against the repo's own source of truth. 75: three or more quoted instances and a fix grounded in a convention the repo already follows somewhere. 50: one or two instances, or taste. The merge demotes a 75 or 100 with fewer than 3 instances to 50.",
+            "type": "integer",
+            "enum": [50, 75, 100]
+          },
+          "instances": {
+            "description": "Every occurrence you are counting, each with the verbatim line. Deduplicated by file and line in the merge.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["file", "line", "quote"],
+              "properties": {
+                "file": { "description": "Path relative to the repo root.", "type": "string" },
+                "line": { "description": "The line the quote sits on. A wrong line is worse than no instance.", "type": "integer", "minimum": 1 },
+                "quote": { "description": "The verbatim line or fragment that shows the pattern.", "type": "string", "maxLength": 300 }
+              }
+            }
+          },
+          "before": {
+            "description": "A short representative snippet as it is today. Optional.",
+            "type": ["object", "null"],
+            "properties": {
+              "language": { "type": "string" },
+              "code": { "type": "string", "maxLength": 2000 }
+            }
+          },
+          "after": {
+            "description": "The same snippet after the fix. Optional.",
+            "type": ["object", "null"],
+            "properties": {
+              "language": { "type": "string" },
+              "code": { "type": "string", "maxLength": 2000 }
+            }
+          },
+          "tokens": {
+            "description": "For design-system drift: each raw value found, the token that should replace it, the token's value, and where the token is defined. A token without a source does not count toward the source gate.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["found"],
+              "properties": {
+                "found": { "type": "string" },
+                "name": { "type": ["string", "null"] },
+                "value": { "type": ["string", "null"] },
+                "source": { "description": "file:line where the token or component is defined.", "type": ["string", "null"] }
+              }
+            }
+          },
+          "convention_source": {
+            "description": "file:line of the spot in this repo that already does it right. Required for a design-system candidate at 75 or 100 that names no sourced token.",
+            "type": ["string", "null"]
+          },
+          "prior_decision": {
+            "description": "The doc (CONTEXT.md, an ADR, a standards file) that already settles this pattern the other way, or null. A non-null value sends the candidate to Dismissed with the doc cited.",
+            "type": ["string", "null"]
+          }
+        }
+      }
+    },
+    "residual_risks": {
+      "description": "Concerns you could not raise to a candidate, including limits of your own search.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "coverage": {
+      "description": "What you read and what you skipped, so the report can say what the audit did not see.",
+      "type": "object",
+      "properties": {
+        "files_read": { "type": "integer" },
+        "dirs_skipped": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

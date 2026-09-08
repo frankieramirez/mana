@@ -1,8 +1,8 @@
 {
   "name": "mana",
   "displayName": "mana",
-  "version": "0.23.1",
-  "description": "Frankie Ramirez's agent skills, cast as spells: multi-reviewer code review, PR feedback resolution without comment noise, sustained PR monitoring and repair, replies that read like you typed them, comment removal, one question repo setup for GitHub, Linear, or Jira with a settings skill to change any of it, maps of decision tickets, filing build tickets from a plan, building a ready ticket, opening a pull request with visual evidence, inbox triage, merge conflict resolution, and blast radius proofs.",
+  "version": "0.24.0",
+  "description": "Frankie Ramirez's agent skills, cast as spells: multi-reviewer code review, PR feedback resolution without comment noise, sustained PR monitoring and repair, replies that read like you typed them, comment removal, one question repo setup for GitHub, Linear, or Jira with a settings skill to change any of it, maps of decision tickets, filing build tickets from a plan, building a ready ticket, opening a pull request with visual evidence, inbox triage, merge conflict resolution, and blast radius proofs, and whole-frontend audits of design system drift, interaction states, accessibility, and component interfaces with an HTML report.",
   "author": {
     "name": "Frankie Ramirez",
     "url": "https://github.com/frankieramirez"
@@ -28,7 +28,10 @@
     "setup",
     "settings",
     "output-style",
-    "persona"
+    "persona",
+    "frontend",
+    "design-system",
+    "accessibility"
   ],
   "agents": [
     "./agents/comment-reaper.md",

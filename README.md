@@ -44,13 +44,14 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 | File the build tickets | [conjure](#conjure) | Session-sized tickets in build order |
 | Build | [cast](#cast) | A committed change and a PR with proof |
 | Review | [scan](#scan), [augur](#augur) | Findings, optional fixes, and evidence the change is safe |
+| Audit the frontend | [ultima](#ultima) | A ranked HTML report of UI patterns worth fixing, with tickets or one fix on request |
 | Answer feedback | [remedy](#remedy), [mimic](#mimic) | Resolved feedback and paste-ready replies |
 | Attend an open PR | [ward](#ward) | Validated fixes and continued monitoring until merge or closure |
 | Repair along the way | [mend](#mend), [banish](#banish), [reveal](#reveal), [dispel](#dispel) | Finished merges, fewer comments, PR bodies, and edited prose |
 
 Build work meets at a `ready-for-agent` issue with an agent brief. A person merges the PR; [tracker closing rules](#trackers) determine when the ticket closes. `cast next` picks up the next ready ticket.
 
-After setup, use `sift` for incoming work and `cast next` for ready tickets. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive.
+After setup, use `sift` for incoming work and `cast next` for ready tickets. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` when the UI has drifted and you want a ranked list of what to clean up.
 
 ## Skills
 
@@ -556,6 +557,36 @@ The search includes pinned library source, wire formats, database columns, featu
 
 </details>
 
+### ultima
+
+Audits a whole frontend codebase and renders a ranked HTML report of patterns worth fixing: raw values where tokens exist, screens missing a loading or error state, elements the keyboard cannot reach, component props that mirror their implementation.
+
+- Four read-only lenses run in parallel; a candidate needs three quoted instances to rank.
+- Ranks by evidence strength, instance count, and how hot the touched files are in recent commits.
+- Ends with one question: report only, file a ticket per strong candidate, or fix the top one now.
+
+```text
+# Audit the frontend and ask what to do
+/mana:ultima
+
+# Report only
+/mana:ultima report
+
+# One package in a monorepo, then fix candidate 2 on the current branch
+/mana:ultima path:apps/web fix:2
+```
+
+<details>
+<summary>Lenses, the report, and the closing actions</summary>
+
+The lenses are design system usage, interaction states, accessibility from code, and component architecture. `lens:<a,b>` runs a subset; `since:<days>` sets the churn window (default 90). Each lens quotes every instance with `file:line`; a design-system candidate must also name the token or component it is measured against and where that is defined, or it drops to the weaker table.
+
+The report lands under `/tmp/ultima-<uid>/<run>/report.html`. It is one file with inline CSS, no script tag, and no network dependency, so it opens offline. Design-system cards show the found value and the token value as swatches side by side.
+
+`tickets` files one ready-for-agent issue per strong candidate through the same tracker script the other skills carry, with acceptance criteria written as the grep that must come back empty. `fix` walks five printed checks (settled by a doc, whole pattern or hot files, needs a new dependency, what proves it, tree clean), edits only the quoted instances, runs the project's validation, commits, and stops. It never pushes or opens a PR.
+
+</details>
+
 ## Trackers
 
 Tickets use the tracker you choose; pull requests stay on GitHub.
@@ -622,6 +653,7 @@ Use explicit tokens to run skills without waiting for answers. Point each schedu
 | `scan` | `mode:agent` | Returns JSON and leaves action to the caller |
 | `remedy` | `dry-run` or `no-push` | Judges only, or fixes without pushing; leaves `needs-human` items in the summary |
 | `ward` | PR target or none | Attends one PR in the active session until closure or a blocker; resumes saved budgets on later invocation |
+| `ultima` | `report`, `tickets`, or `fix[:<n>]` | Renders the report, files a ticket per strong candidate, or fixes one candidate without a closing question |
 | `augur`, `mend`, `banish`, `reveal` | None needed | Ask nothing |
 
 For setup, a tracker name is `github`, `linear`, `jira`, or `local`. For scan, `ticket:<id>` and `peer:<cli>` add context; neither skips the action question by itself. See [scan](#scan) for write modes and peer disclosure.
@@ -684,7 +716,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 - [OpenAI's Codex PR watcher](https://github.com/openai/codex/tree/main/.codex/skills/babysit-pr) inspired `ward`'s sustained PR attendance. The implementation was written from scratch here.
 - [Every's compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) (MIT): `scan` and `remedy` began as forks of its review skills and were rewritten here.
 - [Cursor's pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT): `no-comments` and Comment Sicko inspired `banish` and Comment Reaper. Its `blast-radius` inspired `augur`'s safety fact and evidence ladder; `unslop` inspired `dispel`'s plain-speech rules; `interrogate` inspired `scan`'s Dismissed section. These implementations were written from scratch.
-- [mattpocock/skills](https://github.com/mattpocock/skills) (MIT): inspired `scry`, `cast`, `sift`, and `mend`, all written from scratch here.
+- [mattpocock/skills](https://github.com/mattpocock/skills) (MIT): inspired `scry`, `cast`, `sift`, and `mend`, all written from scratch here. Its [improve-codebase-architecture](https://github.com/mattpocock/skills/tree/main/skills/engineering/improve-codebase-architecture) skill inspired `ultima`'s explore, rank, and act shape; the frontend lenses, the merge, and the report were written from scratch.
 - [humanlayer/skills](https://github.com/humanlayer/skills) (MIT): `show-me` inspired `reveal`'s scannable PR bodies, including trees, call stacks, and structural diffs. The implementation was written from scratch.
 
 ## License
