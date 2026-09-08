@@ -13,7 +13,8 @@
 #       promotion, the confidence gate, partition, sort, stable numbering. Writes merged.json.
 #       Pass 2 (--reconciled): take the model's edited copy of merged.json and restore the
 #       gates, numbering, and counts. --roster lists the reviewers that were dispatched so a
-#       missing artifact is reported.
+#       missing artifact is reported. lore-bard and lore-bard-late are the same harvest
+#       reviewer read twice, so together they count as one voice for promotion.
 #
 #   peer --cli NAME --run-dir DIR --brief FILE --constraints FILE --host FAMILY
 #        [--timeout SECONDS] [--check] [--named-by-user]
@@ -34,7 +35,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA="$HERE/../references/findings-schema.json"
 
 usage() {
-  sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
 }
 
 die() {
@@ -279,7 +280,8 @@ out_path = os.environ["REVIEW_OUT"]
 roster = [r for r in (os.environ.get("REVIEW_ROSTER") or "").split(",") if r]
 
 SKIP = {"merged.json", "reconciled.json", "review.json", "findings.json", "metadata.json",
-        "pr-review-payload.json", "peer-schema.json", "peer-opencode.json"}
+        "pr-review-payload.json", "peer-schema.json", "peer-opencode.json",
+        "harvest.json", "harvest-late.json"}
 SEVERITY = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
 ANCHORS = (0, 25, 50, 75, 100)
 CLASS_RANK = {"gated_auto": 0, "manual": 1, "advisory": 2}
@@ -288,7 +290,7 @@ PROMOTE = {50: 75, 75: 100, 100: 100}
 TESTING_BUCKET = {"marksmanship-hunter"}
 RISK_BUCKET = {"balance-druid", "restoration-shaman", "windwalker-monk", "havoc-demon-hunter",
                "augmentation-evoker", "discipline-priest", "havoc-demon-hunter-peer"}
-HARVEST = {"lore-bard"}
+HARVEST = {"lore-bard", "lore-bard-late"}
 
 
 def warn(msg):
@@ -304,6 +306,10 @@ def fingerprint(f):
 def load_json(path):
     with open(path) as fh:
         return json.load(fh)
+
+
+def harvest_pass_already_counted(independent):
+    return any(n in HARVEST for n in independent)
 
 
 def reviewer_independent(name, artifact):
@@ -567,7 +573,7 @@ for f in work:
             continue
         if not independent_names.get(r, reviewer_independent(r, {})):
             continue
-        if r in HARVEST and c["confidence"] < 75:
+        if r in HARVEST and (c["confidence"] < 75 or harvest_pass_already_counted(indep)):
             continue
         indep.append(r)
     f["independent_reviewers"] = indep

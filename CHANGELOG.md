@@ -1,12 +1,14 @@
 # Changelog
 
-## 0.20.3
+## 0.21.1
+
+- Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
 
 - Scry map body updates can guard against a stale snapshot and expose a raw body read for closeout. The guard rejects missing snapshots, read failures, and concurrent edits before writing, while documenting the residual read/write race.
 
-## 0.20.2
+## 0.21.0
 
-- Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
+- Scan reads the pull request a second time. Bots comment while the reviewers run, so a review that harvested feedback only at the start missed whatever CodeRabbit posted in the meantime and the user had to run remedy afterward to pick it up. The new items go through the same Lore Bard verification, merge gates, and validator as everything else, and the report says which findings arrived mid-review. Fix mode and comment mode check once more before acting, since the question at the end of a review can sit for a while: fix mode adds anything new to its queue, and comment mode stops posting a point a bot already made.
 
 ## 0.20.1
 

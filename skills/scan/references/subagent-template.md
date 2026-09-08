@@ -191,4 +191,4 @@ Append to the review context only for the persona that needs it:
 |---|---|---|
 | `retribution-paladin` | `<standards-paths>` | The non-empty path list from Stage 3b |
 | `unholy-death-knight` | `<review-base>` | The resolved base ref, so drift checks never assume `main` |
-| `lore-bard` | `<harvested-feedback>` | The Stage 2b payload, each item tagged with its surface (`top-level comment`, `review body`, `review thread`) and author login |
+| `lore-bard` | `<harvested-feedback>` | The Stage 2b payload, each item tagged with its surface (`top-level comment`, `review body`, `review thread`) and author login. Dispatched as `lore-bard-late`, the block holds only the items that arrived after that first read |
