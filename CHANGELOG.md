@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.1
+
+- Mend pushes completed changes by default after successful checks when invoked directly, including clean merges. It honors requests to hold changes locally and asks when the push destination or a history rewrite needs a decision. Delegated resolutions return to the caller unless pushing is authorized, and the report includes the push outcome.
+
 ## 0.21.0
 
 - Scan reads the pull request a second time. Bots comment while the reviewers run, so a review that harvested feedback only at the start missed whatever CodeRabbit posted in the meantime and the user had to run remedy afterward to pick it up. The new items go through the same Lore Bard verification, merge gates, and validator as everything else, and the report says which findings arrived mid-review. Fix mode and comment mode check once more before acting, since the question at the end of a review can sit for a while: fix mode adds anything new to its queue, and comment mode stops posting a point a bot already made.
