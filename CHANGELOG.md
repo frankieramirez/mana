@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.22.1
+
+- Simplify ward to one atomic ledger and exact feedback acknowledgments. Remove the readiness classifier, per-poll workflow lookup, and duplicate thread helper. Fetch workflow details only when diagnosing a failure, and use the post-push snapshot to resume attendance.
+
+## 0.22.0
+
+- Add `ward` to attend an open PR until it merges or closes. It handles later review feedback and branch-caused CI failures, validates and pushes repairs, and keeps watching after green checks. Private state remembers handled feedback, two repair attempts per recurring issue, and one justified flaky rerun per head across invocations. It posts no PR comments and stops for conflicts or human decisions. Existing one-pass feedback and publishing workflows keep their behavior.
+
 ## 0.21.0
 
 - Scan reads the pull request a second time. Bots comment while the reviewers run, so a review that harvested feedback only at the start missed whatever CodeRabbit posted in the meantime and the user had to run remedy afterward to pick it up. The new items go through the same Lore Bard verification, merge gates, and validator as everything else, and the report says which findings arrived mid-review. Fix mode and comment mode check once more before acting, since the question at the end of a review can sit for a while: fix mode adds anything new to its queue, and comment mode stops posting a point a bot already made.

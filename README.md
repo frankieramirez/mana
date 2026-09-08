@@ -45,11 +45,12 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 | Build | [cast](#cast) | A committed change and a PR with proof |
 | Review | [scan](#scan), [augur](#augur) | Findings, optional fixes, and evidence the change is safe |
 | Answer feedback | [remedy](#remedy), [mimic](#mimic) | Resolved feedback and paste-ready replies |
+| Attend an open PR | [ward](#ward) | Validated fixes and continued monitoring until merge or closure |
 | Repair along the way | [mend](#mend), [banish](#banish), [reveal](#reveal), [dispel](#dispel) | Finished merges, fewer comments, PR bodies, and edited prose |
 
 Build work meets at a `ready-for-agent` issue with an agent brief. A person merges the PR; [tracker closing rules](#trackers) determine when the ticket closes. `cast next` picks up the next ready ticket.
 
-After setup, use `sift` for incoming work and `cast next` for ready tickets. Review PRs with `scan`, handle feedback with `remedy`, and use `augur` when a small diff looks risky.
+After setup, use `sift` for incoming work and `cast next` for ready tickets. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive.
 
 ## Skills
 
@@ -269,6 +270,30 @@ Failing checks get classified before a fix:
 /mana:remedy 123 no-push
 /mana:remedy <comment-url>
 ```
+
+</details>
+
+### ward
+
+Stays with an open PR until it merges or closes, fixing valid review feedback and failures caused by the branch. A green check run is a progress update; the watch continues for later feedback.
+
+```text
+# Attend the current branch's PR
+/mana:ward
+
+# Attend a specific PR
+/mana:ward 123
+/mana:ward https://github.com/owner/repo/pull/123
+```
+
+<details>
+<summary>Active-session monitoring, limits, and saved state</summary>
+
+Ward polls published feedback and current-head checks about once a minute. It validates repairs before pushing, resolves handled threads silently, and leaves explanations in a local report. It posts no PR replies. A person merges; conflicts and unresolved decisions stop the watch with a concrete handoff.
+
+The skill runs in the active agent session. It creates no background schedule and says explicitly when monitoring stops. Invoking it again on the same PR resumes its private state under `/tmp/ward-<uid>/`, including acknowledged feedback and budgets: two fix attempts per recurring issue across commits, and one justified flaky rerun per head. New feedback is evaluated even after CI turns green.
+
+`remedy` remains the one-pass feedback workflow. `cast` and `reveal` still finish after publishing. Ward installs independently and includes its own state helper; it needs `git` and an authenticated `gh`, including for GitHub Enterprise.
 
 </details>
 
@@ -567,7 +592,7 @@ A missing credential allows setup to record the choice and report what is missin
 <details>
 <summary>PR closing rules</summary>
 
-`scan`, `remedy`, and `reveal` keep their GitHub PR workflow with any tracker. A person merges the PR.
+`scan`, `remedy`, `ward`, and `reveal` keep their GitHub PR workflow with any tracker. A person merges the PR.
 
 | Tracker | PR body | What closes the ticket |
 |---------|---------|------------------------|
@@ -596,6 +621,7 @@ Use explicit tokens to run skills without waiting for answers. Point each schedu
 | `scan` | `report`, `fix`, or `comment` | Reports, pushes fixes, or posts PR comments without a closing question |
 | `scan` | `mode:agent` | Returns JSON and leaves action to the caller |
 | `remedy` | `dry-run` or `no-push` | Judges only, or fixes without pushing; leaves `needs-human` items in the summary |
+| `ward` | PR target or none | Attends one PR in the active session until closure or a blocker; resumes saved budgets on later invocation |
 | `augur`, `mend`, `banish`, `reveal` | None needed | Ask nothing |
 
 For setup, a tracker name is `github`, `linear`, `jira`, or `local`. For scan, `ticket:<id>` and `peer:<cli>` add context; neither skips the action question by itself. See [scan](#scan) for write modes and peer disclosure.
@@ -655,6 +681,7 @@ scripts/           validate.sh, sync-agent.sh, link-local.sh, similarity.py
 
 ## Acknowledgements
 
+- [OpenAI's Codex PR watcher](https://github.com/openai/codex/tree/main/.codex/skills/babysit-pr) inspired `ward`'s sustained PR attendance. The implementation was written from scratch here.
 - [Every's compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) (MIT): `scan` and `remedy` began as forks of its review skills and were rewritten here.
 - [Cursor's pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT): `no-comments` and Comment Sicko inspired `banish` and Comment Reaper. Its `blast-radius` inspired `augur`'s safety fact and evidence ladder; `unslop` inspired `dispel`'s plain-speech rules; `interrogate` inspired `scan`'s Dismissed section. These implementations were written from scratch.
 - [mattpocock/skills](https://github.com/mattpocock/skills) (MIT): inspired `scry`, `cast`, `sift`, and `mend`, all written from scratch here.
