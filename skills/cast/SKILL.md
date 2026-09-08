@@ -171,7 +171,15 @@ If the push is rejected because the remote moved, `git pull --rebase` only when 
 
 Skip this stage when `no-pr` was passed. Stage 4 has already committed, and pushed only when an upstream existed. Stage 5 never runs if Stage 4 did not commit.
 
-Read `references/capture.md`, `references/body.md`, and `references/attach.md`. Push so the branch exists on the remote:
+Read `references/capture.md`, `references/body.md`, and `references/attach.md`. Before capturing proof, check the current branch against the fetched PR base:
+
+```bash
+bash "<SKILL_DIR>/scripts/open-pr.sh" --check
+```
+
+On exit 4, merge the reported `base_sha` into the current branch with a clean working tree. Read the commits and both versions of each conflicting file. Resolve changes whose intended behavior is clear, keeping both intents where compatible. Run the project's validation, including tests covering the merged behavior, then commit the resolution. Never force-push. When choosing between the changes requires a product decision, stop editing and report the exact decision and affected files. Preserve the work as a draft PR if none exists: put the blocker in its body, return to a clean committed tree without discarding work, and use `--draft`. If unresolved paths prevent that, report the local operation and blocker instead of attempting to ship.
+
+After a resolution, rerun the preflight and capture fresh proof. A failed fetch or check is a blocker, never evidence of a clean merge. Push so the branch exists on the remote:
 
 ```bash
 if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
@@ -185,7 +193,9 @@ Same rebase-or-stop rule as Stage 4. Never force-push.
 
 Capture at least one proof file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`; see the closing line in `references/body.md`). Then run `scripts/open-pr.sh` with the title, body file, and attaches.
 
-**Orca card.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), move the card once the PR exists:
+The script repeats the preflight and checks GitHub after writing. If exit 4 reports conflicts after writing, rerun the preflight command to fetch the current base before using the same resolution procedure. Validate and refresh proof, then push and update the PR. Limit this to two resolution passes per run; continued base movement gets a concrete handoff. Exit 5 means mergeability remains unknown: report the URL and uncertainty without claiming the PR is ready. Existing PRs keep their review state. Clean mergeability applies to the checked snapshot; it does not guarantee future base changes or semantic compatibility.
+
+**Orca card.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), move the card once the PR exists and mergeability is clean:
 
 ```bash
 orca worktree set --worktree active --workspace-status in-review --comment "PR <url>" --json
@@ -202,6 +212,7 @@ Branch: <created cast/... | existing branch name>
 Commit: <sha>
 Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
 PR: <url | none: no-pr | none: reason>
+Mergeability: <clean | conflicting: files and base | unknown: reason | skipped: no-pr>
 Evidence: <file list, or none>
 Validation: <one line>
 Orca: <linked <id>, in-review | not present | failed: reason>

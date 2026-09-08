@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.0
+
+- PR shipping checks for conflicts against the fetched base before writing and verifies GitHub mergeability afterward. Conflicts block ready PR creation, drafts can preserve blocked work, and unknown results stay explicit. Cast resolves conflicts within the implementation scope and refreshes validation and proof; reveal reports a concrete resolution handoff.
+
 ## 0.21.1
 
 - Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
