@@ -641,6 +641,7 @@ lenses_meta = []
 dismissed = []
 residual_risks = []
 coverage = {}
+recommendation = None
 work = []
 
 if reconciled:
@@ -650,6 +651,7 @@ if reconciled:
     dismissed = list(doc.get("dismissed", []))
     residual_risks = list(doc.get("residual_risks", []))
     coverage = doc.get("coverage", {}) if isinstance(doc.get("coverage"), dict) else {}
+    recommendation = doc.get("recommendation") if isinstance(doc.get("recommendation"), str) else None
     prior = doc.get("counts", {})
     for k in counts:
         if k in prior:
@@ -770,6 +772,7 @@ result = {
     "dismissed": dismissed,
     "residual_risks": residual_risks,
     "coverage": coverage,
+    "recommendation": recommendation,
 }
 with open(out_path, "w", encoding="utf-8") as fh:
     json.dump(result, fh, indent=2)
@@ -819,91 +822,268 @@ meta = load("metadata.json")
 LENS_LABEL = {"design-system": "Design system", "interaction-states": "Interaction states",
               "accessibility": "Accessibility", "component-architecture": "Component architecture"}
 EFFORT_LABEL = {"S": "small", "M": "medium", "L": "large"}
+COLOR = {100: "#8ff5ff", 75: "#e8b45a", 50: "#6b7089"}
+
+WORDMARK = (
+    '<svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 688 184" role="img" aria-label="mana">'
+    '<defs><linearGradient id="face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efffff"/>'
+    '<stop offset=".24" stop-color="#efffff"/><stop offset=".245" stop-color="#8ff5ff"/><stop offset=".59" stop-color="#56d5fa"/>'
+    '<stop offset=".595" stop-color="#8292ff"/><stop offset="1" stop-color="#7470f3"/></linearGradient>'
+    '<pattern id="dither" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M0 0h4v4H0zM4 4h4v4H4z" fill="#393fc2"/></pattern>'
+    '<g id="letters" fill-rule="evenodd"><path d="M0 112V8L8 0H28L64 36L100 0H120L128 8V112H100V44L64 80L28 44V112Z"/>'
+    '<path transform="translate(144)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/>'
+    '<path transform="translate(264)" d="M0 112V8L8 0H28L84 64V0H104L112 8V112H84L28 48V112Z"/>'
+    '<path transform="translate(392)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/></g>'
+    '<clipPath id="letter-clip"><path d="M0 112V8L8 0H28L64 36L100 0H120L128 8V112H100V44L64 80L28 44V112Z"/>'
+    '<path clip-rule="evenodd" transform="translate(144)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/>'
+    '<path transform="translate(264)" d="M0 112V8L8 0H28L84 64V0H104L112 8V112H84L28 48V112Z"/>'
+    '<path clip-rule="evenodd" transform="translate(392)" d="M0 112V24L24 0H80L104 24V112H76V76H28V112ZM52 20L34 38L52 56L70 38Z"/></clipPath>'
+    '<g id="crystal"><path d="M66 8L114 64V104L66 168L18 104V64Z" fill="#272c83" stroke="#272c83" stroke-width="3" stroke-linejoin="miter"/>'
+    '<path d="M66 8L18 64L42 72Z" fill="#e5ffff"/><path d="M66 8L90 72L114 64Z" fill="#8af2ff"/><path d="M66 8L42 72H90Z" fill="#b5faff"/>'
+    '<path d="M18 64V104L42 72Z" fill="#8af2ff"/><path d="M114 64V104L90 72Z" fill="#438ae9"/><path d="M42 72L66 128L90 72Z" fill="#5bcded"/>'
+    '<path d="M18 104L66 168L42 72Z" fill="#666aef"/><path d="M114 104L66 168L90 72Z" fill="#5044c1"/><path d="M42 72L66 168L66 128Z" fill="#a4acff"/>'
+    '<path d="M90 72L66 168L66 128Z" fill="#7774f7"/><path d="M66 44L78 76L66 100L54 76Z" fill="#f0ffff"/></g></defs>'
+    '<use href="#crystal"/><g transform="translate(164 36)"><use href="#letters" transform="translate(8 8)" fill="#343491"/>'
+    '<use href="#letters" stroke="#343491" stroke-width="3" fill="url(#face)"/><g clip-path="url(#letter-clip)">'
+    '<path d="M0 28H496V36H0ZM0 66H496V82H0ZM0 96H496V108H0Z" fill="url(#dither)" opacity=".42"/><path d="M0 108H496V112H0Z" fill="#4142aa"/></g></g></svg>'
+)
+
+CSS = """
+:root{color-scheme:dark;--bg:#0b0d17;--fg:#e4e7f5;--soft:#d3d7ec;--muted:#9ba1c6;--dim:#7b81a8;--line:#22264a;--row:#181b33;--card:#101323;--glass:#10132399;--tab:#0e1020;--hover:#171b33;--indigo:#8292ff;--indigo-line:#393fc2;--cyan:#8ff5ff;--amber:#e8b45a;--gray:#6b7089;--red:#c96b6b;--green:#6fd3a4;--sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;--mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--pixel:'Pixelify Sans','Press Start 2P',var(--mono)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);text-wrap:pretty}
+a{color:var(--cyan);text-decoration:none}a:hover{color:#fff;text-decoration:underline}
+.page{min-height:100vh;background:radial-gradient(60rem 28rem at 50% -8rem,rgba(57,63,194,.32),transparent 70%),var(--bg)}
+main{max-width:66rem;margin:0 auto;padding:3rem 1.5rem 6rem}
+.mark{height:44px;width:auto;display:block}
+.kicker{font-family:var(--pixel);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo)}
+h1{margin:0;font-size:2.4rem;line-height:1.1;font-weight:600;letter-spacing:-.02em;overflow-wrap:anywhere}
+h2{margin:0 0 .9rem;font-family:var(--pixel);font-size:.8rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo)}
+h3{margin:0;font-size:1.25rem;font-weight:600;line-height:1.3}
+h4{margin:0;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+h5{margin:0;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
+p{margin:0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.5rem 2rem;padding-bottom:2rem;border-bottom:1px solid var(--line)}
+.top .id{display:flex;flex-direction:column;gap:.9rem}
+.lede{max-width:34rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,auto);gap:1.5rem}
+.stat{display:flex;flex-direction:column;gap:.2rem}
+.stat b{font-family:var(--pixel);font-size:2.2rem;line-height:1;font-weight:500}
+.stat span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+dl{margin:0;padding:0}
+dt{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+dd{margin:.15rem 0 0;overflow-wrap:anywhere}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1rem 1.5rem;margin-top:1.75rem}
+.meta div{min-width:0}
+.meta .wide{grid-column:1/-1}
+.mono{font-family:var(--mono);font-size:.85rem}
+.sec{margin-top:3rem}
+.lenses{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.75rem}
+.lens{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.8rem 1rem;border:1px solid var(--line);border-radius:8px;background:var(--glass)}
+.lens .n{display:flex;align-items:center;gap:.6rem;min-width:0;font-weight:500;font-size:.92rem}
+.dot{width:8px;height:8px;border-radius:2px;flex:none}
+.lens .s{font-family:var(--mono);font-size:.75rem;color:var(--dim);white-space:nowrap}
+.rankhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem}
+.rankhead h2{margin:0}
+.tabs{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--tab)}
+.tabs input{position:absolute;opacity:0;width:0;height:0}
+.tabs label{font:inherit;font-size:.78rem;padding:.3rem .8rem;border-radius:6px;cursor:pointer;color:var(--muted)}
+.tabs label:hover{color:#fff}
+main:has(#f-all:checked) label[for=f-all],main:has(#f-100:checked) label[for=f-100],main:has(#f-75:checked) label[for=f-75]{background:var(--line);color:#fff}
+main:has(#f-100:checked) [data-s="75"],main:has(#f-75:checked) [data-s="100"]{display:none}
+.empty{display:none;padding:2rem;text-align:center;color:var(--dim);font-style:italic;border:1px dashed var(--line);border-radius:12px}
+main:has(#f-100:checked):not(:has([data-s="100"])) .empty,main:has(#f-75:checked):not(:has([data-s="75"])) .empty,main:not(:has([data-s])) .empty{display:block}
+ol.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+ol.rank li{display:grid;grid-template-columns:2rem minmax(0,1fr) 7rem 3.5rem;align-items:center;gap:1rem;padding:.7rem 1rem;border-radius:6px;background:var(--glass)}
+ol.rank li:hover{background:var(--hover)}
+.num{font-family:var(--pixel);font-size:1rem;color:var(--dim)}
+ol.rank a{color:var(--fg);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{display:flex;align-items:center;gap:.5rem}
+.bar i{flex:1;height:4px;border-radius:2px;background:#1c2040;overflow:hidden;display:block}
+.bar i b{display:block;height:100%}
+.bar span{font-family:var(--mono);font-size:.72rem;width:1.6rem;text-align:right}
+.sc{font-family:var(--mono);font-size:.75rem;color:var(--dim);text-align:right}
+.cards{margin-top:3rem;display:flex;flex-direction:column;gap:1.25rem}
+.card{border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden;scroll-margin-top:1rem}
+.card .accent{height:2px}
+.card .body{padding:1.5rem 1.75rem}
+.card header{display:flex;align-items:flex-start;gap:1rem}
+.card .big{font-family:var(--pixel);font-size:1.6rem;line-height:1.2;width:2rem;flex:none}
+.card .ttl{display:flex;flex-direction:column;gap:.6rem;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{font-size:.72rem;padding:.15rem .6rem;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.lens{border-color:var(--indigo-line);color:var(--indigo)}
+.chip.score{cursor:help;font-family:var(--mono)}
+.inner{display:grid;grid-template-columns:minmax(0,1fr);gap:1.4rem;margin-top:1.5rem;padding-left:3rem}
+@media (max-width:40rem){.inner{padding-left:0}}
+.inner section{display:flex;flex-direction:column;gap:.35rem}
+.inner p{color:var(--soft)}
+ul.ev{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.3rem;font-family:var(--mono);font-size:.8rem}
+ul.ev li{display:flex;flex-wrap:wrap;gap:.25rem 1rem;overflow-wrap:anywhere}
+ul.ev .loc{color:var(--indigo)}
+ul.ev code{color:var(--soft);background:var(--bg);padding:0 .35rem;border-radius:4px;font-family:inherit}
+details{margin-top:.2rem}
+summary{cursor:pointer;list-style:none;font-size:.78rem;color:var(--cyan);display:inline-flex;align-items:center;gap:.4rem}
+summary::-webkit-details-marker{display:none}
+summary:hover{color:#fff}
+summary .tri{font-family:var(--pixel)}
+details[open] summary .tri{transform:rotate(90deg)}
+details ul.ev{margin-top:.3rem}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+table.tok{font-size:.82rem;font-family:var(--mono)}
+table.tok th{text-align:left;padding:.35rem .6rem;border-bottom:1px solid var(--line);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500;font-family:var(--sans)}
+table.tok td{padding:.45rem .6rem;border-bottom:1px solid var(--row);vertical-align:top}
+table.tok td.nw{white-space:nowrap}
+table.tok .tk{color:var(--cyan)}
+table.tok .at{color:var(--dim)}
+.sw{display:inline-block;width:.85em;height:.85em;border-radius:3px;vertical-align:-.1em;margin-right:.45rem;border:1px solid var(--line)}
+.inner section.ba,.ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.75rem}
+.ba div{display:flex;flex-direction:column;gap:.35rem}
+.ba h5.b{color:var(--red)}.ba h5.a{color:var(--green)}
+pre{margin:0;padding:.8rem 1rem;border-radius:8px;background:var(--bg);border:1px solid #2a1c2e;overflow-x:auto;font-family:var(--mono);font-size:.8rem;line-height:1.5;color:var(--soft)}
+pre.after{border-color:#1a2e2b}
+pre code{font-family:inherit}
+.conv{font-size:.85rem;color:var(--dim)}
+.conv code{font-family:var(--mono);color:var(--indigo)}
+ul.wins{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:.4rem}
+ul.wins li{font-size:.82rem;padding:.2rem .7rem;border-radius:6px;background:#141a2e;color:#b9f0d5}
+.card footer{padding:.6rem 1.75rem;border-top:1px solid var(--row);font-size:.75rem;color:var(--dim);font-family:var(--mono)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table.plain{font-size:.88rem}
+table.plain thead tr{background:var(--tab)}
+table.plain th{text-align:left;padding:.55rem .9rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500}
+table.plain td{padding:.6rem .9rem;border-top:1px solid var(--row);vertical-align:top}
+table.plain .r{text-align:right}
+table.plain .m{font-family:var(--mono)}
+table.plain .l{color:var(--muted);white-space:nowrap}
+.trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:2.5rem 3rem;margin-top:3.5rem}
+.trio .wide{grid-column:1/-1}
+ul.list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.6rem;font-size:.9rem}
+ul.list li{display:flex;flex-direction:column;gap:.15rem}
+ul.list .why{color:var(--dim);font-size:.82rem}
+ul.list .why code{font-family:var(--mono)}
+ul.list .tag{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.cov{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.9rem 1.5rem;padding:1.1rem 1.25rem;border:1px solid var(--line);border-radius:10px;background:var(--glass);font-size:.88rem}
+.cov code{font-family:var(--mono);font-size:.82rem}
+.start{margin-top:3.5rem;border:1px solid var(--indigo-line);border-radius:12px;background:linear-gradient(180deg,rgba(57,63,194,.18),rgba(16,19,35,.6));overflow:hidden}
+.start .body{padding:1.75rem 1.75rem 1.5rem;display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}
+.start h2{margin:0;color:var(--cyan)}
+.start .pick{display:flex;flex-direction:column;gap:.6rem}
+.start .pick a{color:#fff;font-size:1.35rem;font-weight:600;line-height:1.3;display:flex;align-items:baseline;gap:.75rem}
+.start .pick a .big{font-family:var(--pixel);font-size:1.4rem;color:var(--cyan)}
+.start .pick p{color:var(--soft);max-width:44rem}
+.start dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.9rem 1.5rem;padding:1rem 0 0;border-top:1px solid var(--line);font-size:.88rem}
+.start .dimmed{color:var(--muted)}
+.foot{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;font-size:.75rem;color:var(--dim);font-family:var(--mono)}
+@media print{.page{background:#fff}body{color:#000}.card{break-inside:avoid}main{max-width:none}}
+"""
 
 
 def e(v):
     return html.escape("" if v is None else str(v), quote=True)
 
 
+def is_color(value):
+    low = (value or "").strip().lower()
+    return low.startswith("#") or low.startswith(("rgb", "hsl", "oklch", "oklab", "lab(", "lch(", "color("))
+
+
+def swatch(value):
+    if not is_color(value):
+        return ""
+    return '<span class="sw" style="background:%s"></span>' % e(value.strip())
+
+
+def rank_label(n):
+    return "%02d" % n
+
+
+def color_of(c):
+    return COLOR.get(c["strength"], COLOR[50])
+
+
+def instance_row(i):
+    return '<li><span class="loc">%s:%s</span><code>%s</code></li>' % (e(i["file"]), e(i["line"]), e(i["quote"]))
+
+
 def chip(text, cls=""):
     return '<span class="chip %s">%s</span>' % (e(cls), e(text))
 
 
-def swatch(value):
-    v = (value or "").strip()
-    low = v.lower()
-    is_color = low.startswith("#") or low.startswith(("rgb", "hsl", "oklch", "oklab", "lab(", "lch(", "color("))
-    if not is_color:
-        return ""
-    return '<span class="sw" style="background:%s"></span>' % e(v)
-
-
-def instance_row(i):
-    return '<li><code class="loc">%s:%s</code> <code class="q">%s</code></li>' % (e(i["file"]), e(i["line"]), e(i["quote"]))
-
-
 def card(c):
     s = c.get("score", {})
+    col = color_of(c)
     factors = "S %s x I %s x H %s x 2 / E %s" % (s.get("S"), s.get("I"), s.get("H"), s.get("E"))
     inst = c.get("instances", [])
     files = sorted({i["file"] for i in inst})
-    parts = []
-    parts.append('<article class="card" id="c%d">' % c["rank"])
-    parts.append('<header><span class="rank">%d</span><h3>%s</h3></header>' % (c["rank"], e(c["title"])))
+    hot = int(round(100 * (s.get("churn_share") or 0)))
+    parts = ['<article class="card" id="c%d" data-s="%d">' % (c["rank"], c["strength"])]
+    parts.append('<div class="accent" style="background:linear-gradient(90deg,%s,transparent 70%%)"></div><div class="body">' % col)
     chips = [chip(LENS_LABEL.get(l, l), "lens") for l in c.get("lenses", [c.get("lens")])]
-    chips.append(chip("strength %s" % c["strength"], "s%s" % c["strength"]))
+    chips.append('<span class="chip" style="border-color:%s;color:%s">strength %d</span>' % (col, col, c["strength"]))
     chips.append(chip("%d instances" % len(inst)))
     chips.append(chip("effort %s" % EFFORT_LABEL.get(c.get("effort"), c.get("effort"))))
-    if s.get("churn_share") is not None:
-        chips.append(chip("hot path %d%%" % int(round(100 * s["churn_share"]))))
+    chips.append(chip("hot path %d%%" % hot))
     chips.append('<span class="chip score" title="%s">score %s</span>' % (e(factors), e(s.get("total"))))
-    parts.append('<div class="chips">%s</div>' % "".join(chips))
+    parts.append('<header><span class="big" style="color:%s">%s</span><div class="ttl"><h3>%s</h3><div class="chips">%s</div></div></header>' % (
+        col, rank_label(c["rank"]), e(c["title"]), "".join(chips)))
+    parts.append('<div class="inner">')
     parts.append('<section><h4>Problem</h4><p>%s</p></section>' % e(c["problem"]))
-    shown = inst[:3]
-    rest = inst[3:]
+    shown, rest = inst[:3], inst[3:]
     ev = '<ul class="ev">%s</ul>' % "".join(instance_row(i) for i in shown)
     if rest:
-        ev += '<details><summary>%d more</summary><ul class="ev">%s</ul></details>' % (len(rest), "".join(instance_row(i) for i in rest))
+        ev += '<details><summary><span class="tri">&#9656;</span>%d more</summary><ul class="ev">%s</ul></details>' % (len(rest), "".join(instance_row(i) for i in rest))
     parts.append('<section><h4>Evidence</h4>%s</section>' % ev)
     tokens = c.get("tokens") or []
     if tokens:
         rows = []
         for t in tokens:
-            rows.append('<tr><td>%s<code>%s</code></td><td>%s</td><td>%s<code>%s</code></td><td class="loc">%s</td></tr>' % (
+            rows.append('<tr><td class="nw">%s%s</td><td class="tk">%s</td><td class="nw">%s%s</td><td class="at">%s</td></tr>' % (
                 swatch(t.get("found")), e(t.get("found")), e(t.get("name") or ""), swatch(t.get("value")), e(t.get("value") or ""), e(t.get("source") or "")))
-        parts.append('<section><h4>Found versus token</h4><table class="tok"><thead><tr><th>Found</th><th>Token</th><th>Value</th><th>Defined at</th></tr></thead><tbody>%s</tbody></table></section>' % "".join(rows))
+        parts.append('<section><h4>Found versus token</h4><div class="scroll"><table class="tok"><thead><tr><th>Found</th><th>Token</th><th>Value</th><th>Defined at</th></tr></thead><tbody>%s</tbody></table></div></section>' % "".join(rows))
     before, after = c.get("before"), c.get("after")
     if before or after:
         cols = []
-        for label, snip in (("Before", before), ("After", after)):
-            if snip:
-                cols.append('<div><h5>%s</h5><pre><code>%s</code></pre></div>' % (label, e(snip["code"])))
+        if before:
+            cols.append('<div><h5 class="b">Before</h5><pre><code>%s</code></pre></div>' % e(before["code"]))
+        if after:
+            cols.append('<div><h5 class="a">After</h5><pre class="after"><code>%s</code></pre></div>' % e(after["code"]))
         parts.append('<section class="ba">%s</section>' % "".join(cols))
-    fix = e(c["fix"])
+    fix = '<section><h4>Fix</h4><p>%s</p>' % e(c["fix"])
     if c.get("convention_source"):
-        fix += ' <span class="conv">Already done right at <code class="loc">%s</code>.</span>' % e(c["convention_source"])
-    parts.append('<section><h4>Fix</h4><p>%s</p></section>' % fix)
+        fix += '<p class="conv">Already done right at <code>%s</code></p>' % e(c["convention_source"])
+    parts.append(fix + "</section>")
     if c.get("wins"):
-        parts.append('<section><h4>Wins</h4><ul>%s</ul></section>' % "".join("<li>%s</li>" % e(w) for w in c["wins"]))
+        parts.append('<section><h4>Wins</h4><ul class="wins">%s</ul></section>' % "".join("<li>%s</li>" % e(w) for w in c["wins"]))
+    parts.append("</div></div>")
     foot = ["%d files" % len(files)]
     if c.get("corroborated"):
         foot.append("two lenses agree")
-    if c.get("gates"):
-        foot.append("; ".join(c["gates"]))
-    parts.append('<footer>%s</footer>' % e(" | ".join(foot)))
-    parts.append("</article>")
+    foot.extend(c.get("gates") or [])
+    parts.append('<footer>%s</footer></article>' % e(" · ".join(foot)))
     return "".join(parts)
 
 
-def table(cands, caption):
-    if not cands:
-        return ""
+def rank_row(c):
+    col = color_of(c)
+    return ('<li data-s="%d"><span class="num">%s</span><a href="#c%d">%s</a>'
+            '<span class="bar"><i><b style="width:%d%%;background:%s"></b></i><span style="color:%s">%d</span></span>'
+            '<span class="sc">%s</span></li>') % (
+        c["strength"], rank_label(c["rank"]), c["rank"], e(c["title"]), c["strength"], col, col, c["strength"], e(c.get("score", {}).get("total")))
+
+
+def plain_table(cands):
     rows = []
     for c in cands:
-        rows.append('<tr><td>%d</td><td><a href="#c%d">%s</a></td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td></tr>' % (
-            c["rank"], c["rank"], e(c["title"]), e(", ".join(LENS_LABEL.get(l, l) for l in c.get("lenses", []))),
-            c["strength"], len(c.get("instances", [])), e(EFFORT_LABEL.get(c.get("effort"), c.get("effort"))), e(c.get("score", {}).get("total"))))
-    return '<section><h2>%s</h2><div class="scroll"><table><thead><tr><th>#</th><th>Candidate</th><th>Lens</th><th>Strength</th><th>Instances</th><th>Effort</th><th>Score</th></tr></thead><tbody>%s</tbody></table></div></section>' % (e(caption), "".join(rows))
+        rows.append('<tr><td class="num">%d</td><td>%s</td><td class="l">%s</td><td class="m" style="color:%s">%d</td><td class="m">%d</td><td>%s</td><td class="m r">%s</td></tr>' % (
+            c["rank"], e(c["title"]), e(", ".join(LENS_LABEL.get(l, l) for l in c.get("lenses", []))), color_of(c), c["strength"],
+            len(c.get("instances", [])), e(EFFORT_LABEL.get(c.get("effort"), c.get("effort"))), e(c.get("score", {}).get("total"))))
+    return ('<div class="tbl"><table class="plain"><thead><tr><th>#</th><th>Candidate</th><th>Lens</th><th>Strength</th><th>Instances</th><th>Effort</th><th class="r">Score</th></tr></thead><tbody>%s</tbody></table></div>' % "".join(rows))
+
+
+def dd(label, value, cls=""):
+    return '<div><dt>%s</dt><dd class="%s">%s</dd></div>' % (e(label), e(cls), value)
 
 
 cands = doc.get("candidates", [])
@@ -911,121 +1091,115 @@ strong = [c for c in cands if c["strength"] >= 75]
 weak = [c for c in cands if c["strength"] < 75]
 cards = strong[:12]
 more = strong[12:]
+dismissed = doc.get("dismissed", [])
+risks = [r for r in doc.get("residual_risks", []) if isinstance(r, dict)]
+ds = profile.get("design_system", {}) or {}
+hs = profile.get("hot_spots", {}) or {}
+repo = meta.get("repo") or os.path.basename(str(profile.get("root") or "")) or "repository"
+head = (meta.get("head") or profile.get("head") or "")[:12]
+generated = doc.get("generated_at") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+generated = generated.replace("T", " ").replace("Z", " UTC")
 
-ds = profile.get("design_system", {})
-lens_lines = []
+out = []
+out.append('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">')
+out.append('<title>Ultima audit: %s</title><style>%s</style></head><body><div class="page"><main>' % (e(repo), CSS))
+
+out.append('<header class="top"><div class="id">%s<div class="kicker">Ultima · Frontend audit</div><h1>%s</h1>'
+           '<p class="lede">%d candidates worth acting on, %d weaker, %d dismissed. Ranked by strength, then by score.</p></div>' % (
+               WORDMARK, e(repo), len(strong), len(weak), len(dismissed)))
+out.append('<div class="stats"><div class="stat"><b style="color:%s">%d</b><span>Act on</span></div><div class="stat"><b style="color:%s">%d</b><span>Weaker</span></div><div class="stat"><b style="color:%s">%d</b><span>Dismissed</span></div></div></header>' % (
+    COLOR[100], len(strong), COLOR[75], len(weak), COLOR[50], len(dismissed)))
+
+design = " · ".join((ds.get("libraries") or []) + (ds.get("dirs") or []) + (ds.get("files") or [])[:4]) or "none found"
+meta_items = [
+    dd("Repository", e(repo), "mono"), dd("Head", e(head), "mono"), dd("Scope", e(profile.get("scope", {}).get("path", ".")), "mono"),
+    dd("Generated", e(generated), "mono"),
+    dd("Framework", e(", ".join([x for x in [profile.get("framework")] + list(profile.get("meta") or []) if x]) or "unknown")),
+    dd("Styling", e(", ".join(profile.get("styling") or []) or "unknown")),
+    dd("Tokens parsed", e(ds.get("token_count", 0))),
+    dd("Hot spots", e("%d files touched in %s days" % (hs.get("files_touched", 0), hs.get("since_days", "?")))),
+]
+out.append('<dl class="meta">%s<div class="wide"><dt>Design system</dt><dd class="mono" style="color:#b9bedb;font-size:.82rem">%s</dd></div></dl>' % ("".join(meta_items), e(design)))
+
+lens_tiles = []
 for l in doc.get("lenses", []):
     status = l.get("status", "?")
-    lens_lines.append("%s: %s%s" % (LENS_LABEL.get(l.get("name"), l.get("name")), status,
-                                    " (%d in)" % l.get("candidates_in", 0) if status == "ok" else ""))
-summary = [
-    ("Repository", meta.get("repo") or profile.get("root") or ""),
-    ("Head", (meta.get("head") or profile.get("head") or "")[:12]),
-    ("Scope", profile.get("scope", {}).get("path", ".")),
-    ("Generated", doc.get("generated_at") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
-    ("Framework", ", ".join([x for x in [profile.get("framework")] + list(profile.get("meta") or []) if x]) or "unknown"),
-    ("Styling", ", ".join(profile.get("styling") or []) or "unknown"),
-    ("Design system", ", ".join((ds.get("libraries") or []) + (ds.get("dirs") or []) + (ds.get("files") or [])[:4]) or "none found"),
-    ("Tokens parsed", str(ds.get("token_count", 0))),
-    ("Hot spots", "%d files touched in %s days" % (profile.get("hot_spots", {}).get("files_touched", 0), profile.get("hot_spots", {}).get("since_days", "?"))),
-    ("Lenses", "; ".join(lens_lines) or "none"),
-]
-summary_html = "".join("<div><dt>%s</dt><dd>%s</dd></div>" % (e(k), e(v)) for k, v in summary)
+    ok = status == "ok"
+    label = "ok · %d in" % l.get("candidates_in", 0) if ok else status
+    dot = COLOR[100] if ok else "#c96b6b"
+    lens_tiles.append('<div class="lens"><div class="n"><span class="dot" style="background:%s;box-shadow:0 0 8px %s"></span><span>%s</span></div><span class="s">%s</span></div>' % (
+        dot, dot, e(LENS_LABEL.get(l.get("name"), l.get("name"))), e(label)))
+if lens_tiles:
+    out.append('<section class="sec"><h2>Lenses</h2><div class="lenses">%s</div></section>' % "".join(lens_tiles))
 
-toc = "".join('<li><a href="#c%d">%s</a> %s</li>' % (c["rank"], e(c["title"]), chip("strength %s" % c["strength"], "s%s" % c["strength"])) for c in cards)
+out.append('<section class="sec"><div class="rankhead"><h2>Ranked candidates</h2><div class="tabs">'
+           '<input type="radio" name="f" id="f-all" checked><label for="f-all">All</label>'
+           '<input type="radio" name="f" id="f-100"><label for="f-100">Strong</label>'
+           '<input type="radio" name="f" id="f-75"><label for="f-75">Moderate</label></div></div>')
+out.append('<ol class="rank">%s</ol></section>' % "".join(rank_row(c) for c in cards))
+out.append('<section class="cards">%s<p class="empty">No candidates at this strength.</p></section>' % "".join(card(c) for c in cards))
 
-dismissed = doc.get("dismissed", [])
-dis_html = "".join("<li><strong>%s</strong> (%s): %s</li>" % (e(d.get("title")), e(LENS_LABEL.get(d.get("lens"), d.get("lens") or "")), e(d.get("reason"))) for d in dismissed)
+if more:
+    out.append('<section class="sec"><h2>More candidates</h2>%s</section>' % plain_table(more))
+if weak:
+    out.append('<section class="sec" style="margin-top:3.5rem"><h2>Weaker candidates</h2>%s</section>' % plain_table(weak))
 
-cov = doc.get("coverage", {}) or {}
+dis = "".join('<li><span>%s</span><span class="why">%s · %s</span></li>' % (
+    e(d.get("title")), e(LENS_LABEL.get(d.get("lens"), d.get("lens") or "")), e(d.get("reason"))) for d in dismissed)
+risk = "".join('<li><span class="tag">%s</span><span>%s</span></li>' % (e(LENS_LABEL.get(r.get("lens"), r.get("lens"))), e(r.get("text"))) for r in risks)
 cov_items = []
-for lens, c in cov.items():
+for lens, c in (doc.get("coverage", {}) or {}).items():
     if isinstance(c, dict):
-        bits = ["%s: %s" % (k, ", ".join(map(str, v)) if isinstance(v, list) else v) for k, v in c.items()]
-        cov_items.append("<li><strong>%s</strong>: %s</li>" % (e(LENS_LABEL.get(lens, lens)), e("; ".join(bits))))
+        bits = []
+        if c.get("files_read") is not None:
+            bits.append("%s files read" % c.get("files_read"))
+        skipped = c.get("dirs_skipped") or c.get("skipped")
+        if skipped:
+            bits.append("skipped <code>%s</code>" % e(", ".join(map(str, skipped))))
+        for note in c.get("notes") or []:
+            bits.append(e(note))
+        cov_items.append(dd(LENS_LABEL.get(lens, lens), " · ".join(bits) or "no notes"))
 missing = doc.get("counts", {}).get("lenses_missing") or []
 if missing:
-    cov_items.append("<li><strong>Lenses with no usable output</strong>: %s</li>" % e(", ".join(missing)))
+    cov_items.append(dd("No usable output", e(", ".join(missing)), "dimmed"))
 docs_files = (profile.get("docs", {}) or {}).get("files") or []
 adrs = (profile.get("docs", {}) or {}).get("adrs") or []
 if docs_files or adrs:
-    cov_items.append("<li><strong>Decision docs consulted</strong>: %s</li>" % e(", ".join(docs_files + [a["path"] for a in adrs])))
+    cov_items.append(dd("Decision docs", '<code>%s</code>' % e(" · ".join(docs_files + [a["path"] for a in adrs]))))
 lint = profile.get("lint", {}) or {}
 if lint.get("a11y") or lint.get("style"):
-    cov_items.append("<li><strong>Lint rules deferred to</strong>: %s</li>" % e(", ".join((lint.get("a11y") or []) + (lint.get("style") or []))))
-risks = doc.get("residual_risks", [])
-risk_html = "".join("<li>%s: %s</li>" % (e(LENS_LABEL.get(r.get("lens"), r.get("lens"))), e(r.get("text"))) for r in risks if isinstance(r, dict))
+    cov_items.append(dd("Lint rules deferred to", '<code>%s</code>' % e(", ".join((lint.get("a11y") or []) + (lint.get("style") or [])))))
+out.append('<div class="trio"><section><h2>Dismissed</h2>%s</section><section><h2>Residual risks</h2>%s</section>'
+           '<section class="wide"><h2>Coverage</h2><dl class="cov">%s</dl></section></div>' % (
+               '<ul class="list">%s</ul>' % dis if dis else '<p class="dimmed">Nothing dismissed.</p>',
+               '<ul class="list">%s</ul>' % risk if risk else '<p class="dimmed">None recorded.</p>',
+               "".join(cov_items) or dd("Notes", "none")))
 
-CSS = """
-:root{color-scheme:light dark;--bg:#fbfaf7;--fg:#1c1b19;--muted:#6b6862;--line:#e3dfd6;--card:#ffffff;--accent:#2f5d50;--warn:#a5641b;--weak:#7a7670;--code:#f1efe9;--sw:#d6d2c8}
-@media (prefers-color-scheme:dark){:root{--bg:#161513;--fg:#ece8df;--muted:#a19c92;--line:#312e29;--card:#1f1d1a;--accent:#8fc4b0;--warn:#e0a45a;--weak:#8d8880;--code:#26231f;--sw:#3a3631}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
-main{max-width:64rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
-h1{font-size:1.7rem;margin:0 0 .25rem;letter-spacing:-.01em}
-h2{font-size:1.15rem;margin:2.5rem 0 .75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-h3{font-size:1.2rem;margin:0;font-weight:600}
-h4{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:1rem 0 .3rem}
-h5{margin:.3rem 0;font-size:.8rem;color:var(--muted)}
-p{margin:.3rem 0}
-.lede{color:var(--muted);margin:0 0 1.5rem}
-dl.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.6rem 1.5rem;margin:0;padding:1rem 1.25rem;border:1px solid var(--line);border-radius:10px;background:var(--card)}
-dl.sum div{min-width:0}
-dt{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-dd{margin:0;overflow-wrap:anywhere}
-ol.toc{padding-left:1.4rem}
-ol.toc li{margin:.2rem 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.25rem 1.5rem;margin:1.25rem 0}
-.card header{display:flex;align-items:baseline;gap:.75rem}
-.rank{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
-.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:.6rem 0 .2rem}
-.chip{font-size:.72rem;padding:.1rem .55rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);white-space:nowrap}
-.chip.lens{color:var(--accent);border-color:var(--accent)}
-.chip.s100{color:var(--accent);font-weight:600}
-.chip.s75{color:var(--warn)}
-.chip.s50{color:var(--weak)}
-.chip.score{cursor:help}
-ul.ev{list-style:none;padding:0;margin:0}
-ul.ev li{margin:.25rem 0;overflow-wrap:anywhere}
-code{font:.85em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);padding:.05rem .3rem;border-radius:4px}
-code.loc{color:var(--muted)}
-pre{background:var(--code);padding:.75rem;border-radius:8px;overflow-x:auto;margin:0}
-pre code{background:none;padding:0}
-.ba{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
-@media (max-width:40rem){.ba{grid-template-columns:1fr}}
-.sw{display:inline-block;width:.9em;height:.9em;border-radius:3px;border:1px solid var(--line);vertical-align:-.1em;margin-right:.35rem;background:var(--sw)}
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.scroll{overflow-x:auto}
-.conv{color:var(--muted)}
-footer{margin-top:1rem;font-size:.78rem;color:var(--muted)}
-details{margin:.4rem 0}
-summary{cursor:pointer;color:var(--muted);font-size:.85rem}
-.empty{color:var(--muted);font-style:italic}
-@media print{body{background:#fff;color:#000}.card{break-inside:avoid;border-color:#bbb}main{max-width:none}}
-"""
+if strong:
+    first = strong[0]
+    s1 = first.get("score", {})
+    why = "Strength %d, %s effort, %d%% hot path" % (first["strength"], EFFORT_LABEL.get(first.get("effort"), first.get("effort")), int(round(100 * (s1.get("churn_share") or 0))))
+    text = doc.get("recommendation")
+    if not isinstance(text, str) or not text.strip():
+        nxt = strong[1].get("score", {}).get("total") if len(strong) > 1 else None
+        text = "Highest score%s, %d quoted instances across %d files, and a fix the candidate names." % (
+            " (%s versus %s for the next)" % (s1.get("total"), nxt) if nxt is not None else " (%s)" % s1.get("total"),
+            len(first.get("instances", [])), len({i["file"] for i in first.get("instances", [])}))
+    items = [dd("Why first", e(why))]
+    if first.get("wins"):
+        items.append(dd("Unblocks", e(", ".join(first["wins"][:2]))))
+    if len(strong) > 1:
+        second = strong[1]
+        items.append(dd("Then", '<a href="#c%d">%s %s</a>' % (second["rank"], rank_label(second["rank"]), e(second["title"]))))
+    coldest = min(strong[1:], key=lambda c: (c.get("score", {}).get("churn_share") or 0, -c["rank"])) if len(strong) > 2 else None
+    if coldest is not None and (coldest.get("score", {}).get("churn_share") or 0) == 0:
+        items.append(dd("Skip for now", '<a href="#c%d">%s %s</a> · 0%% hot path, no active churn' % (coldest["rank"], rank_label(coldest["rank"]), e(coldest["title"])), "dimmed"))
+    out.append('<section class="start"><div class="body"><div class="pick"><h2>Start here</h2><a href="#c%d"><span class="big">%s</span>%s</a><p>%s</p></div><dl>%s</dl></div></section>' % (
+        first["rank"], rank_label(first["rank"]), e(first["title"]), e(text), "".join(items)))
 
-parts = []
-parts.append("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
-parts.append("<title>Frontend audit: %s</title><style>%s</style></head><body><main>" % (e(os.path.basename(str(meta.get("repo") or profile.get("root") or "repo"))), CSS))
-parts.append("<h1>Frontend audit</h1><p class=\"lede\">%d candidates worth acting on, %d weaker ones, %d dismissed. Ranked by strength, then by score.</p>" % (len(strong), len(weak), len(dismissed)))
-parts.append("<dl class=\"sum\">%s</dl>" % summary_html)
-if cards:
-    parts.append("<h2>Ranked</h2><ol class=\"toc\">%s</ol>" % toc)
-    parts.append("<h2>Candidates</h2>")
-    parts.extend(card(c) for c in cards)
-else:
-    parts.append("<h2>Candidates</h2><p class=\"empty\">No candidate cleared the evidence bar. The weaker table and Coverage below say what was seen.</p>")
-parts.append(table(more, "More candidates"))
-parts.append(table(weak, "Weaker candidates"))
-parts.append("<h2>Dismissed</h2>%s" % ("<ul>%s</ul>" % dis_html if dis_html else "<p class=\"empty\">Nothing dismissed.</p>"))
-if risk_html:
-    parts.append("<h2>Residual risks</h2><ul>%s</ul>" % risk_html)
-parts.append("<h2>Coverage</h2>%s" % ("<ul>%s</ul>" % "".join(cov_items) if cov_items else "<p class=\"empty\">No coverage notes.</p>"))
-parts.append("</main></body></html>")
+out.append('<footer class="foot"><span>generated by ultima</span><span>head %s</span></footer></main></div></body></html>' % e(head))
 
-text = "".join(parts)
+text = "".join(out)
 if "<script" in text.lower():
     print("ultima.sh render: refusing to write a report containing a script tag", file=sys.stderr)
     raise SystemExit(1)

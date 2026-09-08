@@ -157,7 +157,7 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     empty.mkdir()
     run("merge", str(empty), "--roster", "design-system")
     run("render", str(empty))
-    assert "No candidate cleared" in (empty / "report.html").read_text()
+    assert "No candidates at this strength" in (empty / "report.html").read_text()
 
 print("ultima fixture tests: ok")
 PY

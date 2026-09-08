@@ -2,7 +2,7 @@
 
 ## 0.24.0
 
-- Add `ultima` to audit a whole frontend codebase instead of a diff. Four read-only lenses look for repeated patterns: raw values where design tokens exist, screens with no loading, empty, or error state, elements the keyboard cannot reach, and component props that mirror their implementation. A bundled script profiles the checkout, merges and ranks what the lenses find against recent git churn, and renders a self-contained HTML report with no script tag and every quoted line escaped. The skill then asks whether to report only, file one ticket per strong candidate through the shared tracker script, or fix the top candidate on the current branch after a printed five-check walk.
+- Add `ultima` to audit a whole frontend codebase instead of a diff. Four read-only lenses look for repeated patterns: raw values where design tokens exist, screens with no loading, empty, or error state, elements the keyboard cannot reach, and component props that mirror their implementation. A bundled script profiles the checkout, merges and ranks what the lenses find against recent git churn, and renders a self-contained HTML report with no script tag and every quoted line escaped. The report follows a dark Claude Design layout: the mana wordmark, count tiles, lens status tiles, a ranked list with strength bars, cards with an accent line and token swatches, and a Start here block that names what to fix first; the Strong and Moderate filter tabs are CSS only. The skill then asks whether to report only, file one ticket per strong candidate through the shared tracker script, or fix the top candidate on the current branch after a printed five-check walk.
 
 ## 0.23.1
 

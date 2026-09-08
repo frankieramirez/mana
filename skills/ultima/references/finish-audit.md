@@ -30,6 +30,8 @@ Read `merged.json` in full. Copy it to `$RUN_DIR/reconciled.json` and edit only 
 - **Tighten** a title so it names the wrong thing and the right thing in twelve words.
 - **Raise** a candidate's strength only by adding a quoted instance or a `convention_source` that the lens missed. Never raise it by editing the number alone; pass 2 re-applies the gates.
 
+- **Recommend** by setting a top-level `recommendation` string: one or two sentences on why rank 1 comes first, naming its score against the next candidate, its hot files, and how mechanical the fix is. The report prints it in the Start here block. Leave it out and the script writes a plain line from the numbers.
+
 You may not add a candidate no lens produced, and you may not delete a dismissal.
 
 ## Merge, pass 2

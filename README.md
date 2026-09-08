@@ -581,7 +581,7 @@ Audits a whole frontend codebase and renders a ranked HTML report of patterns wo
 
 The lenses are design system usage, interaction states, accessibility from code, and component architecture. `lens:<a,b>` runs a subset; `since:<days>` sets the churn window (default 90). Each lens quotes every instance with `file:line`; a design-system candidate must also name the token or component it is measured against and where that is defined, or it drops to the weaker table.
 
-The report lands under `/tmp/ultima-<uid>/<run>/report.html`. It is one file with inline CSS, no script tag, and no network dependency, so it opens offline. Design-system cards show the found value and the token value as swatches side by side.
+The report lands under `/tmp/ultima-<uid>/<run>/report.html`. It is one file with inline CSS, no script tag, and no network dependency, so it opens offline. The layout is dark: count tiles, lens status, a ranked list with strength bars, one card per candidate, and a Start here block naming what to fix first. Design-system cards show the found value and the token value as swatches side by side, and Strong and Moderate tabs filter the list without script.
 
 `tickets` files one ready-for-agent issue per strong candidate through the same tracker script the other skills carry, with acceptance criteria written as the grep that must come back empty. `fix` walks five printed checks (settled by a doc, whole pattern or hot files, needs a new dependency, what proves it, tree clean), edits only the quoted instances, runs the project's validation, commits, and stops. It never pushes or opens a PR.
 
