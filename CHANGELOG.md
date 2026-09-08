@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.2
+
+- Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
+
 ## 0.20.1
 
 - Prompt audit against the current model generation. Dropped two anti-laziness boosters from remedy's judgment rule and rubric, the findings cap on Havoc Demon Hunter's quick depth, a reinforcement sentence in scan's execution spine, the scolding phrasing in Lore Bard's check-failed rule, and a version pin in the scry GitHub operations note. The reviewer template no longer tells subagents that long `why_it_matters` entries are truncated downstream, since the merge script keeps the longest one and never truncates.

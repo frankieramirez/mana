@@ -6,6 +6,8 @@
 #   create-ticket MAP TYPE TITLE        body on stdin; TYPE is research|prototype|grilling|task
 #   wire          CHILD BLOCKER
 #   frontier      MAP
+#   children      MAP                   all children, including closed
+#   close-map     MAP                   refuses open children
 #   claim         NUMBER
 #   view          NUMBER
 #   parent        NUMBER
@@ -33,6 +35,8 @@ usage: map.sh <subcommand> [args]
   create-ticket MAP TYPE TITLE [owner/repo] body on stdin; prints number<TAB>url
   wire          CHILD BLOCKER [owner/repo]
   frontier      MAP [owner/repo]            number<TAB>title<TAB>type<TAB>url
+  children      MAP [owner/repo]            number<TAB>state<TAB>title<TAB>url
+  close-map     MAP [owner/repo]            closes a map only with no open children
   claim         NUMBER [owner/repo]
   view          NUMBER [owner/repo]
   parent        NUMBER [owner/repo]         parent map number, or empty
@@ -256,6 +260,60 @@ cmd_frontier() {
   done < <(child_numbers "$map")
 }
 
+# Completion needs every child, including mixed native and fallback links.
+# Keep this separate from frontier's best-effort work queue discovery.
+completion_children() {
+  local map="$1" native body linked tasks err
+  [[ "$map" =~ ^[0-9]+$ ]] || die "map number must be numeric"
+  err=$(mktemp)
+  if ! native=$(gh api --paginate "repos/${OWNER}/${REPO}/issues/${map}/sub_issues" --jq '.[].number' 2>"$err"); then
+    if ! grep -qE 'HTTP (404|410)' "$err"; then
+      cat "$err" >&2
+      rm -f "$err"
+      die "cannot verify map children"
+    fi
+    native=""
+  fi
+  rm -f "$err"
+  body=$(gh issue view --repo "$OWNER/$REPO" "$map" --json body --jq .body) || die "cannot read map body"
+  linked=$(gh api --paginate "repos/${OWNER}/${REPO}/issues?state=all&per_page=100" --jq ".[] | select(.pull_request == null) | select((.body // \"\") | test(\"(?m)^Part of #${map}(\\\\s|$)\")) | .number") || die "cannot verify fallback children"
+  tasks=$(printf '%s\n' "$body" | grep -E '^[[:space:]]*[-*][[:space:]]*\[[ xX]\]' | grep -oE '#[0-9]+' | tr -d '#' || true)
+  printf '%s\n' "$native" "$tasks" "$linked" | awk 'NF && !seen[$0]++'
+}
+
+cmd_children() {
+  local map="$1" nums n row
+  nums=$(completion_children "$map") || die "cannot enumerate map children"
+  while IFS= read -r n; do
+    [ -n "$n" ] || continue
+    row=$(gh issue view --repo "$OWNER/$REPO" "$n" --json number,state,title,url --jq '[.number, .state, .title, .url] | @tsv') || die "cannot read child $n"
+    [[ "$row" == "$n"$'\t'* ]] || die "missing or mismatched child $n"
+    printf '%s\n' "$row"
+  done <<< "$nums"
+}
+
+cmd_close_map() {
+  local map="$1" labels state rows n child_state rest
+  labels=$(gh issue view --repo "$OWNER/$REPO" "$map" --json labels --jq '.labels[].name') || die "cannot read map labels"
+  printf '%s\n' "$labels" | grep -qxE '(scry|wayfinder):map' || die "issue is not a map"
+  state=$(gh issue view --repo "$OWNER/$REPO" "$map" --json state --jq .state) || die "cannot read map state"
+  case "$state" in
+    CLOSED|closed) return 0 ;;
+    OPEN|open) ;;
+    *) die "unknown map state: $state" ;;
+  esac
+  rows=$(cmd_children "$map") || die "cannot verify map completion"
+  while IFS=$'\t' read -r n child_state rest; do
+    [ -n "$n" ] || continue
+    case "$child_state" in
+      CLOSED|closed) ;;
+      OPEN|open) die "map still has open child #$n" ;;
+      *) die "cannot verify state of child #$n" ;;
+    esac
+  done <<< "$rows"
+  cmd_close "$map"
+}
+
 assignees_except() {
   local n="$1" me="$2"
   gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '[.assignees[].login] | map(select(. != "'"$me"'")) | join(",")'
@@ -358,11 +416,15 @@ case "$cmd" in
     locate_repo "${1:-}"
     cmd_wire "$child" "$blocker"
     ;;
-  frontier)
-    [ $# -ge 1 ] || die "frontier MAP"
+  frontier|children|close-map)
+    [ $# -ge 1 ] || die "$cmd MAP"
     map="$1"; shift
     locate_repo "${1:-}"
-    cmd_frontier "$map"
+    case "$cmd" in
+      frontier) cmd_frontier "$map" ;;
+      children) cmd_children "$map" ;;
+      close-map) cmd_close_map "$map" ;;
+    esac
     ;;
   claim|view|parent|comment|close|update-body)
     [ $# -ge 1 ] || die "$cmd NUMBER"

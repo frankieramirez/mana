@@ -57,7 +57,7 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 1. Resolve the tracker (Stage 1).
 2. Decide chart vs walk from the arguments (above).
 3. Chart: Stage 2, then stop. Walking tickets is a later session.
-4. Walk: Stage 3. Resolve one ticket, file new fog, stop.
+4. Walk: Stage 3. Check for an already finished map, or resolve one ticket and file new fog. Check closeout before stopping.
 
 ---
 
@@ -135,7 +135,7 @@ Everything still too dim to phrase stays in **Not yet specified**. Do not pre-sl
 
 For each `research` ticket just created, read `references/research.md` and spawn a generic subagent seeded with that file plus the ticket's Question. They run as one concurrent batch. Charting hand-resolves nothing else.
 
-Stop. Charting is one session.
+After recording the research results, run Stage 3f's closeout check. Stop. Charting is one session.
 
 ---
 
@@ -153,6 +153,8 @@ GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" frontier MAP_NUMBER
 ```
 
 Orient to Destination and Notes before picking a ticket.
+
+If the map is already closed, report that and stop without another completion note. Otherwise run Stage 3f's closeout check before choosing work. If the map is finished, close it and stop. If the frontier is empty but the map remains unfinished, report what keeps it open: assigned or blocked tickets, unresolved fog, or an unmet destination. Specify remaining in-scope questions where possible; ask only about choices the available decisions do not settle. If no ticket can be worked, stop after reporting the remaining work.
 
 ### 3b. Choose and claim
 
@@ -212,7 +214,28 @@ If this answer shows a ticket sits past the destination, close that ticket and m
 
 If the decision invalidates other tickets, update or close them.
 
-Stop. One ticket is the session.
+Run the closeout check below, then stop. Closing the parent finishes this session and does not count as working another ticket.
+
+### 3f. Close out the map
+
+Re-read the map and check all children, including assigned or blocked tickets. On GitHub:
+
+```bash
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" view MAP_NUMBER
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" children MAP_NUMBER
+```
+
+An empty frontier or a full child progress count alone does not establish completion. Every child must be closed. Review **Not yet specified** against the recorded decisions: clear resolved fog, move work beyond the destination to **Out of scope** with a reason, and keep any unresolved in-scope question visible. Verify that **Destination** is reached under the map's **Notes**, and that required owning documents contain the decisions. Read individual resolutions when the gists do not establish this. Closed tickets that were invalidated or ruled out do not by themselves prove the destination was reached.
+
+If anything remains, keep the map open and tell the user what remains. Do not start building merely to close a decision map. If nothing remains, use `update-body` to persist any cleanup and a brief **Completion** section stating how the destination was reached and linking any resulting spec or owning document. Preserve the other sections and update an existing completion note when retrying after a failed close. Then:
+
+```bash
+GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" close-map MAP_NUMBER
+```
+
+`close-map` rechecks child states before closing; the agent owns the destination and fog checks above. If a read fails or a child remains open, report the reason and leave the map open. Confirm the final state with `view` before reporting it closed.
+
+On another tracker, apply the same checks through its Wayfinding operations and close the parent using that tracker. For a scratch map, check every linked ticket file, append the completion note to the map, and set its `Status: closed`. A map already closed needs no further write.
 
 ---
 
