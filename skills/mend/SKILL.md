@@ -16,7 +16,7 @@ Apply the voice only to lead-agent conversation. Deliverables, specialist roles,
 
 # Mend
 
-Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. A direct request to mend includes pushing the completed result under Stage 6 unless the user asks to hold it locally. Preparing or reviewing a proposed resolution alone does not authorize publishing it.
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
@@ -51,6 +51,7 @@ The operation started is a merge of the base into the current branch. An instruc
 3. Spawn Weaver on the conflicted files (Stage 3).
 4. Audit, then run the project's checks (Stage 4).
 5. Finish the operation (Stage 5).
+6. Push the completed result, or resolve a missing push decision (Stage 6).
 
 ---
 
@@ -95,7 +96,7 @@ Every check here is a stop, reported in one line, with the tree untouched.
 3. `git fetch --no-tags origin <base>` for a PR or branch target. The ref to merge is `origin/<base>`.
 4. `git merge --no-edit <ref>`.
 
-Exit 0 means the merge was clean: report the new merge commit under `Commit`, `Resolved: 0 files`, and stop. The branch is up to date, which is what the target asked for. Do not push.
+Exit 0 means the merge was clean: load `references/checks.md` and run the project's checks, then go to Stage 6. Report the resulting HEAD under `Commit` and `Resolved: 0 files`. There may be no new commit if the branch was already up to date. Fix only failures caused by this merge, within the merged files and their direct fallout, and commit those fixes before Stage 6. Record pre-existing failures without repairing them.
 
 A non-zero exit with unmerged paths is the conflict this skill exists for. Run the script again and continue with Stage 2.
 
@@ -160,7 +161,19 @@ A rebase or cherry-pick of several commits is a loop: resolve, continue, and if 
 
 Never `--skip` a commit unless it is empty after resolution (the change already landed) and `git rebase --continue` refuses it. Record each skip.
 
-Do not push. The caller pushes.
+Proceed to Stage 6 once the entire operation is complete. For `unmerged`, report the staged resolution and stop: there is no completed commit to push.
+
+## Stage 6: Push
+
+For a direct user invocation, push the completed branch by default after the checks pass. Respect an explicit request to hold off or keep changes local without asking again. When another workflow delegates conflict resolution here, return the result to that caller unless it also delegates pushing or the conversation already authorizes it.
+
+Confirm the operation has ended and the working tree is clean. Failed or unavailable checks hold the push; explain the result and ask whether to push anyway or hold, unless the user explicitly authorized pushing despite those check results. The default push policy does not waive checks. An incomplete operation stays local.
+
+Use the current branch's configured upstream, or the remote and branch already selected in the conversation. Confirm that the destination is the branch being mended; a PR's base is not its push destination. Push only this branch with an explicit refspec, such as `git push <remote> HEAD:refs/heads/<branch>`. If HEAD is detached, the destination is missing, or the upstream points to a different branch without an explicit instruction to use it, ask the user for the destination or whether to hold. Do not guess or change branches.
+
+If a completed rebase needs a history rewrite, ask before forcing unless that rewrite is already authorized. Use `--force-with-lease` with the expected remote commit verified before the rewrite; if that commit is unavailable, inspect the remote changes and obtain a decision before replacing them. Never use plain `--force`. A rejected push or lease failure is a stop: report the reason and ask how to proceed, without retrying with weaker protection.
+
+Verify that the destination ref matches local HEAD after pushing. Report a failed or unverified push explicitly. Do not finish with unexplained unpushed changes: either honor an existing hold or caller handoff, report a prerequisite failure, or ask the unresolved push question.
 
 ## Report
 
@@ -174,6 +187,7 @@ Trade-offs
 
 Checks: <one line>
 Commit: <sha or rebase HEAD>
+Push: <remote/branch and verified sha | held with reason | returned to caller | failed with reason>
 Open: <anything left conflicted, or none>
 ```
 
