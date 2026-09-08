@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Integration fixtures for open-pr.sh conflict preflight and mergeability checks.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
