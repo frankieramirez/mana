@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.23.0
+
+- Add `ward` to attend an open PR until it merges or closes. It handles later review feedback and branch-caused CI failures, validates and pushes repairs, and keeps watching after green checks. Private state remembers handled feedback, two repair attempts per recurring issue, and one justified flaky rerun per head across invocations. It posts no PR comments and stops for conflicts or human decisions. Existing one-pass feedback and publishing workflows keep their behavior.
+
+- Simplify ward to one atomic ledger and exact feedback acknowledgments. Remove the readiness classifier, per-poll workflow lookup, and duplicate thread helper. Fetch workflow details only when diagnosing a failure, and use the post-push snapshot to resume attendance.
+
 ## 0.22.1
 
 - Cast reconsiders the implementation from first principles before committing, challenges weak assumptions, and prefers deletion before simplification. Changes need a concrete benefit within scope; a clean pass leaves good work alone instead of forcing every single-consumer helper or interface to be removed.
