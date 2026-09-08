@@ -28,6 +28,8 @@ Open tickets are omitted from the body. They are children, found by `map.sh fron
 <!-- work ruled past this destination; closed, never graduates -->
 ```
 
+At closeout, append a **Completion** section to the map with a brief explanation of how the destination was reached and links to resulting documents. Stage 3f checks completion before closing the parent; the child progress count alone is insufficient.
+
 ## Tickets
 
 Each child is one question, sized to one session. The tracker's issue number is its identity.

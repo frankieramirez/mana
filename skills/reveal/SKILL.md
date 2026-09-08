@@ -97,7 +97,9 @@ Read `references/capture.md` and follow it. You need at least one file before St
 
 Read `references/body.md` and `references/attach.md`. Write the body to a temp file. Run `scripts/open-pr.sh`.
 
-Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), move the card once the PR exists:
+The script checks the fetched base before writing and GitHub mergeability afterward. On exit 4 after a write, run `bash "<SKILL_DIR>/scripts/open-pr.sh" --check` to fetch the current base and recover conflict diagnostics. Report the conflicting files and the base SHA from the check. If the local check is clean but GitHub still reports conflicts, report that disagreement. This skill packages existing work: leave conflict resolution as an explicit handoff with the base to merge and the checks to rerun. If no PR exists, add that blocker to the body and rerun with `--draft` to preserve progress. Existing PRs keep their review state. On exit 5, report mergeability as unknown and the PR URL; do not claim it is ready. A later base change can introduce new conflicts after a successful check.
+
+Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), move the card once the PR exists and mergeability is clean:
 
 ```bash
 orca worktree set --worktree active --workspace-status in-review --comment "PR <url>" --json
@@ -108,6 +110,7 @@ orca worktree set --worktree active --workspace-status in-review --comment "PR <
 ```
 Reveal: <title>
 PR: <url>
+Mergeability: <clean | conflicting: files and base | unknown: reason>
 Attach: <yes | skipped: reason>
 Evidence: <file list>
 Orca: <in-review | not present | failed: reason>

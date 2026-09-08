@@ -1,12 +1,28 @@
 # Changelog
 
-## 0.22.1
+## 0.23.0
+
+- Add `ward` to attend an open PR until it merges or closes. It handles later review feedback and branch-caused CI failures, validates and pushes repairs, and keeps watching after green checks. Private state remembers handled feedback, two repair attempts per recurring issue, and one justified flaky rerun per head across invocations. It posts no PR comments and stops for conflicts or human decisions. Existing one-pass feedback and publishing workflows keep their behavior.
 
 - Simplify ward to one atomic ledger and exact feedback acknowledgments. Remove the readiness classifier, per-poll workflow lookup, and duplicate thread helper. Fetch workflow details only when diagnosing a failure, and use the post-push snapshot to resume attendance.
 
+## 0.22.1
+
+- Cast reconsiders the implementation from first principles before committing, challenges weak assumptions, and prefers deletion before simplification. Changes need a concrete benefit within scope; a clean pass leaves good work alone instead of forcing every single-consumer helper or interface to be removed.
+
 ## 0.22.0
 
-- Add `ward` to attend an open PR until it merges or closes. It handles later review feedback and branch-caused CI failures, validates and pushes repairs, and keeps watching after green checks. Private state remembers handled feedback, two repair attempts per recurring issue, and one justified flaky rerun per head across invocations. It posts no PR comments and stops for conflicts or human decisions. Existing one-pass feedback and publishing workflows keep their behavior.
+- PR shipping checks for conflicts against the fetched base before writing and verifies GitHub mergeability afterward. Conflicts block ready PR creation, drafts can preserve blocked work, and unknown results stay explicit. Cast resolves conflicts within the implementation scope and refreshes validation and proof; reveal reports a concrete resolution handoff.
+
+## 0.21.2
+
+- Mend pushes completed changes by default after successful checks when invoked directly, including clean merges. It honors requests to hold changes locally and asks when the push destination or a history rewrite needs a decision. Delegated resolutions return to the caller unless pushing is authorized, and the report includes the push outcome.
+
+## 0.21.1
+
+- Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
+
+- Scry map body updates can guard against a stale snapshot and expose a raw body read for closeout. The guard rejects missing snapshots, read failures, and concurrent edits before writing, while documenting the residual read/write race.
 
 ## 0.21.0
 

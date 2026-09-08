@@ -46,4 +46,6 @@ Blocked by:
 
 Claim is rewriting `Status: claimed` and putting your name under it. Resolve is `Status: closed`, the answer at the bottom, and a gist line on the map.
 
+After resolution and when resuming a map, apply Stage 3f's closeout check to the map and its ticket files. Once every ticket is closed and the destination is reached with no unresolved in-scope fog, append a completion note and set the map's `Status: closed`.
+
 Tell the user the map is local because GitHub refused the write. They can publish it later with a token that can create issues. Do not write a publisher unless they ask.
