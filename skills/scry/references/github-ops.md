@@ -18,9 +18,10 @@
 | `claim` | `NUMBER` | Assigns the issue to the current `gh` user. Exits 1 if someone else already holds it |
 | `view` | `NUMBER` | Prints number, title, url, state, labels, assignees, body |
 | `parent` | `NUMBER` | Prints the parent map number, or empty |
+| `body` | `NUMBER` | Prints the raw issue body |
 | `comment` | `NUMBER`, body on stdin | Posts a comment |
 | `close` | `NUMBER` | Closes the issue |
-| `update-body` | `NUMBER`, body on stdin | Replaces the issue body |
+| `update-body` | `NUMBER`, body on stdin | Replaces the issue body. With `--expected-body PATH`, reads the proposed replacement first, then reads the current body and refuses the write if the snapshot is missing, unreadable, or differs. |
 
 Without `owner/repo`, the script uses `gh repo view` in this checkout. The script passes `--repo` to every `gh issue` and `gh label` call so an explicit owner/repo wins.
 
@@ -39,5 +40,6 @@ Without `owner/repo`, the script uses `gh repo view` in this checkout. The scrip
 - The frontier finds children via sub-issues, then `Part of #<map>` on open issues and task-list `#N` lines on the map. It does not scrape every `#N` in the map body. It drops any child with an assignee or an open blocker.
 - Completion uses `children`, which combines paginated native sub-issues with task-list references and paginated `Part of #<map>` links across all issue states. Native API HTTP 404 or 410 permits fallback discovery; other native read failures and failed fallback reads stop closeout. An empty frontier never proves completion. `close` only closes the supplied issue; use `close-map` for parent closeout.
 - Claim is the assignee. The script refuses when another login already holds the ticket.
+- Stage 3f saves the original body in a private temporary file before reviewing or deriving a replacement, then passes it to `update-body --expected-body`. A mismatch or read failure stops closeout before `close-map`. This is best-effort stale-snapshot detection: a concurrent edit can still land between the comparison and the write, because the two GitHub calls are not an atomic compare-and-swap.
 
 Do not call `gh issue create`, `gh api .../sub_issues`, or `gh api .../dependencies` yourself. The script is the one place those sequences live.

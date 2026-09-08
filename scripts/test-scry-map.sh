@@ -46,6 +46,14 @@ if [[ "$1" == api ]]; then
 fi
 
 if [[ "$1" == issue && "$2" == view ]]; then
+  if [[ "$n" == 7 && "$jq_expr" == .body ]]; then
+    case "$mode" in
+      body_read_error) echo 'HTTP 500' >&2; exit 1 ;;
+      body_stale) printf 'changed body\n' ;;
+      *) printf 'same body\n' ;;
+    esac
+    exit 0
+  fi
   if [[ "$n" == 100 ]]; then
     case "$jq_expr" in
       '.labels[].name')
@@ -72,6 +80,17 @@ if [[ "$1" == issue && "$2" == view ]]; then
     [[ "$jq_expr" == *'@tsv'* ]] || { echo "unexpected child read: $*" >&2; exit 1; }
     printf '%s\t%s\tChild %s\thttps://github.com/acme/widgets/issues/%s\n' "$n" "$state" "$n" "$n"
   fi
+  exit 0
+fi
+if [[ "$1" == issue && "$2" == edit && "$n" == 7 ]]; then
+  body_file=""
+  previous=""
+  for arg in "$@"; do
+    [[ "$previous" == --body-file ]] && body_file="$arg"
+    previous="$arg"
+  done
+  [[ -n "$body_file" && "$(cat "$body_file")" == "replacement body" ]] || exit 1
+  printf 'edited payload:replacement body\n' >> "$log"
   exit 0
 fi
 if [[ "$1" == issue && "$2" == close && "$n" == 100 ]]; then printf 'closed\n'; exit 0; fi
@@ -115,4 +134,34 @@ run_case "already closed is idempotent" parent_closed 0 0 close-map 100
 run_case "non-map refuses close" nonmap 1 0 close-map 100
 run_case "children returns all native children" all_closed 0 0 children 100
 run_case "children returns mixed fallback children" mixed 0 0 children 100
+
+run_update_case() {
+  local name=$1 mode=$2 expected_ec=$3 expected_write=$4 snapshot=${5:-}
+  local out ec writes
+  local -a args=(update-body 7)
+  [ -n "$snapshot" ] && args+=(--expected-body "$snapshot")
+  args+=(acme/widgets)
+  : > "$TMP/log"
+  if out=$(GH_FIXTURE_MODE="$mode" GH_FIXTURE_LOG="$TMP/log" PATH="$TMP:$PATH" "$MAP" "${args[@]}" 2>"$TMP/err" <<'EOF'
+replacement body
+EOF
+  ); then ec=0; else ec=$?; fi
+  writes=$(grep -c 'issue edit' "$TMP/log" || true)
+  payload_ok=0
+  [[ "$expected_ec" != 0 || "$(grep -c '^edited payload:replacement body$' "$TMP/log" || true)" == 1 ]] && payload_ok=1
+  if [[ "$ec" != "$expected_ec" || "$writes" != "$expected_write" || "$payload_ok" != 1 ]]; then
+    echo "FAIL $name (exit=$ec writes=$writes)" >&2; cat "$TMP/err" >&2; fail=1
+  else echo "ok $name"; fi
+}
+
+snapshot="$TMP/body"
+printf 'same body\n' > "$snapshot"
+run_update_case "update-body accepts unchanged snapshot" body_unchanged 0 1 "$snapshot"
+run_update_case "update-body rejects stale snapshot" body_stale 1 0 "$snapshot"
+run_update_case "update-body rejects missing snapshot" body_unchanged 1 0 "$TMP/missing"
+run_update_case "update-body rejects body read error" body_read_error 1 0 "$snapshot"
+run_update_case "update-body keeps old usage" body_unchanged 0 1
+
+body_out=$(GH_FIXTURE_MODE=body_unchanged GH_FIXTURE_LOG="$TMP/log" PATH="$TMP:$PATH" "$MAP" body 7 acme/widgets)
+[[ "$body_out" == "same body" ]] || { echo "FAIL body command" >&2; fail=1; }
 [[ "$fail" -eq 0 ]]

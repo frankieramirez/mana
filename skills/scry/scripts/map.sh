@@ -11,9 +11,10 @@
 #   claim         NUMBER
 #   view          NUMBER
 #   parent        NUMBER
+#   body          NUMBER
 #   comment       NUMBER                body on stdin
 #   close         NUMBER
-#   update-body   NUMBER                body on stdin
+#   update-body   NUMBER [--expected-body PATH] body on stdin
 #
 # Labels are scry:map and scry:<type>. Reads also accept the older wayfinder:* names
 # so maps filed before 0.11.0 still walk; nothing writes them.
@@ -40,9 +41,10 @@ usage: map.sh <subcommand> [args]
   claim         NUMBER [owner/repo]
   view          NUMBER [owner/repo]
   parent        NUMBER [owner/repo]         parent map number, or empty
+  body          NUMBER [owner/repo]         raw issue body
   comment       NUMBER [owner/repo]         body on stdin
   close         NUMBER [owner/repo]
-  update-body   NUMBER [owner/repo]         body on stdin
+  update-body   NUMBER [--expected-body PATH] [owner/repo] body on stdin
 
 TYPE is research, prototype, grilling, or task.
 Exit 3 means this token cannot write issues; use the scratch fallback.
@@ -368,6 +370,11 @@ cmd_parent() {
   printf '%s\n' "$body" | sed -n '1,12p' | grep -E '^Part of #' | head -n 1 | grep -oE '[0-9]+' || true
 }
 
+cmd_body() {
+  local n="$1"
+  gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body
+}
+
 cmd_comment() {
   local n="$1"
   local body
@@ -381,10 +388,23 @@ cmd_close() {
 }
 
 cmd_update_body() {
-  local n="$1"
-  local tmp
+  local n="$1" expected="${2:-}"
+  local tmp current
   tmp=$(mktemp)
   cat > "$tmp"
+  if [ -n "$expected" ]; then
+    [ -f "$expected" ] || { rm -f "$tmp"; die "expected body snapshot is missing: $expected"; }
+    current=$(mktemp)
+    if ! gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body > "$current"; then
+      rm -f "$tmp" "$current"
+      die "cannot read current body; refusing update"
+    fi
+    if ! cmp -s "$expected" "$current"; then
+      rm -f "$tmp" "$current"
+      die "current body differs from expected snapshot; refusing update"
+    fi
+    rm -f "$current"
+  fi
   run_gh gh issue edit --repo "$OWNER/$REPO" "$n" --body-file "$tmp"
   rm -f "$tmp"
 }
@@ -426,17 +446,24 @@ case "$cmd" in
       close-map) cmd_close_map "$map" ;;
     esac
     ;;
-  claim|view|parent|comment|close|update-body)
+  claim|view|parent|body|comment|close|update-body)
     [ $# -ge 1 ] || die "$cmd NUMBER"
     number="$1"; shift
+    expected=""
+    if [ "$cmd" = update-body ] && [ "${1:-}" = "--expected-body" ]; then
+      [ -n "${2:-}" ] || die "update-body NUMBER --expected-body PATH"
+      expected="$2"
+      shift 2
+    fi
     locate_repo "${1:-}"
     case "$cmd" in
       claim) cmd_claim "$number" ;;
       view) cmd_view "$number" ;;
       parent) cmd_parent "$number" ;;
+      body) cmd_body "$number" ;;
       comment) cmd_comment "$number" ;;
       close) cmd_close "$number" ;;
-      update-body) cmd_update_body "$number" ;;
+      update-body) cmd_update_body "$number" "$expected" ;;
     esac
     ;;
   *) die "unknown subcommand: $cmd" ;;

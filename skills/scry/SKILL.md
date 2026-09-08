@@ -225,9 +225,36 @@ GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" view MAP_NUMBER
 GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" children MAP_NUMBER
 ```
 
+On GitHub, before reviewing or deriving the replacement, save the original body in a private temporary file. The body read must remove a partial snapshot and abort on failure:
+
+```bash
+snapshot_path=$(mktemp)
+if ! GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" body MAP_NUMBER > "$snapshot_path"; then
+  rm -f "$snapshot_path"
+  exit 1
+fi
+printf 'original_body=%s\n' "$snapshot_path"
+```
+
 An empty frontier or a full child progress count alone does not establish completion. Every child must be closed. Review **Not yet specified** against the recorded decisions: clear resolved fog, move work beyond the destination to **Out of scope** with a reason, and keep any unresolved in-scope question visible. Verify that **Destination** is reached under the map's **Notes**, and that required owning documents contain the decisions. Read individual resolutions when the gists do not establish this. Closed tickets that were invalidated or ruled out do not by themselves prove the destination was reached.
 
-If anything remains, keep the map open and tell the user what remains. Do not start building merely to close a decision map. If nothing remains, use `update-body` to persist any cleanup and a brief **Completion** section stating how the destination was reached and linking any resulting spec or owning document. Preserve the other sections and update an existing completion note when retrying after a failed close. Then:
+If anything remains, keep the map open and tell the user what remains. Do not start building merely to close a decision map. If nothing remains, preserve the other sections and prepare any cleanup and a brief **Completion** section stating how the destination was reached and linking any resulting spec or owning document. Update an existing completion note when retrying after a failed close.
+
+Shell variables do not persist between calls. Record the printed absolute path, then set `original_body` to that exact path in the update call below. Read the body and prepare the replacement from that snapshot. Write it with the guard, and stop without running `close-map` if the snapshot is missing, the read fails, or the current body differs:
+
+```bash
+original_body='<recorded absolute snapshot path>'
+if ! GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" update-body MAP_NUMBER --expected-body "$original_body" <<'EOF'
+<updated body>
+EOF
+then
+  rm -f "$original_body"
+  exit 1
+fi
+rm -f "$original_body"
+```
+
+The guard detects stale snapshots between the read and comparison. It cannot eliminate the residual read/write race between comparison and the GitHub write, since those calls are not an atomic compare-and-swap.
 
 ```bash
 GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" close-map MAP_NUMBER

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.3
+
+- Scry map body updates can guard against a stale snapshot and expose a raw body read for closeout. The guard rejects missing snapshots, read failures, and concurrent edits before writing, while documenting the residual read/write race.
+
 ## 0.20.2
 
 - Scry checks parent-map closeout when resuming and after recording work, including charting research. It closes maps once all children are closed and the destination is reached with no unresolved in-scope fog, records a completion note, and explains what keeps unfinished maps open. New map commands enumerate all children and guard parent closure against open tickets or failed reads; an empty frontier is no longer treated as proof of completion.
