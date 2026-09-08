@@ -53,7 +53,7 @@ Parse tokens, then treat the remainder as the target.
 
 1. Load the ticket (Stage 1).
 2. Build it (Stage 2).
-3. Check the diff against the ticket (Stage 3).
+3. Clean up comments in this session's changes (Stage 2a), then check the diff against the ticket (Stage 3).
 4. Commit, and push only when the branch already has an upstream (Stage 4).
 5. Capture proof and open the pull request (Stage 5). Skip when `no-pr`.
 
@@ -135,6 +135,12 @@ Stay inside the ticket's scope. Adjacent cleanup waits.
 
 Inside that scope, build the smallest shape that satisfies the ticket. When one plain line does the job, write one line. A helper earns its place when the same line appears a second time, and an interface, option, or registry when a second consumer exists in this diff or the codebase. Later is no reason on its own. The signal has to be present now.
 
+## Stage 2a: Comment cleanup
+
+Inspect this session's diff for added or modified code comments, including suppressions. If there are none, report the pass as skipped and continue. Documentation prose and generated files are outside this pass.
+
+Read `references/comment-cleanup.md` and follow it before the spec check. Its reviewer instructions are bundled in `references/comment-reaper.md`; no separate skill installation is required. Limit deletions to comments added or modified by this session and repairs to code changed for this ticket. Surrounding code is read-only context. Never use the whole branch diff as a substitute for this session's scope.
+
 ## Stage 3: Spec check
 
 Read `references/spec-check.md` and walk it against the diff and the ticket. If a criterion fails, fix it before committing. If a criterion cannot be met on this branch, stop and report it. Do not commit a partial that pretends to be the ticket.
@@ -214,6 +220,7 @@ Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
 PR: <url | none: no-pr | none: reason>
 Mergeability: <clean | conflicting: files and base | unknown: reason | skipped: no-pr>
 Evidence: <file list, or none>
+Comment cleanup: <skipped: reason | deleted count, repairs, and open items>
 Validation: <one line>
 Orca: <linked <id>, in-review | not present | failed: reason>
 Open: <any criterion left unmet, or none>
@@ -228,6 +235,8 @@ Open: <any criterion left unmet, or none>
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
 | `references/tdd.md` | Stage 2, for meaningful behavior changes with a test harness | Red-green at agreed seams |
+| `references/comment-cleanup.md` | Stage 2a, when this session changes code comments | Audit deletions and repair confusing code |
+| `references/comment-reaper.md` | Stage 2a, through comment cleanup | Scoped comment reviewer instructions |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
 | `references/capture.md` | Stage 5 | What to record, and the SVG stand-in |
 | `references/body.md` | Stage 5 | Scannable PR body: trees and diffs |

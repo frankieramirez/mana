@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.23.1
+
+- Cast automatically audits comments added or modified during implementation before its spec check. The bundled reviewer preserves protected comments, keeps repairs inside the ticket, and requires fresh validation after cleanup edits. Runs without changed code comments skip the pass.
+
 ## 0.23.0
 
 - Add `ward` to attend an open PR until it merges or closes. It handles later review feedback and branch-caused CI failures, validates and pushes repairs, and keeps watching after green checks. Private state remembers handled feedback, two repair attempts per recurring issue, and one justified flaky rerun per head across invocations. It posts no PR comments and stops for conflicts or human decisions. Existing one-pass feedback and publishing workflows keep their behavior.

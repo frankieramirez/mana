@@ -102,6 +102,7 @@ while read -r a b; do
   [ -n "${a:-}" ] || continue
   cmp -s "$a" "$b" || err "$a and $b differ; edit $(dirname "$(dirname "$a")")/ and copy to $(dirname "$(dirname "$b")")/"
 done <<'EOF'
+skills/banish/references/comment-reaper.md skills/cast/references/comment-reaper.md
 skills/reveal/references/capture.md skills/cast/references/capture.md
 skills/reveal/references/body.md skills/cast/references/body.md
 skills/reveal/references/attach.md skills/cast/references/attach.md
