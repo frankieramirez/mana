@@ -559,9 +559,9 @@ The search includes pinned library source, wire formats, database columns, featu
 
 ### ultima
 
-Audits a whole frontend codebase and renders a ranked HTML report of patterns worth fixing: raw values where tokens exist, screens missing a loading or error state, elements the keyboard cannot reach, component props that mirror their implementation.
+Audits a whole frontend codebase and renders a ranked HTML report of patterns worth fixing: raw values where tokens exist, screens missing a loading, empty, or error state, elements the keyboard cannot reach, component props that mirror their implementation.
 
-- Four read-only lenses run in parallel; a candidate needs three quoted instances to rank.
+- Four read-only lenses run in parallel; a candidate with three or more quoted instances ranks as strong, and one with fewer than three drops to strength 50 in the weaker table.
 - Ranks by evidence strength, instance count, and how hot the touched files are in recent commits.
 - Ends with one question: report only, file a ticket per strong candidate, or fix the top one now.
 

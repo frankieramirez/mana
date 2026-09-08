@@ -20,7 +20,7 @@ Honor the user's explicit instructions and decisions already made in this conver
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Audits a frontend codebase as a whole, not a diff. Four read-only lenses look for the same wrong thing repeated across files: raw values where tokens exist, screens with no loading or error state, clickable elements with no keyboard path, components whose props mirror their implementation. A script merges and ranks what they find, renders one HTML report, and then the skill asks what to do with it.
+Audits a frontend codebase as a whole, not a diff. Four read-only lenses look for the same wrong thing repeated across files: raw values where tokens exist, screens with no loading, empty, or error state, clickable elements with no keyboard path, components whose props mirror their implementation. A script merges and ranks what they find, renders one HTML report, and then the skill asks what to do with it.
 
 ## When to use
 
@@ -121,7 +121,7 @@ Fill the template for each lens and spawn it as a **generic subagent**. Do not u
 
 Each lens receives: its lens file, the schema, the prior-decisions block, the profile path, and the one-line context values from the template's slot table. Lenses are **read-only** toward the project: non-mutating inspection only. The one permitted write is their own artifact file under `$RUN_DIR`. They never edit project files, install packages, start servers, switch branches, or commit.
 
-Collect **every** spawned lens before Stage 5; a merge on a partial roster is a defect. For any lens whose artifact is missing or fails to parse, write its compact return to `$RUN_DIR/returns/<lens>.json` so the merge can still use it. A lens that returned nothing usable is a failed lens: name it in Coverage, never invent its candidates.
+Collect **every** spawned lens before Stage 5; a merge on a partial roster is a defect. For any lens whose artifact is missing or fails to parse, write its return to `$RUN_DIR/returns/<lens>.json`. The merge can use that file only when the return carries the full artifact shape, with `problem`, `fix`, and every instance; a compact return with no artifact behind it is a failed lens. A lens that returned nothing usable is a failed lens: name it in Coverage, never invent its candidates.
 
 ## Stage 5: Merge, reconcile, render
 

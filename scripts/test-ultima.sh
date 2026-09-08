@@ -74,6 +74,10 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     (repo / "server" / "main.go").write_text("package main\n")
     p = run("orient", "--path", "server", cwd=repo, ok=False)
     assert p.returncode == 2, p.returncode
+    sibling = pathlib.Path(td) / "app-other"
+    sibling.mkdir()
+    p = run("orient", "--path", str(sibling.resolve()), cwd=repo, ok=False)
+    assert "outside the checkout" in p.stderr, p.stderr
 
     inst = lambda f, n, q: {"file": f, "line": n, "quote": q}
     (run_dir / "design-system.json").write_text(json.dumps({
@@ -83,7 +87,8 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
              "fix": "Use var(--color-primary).", "wins": ["one place to change"], "effort": "S", "strength": 100,
              "instances": [inst("src/components/Button.tsx", 1, 'color: "#2563eb"'), inst("src/components/Card.tsx", 1, "#2563eb"),
                            inst("src/components/Nav.tsx", 4, "#2563eb"), inst("src/components/Button.tsx", 1, "dup")],
-             "tokens": [{"found": "#2563eb", "name": "--color-primary", "value": "#2563eb", "source": "src/styles/tokens.css:2"}],
+             "tokens": [{"found": "#2563eb", "name": "--color-primary", "value": "#2563eb", "source": "src/styles/tokens.css:2"},
+                        {"found": "#fff;background-image:url(http://evil.example/x)", "name": "--x", "value": "#ffffff", "source": "src/styles/tokens.css:9"}],
              "before": {"language": "tsx", "code": "<script>alert(1)</script>"}, "after": {"language": "tsx", "code": "var(--color-primary)"}},
             {"title": "Ad hoc spacing values", "problem": "Two paddings.", "fix": "Use --space-4.", "strength": 75, "effort": "M",
              "instances": [inst("src/components/Button.tsx", 2, "padding: 17"), inst("src/components/Card.tsx", 3, "padding: 3")]},
@@ -145,6 +150,9 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     assert "<script" not in html.lower(), "script tag leaked"
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
     assert "background:#2563eb" in html, "swatch missing"
+    styles = "".join(seg.split('"', 1)[0] for seg in html.split('style="')[1:])
+    assert "background-image" not in styles and "url(http://evil" not in styles, "swatch injected"
+    assert "#fff;background-image:url(http://evil.example/x)" in html, "found value text missing"
     assert "src/styles/tokens.css:2" in html and "Already done right at" in html
     for needle in ("Dismissed", "Interaction states"):
         assert needle in html, needle

@@ -20,9 +20,9 @@ A candidate is a pattern, never a point finding. It is the same wrong thing done
 
 ## Two outputs, two shapes
 
-1. The artifact. Write the complete analysis as JSON to `{run_dir}/{lens_name}.json`: every schema field, every instance with its quote, `before` and `after` when you have them, `tokens` when the fix names a token. That file is the only write you get. If the write fails, carry on to step 2.
+1. The artifact. Write the complete analysis as JSON to `{run_dir}/{lens_name}.json`: every schema field, every instance with its quote, `before` and `after` when you have them, `tokens` when the fix names a token. That file is the only write you get. If the write fails, say so in the return and give the parent the full artifact shape in step 2 instead of the compact one: every field, every instance. The parent saves that return as `returns/{lens_name}.json`, and the merge drops any candidate missing `problem`, `fix`, or its instances.
 
-2. The return. Give the parent a compact JSON object: top-level `lens`, `residual_risks`, `coverage`, and a `candidates` array whose items carry title, strength, effort, lens, instance count, the first three instances, `convention_source`, and `prior_decision`. Leave `problem`, `fix`, `wins`, `before`, `after`, and the rest of the instances out; the merge rehydrates them from the artifact.
+2. The return. Give the parent a compact JSON object: top-level `lens`, `residual_risks`, `coverage`, and a `candidates` array whose items carry title, strength, effort, lens, instance count, the first three instances, `convention_source`, and `prior_decision`. Leave `problem`, `fix`, `wins`, `before`, `after`, and the rest of the instances out; the merge rehydrates them from the artifact. This compact shape is the normal case and only works when the artifact exists on disk.
 
 The common slip is writing the compact shape to disk. Full artifact, compact return.
 

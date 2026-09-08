@@ -5,7 +5,7 @@ Every lens has returned. This file runs the merge, the reconcile, the render, th
 ## Merge, pass 1
 
 ```bash
-bash "<SKILL_DIR>/scripts/ultima.sh" merge "$RUN_DIR" --roster <lens,lens,...>
+bash "<SKILL_DIR>/scripts/ultima.sh" merge "$RUN_DIR" --roster "<lens,lens,...>"
 ```
 
 The script reads each `$RUN_DIR/<lens>.json`, falls back to `$RUN_DIR/returns/<lens>.json` when the artifact is missing, and applies the gates in this order:
@@ -80,8 +80,8 @@ Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names th
 Resolve the label strings. When `docs/agents/triage-labels.md` exists, take the strings it maps for `enhancement` and `ready-for-agent`. Missing file: the string equals the role name. Ensure them once:
 
 ```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a <enhancement string>
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 <ready string>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a4a "<enhancement string>"
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 "<ready string>"
 ```
 
 Load `references/agent-brief.md`. Write one brief per strong candidate (strength 75 or 100), in rank order. Weaker candidates are not filed unless the user names them. The brief is written against behavior, since paths go stale:
@@ -91,11 +91,11 @@ Load `references/agent-brief.md`. Write one brief per strong candidate (strength
 - **Current behavior:** the `problem`, plus the instance count and the three hottest files as examples.
 - **Desired behavior:** the `fix`, naming the token, component, or attribute.
 - **Key interfaces:** the token or component from `convention_source` or `tokens[]`.
-- **Acceptance criteria:** no remaining instance of the pattern under the scope path, verified by the grep that found them; the project's Validation command passes; any story or snapshot for the touched components updated.
+- **Acceptance criteria:** the check that established the candidate (a grep, a lint rule, a test, or a manual read of each quoted instance) finds no remaining instance under the scope path; the project's Validation command passes; any story or snapshot for the touched components updated.
 - **Out of scope:** the other candidates, by title.
 
 ```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> create "<title>" --label <enhancement string> --label <ready string> <<'EOF'
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> create "<title>" --label "<enhancement string>" --label "<ready string>" <<'EOF'
 Source: frontend audit <short sha>, candidate <rank>
 
 <brief from references/agent-brief.md>

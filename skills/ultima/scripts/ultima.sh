@@ -315,7 +315,7 @@ frontend_packages = [p for p in packages if p["frameworks"]]
 
 if scope_arg not in (".", ""):
     scope_abs = os.path.realpath(os.path.join(root, scope_arg)) if not os.path.isabs(scope_arg) else os.path.realpath(scope_arg)
-    if not scope_abs.startswith(root):
+    if scope_abs != root and not scope_abs.startswith(root + os.sep):
         print("ultima.sh orient: path is outside the checkout", file=sys.stderr)
         sys.exit(1)
     scope_rel = rel(scope_abs) if scope_abs != root else "."
@@ -800,7 +800,7 @@ cmd_render() {
   [ -f "$inp" ] || die "render: merged file missing: $inp"
   ULTIMA_RUN_DIR="$run_dir" ULTIMA_IN="$inp" ULTIMA_OUT="${out:-$run_dir/report.html}" \
     python3 - <<'PY'
-import datetime, html, json, os, sys
+import datetime, html, json, os, re, sys
 
 run_dir = os.environ["ULTIMA_RUN_DIR"]
 doc = json.load(open(os.environ["ULTIMA_IN"], encoding="utf-8"))
@@ -984,9 +984,11 @@ def e(v):
     return html.escape("" if v is None else str(v), quote=True)
 
 
+COLOR_RE = re.compile(r"#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})|(?:rgba?|hsla?|oklch|oklab|lab|lch|color)\([0-9a-z.,%/ -]*\)", re.IGNORECASE)
+
+
 def is_color(value):
-    low = (value or "").strip().lower()
-    return low.startswith("#") or low.startswith(("rgb", "hsl", "oklch", "oklab", "lab(", "lch(", "color("))
+    return bool(COLOR_RE.fullmatch((value or "").strip()))
 
 
 def swatch(value):
