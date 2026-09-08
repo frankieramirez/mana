@@ -30,7 +30,7 @@ Confidence 100, corroborated (Protection Warrior, Marksmanship Hunter).
 #3 No test forces the exempt branch after the move. src/tax.test.ts:1
 Why it matters: the only exemption test asserts on the old lookupTier path, which the diff deleted, so a regression in #1 passes the suite.
 Response: add a case that builds an exempt account and expects computeTax to return 0; src/invoice.test.ts:40 has the fixture to reuse.
-Confidence 75 (Marksmanship Hunter).
+Confidence 100, corroborated (Marksmanship Hunter, and coderabbitai raised it mid-review). Arrived during this review.
 
 ### Requirements
 
@@ -41,7 +41,8 @@ R3 Invoice PDF shows the flat rate: deferred, PR body says "PDF template follows
 
 ### Existing PR feedback
 
-Harvested 3 items. 1 became a finding (#1, also reported by coderabbitai inline). 1 already addressed: the unused import at src/tax.ts:2 is gone. 1 not a finding: github-actions coverage delta with no threshold breach.
+Harvested 3 items at the start. 1 became a finding (#1, also reported by coderabbitai inline). 1 already addressed: the unused import at src/tax.ts:2 is gone. 1 not a finding: github-actions coverage delta with no threshold breach.
+2 more arrived while the reviewers ran (coderabbitai, 14:32 UTC). 1 became #3. 1 not a finding: the suggested null check is guaranteed by the caller at src/invoice.ts:44.
 
 ### Dismissed
 
@@ -50,7 +51,7 @@ Harvested 3 items. 1 became a finding (#1, also reported by coderabbitai inline)
 
 ### Coverage
 
-Reviewers: 4 ran, 0 failed. Full roster (rate logic is a persistence-adjacent change). Suppressed: 2 at anchor 25. Quote-the-line demotions: 1. Validator: 2 of 3 validated. Merge: script. Untracked files excluded: none. Residual risks: the flat rate is read once at module load, so a config change needs a restart (Restoration Shaman). Ticket: ENG-42 read through tickets.sh. Run artifacts: /tmp/scan-501/20260903-101500-ab12cd34/.
+Reviewers: 4 ran, 0 failed. Full roster (rate logic is a persistence-adjacent change). Suppressed: 2 at anchor 25. Quote-the-line demotions: 1. Validator: 2 of 3 validated. Late harvest: 2 items at 14:32 UTC, 1 finding, 1 not a finding. Merge: script. Untracked files excluded: none. Residual risks: the flat rate is read once at module load, so a config change needs a restart (Restoration Shaman). Ticket: ENG-42 read through tickets.sh. Run artifacts: /tmp/scan-501/20260903-101500-ab12cd34/.
 
 ---
 
@@ -95,5 +96,5 @@ Each defect, one line:
 - The numbers change between sections: item 1 is exempt accounts in one list and tests in the next.
 - The requirements block never appears, so the unmet R1 is invisible and the verdict is wrong.
 - A dismissed item is presented as a finding; a real dismissal (the config constant) is missing, so the user cannot override it.
-- The harvested coderabbitai comment vanished with no reconciliation line.
+- The harvested coderabbitai comment vanished with no reconciliation line, and the comment that landed mid-review is nowhere at all.
 - "Ready to merge" with a P1 open, padded with praise. A verdict is a judgment, never a compliment.
