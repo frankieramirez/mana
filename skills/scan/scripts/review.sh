@@ -35,7 +35,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA="$HERE/../references/findings-schema.json"
 
 usage() {
-  sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
 }
 
 die() {
@@ -308,6 +308,10 @@ def load_json(path):
         return json.load(fh)
 
 
+def harvest_pass_already_counted(independent):
+    return any(n in HARVEST for n in independent)
+
+
 def reviewer_independent(name, artifact):
     if name == "fast-pass":
         return False
@@ -569,10 +573,8 @@ for f in work:
             continue
         if not independent_names.get(r, reviewer_independent(r, {})):
             continue
-        if r in HARVEST:
-            # the early and late harvest passes are one reviewer reading the PR twice
-            if c["confidence"] < 75 or any(n in HARVEST for n in indep):
-                continue
+        if r in HARVEST and (c["confidence"] < 75 or harvest_pass_already_counted(indep)):
+            continue
         indep.append(r)
     f["independent_reviewers"] = indep
     if len(indep) >= 2:
