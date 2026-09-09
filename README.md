@@ -1,5 +1,3 @@
-# mana
-
 <p align="center">
   <img src="docs/assets/mana.svg" alt="Mana" width="688">
 </p>
