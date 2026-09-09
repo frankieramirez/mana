@@ -41,14 +41,15 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 
 | Token | Effect |
 |-------|--------|
-| `you-pick` | On grilling rounds, accept every recommended answer. Same meaning as the user saying "make the decisions" or "you pick". |
+| `you-pick` | On interrogation rounds, accept every recommended answer. Same meaning as the user saying "make the decisions" or "you pick". |
 
 **No number or URL (a loose idea).** Chart a new map.
 
 **A number or issue URL.** Load that issue.
 
 - Label `scry:map`: walk that map.
-- Label `scry:research`, `scry:prototype`, `scry:grilling`, or `scry:task`: walk its parent map and claim this ticket.
+- Label `scry:research`, `scry:prototype`, `scry:interrogation`, or `scry:task`: walk its parent map and claim this ticket.
+  Treat the legacy label `scry:grilling` as `scry:interrogation` when resuming existing tickets.
 - The same labels under the older `wayfinder:` prefix mean the same thing. Walk them as they are; do not relabel.
 - Any other issue: chart a new map whose destination is informed by that issue.
 
@@ -83,17 +84,17 @@ Exit 3 from the script means this token cannot write issues (usually HTTP 403). 
 
 ## Stage 2: Chart
 
-Load `references/map-shape.md`, `references/grilling.md`, and `references/domain.md`.
+Load `references/map-shape.md`, `references/interrogate.md`, and `references/domain.md`.
 
 ### 2a. Name the destination
 
-Grill until the destination is a sentence or two: the spec, decision, or in-place change this map is finding its way to. Update `CONTEXT.md` and ADRs as terms land.
+Interrogate the goal until the destination is a sentence or two: the spec, decision, or in-place change this map is finding its way to. Update `CONTEXT.md` and ADRs as terms land.
 
 The destination fixes the scope. Work past it belongs in Out of scope on the map, never in the ticket list.
 
 ### 2b. Map the frontier
 
-Grill again, breadth-first this time: fan across the space rather than deep on one thread. Surface the open decisions and the first steps takeable now.
+Interrogate the open decisions, breadth-first this time: fan across the space rather than deep on one thread. Surface the open decisions and the first steps takeable now.
 
 If this surfaces no fog (the way is already clear, and the whole journey fits one session), you do not need a map. Stop and ask how they want to proceed.
 
@@ -113,7 +114,7 @@ Notes record: domain; files every session should read; standing preferences; any
 
 A ticket is ready to file when you can state its **Question** precisely. Sharpness of the question matters. Whether you can answer it yet does not.
 
-Create each one as a child of the map, labelled `scry:<type>` (`research`, `prototype`, `grilling`, `task`). See Ticket types in `references/map-shape.md`.
+Create each one as a child of the map, labelled `scry:<type>` (`research`, `prototype`, `interrogation`, `task`). See Ticket types in `references/map-shape.md`.
 
 ```bash
 GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" create-ticket MAP_NUMBER TYPE "Title" <<'EOF'
@@ -174,14 +175,14 @@ Load the reference for its type, and only that type:
 
 | Type | Load |
 |------|------|
-| `grilling` | `references/grilling.md` and `references/domain.md` |
+| `interrogation` | `references/interrogate.md` and `references/domain.md` |
 | `research` | `references/research.md` |
-| `prototype` | `references/prototype.md`, then `references/grilling.md` once there is an artifact to react to |
+| `prototype` | `references/prototype.md`, then `references/interrogate.md` once there is an artifact to react to |
 | `task` | none. Do the work, or hand the user a precise checklist |
 
-If Notes name more files to read, read them. When the type is unclear, load grilling and domain.
+If Notes name more files to read, read them. When the type is unclear, load `interrogate.md` and `domain.md`.
 
-`you-pick` (or the user saying "make the decisions") accepts recommended grilling answers.
+`you-pick` (or the user saying "make the decisions") accepts recommended interrogation answers.
 
 ### 3d. Record
 
@@ -273,8 +274,8 @@ On another tracker, apply the same checks through its Wayfinding operations and 
 | `references/github-ops.md` | Stage 1 | How `map.sh` talks to GitHub, including exit 3 |
 | `references/map-shape.md` | Stage 2, Stage 3 | Map body, ticket types, fog, out of scope |
 | `references/handoff.md` | Stage 3a, Stage 3f | Completion handoff and closed-map revisit report |
-| `references/grilling.md` | Stage 2; Stage 3 on grilling or prototype | Design-tree interview |
-| `references/domain.md` | With grilling | Glossary and ADRs as terms land |
+| `references/interrogate.md` | Stage 2; Stage 3 on interrogation or prototype | Design-tree interview |
+| `references/domain.md` | With interrogation | Glossary and ADRs as terms land |
 | `references/research.md` | Stage 2e; Stage 3 on research | AFK cited notes under `docs/research/` |
 | `references/prototype.md` | Stage 3 on prototype | Cheap artifact to react to |
 | `references/scratch.md` | Stage 1, exit 3 only | Local map when GitHub writes fail |

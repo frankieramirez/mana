@@ -3,7 +3,7 @@
 #
 #   ensure-labels
 #   create-map    TITLE                 body on stdin
-#   create-ticket MAP TYPE TITLE        body on stdin; TYPE is research|prototype|grilling|task
+#   create-ticket MAP TYPE TITLE        body on stdin; TYPE is research|prototype|interrogation|task
 #   wire          CHILD BLOCKER
 #   frontier      MAP
 #   children      MAP                   all children, including closed
@@ -46,7 +46,7 @@ usage: map.sh <subcommand> [args]
   close         NUMBER [owner/repo]
   update-body   NUMBER [--expected-body PATH] [owner/repo] body on stdin
 
-TYPE is research, prototype, grilling, or task.
+TYPE is research, prototype, interrogation, or task.
 Exit 3 means this token cannot write issues; use the scratch fallback.
 EOF
 }
@@ -108,6 +108,7 @@ ticket_type() {
     [.labels[].name]
     | map(select((startswith("scry:") or startswith("wayfinder:")) and . != "scry:map" and . != "wayfinder:map"))
     | map(sub("^(scry|wayfinder):";""))
+    | map(if . == "grilling" then "interrogation" else . end)
     | first // ""
   '
 }
@@ -115,7 +116,7 @@ ticket_type() {
 cmd_ensure_labels() {
   local name existing
   existing=$(gh label list --repo "$OWNER/$REPO" --limit 100 --json name --jq '.[].name')
-  for name in scry:map scry:research scry:prototype scry:grilling scry:task; do
+  for name in scry:map scry:research scry:prototype scry:interrogation scry:task; do
     if printf '%s\n' "$existing" | grep -qxF "$name"; then
       continue
     fi
@@ -152,8 +153,8 @@ cmd_create_ticket() {
   local map="$1" typ="$2" title="$3"
   local tmp out url num child_id body attach_ec
   case "$typ" in
-    research|prototype|grilling|task) ;;
-    *) die "type must be research, prototype, grilling, or task (got '$typ')" ;;
+    research|prototype|interrogation|task) ;;
+    *) die "type must be research, prototype, interrogation, or task (got '$typ')" ;;
   esac
   tmp=$(mktemp)
   cat > "$tmp"

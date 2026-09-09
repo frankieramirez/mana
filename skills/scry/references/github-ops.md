@@ -8,7 +8,7 @@
 
 | Subcommand | Arguments | What it does |
 |------------|-----------|--------------|
-| `ensure-labels` | none | Creates `scry:map` and `scry:{research,prototype,grilling,task}` if missing |
+| `ensure-labels` | none | Creates `scry:map` and `scry:{research,prototype,interrogation,task}` if missing |
 | `create-map` | `TITLE`, body on stdin | Opens an issue labelled `scry:map`. Prints `number<TAB>url` |
 | `create-ticket` | `MAP_NUMBER TYPE TITLE`, body on stdin | Opens a child labelled `scry:TYPE`, attaches it as a sub-issue. Prints `number<TAB>url` |
 | `wire` | `CHILD_NUMBER BLOCKER_NUMBER` | CHILD is blocked by BLOCKER (database id under the hood) |

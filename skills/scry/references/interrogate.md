@@ -1,4 +1,4 @@
-# Grilling
+# Interrogation
 
 Interview the user until you share an understanding. Map the work as a **design tree**: every settled decision unblocks the decisions that hang off it.
 
@@ -19,4 +19,4 @@ The decisions are the user's. Put each one to them and wait.
 
 **`you-pick`.** If the invocation included `you-pick`, or the user said "make the decisions", "you pick", or "you decide", treat every recommended answer in that round as accepted and continue. Still show the questions and the answers you took, so they can override.
 
-The session is done when the frontier is empty: every branch visited, nothing left silently assumed. Do not act on the result until the user confirms you have a shared understanding, unless `you-pick` already covered that confirmation.
+The interview is done when every branch of this ticket's question is settled, with nothing left silently assumed. An empty map frontier can also mean work is assigned or blocked; map completion is checked separately in Stage 3f. Do not act on the result until the user confirms you have a shared understanding, unless `you-pick` already covered that confirmation.
