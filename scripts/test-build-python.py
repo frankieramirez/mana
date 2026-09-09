@@ -121,6 +121,9 @@ class LinearTransport:
                 self.updates.append((issue["identifier"], payload["description"]))
             if "parentId" in payload:
                 issue["parent"] = {"id": payload["parentId"]}
+            if "assigneeId" in payload:
+                issue["assignee"] = {"id": payload["assigneeId"], "name": "Fixture"} if payload["assigneeId"] else None
+                self.updates.append((issue["identifier"], "assignee", payload["assigneeId"]))
             return {"issueUpdate": {"success": True}}
         if "issueRelationCreate" in query:
             return {"issueRelationCreate": {"success": True}}
@@ -158,6 +161,14 @@ class JiraTransport:
         return self.issue(key, summary, description)
 
     def api(self, method, path, payload=None):
+        if method == "GET" and path == "/myself":
+            return {"accountId": "me", "displayName": "Fixture"}
+        if method == "PUT" and path.startswith("/issue/") and path.endswith("/assignee"):
+            key = path.split("/")[2]
+            account = (payload or {}).get("accountId")
+            self.issues[key]["fields"]["assignee"] = {"accountId": account} if account else None
+            self.updates.append((key, "assignee", account))
+            return {}
         if method == "GET" and path.startswith("/issue/"):
             key = path.split("/")[2].split("?")[0]
             return self.issues[key]
@@ -320,6 +331,24 @@ class AdapterContract(unittest.TestCase):
         self.assertIn("READY-NEXT", printed)
         self.assertNotIn("BUILD-NEXT", printed)
 
+    def test_linear_claim_never_assigns_a_build_parent(self):
+        ns = load_python_adapter("linear")
+        transport = LinearTransport(ns)
+        build = transport.issue_for_test("BUILD-NEXT", "Build index", "Work kind: build")
+        ready = transport.issue_for_test("READY-NEXT", "Ready implementation", "Build parent: [Build](parent)")
+        transport.issues.update({"BUILD-NEXT": build, "READY-NEXT": ready})
+        keys = ("identifier", "title", "url", "createdAt", "updatedAt", "labels", "assignee", "inverseRelations")
+        transport.base.open_issues = lambda **_: [{k: build[k] for k in keys}, {k: ready[k] for k in keys}]
+        _, printed = output_of(transport.base.next, "ready-for-agent", True)
+        self.assertIn("READY-NEXT", printed)
+        self.assertNotIn("BUILD-NEXT", printed)
+        self.assertEqual(ready["assignee"]["id"], "me")
+        self.assertIsNone(build["assignee"])
+        # The post-claim recheck rejects a build parent even when it is assigned to us.
+        build["assignee"] = {"id": "me", "name": "Fixture"}
+        self.assertFalse(transport.base.still_ready("BUILD-NEXT", "ready-for-agent", "me"))
+        self.assertTrue(transport.base.still_ready("READY-NEXT", "ready-for-agent", "me"))
+
     def test_jira_next_rechecks_full_description_before_claiming(self):
         ns = load_python_adapter("jira")
         transport = JiraTransport(ns)
@@ -335,6 +364,33 @@ class AdapterContract(unittest.TestCase):
         _, printed = output_of(transport.base.next, "ready-for-agent", False)
         self.assertIn("PROJ-7", printed)
         self.assertNotIn("PROJ-8", printed)
+
+    def test_jira_claim_never_assigns_a_build_parent(self):
+        ns = load_python_adapter("jira")
+        transport = JiraTransport(ns)
+        build = transport.issue_for_test("PROJ-8", "Build index", "Work kind: build")
+        ready = transport.issue_for_test("PROJ-7", "Ready implementation", "Build parent: [Build](parent)")
+        transport.issues.update({"PROJ-8": build, "PROJ-7": ready})
+        transport.base.search = lambda *_args, **_kwargs: [
+            {"key": "PROJ-8", "fields": {"summary": "Build index", "created": "1", "assignee": None,
+                "status": {"statusCategory": {"key": "indeterminate"}}, "issuelinks": []}},
+            {"key": "PROJ-7", "fields": {"summary": "Ready implementation", "created": "2", "assignee": None,
+                "status": {"statusCategory": {"key": "indeterminate"}}, "issuelinks": []}},
+        ]
+        _, printed = output_of(transport.base.next, "ready-for-agent", True)
+        self.assertIn("PROJ-7", printed)
+        self.assertNotIn("PROJ-8", printed)
+        self.assertEqual(ready["fields"]["assignee"]["accountId"], "me")
+        self.assertIsNone(build["fields"]["assignee"])
+        build["fields"]["assignee"] = {"accountId": "me"}
+        self.assertFalse(transport.base.still_ready("PROJ-8", "ready-for-agent", "me"))
+        self.assertTrue(transport.base.still_ready("PROJ-7", "ready-for-agent", "me"))
+
+    def test_build_links_accepts_crlf_bodies(self):
+        ns = load_python_adapter("linear")
+        body = "Build parent: [Build](https://linear.example/BLD-1)\r\n\r\nbrief"
+        self.assertEqual(ns["build_links"](body), ["https://linear.example/BLD-1"])
+        self.assertTrue(ns["is_build"]("Work kind: build\r\n\r\n## Build order"))
 
 
 if __name__ == "__main__":

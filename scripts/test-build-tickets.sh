@@ -88,7 +88,7 @@ elif a[0]=='api':
         elif 'Build parent:' in q:
             assert 'split("\\n")' in q, q
             for k,d in state.items():
-                if re.search(r'^Build parent: \[.*\]\(https://github.com/acme/widgets/issues/1\)$',d['body'],re.M): print(k)
+                if re.search(r'^Build parent: \[.*\]\(https://github.com/acme/widgets/issues/1\)$',d['body'].replace('\r',''),re.M): print(k)
         else: fail('unexpected all-state query: '+q)
     elif endpoint.endswith('/issues'):
         assert '--paginate' in a and 'Work kind: build' in q
@@ -103,16 +103,19 @@ python3 - <<'PY'
 import json,os
 from pathlib import Path
 state={str(n):{'title':f'Issue {n}','url':f'https://github.com/acme/widgets/issues/{n}',
- 'state':'OPEN','body':'Slice literal [x].','parent':None} for n in range(1,7)}
-state['1']['body']='Work kind: build\n\n## Destination\nDeliver the feature'
+ 'state':'OPEN','body':'Slice literal [x].','parent':None} for n in range(1,8)}
+# Bodies edited in the GitHub web UI come back with CRLF; the parent and issue 7 carry it.
+state['1']['body']='Work kind: build\r\n\r\n## Destination\r\nDeliver the feature'
 state['3'].update(state='CLOSED',body='Build parent: [Build](https://github.com/acme/widgets/issues/1)')
 state['6'].update(parent='5')
+state['7']['body']='Build parent: [Build](https://github.com/acme/widgets/issues/1)\r\n\r\nSlice literal [x].'
 Path(os.environ['GH_FIXTURE'],'state.json').write_text(json.dumps(state))
 PY
 run() { bash "$root/skills/sift/scripts/tickets.sh" --repo acme/widgets "$@"; }
 expect_fail() { if "$@" > "$tmp/out" 2> "$tmp/err"; then echo "unexpected success: $*" >&2; exit 1; fi; }
 run body 1 > "$tmp/snapshot"
-run update-body 1 --expected-body "$tmp/snapshot" < "$tmp/snapshot"
+! grep -q $'\r' "$tmp/snapshot"
+printf 'Work kind: build\r\n\r\n## Destination\r\nDeliver the feature\r\n' | run update-body 1 --expected-body "$tmp/snapshot"
 printf 'stale\n' > "$tmp/stale"
 expect_fail run update-body 1 --expected-body "$tmp/stale" <<< replacement
 grep -q 'differs' "$tmp/err"
@@ -129,11 +132,20 @@ NATIVE=403 expect_fail run attach 4 1
 [ "$(wc -l < "$tmp/mutations")" -eq "$before" ]
 NATIVE=404 run attach 4 1 2>/dev/null
 run body 4 | grep -q '^Build parent:'
+# Issue 7 already carries the link with CRLF endings: attach adds the native
+# parent and must not prepend a second link.
+run attach 7 1
+tail -n 1 "$tmp/mutations" | grep -qx 'attach 7'
+[ "$(run body 7 | grep -c '^Build parent:')" -eq 1 ]
+before=$(wc -l < "$tmp/mutations")
+run attach 7 1
+[ "$(wc -l < "$tmp/mutations")" -eq "$before" ]
 run children 1 > "$tmp/children"
-[ "$(wc -l < "$tmp/children")" -eq 3 ]
+[ "$(wc -l < "$tmp/children")" -eq 4 ]
 grep -q $'^3\tCLOSED\t' "$tmp/children"
+grep -q $'^7\tOPEN\t' "$tmp/children"
 NATIVE=404 run children 1 > "$tmp/fallback"
-cmp "$tmp/children" "$tmp/fallback"
+diff <(sort "$tmp/children") <(sort "$tmp/fallback")
 NATIVE=fail expect_fail run children 1
 [ ! -s "$tmp/out" ]
 SCAN_FAIL=1 expect_fail run children 1
@@ -147,5 +159,10 @@ SCAN_FAIL=1 expect_fail run find literal
 run next ready > "$tmp/next"
 grep -q $'^2\t' "$tmp/next"
 ! grep -q $'^1\t' "$tmp/next"
+run next ready --claim > "$tmp/claimed"
+grep -q $'^2\t' "$tmp/claimed"
+! grep -q $'^1\t' "$tmp/claimed"
+grep -q '^edit 2$' "$tmp/mutations"
+! grep -q '^edit 1$' "$tmp/mutations"
 python3 "$root/scripts/test-build-python.py"
 echo 'build ticket adapter fixtures: ok'

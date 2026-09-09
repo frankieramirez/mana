@@ -166,7 +166,7 @@ gh_is_blocked() {
     [ "${raw:-0}" -gt 0 ]
     return
   fi
-  body=$(gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body)
+  body=$(gh_body "$n")
   ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
   for id in $ids; do
     [ -n "$id" ] || continue
@@ -236,9 +236,12 @@ gh_is_build_body() {
   printf '%s\n' "$body" | grep -qxF 'Work kind: build'
 }
 
+# Bodies edited in the GitHub web UI come back with CRLF line endings, and
+# every marker below is an exact line match, so strip the carriage returns
+# once here. Every body read in this file goes through this function.
 gh_body() {
   local n="$1"
-  gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body
+  gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body | tr -d '\r'
 }
 
 gh_update_body() {
@@ -318,22 +321,40 @@ gh_attach_native() {
   return "$ec"
 }
 
-gh_explicit_build_link() {
-  local child="$1" parent="$2" parent_title="$3" parent_url="$4"
-  local body target tmp line existing_url
-  body=$(gh_body "$child") || die "cannot read build ticket $child"
-  target="Build parent: ["$parent_title"]("$parent_url")"
+# Print the URL from the first "Build parent: [title](url)" line in a body,
+# or nothing when the body has no such line. The Python adapter has the same
+# rule in build_links().
+gh_build_parent_url() {
+  local body="$1" line
   while IFS= read -r line; do
     case "$line" in
       'Build parent: ['*)
-        existing_url="$line"
-        existing_url="${existing_url##*](}"
-        existing_url="${existing_url%)}"
-        [ "$existing_url" = "$parent_url" ] || die "ticket $child already names another build parent"
+        line="${line##*](}"
+        printf '%s\n' "${line%)}"
         return 0
         ;;
     esac
   done <<< "$body"
+}
+
+# Die when a body already names a different build parent. Prints "linked" when
+# it names this one and nothing when it names none.
+gh_check_build_link() {
+  local child="$1" body="$2" parent_url="$3" existing_url
+  existing_url=$(gh_build_parent_url "$body")
+  [ -n "$existing_url" ] || return 0
+  [ "$existing_url" = "$parent_url" ] || die "ticket $child already names another build parent"
+  printf 'linked\n'
+}
+
+gh_explicit_build_link() {
+  local child="$1" parent="$2" parent_title="$3" parent_url="$4"
+  local body target tmp
+  body=$(gh_body "$child") || die "cannot read build ticket $child"
+  target="Build parent: ["$parent_title"]("$parent_url")"
+  local linked
+  linked=$(gh_check_build_link "$child" "$body" "$parent_url") || exit $?
+  [ -z "$linked" ] || return 0
   tmp=$(mktemp)
   if [ -n "$body" ]; then
     printf '%s\n\n%s\n' "$target" "$body" > "$tmp"
@@ -345,18 +366,9 @@ gh_explicit_build_link() {
 }
 
 gh_validate_build_link() {
-  local child="$1" parent_url="$2" body line existing_url
+  local child="$1" parent_url="$2" body
   body=$(gh_body "$child") || die "cannot read build ticket $child"
-  while IFS= read -r line; do
-    case "$line" in
-      'Build parent: ['*)
-        existing_url="$line"
-        existing_url="${existing_url##*](}"
-        existing_url="${existing_url%)}"
-        [ "$existing_url" = "$parent_url" ] || die "ticket $child already names another build parent"
-        ;;
-    esac
-  done <<< "$body"
+  gh_check_build_link "$child" "$body" "$parent_url" >/dev/null
 }
 
 gh_attach() {
@@ -400,7 +412,7 @@ gh_membership_jq() {
   local parent_url="$1" escaped
   escaped=${parent_url//\\/\\\\}
   escaped=${escaped//\"/\\\"}
-  printf '.[] | select(.pull_request == null) | select((.body // "") | split("\\n") | any(startswith("Build parent: [") and endswith("](%s)"))) | .number\n' "$escaped"
+  printf '.[] | select(.pull_request == null) | select((.body // "") | gsub("\\r"; "") | split("\\n") | any(startswith("Build parent: [") and endswith("](%s)"))) | .number\n' "$escaped"
 }
 
 gh_child_numbers() {
@@ -479,7 +491,7 @@ gh_wire() {
   local blocker_id body tmp
   blocker_id=$(db_id "$blocker")
   if ! api_write --method POST "repos/${OWNER}/${REPO}/issues/${child}/dependencies/blocked_by" -F "issue_id=${blocker_id}"; then
-    body=$(gh issue view --repo "$OWNER/$REPO" "$child" --json body --jq .body)
+    body=$(gh_body "$child")
     tmp=$(mktemp)
     printf 'Blocked by: #%s\n\n%s\n' "$blocker" "$body" > "$tmp"
     run_gh gh issue edit --repo "$OWNER/$REPO" "$child" --body-file "$tmp"
@@ -495,7 +507,7 @@ gh_still_ready() {
     OPEN|open) ;;
     *) return 1 ;;
   esac
-  body=$(gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body) || return 1
+  body=$(gh_body "$n") || return 1
   gh_is_build_body "$body" && return 1
   gh issue view --repo "$OWNER/$REPO" "$n" --json labels --jq '.labels[].name' | grep -qxF "$label" || return 1
   gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '.assignees[].login' | grep -qxF "$me" || return 1
@@ -522,7 +534,7 @@ gh_next() {
     .[]
     | select(.pull_request == null)
     | select((.assignees | length) == 0)
-    | select((.body // "") | split("\n") | any(. == "Work kind: build") | not)
+    | select((.body // "") | gsub("\r"; "") | split("\n") | any(. == "Work kind: build") | not)
     | [.created_at, (.number|tostring), .title, .html_url]
     | @tsv
   ') || die "cannot enumerate ready tickets"
@@ -694,7 +706,8 @@ def is_build(body):
 
 
 def build_links(body):
-    return re.findall(r"^Build parent: \[.*\]\((.+)\)$", body or "", re.M)
+    body = (body or "").replace("\r\n", "\n").replace("\r", "\n")
+    return re.findall(r"^Build parent: \[.*\]\((.+)\)$", body, re.M)
 
 
 def linked_body(body, parent_url, title):

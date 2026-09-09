@@ -40,4 +40,12 @@ Finish with the build parent's linked title, the current result, and one concret
 - Blocked or uncertain: name the unmet requirement or failed read and provide a prompt to resolve or recheck it.
 - Delivered: say the effort is complete. Name a documented follow-up only when one exists; otherwise say no further work is required for this destination.
 
-Update an open parent's **Next step** when it changes, using `body PARENT_ID` to save a fresh raw body to a private temporary file, deriving the replacement from that snapshot, and passing its absolute path to `update-body PARENT_ID --expected-body PATH`. Abort on a read failure or mismatch and delete the snapshot after the update; on a connector or local file, compare before writing. Preserve all other sections, and re-read after writing. An unchanged result needs no tracker write. A ticket lacking a build-parent link follows its existing workflow; legacy planning-source links alone do not authorize closing the planning map as a build parent.
+Update an open parent's **Next step** when it changes. Save a fresh raw body with `body PARENT_ID` to a private temporary file, derive the replacement from that snapshot, then write it with the guard. The replacement body goes on stdin; the snapshot path only guards the write:
+
+```bash
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> update-body PARENT_ID --expected-body '<recorded absolute snapshot path>' <<'EOF_BODY'
+<replacement derived from the snapshot>
+EOF_BODY
+```
+
+Abort on a read failure or mismatch and delete the snapshot after the update; on a connector or local file, compare before writing. Preserve all other sections, and re-read after writing. An unchanged result needs no tracker write. A ticket lacking a build-parent link follows its existing workflow; legacy planning-source links alone do not authorize closing the planning map as a build parent.
