@@ -54,11 +54,13 @@ Update `metadata.json` with `report` set to that path.
 
 ## Terminal summary
 
-Print the report path first, then the top candidates. Keep it short; the report is the deliverable.
+Before invoking the Stage 6 question tool, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. Use the actual absolute path, for example `[Open frontend audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing an action, including when there are no candidates.
+
+Use this shape as prose, not a fenced code block:
 
 ```
 Frontend audit: <repo> at <short sha>, scope <path>
-Report: <path>   (open it in a browser)
+[Open frontend audit report](<absolute report path>)
 
 Top candidates
   1. <title>  [<lens>, strength <n>, <k> instances, effort <S|M|L>]
@@ -69,7 +71,7 @@ Strong <n>, weaker <n>, dismissed <n>.
 Coverage: lenses <ok list>; missing <list or none>; docs consulted <list>; lint deferred to <list or none>.
 ```
 
-On macOS you may offer `open <path>` as a command. Do not run it unprompted.
+Say briefly that the report is stored temporarily and should be saved elsewhere if the user wants to keep it. If the host supports a local file preview, open the report there as part of delivery and retain the link. If local links are unsupported, provide the absolute path and a platform-appropriate browser-opening command before asking the question. On macOS you may offer `open <quoted absolute path>` as a command. Do not launch an external application unprompted.
 
 ## Action modes
 
