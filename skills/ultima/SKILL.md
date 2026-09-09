@@ -49,7 +49,7 @@ Follow these boundaries in order. References supply detail but never change the 
 - **Never switch branches.** The audit reads the current checkout. `path:` narrows what is read, never what may be mutated.
 - **Patterns, not points.** A candidate has three or more quoted instances or it is weak. A single bug belongs to a code review.
 - **The report is rendered by the script.** It embeds quoted repo code, and the script escapes it. Never hand-write the HTML.
-- **Report outcomes, not machinery.** Say what was audited, which lenses ran, and what they found. Keep the run directory, script calls, and JSON shapes quiet unless something failed.
+- **Report outcomes, not machinery.** Say what was audited, which lenses ran, and what they found. Always deliver the report link; keep intermediate artifact paths, script calls, and JSON shapes quiet unless something failed.
 - **Nothing leaves the machine.** Lenses are local subagents. The report is a local file.
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
@@ -129,7 +129,9 @@ Read `references/finish-audit.md` in full and follow it: merge pass 1, your reco
 
 ## Stage 6: Choose what happens next
 
-After the summary is printed, ask **one** question, unless `report`, `tickets`, or `fix` already answered it.
+After Stage 5 delivers the report as a clickable link in a user-visible message, ask **one** question, unless `report`, `tickets`, or `fix` already answered it. Shell output and a path inside a code block do not deliver the report. Never defer the link until the user chooses **Report only**. Action tokens skip the question, but still receive the report link before the action starts.
+
+Begin the question with "Review the [frontend audit report](<absolute report path>), then choose what happens next." Substitute the actual path and retain the link in the preceding message even if the question tool cannot render links. The user must be able to open the report while the choice is pending.
 
 Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded) with these three options:
 

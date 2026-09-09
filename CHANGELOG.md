@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.25.2
+
+- Ultima makes report delivery unconditional before Stage 6, including explicit action modes. The absolute path and browser-opening command fallback also precede those actions.
+
+## 0.25.1
+
+- Ultima delivers a clickable report link before asking what to do next, repeats it in the action question, and opens a local preview when supported. Explicit action modes also receive the report before proceeding. Delivery explains that reports use temporary storage.
+
 ## 0.25.0
 
 - Completed maps save an actionable handoff. Implementation gets a separate build parent with resumable ticket filing, legacy ticket reuse, and a first-ticket prompt. Build sessions and parent revisits check delivery evidence before closeout, keeping efforts open while PRs await review. Tracker adapters support build membership and guarded parent updates, including local fallback. Build markers and membership links are read the same way when a body was edited in the GitHub web UI and carries CRLF line endings.
