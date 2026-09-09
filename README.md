@@ -438,7 +438,7 @@ The planning map stays closed. Its handoff links the new `Build: <outcome>` pare
 
 After a build session, the agent checks the parent and names the next available ticket or pending review. A PR awaiting merge keeps the effort open. Once all required tickets are complete and the implementation destination is delivered, a progress check closes the parent. These checks run during sessions; no background automation is installed.
 
-For local trackers or refused writes, the parent lives in `.scratch/<slug>/build.md` and missing tickets in `.scratch/<slug>/tickets/`. Any remote tickets already created keep their links.
+A refused remote write keeps the parent in `.scratch/<slug>/build.md` and missing tickets in `.scratch/<slug>/tickets/`. A configured local tracker keeps the parent and its tickets in its own ticket directory instead. Any remote tickets already created keep their links.
 
 </details>
 

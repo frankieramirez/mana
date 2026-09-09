@@ -78,7 +78,7 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> next <ready string> --clai
 
 Empty output means nothing is ready. Say so in one line and stop; a loop that calls this on a schedule should stay quiet. `--claim` assigns the ticket only while it is still open, still carries the ready label, and is still unblocked; otherwise the script releases it and tries the next candidate. The first field is the ticket id. Do not call `claim` again on this path.
 
-**Id, URL, or local path.** Read the issue or file first to identify its role. If its body contains `Work kind: build`, load `references/build-progress.md`, report progress, and stop without claiming it or creating a branch. Otherwise claim the ticket before implementation. An explicit ticket id does not have to carry the ready label:
+**Id, URL, or local path.** Read the issue or file first to identify its role. If its body contains the exact line `Work kind: build`, load `references/build-progress.md`, report progress, and stop without claiming it or creating a branch. Otherwise claim the ticket before implementation. An explicit ticket id does not have to carry the ready label:
 
 ```bash
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> claim ID

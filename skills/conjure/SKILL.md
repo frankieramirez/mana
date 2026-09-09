@@ -48,8 +48,8 @@ Parse tokens, then treat the remainder as the source.
 | Input | Source |
 |-------|--------|
 | none | The plan or spec already in this conversation. If none is obvious, stop and ask. |
-| number or issue URL | Read that issue. `Work kind: build` identifies a build parent to resume. Labelled `scry:map` (or `wayfinder:map`): the planning source. Any other issue: its body is the spec. |
-| a path | Read the file. `Work kind: build` identifies a local build parent; otherwise it is the spec |
+| number or issue URL | Read that issue. A body with the exact line `Work kind: build` identifies a build parent to resume. Labelled `scry:map` (or `wayfinder:map`): the planning source. Any other issue: its body is the spec. |
+| a path | Read the file. The exact line `Work kind: build` identifies a local build parent; otherwise it is the spec |
 
 ## Execution spine
 
