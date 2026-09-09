@@ -9,7 +9,7 @@ Host: github.com
 
 ## Conventions
 
-Every write goes through the adapter script the skills carry (`tickets.sh`): create, wire, next, claim, label, comment, close. Reads may use `gh issue view` and `gh issue list` directly.
+Every write goes through the adapter script the skills carry (`tickets.sh`): create, attach, wire, next, claim, label, comment, update-body, close. Reads may use `gh issue view` and `gh issue list` directly.
 
 ## Pull requests as a request surface
 

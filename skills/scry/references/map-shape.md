@@ -28,7 +28,17 @@ Open tickets are omitted from the body. They are children, found by `map.sh fron
 <!-- work ruled past this destination; closed, never graduates -->
 ```
 
-At closeout, append a **Completion** section to the map with a brief explanation of how the destination was reached and links to resulting documents. Stage 3f checks completion before closing the parent; the child progress count alone is insufficient.
+At closeout, append a **Completion** section to the map with a brief explanation of how the destination was reached and links to resulting documents. Include a **Next step** subsection that follows `references/handoff.md`. Stage 3f checks completion before closing the parent; the child progress count alone is insufficient.
+
+```markdown
+## Completion
+
+<how the destination was reached, with links to resulting documents>
+
+### Next step
+
+<existing build effort and first available ticket, a statement that the destination is complete, or the copyable implementation prompt>
+```
 
 ## Tickets
 

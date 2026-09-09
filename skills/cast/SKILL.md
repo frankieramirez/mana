@@ -56,6 +56,7 @@ Parse tokens, then treat the remainder as the target.
 3. Clean up comments in this session's changes (Stage 2a), then check the diff against the ticket (Stage 3).
 4. Commit, and push only when the branch already has an upstream (Stage 4).
 5. Capture proof and open the pull request (Stage 5). Skip when `no-pr`.
+6. Report the ticket result, then check its build parent and give the next action (Stage 6).
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
@@ -65,7 +66,7 @@ Parse tokens, then treat the remainder as the target.
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too. Ticket ids are whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`).
 
-The operations below are `next`, `claim`, and `view`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Inside an Orca worktree, `orca linear` is such a connector for Linear: `orca linear issue <id> --comments --relations --json` is `view`, `orca linear assignee set` is `claim`, and `orca linear --help` lists the rest. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered file with `Status: ready-for-agent` and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
+The operations below are `next`, `claim`, and `view`; build progress also uses `children`, `body`, `update-body`, `comment`, and `close`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Inside an Orca worktree, `orca linear` is such a connector for Linear: `orca linear issue <id> --comments --relations --json` is `view`, `orca linear assignee set` is `claim`, and `orca linear --help` lists the rest. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation, excluding bodies marked `Work kind: build`. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is a build parent, closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered ticket file with `Status: ready-for-agent`, no `Work kind: build` marker, and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
 
 ## Stage 1: Load
 
@@ -77,7 +78,7 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> next <ready string> --clai
 
 Empty output means nothing is ready. Say so in one line and stop; a loop that calls this on a schedule should stay quiet. `--claim` assigns the ticket only while it is still open, still carries the ready label, and is still unblocked; otherwise the script releases it and tries the next candidate. The first field is the ticket id. Do not call `claim` again on this path.
 
-**Id or URL.** Claim it before reading further. An explicit id does not have to carry the ready label:
+**Id, URL, or local path.** Read the issue or file first to identify its role. If its body contains `Work kind: build`, load `references/build-progress.md`, report progress, and stop without claiming it or creating a branch. Otherwise claim the ticket before implementation. An explicit ticket id does not have to carry the ready label:
 
 ```bash
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> claim ID
@@ -90,6 +91,8 @@ Fetch the ticket with its comments:
 ```bash
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view ID
 ```
+
+Retain the ticket's `Build parent:` link for Stage 6 even when a linked spec or newer brief takes precedence. A `Builds toward:` link alone is legacy planning provenance. `Planning source:` and parent links supply context; they do not replace the ticket's brief with the whole effort's spec.
 
 Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec path named in the body; the ticket body itself.
 
@@ -209,6 +212,12 @@ orca worktree set --worktree active --workspace-status in-review --comment "PR <
 
 On Linear, also attach the PR to the issue so it shows there before the merge: `orca linear attach <ENG-42> --url <pr url> --title "Pull request" --json`.
 
+## Stage 6: Build progress
+
+After preparing the ticket result below, load `references/build-progress.md` when the ticket has a `Build parent:` link. Check the parent and append the next action to the same final response. Run this after `no-pr` too. A publishing failure still gets a progress report when the tracker is readable. An open PR remains pending review; do not close its ticket or the parent merely because this session finished implementation. Stop after the handoff rather than beginning another ticket.
+
+For a local ticket or a direct local build-parent path, use its file membership and the same reference. A direct parent path only checks progress. A ticket without a build parent retains its current workflow.
+
 ## Report
 
 ```
@@ -224,6 +233,8 @@ Comment cleanup: <skipped: reason | deleted count, repairs, and open items>
 Validation: <one line>
 Orca: <linked <id>, in-review | not present | failed: reason>
 Open: <any criterion left unmet, or none>
+Build effort: <linked parent and progress, or none>
+Next step: <concrete ticket, review, or closeout prompt; or destination complete>
 ```
 
 ## Scripts
@@ -234,6 +245,7 @@ Open: <any criterion left unmet, or none>
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
+| `references/build-progress.md` | Stage 6 or direct build-parent input | Parent evidence checks, closeout, and next action |
 | `references/tdd.md` | Stage 2, for meaningful behavior changes with a test harness | Red-green at agreed seams |
 | `references/comment-cleanup.md` | Stage 2a, when this session changes code comments | Audit deletions and repair confusing code |
 | `references/comment-reaper.md` | Stage 2a, through comment cleanup | Scoped comment reviewer instructions |

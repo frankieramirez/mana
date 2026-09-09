@@ -9,7 +9,7 @@ Host: https://linear.app/<workspace>
 
 ## Conventions
 
-Every write goes through the adapter script the skills carry (`tickets.sh --tracker linear --project <TEAM KEY>`): create, wire, next, claim, label, comment, close. `view` and `list` read. Labels are Linear labels on this team; the triage states are labels too, not workflow states. "Open" means any workflow state that is not completed or canceled. `close` moves the issue to the team's first completed state.
+Every write goes through the adapter script the skills carry (`tickets.sh --tracker linear --project <TEAM KEY>`): create, attach, wire, next, claim, label, comment, update-body, close. `view`, `list`, `body`, and `children` read. Labels are Linear labels on this team; the triage states are labels too, not workflow states. "Open" means any workflow state that is not completed or canceled. `close` moves the issue to the team's first completed state.
 
 Pull requests stay on GitHub. A pull request that resolves a Linear issue puts the key in its branch name or title and ends its body with `Closes ENG-42`, which Linear's GitHub integration reads.
 

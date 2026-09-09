@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.24.0
+
+- Completed maps save an actionable handoff. Implementation gets a separate build parent with resumable ticket filing, legacy ticket reuse, and a first-ticket prompt. Build sessions and parent revisits check delivery evidence before closeout, keeping efforts open while PRs await review. Tracker adapters support build membership and guarded parent updates, including local fallback.
+
 ## 0.23.1
 
 - Cast automatically audits comments added or modified during implementation before its spec check. The bundled reviewer preserves protected comments, keeps repairs inside the ticket, and requires fresh validation after cleanup edits. Runs without changed code comments skip the pass.

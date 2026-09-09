@@ -154,7 +154,7 @@ GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" frontier MAP_NUMBER
 
 Orient to Destination and Notes before picking a ticket.
 
-If the map is already closed, report that and stop without another completion note. Otherwise run Stage 3f's closeout check before choosing work. If the map is finished, close it and stop. If the frontier is empty but the map remains unfinished, report what keeps it open: assigned or blocked tickets, unresolved fog, or an unmet destination. Specify remaining in-scope questions where possible; ask only about choices the available decisions do not settle. If no ticket can be worked, stop after reporting the remaining work.
+If the map is already closed, load `references/handoff.md` and produce the read-only handoff report it specifies. Do not add another completion note or change the map. Prefer an existing linked build effort and its available tickets. If none exists, follow that reference to identify implementation, another decision, or a destination requiring no further work. Stop after the handoff report. Otherwise run Stage 3f's closeout check before choosing work. If the map is finished, close it and stop. If the frontier is empty but the map remains unfinished, report what keeps it open: assigned or blocked tickets, unresolved fog, or an unmet destination. Specify remaining in-scope questions where possible; ask only about choices the available decisions do not settle. If no ticket can be worked, stop after reporting the remaining work.
 
 ### 3b. Choose and claim
 
@@ -238,7 +238,7 @@ printf 'original_body=%s\n' "$snapshot_path"
 
 An empty frontier or a full child progress count alone does not establish completion. Every child must be closed. Review **Not yet specified** against the recorded decisions: clear resolved fog, move work beyond the destination to **Out of scope** with a reason, and keep any unresolved in-scope question visible. Verify that **Destination** is reached under the map's **Notes**, and that required owning documents contain the decisions. Read individual resolutions when the gists do not establish this. Closed tickets that were invalidated or ruled out do not by themselves prove the destination was reached.
 
-If anything remains, keep the map open and tell the user what remains. Do not start building merely to close a decision map. If nothing remains, preserve the other sections and prepare any cleanup and a brief **Completion** section stating how the destination was reached and linking any resulting spec or owning document. Update an existing completion note when retrying after a failed close.
+If anything remains, keep the map open and tell the user what remains. Do not start building merely to close a decision map. If nothing remains, preserve the other sections and prepare any cleanup and a brief **Completion** section stating how the destination was reached and linking any resulting spec or owning document. Load `references/handoff.md` and add a durable **Next step** subsection: identify an existing build effort if one is linked, state that the destination is complete when no downstream work is required, or include the copyable implementation prompt with this map's URL and intended outcome. Update an existing completion note when retrying after a failed close.
 
 Shell variables do not persist between calls. Record the printed absolute path, then set `original_body` to that exact path in the update call below. Read the body and prepare the replacement from that snapshot. Write it with the guard, and stop without running `close-map` if the snapshot is missing, the read fails, or the current body differs:
 
@@ -260,7 +260,7 @@ The guard detects stale snapshots between the read and comparison. It cannot eli
 GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" close-map MAP_NUMBER
 ```
 
-`close-map` rechecks child states before closing; the agent owns the destination and fog checks above. If a read fails or a child remains open, report the reason and leave the map open. Confirm the final state with `view` before reporting it closed.
+`close-map` rechecks child states before closing; the agent owns the destination and fog checks above. If a read fails or a child remains open, report the reason and leave the map open. Confirm the final state with `view` before reporting it closed. The final response must include the **Next step** and its exact copyable action, even when no tickets remain open.
 
 On another tracker, apply the same checks through its Wayfinding operations and close the parent using that tracker. For a scratch map, check every linked ticket file, append the completion note to the map, and set its `Status: closed`. A map already closed needs no further write.
 
@@ -272,6 +272,7 @@ On another tracker, apply the same checks through its Wayfinding operations and 
 |-----------|---------|---------|
 | `references/github-ops.md` | Stage 1 | How `map.sh` talks to GitHub, including exit 3 |
 | `references/map-shape.md` | Stage 2, Stage 3 | Map body, ticket types, fog, out of scope |
+| `references/handoff.md` | Stage 3a, Stage 3f | Completion handoff and closed-map revisit report |
 | `references/grilling.md` | Stage 2; Stage 3 on grilling or prototype | Design-tree interview |
 | `references/domain.md` | With grilling | Glossary and ADRs as terms land |
 | `references/research.md` | Stage 2e; Stage 3 on research | AFK cited notes under `docs/research/` |

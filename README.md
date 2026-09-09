@@ -409,27 +409,35 @@ Tracker labels are `scry:map` and `scry:<type>`. Existing maps with `wayfinder:*
 
 ### conjure
 
-Turns a finished map, spec, or conversation plan into build tickets in dependency order.
+Turns a finished map, spec, or conversation plan into a separate build effort with implementation tickets in dependency order. It also resumes interrupted filing and checks delivery progress.
 
 - Each ticket is a session-sized vertical slice with an agent brief and blocking dependencies.
 - Shows the proposed slices and order before filing; `you-pick` accepts the recommendation.
+- The build parent records the delivery destination and stays outside the ready-ticket queue.
+- Reuses existing tickets and finishes with the exact next action.
 
 ```text
-# Create tickets from a spec
+# Create a build effort from a spec
 /mana:conjure docs/spec.md
 
 # Use the plan in this conversation
 /mana:conjure you-pick
+
+# Use a completed planning map as the source
+/mana:conjure 92
+
+# Resume filing or check progress on the build parent
+/mana:conjure 120
 ```
 
 <details>
-<summary>Map handoff and write fallback</summary>
+<summary>Planning source, delivery tracking, and write fallback</summary>
 
-On a decision map, conjure posts the build order as a comment. If the token cannot create issues, it saves the same tickets under `.scratch/<slug>/tickets/`.
+The planning map stays closed. Its handoff links the new `Build: <outcome>` parent, whose children track implementation. Older flat build-ticket lists remain usable and can be adopted without recreating tickets. Repeating the command reuses the matching effort.
 
-```text
-/mana:conjure 92   # file build tickets once the map is decided
-```
+After a build session, the agent checks the parent and names the next available ticket or pending review. A PR awaiting merge keeps the effort open. Once all required tickets are complete and the implementation destination is delivered, a progress check closes the parent. These checks run during sessions; no background automation is installed.
+
+For local trackers or refused writes, the parent lives in `.scratch/<slug>/build.md` and missing tickets in `.scratch/<slug>/tickets/`. Any remote tickets already created keep their links.
 
 </details>
 
