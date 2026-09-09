@@ -36,6 +36,7 @@ scripts/sync-persona.sh --check || err "persona references or activation blocks 
 scripts/test-persona.sh || err "persona synchronization fixtures failed"
 scripts/test-ward.sh || err "PR attendance fixtures failed"
 scripts/test-scry-map.sh || err "scry map closeout fixtures failed"
+scripts/test-build-tickets.sh || err "build ticket adapter fixtures failed"
 scripts/test-open-pr.sh || err "open-pr conflict fixtures failed"
 scripts/test-ultima.sh || err "ultima audit fixtures failed"
 
@@ -110,6 +111,7 @@ skills/reveal/references/attach.md skills/cast/references/attach.md
 skills/reveal/scripts/open-pr.sh skills/cast/scripts/open-pr.sh
 skills/reveal/scripts/text-frame.sh skills/cast/scripts/text-frame.sh
 skills/sift/references/agent-brief.md skills/conjure/references/agent-brief.md
+skills/conjure/references/build-progress.md skills/cast/references/build-progress.md
 skills/sift/scripts/tickets.sh skills/conjure/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/cast/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/setup-mana/scripts/tickets.sh

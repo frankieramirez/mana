@@ -9,7 +9,7 @@ Host: <JIRA_BASE_URL>
 
 ## Conventions
 
-Every write goes through the adapter script the skills carry (`tickets.sh --tracker jira --project <PROJECT KEY>`): create, wire, next, claim, label, comment, close. `view` and `list` read. Labels are Jira labels, free text with no registry, so `ensure-labels` is a no-op. "Open" means a status whose category is not Done. `close` takes the first available transition into a Done status. Bodies are written as plain paragraphs; Jira does not render Markdown.
+Every write goes through the adapter script the skills carry (`tickets.sh --tracker jira --project <PROJECT KEY>`): create, attach, wire, next, claim, label, comment, update-body, close. `view`, `list`, `body`, and `children` read. Labels are Jira labels, free text with no registry, so `ensure-labels` is a no-op. "Open" means a status whose category is not Done. `close` takes the first available transition into a Done status. Bodies are written as plain paragraphs; Jira does not render Markdown.
 
 Pull requests stay on GitHub. A pull request that resolves a Jira issue puts the key in its branch name and title. Ending the body with `Closes PLAT-42` closes the issue only when a Jira automation rule reads it; otherwise the merge leaves the issue for a person to transition.
 
