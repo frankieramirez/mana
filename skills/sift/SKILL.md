@@ -75,7 +75,7 @@ Natural language. Interpret and act.
 
 | Token | Effect |
 |-------|--------|
-| `you-pick` | Do not wait for the maintainer. Take your own recommendation at 2b, accept recommended grilling answers at 2d, and apply the result under the guard in 2e. With no id, work every Stage 1 item oldest first, at most 10 per run. Same meaning as the user saying "make the decisions" or "you pick". |
+| `you-pick` | Do not wait for the maintainer. Take your own recommendation at 2b, accept recommended interrogation answers at 2d, and apply the result under the guard in 2e. With no id, work every Stage 1 item oldest first, at most 10 per run. Same meaning as the user saying "make the decisions" or "you pick". |
 
 ## Stage 1: What needs attention
 
@@ -108,11 +108,11 @@ Tell the maintainer the category and state you lean toward, with reasoning, plus
 
 ### 2c. Verify
 
-Before grilling, check the claim. For a bug, reproduce from the reporter's steps. For a PR, confirm the diff does what it claims: look at the code, run the relevant tests. Report confirmed (with the code path), failed, or too little detail (`needs-info`).
+Before interrogation, check the claim. For a bug, reproduce from the reporter's steps. For a PR, confirm the diff does what it claims: look at the code, run the relevant tests. Report confirmed (with the code path), failed, or too little detail (`needs-info`).
 
-### 2d. Grill when the request is thin
+### 2d. Interrogate a thin request
 
-Load `references/grilling.md`. Ask a round, wait, repeat until the request is sharp enough to brief or to reject. Update `CONTEXT.md` when a term lands, using the same glossary habit as anywhere else: write the definition in the file when you have it.
+Load `references/interrogate.md`. Ask a round, wait, repeat until the request is sharp enough to brief or to reject. Update `CONTEXT.md` when a term lands, using the same glossary habit as anywhere else: write the definition in the file when you have it.
 
 ### 2e. Apply
 
@@ -130,7 +130,7 @@ Load `references/agent-brief.md` before posting a brief.
 
 ## Stage 3: Override
 
-When the maintainer names the state, trust them. A state-only override requires exactly one valid category already on the issue (`bug` or `enhancement`, or the mapped strings from `docs/agents/triage-labels.md` when that file exists). If there is no category, or category labels conflict, stop and ask. Then confirm the label change, the comment, and any close, then act. Skip grilling. If the destination is `ready-for-agent` and there was no grilling session, ask whether they want a brief written.
+When the maintainer names the state, trust them. A state-only override requires exactly one valid category already on the issue (`bug` or `enhancement`, or the mapped strings from `docs/agents/triage-labels.md` when that file exists). If there is no category, or category labels conflict, stop and ask. Then confirm the label change, the comment, and any close, then act. Skip interrogation. If the destination is `ready-for-agent` and there was no interrogation session, ask whether they want a brief written.
 
 ## Needs-info template
 
@@ -150,7 +150,7 @@ When the maintainer names the state, trust them. A state-only override requires 
 - question 2
 ```
 
-Capture everything resolved during grilling under "established so far". Questions are specific.
+Capture everything resolved during interrogation under "established so far". Questions are specific.
 
 ## Resume
 
@@ -164,6 +164,6 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
-| `references/grilling.md` | Stage 2d | Design-tree interview |
+| `references/interrogate.md` | Stage 2d | Design-tree interview |
 | `references/agent-brief.md` | Stage 2e, ready-for-agent or ready-for-human | Brief contract |
 | `references/out-of-scope.md` | Stage 2a and 2e, rejected enhancements | `.out-of-scope/` files |

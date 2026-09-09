@@ -10,7 +10,7 @@ If `CONTEXT-MAP.md` exists, it points at per-area `CONTEXT.md` files. Edit the o
 
 Create files when you have something to write. The first resolved term creates `CONTEXT.md`. The first ADR creates `docs/adr/`.
 
-## During grilling
+## During interrogation
 
 When the user uses a term that conflicts with `CONTEXT.md`, say so immediately: "The glossary defines cancellation as X, and you just used it as Y. Which one holds?"
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.3
+
+- Rename grilling to interrogation in scry and sift, with `interrogate.md` references and the `scry:interrogation` ticket type. Existing `scry:grilling` tickets remain readable.
+
 ## 0.25.2
 
 - Ultima makes report delivery unconditional before Stage 6, including explicit action modes. The absolute path and browser-opening command fallback also precede those actions.

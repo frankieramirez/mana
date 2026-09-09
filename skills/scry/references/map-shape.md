@@ -50,17 +50,17 @@ Each child is one question, sized to one session. The tracker's issue number is 
 <the decision or investigation this ticket resolves>
 ```
 
-Label with exactly one of `scry:research`, `scry:prototype`, `scry:grilling`, `scry:task`.
+Label with exactly one of `scry:research`, `scry:prototype`, `scry:interrogation`, `scry:task`.
 
 The answer is written on resolution (a comment), never as part of the filed body.
 
 ## Ticket types
 
-Every ticket is **HITL** (worked with a human who speaks for themselves) or **AFK** (the agent drives it alone). A HITL ticket only resolves through that live exchange. Answering your own grilling questions has broken this, unless the user passed `you-pick`.
+Every ticket is **HITL** (worked with a human who speaks for themselves) or **AFK** (the agent drives it alone). A HITL ticket only resolves through that live exchange. Answering your own interrogation questions has broken this, unless the user passed `you-pick`.
 
 - **Research** (AFK). A fact a later decision waits on, found in docs, APIs, or other primary sources outside the current working directory. Resolved by a subagent following `research.md`.
 - **Prototype** (HITL). A cheap, rough artifact to react to: an outline, a stub, a UI or logic sketch. Use when the question is how something should look or behave. Link the artifact from the ticket.
-- **Grilling** (HITL). Conversation. The default. Load `grilling.md` and `domain.md`.
+- **Interrogation** (HITL). Conversation. The default. Load `interrogate.md` and `domain.md`.
 - **Task** (HITL or AFK). Manual work that must happen before a decision can be made: signing up for a service, provisioning access, moving data so its shape can be seen. This type does work so a decision can proceed. It does not deliver the destination. The agent drives it alone where it can; otherwise it hands the human a checklist. The answer records what was done and any facts later tickets need (URLs, row counts, where credentials landed).
 
 A defect (something broken) is a regular GitHub issue, labelled from `docs/agents/triage-labels.md` when that file exists (`needs-triage` by default). It does not join the map.
