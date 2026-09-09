@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.2
+
+- Ultima makes report delivery unconditional before Stage 6, including explicit action modes. The absolute path and browser-opening command fallback also precede those actions.
+
 ## 0.25.1
 
 - Ultima delivers a clickable report link before asking what to do next, repeats it in the action question, and opens a local preview when supported. Explicit action modes also receive the report before proceeding. Delivery explains that reports use temporary storage.
