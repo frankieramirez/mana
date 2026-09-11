@@ -81,7 +81,7 @@ Each entry: what it is, then a violation and a fix.
 - ✗ The queue is the substrate every worker builds on.
 - ✓ Every worker reads from the queue.
 
-**Say what it does, not how it feels.** "types that follow your schema" and "the database stays close at hand" name a feeling. Name the mechanism or the number instead. Test: if the sentence could appear unchanged in another project's docs, it says nothing about this one. Cut it.
+**Say what it does, not how it feels.** "types that follow your schema" and "the database stays close at hand" name a feeling. Name the mechanism or the number when the source gives you one. When it does not, cut the sentence. Test: if the sentence could appear unchanged in another project's docs, it says nothing about this one. Cut it.
 - ✗ Types that stay in sync with your schema.
 - ✓ A column rename fails the build.
 
@@ -89,13 +89,26 @@ Each entry: what it is, then a violation and a fix.
 - ✗ Queries are validated before they run.
 - ✓ The compiler validates queries before they run.
 
-**Adverbs propping up a verb.** Replace the adverb with the number or a stronger verb. An adverb doing the work means the verb is wrong.
+**Adverbs propping up a verb.** Replace the adverb with the number the source gives, or with a stronger verb. An adverb doing the work means the verb is wrong. Reach for the verb whenever the number is not already in front of you.
 - ✗ The new index significantly improves lookups.
-- ✓ Lookups drop from 400ms to 30ms with the new index.
+- ✓ Lookups drop from 400ms to 30ms with the new index. (the source stated both figures)
+- ✓ The new index speeds up lookups. (the source stated no figures)
 
 **The fancy synonym.** utilize, facilitate, numerous, "in the event that", "prior to", "in order to". Use, help, many, if, before, to.
 - ✗ Prior to deploy, utilize the script in order to facilitate the migration.
 - ✓ Before deploy, run the migration script.
+
+## Fidelity
+
+The rewrite carries the same facts as the source. Nothing enters the prose that was not already in it.
+
+Cutting a banned word is free. Replacing it with a detail you inferred is the one failure this skill can cause that the original prose did not have.
+
+- **Exempt text is read-only in both directions.** Preserve it, and do not mine it. A constant visible in a code block does not license a sentence documenting what that constant produces at runtime. Neither does an error string, a config value, or a log line. Quote it or leave it alone.
+- **A missing reason stays missing.** When the source says something happens and never says why, the rewrite says the same. Plausibility is not evidence.
+- **A vague sentence with nothing behind it gets cut.** Deleting it is always in scope. Filling the gap with a guess never is.
+
+When you cannot say it concretely and truthfully, say it plainly and shortly, or say nothing.
 
 ## Positive rules
 
@@ -118,5 +131,6 @@ Scan only the prose you authored; skip the exempt text named above. Check for:
 6. Words from the filler list.
 7. A passive verb whose actor you could name.
 8. Any word from the metaphor-noun list.
+9. Any mechanism, number, reason, or name in your prose that the source did not state. Cut it, including anything you read out of exempt text.
 
 Fix what you find, then return the prose. Do not narrate the fixes.
