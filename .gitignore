@@ -8,3 +8,6 @@ node_modules/
 .agents/
 .claude/skills/
 skills-lock.json
+
+# eval run artifacts; the cases under evals/ are the source of truth
+evals/results/
