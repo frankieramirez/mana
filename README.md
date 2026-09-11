@@ -315,6 +315,19 @@ Use it for docs, messages, PR descriptions, or other writing. It also triggers o
 
 </details>
 
+<details>
+<summary>Measured effect</summary>
+
+Scored against the same model running the same prompts with the plugin removed: **+9.2 points across 8 cases, no regressions**. Two of the cases check that it stays quiet where it should, on a plain bug fix and on a customer quote that has to stay word for word.
+
+```bash
+claude plugin eval evals/ --ablation with-without
+```
+
+The cases live in `evals/`. Numbers are from mana v0.25.3 on Claude Code 2.1.269, 3 runs per arm, judged by Sonnet. One run, no confidence intervals, and the cases are hand written, so read the delta as a direction rather than a precise figure.
+
+</details>
+
 ### mimic
 
 Drafts a reply in your voice, ready to paste into the conversation.

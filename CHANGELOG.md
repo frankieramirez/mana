@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix the `no-invented-rationale` grader in the `dispel` eval suite. It miscounted the prompt's facts and failed any description that restated them, so it failed every run in both arms and made case 04 unscorable. Recorded numbers predate the fix.
+- Record the measured `dispel` ablation in `README.md`, with the command to reproduce it and the limits of the run.
 - Add the `dispel` eval suite under `evals/`: six cases that expect the skill to fire and two negative cases that expect it to stay out of the way. Run artifacts under `evals/results/` stay untracked. No change to shipped skill behavior, so no version bump.
 
 ## 0.25.3
