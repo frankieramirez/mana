@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add the `dispel` eval suite under `evals/`: six cases that expect the skill to fire and two negative cases that expect it to stay out of the way. Run artifacts under `evals/results/` stay untracked. No change to shipped skill behavior, so no version bump.
+
 ## 0.25.3
 
 - Rename grilling to interrogation in scry and sift, with `interrogate.md` references and the `scry:interrogation` ticket type. Existing `scry:grilling` tickets remain readable.
