@@ -1,7 +1,7 @@
 ---
 name: attune
-description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, the tracker key, the Archmage persona for skill workflows, or the Archmage style for every turn of a session. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, rename the triage labels, enable or disable Archmage, set Archmage as the output style or the session voice, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, or /attune."
-argument-hint: "[blank to list every setting] [labels | validation | proof | docs | peer | worktree | pr-surface | key | pointer | persona | style] [new value]"
+description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, the branch name pattern, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, the tracker key, the Archmage persona for skill workflows, or the Archmage style for every turn of a session. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, change the branch naming convention, set the branch name pattern, rename the triage labels, enable or disable Archmage, set Archmage as the output style or the session voice, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, or /attune."
+argument-hint: "[blank to list every setting] [labels | validation | branches | proof | docs | peer | worktree | pr-surface | key | pointer | persona | style] [new value]"
 ---
 
 <!-- BEGIN MANA PERSONA -->
@@ -81,6 +81,7 @@ Otherwise print the table first, filled in from Stage 1. The table is the whole 
 Setting      Current                                   Read by
 labels       role name equals label string (no file)   triage, ticket filing, building
 validation   pnpm test && pnpm typecheck               review, feedback, building, merges
+branches     unset, <id>-<slug>                        building
 proof        unset, the host picks                     pull request bodies
 docs         unset, CONTEXT.md at the root             anything reading project vocabulary
 peer         unset, the diff stays on this machine     review
@@ -109,6 +110,8 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a
 Existing labels are never renamed or deleted on the tracker. The report names the ones that are now unused. Jira has no label registry, so `ensure-labels` is a no-op there and any string works. On `local` and `other` the role names are the strings and there is nothing to change: say so and stop.
 
 **validation.** Show the current line. Run the proposed command once before writing it, always, including a value passed on the invocation. It is written only when it runs clean. It refuses to run: say what failed and write nothing.
+
+**branches.** Show the current line, or say the default `<id>-<slug>` is in effect. The value is a pattern with `<id>` for the lowercased ticket id and `<slug>` for a short kebab slug from the title, such as `feat/<id>-<slug>` or `<slug>`. Without a ticket the building skill drops `<id>` and the separator after it. Refuse a value with no `<slug>`, with spaces, or that `git check-ref-format --branch` rejects once the placeholders are filled with `42` and `x`. Write `Branches: <pattern>` in the block, or remove the line to return to the default.
 
 **proof.** Three choices: a screenshot or recording tool the host offers, Orca's embedded browser (`orca screenshot`, only inside an Orca worktree), or command output rendered to an image. Report whether `gh` is 2.99.0 or newer, since `--attach` needs it. Writing nothing is a choice, and it is the default.
 

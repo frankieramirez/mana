@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.28.0
+
+- Branch names no longer carry the skill's name or the user's login. `cast` used to create `cast/<id>-<slug>` from the default branch and keep whatever branch a worktree tool handed it, which is how `cast/62-macos-14-x64-exclusion` and `frankieramirez/portal-59` ended up on pull requests. The name now comes from a `Branches:` line in the `## Agent skills` block, `<id>-<slug>` when the line is absent, so the same tickets give `62-macos-14-x64-exclusion` and `59-<slug>`. A tool-made branch that has no commits of its own and no upstream is renamed to the pattern before the first edit; one with commits or a remote is left alone. `attune branches` sets or removes the line. `scan` and the pull request closing line read the ticket id from the start of the branch name after any prefix, so older `cast/` branches still resolve.
+
 ## 0.27.1
 
 - Make `portal` honor recommendation-only requests and prior handoff authorization. Route closed targets before workflow labels, read unresolved PR threads and complete check state, and use question tools only when permitted. Split board and target routing into stage-loaded references, defer lower-priority detail, and report only inspected context for named targets. Shorten its discovery description.

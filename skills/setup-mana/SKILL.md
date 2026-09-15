@@ -119,7 +119,7 @@ Triage labels: mapped. See `docs/agents/triage-labels.md`.
 Validation: `<the command>`
 ```
 
-The `Triage labels:` line is written only alongside its file. The `Validation:` line is written only when the command ran clean in Stage 1. Update or remove only setup-owned lines according to those conditions; preserve all other existing lines exactly, including `Persona:` and `Style:`. Setup never adds a persona or style setting. How pull request proof is captured, the domain docs layout, a second opinion reviewer, and the Orca worktree files all have working defaults, and none of them is a question this skill asks.
+The `Triage labels:` line is written only alongside its file. The `Validation:` line is written only when the command ran clean in Stage 1. Update or remove only setup-owned lines according to those conditions; preserve all other existing lines exactly, including `Persona:` and `Style:`. Setup never adds a persona or style setting. The branch name pattern, how pull request proof is captured, the domain docs layout, a second opinion reviewer, and the Orca worktree files all have working defaults, and none of them is a question this skill asks.
 
 ## Stage 4: Verify and report
 
@@ -153,7 +153,7 @@ Validation: <the command and its result | none recorded, each skill detects one>
 Wrote: <files written or updated in place>
 ```
 
-Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker and any existing persona or style setting was defaulted. To change one of those later, the label names, the validation command, how pull request proof is captured, a persona or session style, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
+Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker and any existing persona or style setting was defaulted. To change one of those later, the label names, the validation command, the branch name pattern, how pull request proof is captured, a persona or session style, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
 
 ## References
 

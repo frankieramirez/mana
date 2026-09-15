@@ -204,7 +204,7 @@ A change that claims to finish a ticket is reviewed against that ticket. Resolve
 
 1. A `ticket:<id>` token.
 2. A `Closes`, `Fixes`, or `Resolves <id>` line in the PR body.
-3. A branch named `cast/<id>-...`.
+3. A branch whose name starts with a tracker id, after any `<prefix>/` (`42-flat-tax`, `eng-42-flat-tax`, or the older `cast/42-flat-tax`).
 4. A tracker id (`#42`, `ENG-42`, `PLAT-42`) in the branch name or in a commit subject within `${BASE}..HEAD`.
 
 Sources 1 and 2 make the ticket **explicit**; sources 3 and 4 make it **inferred**. Two different ids from the inferred sources mean no ticket; say which two in Coverage.
