@@ -12,6 +12,7 @@
 #   body ID                                  print the raw issue body
 #   update-body ID [--expected-body PATH]    replace body on stdin, optionally guarded by a snapshot
 #   wire CHILD BLOCKER                        CHILD is blocked by BLOCKER
+#   blocked ID                                open blockers, one per line; exit 1 when none
 #   next READY_LABEL [--claim]                oldest open, unassigned, unblocked issue;
 #                                             --claim assigns it only while it stays eligible
 #   claim ID                                  assign yourself; refuse if someone else holds it
@@ -55,6 +56,7 @@ usage: tickets.sh [--tracker github|linear|jira] [--project KEY] [--repo OWNER/R
                                          unblocked issue; empty when none. --claim assigns
                                          it, re-reads, and releases if it is no longer eligible
   claim ID                               assign yourself; exit 1 if someone else holds it
+  blocked ID                             open blockers, one id per line; exit 1 when none
   label ID [--add L]... [--remove L]...  change labels
   comment ID                             body on stdin
   close ID                               close the issue
@@ -176,6 +178,40 @@ gh_is_blocked() {
     fi
   done
   return 1
+}
+
+gh_blocked() {
+  local n="$1"
+  local ids
+  if ids=$(gh_open_blockers_from_api "$n"); then
+    :
+  else
+    ids=$(gh_open_blockers_from_body "$n")
+  fi
+  [ -n "$ids" ] || return 1
+  printf '%s\n' "$ids"
+}
+
+gh_open_blockers_from_api() {
+  local n="$1"
+  gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
+    (if type == "array" then . else (.blocked_by // []) end)
+    | .[] | select(.state == "open" or .state == "OPEN") | .number
+  ' 2>/dev/null | grep -E '^[0-9]+$' || [ "${PIPESTATUS[0]}" -eq 0 ]
+}
+
+gh_open_blockers_from_body() {
+  local n="$1"
+  local body ids id st
+  body=$(gh_body "$n") || die "cannot read $n"
+  ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
+  for id in $ids; do
+    [ -n "$id" ] || continue
+    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state 2>/dev/null || true)
+    if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
+      printf '%s\n' "$id"
+    fi
+  done
 }
 
 gh_check() {
@@ -945,6 +981,14 @@ class Linear:
                 return True
         return False
 
+    def blockers(self, ident):
+        d = self.issue(ident)
+        ids = [rel["issue"]["identifier"] for rel in d["inverseRelations"]["nodes"]
+               if rel["type"] == "blocks" and rel["issue"]["state"]["type"] not in DONE_TYPES]
+        for i in ids:
+            print(i)
+        sys.exit(0 if ids else 1)
+
     def still_ready(self, ident, label, me_id):
         d = self.issue(ident)
         if is_build(d.get("description")) or d["state"]["type"] in DONE_TYPES:
@@ -1205,6 +1249,19 @@ class Jira:
                     return True
         return False
 
+    def blockers(self, key):
+        i = self.api("GET", f"/issue/{key}?fields=issuelinks")
+        ids = []
+        for link in i["fields"].get("issuelinks") or []:
+            other = link.get("inwardIssue")
+            if link.get("type", {}).get("name") == "Blocks" and other:
+                cat = (((other.get("fields") or {}).get("status") or {}).get("statusCategory") or {}).get("key")
+                if cat != "done":
+                    ids.append(other["key"])
+        for k in ids:
+            print(k)
+        sys.exit(0 if ids else 1)
+
     def still_ready(self, key, label, me_id):
         i = self.api("GET", f"/issue/{key}?fields=status,labels,assignee,issuelinks")
         f = i["fields"]
@@ -1304,6 +1361,8 @@ def main():
         t.next(rest[0], "--claim" in rest[1:])
     elif cmd == "claim":
         t.claim(rest[0])
+    elif cmd == "blocked":
+        t.blockers(rest[0])
     elif cmd == "label":
         add, remove, mode = [], [], None
         for a in rest[1:]:
@@ -1404,7 +1463,7 @@ case "$cmd" in
     EXPECTED_BODY="${3:-}"
     ;;
   find) [ $# -eq 1 ] && [ -n "$1" ] || die "find needs literal text" ;;
-  list|view|claim|comment|close|children|body) [ $# -ge 1 ] || die "$cmd needs an argument" ;;
+  list|view|claim|blocked|comment|close|children|body) [ $# -ge 1 ] || die "$cmd needs an argument" ;;
   attach|wire) [ $# -ge 2 ] || die "$cmd needs two issue IDs" ;;
   label) [ $# -ge 2 ] || die "label ID [--add L]... [--remove L]..." ;;
   check) ;;
@@ -1412,7 +1471,7 @@ case "$cmd" in
 esac
 
 case "$cmd" in
-  view|claim|comment|close|children|body|update-body)
+  view|claim|blocked|comment|close|children|body|update-body)
     set -- "$(normalize_id "$1")"
     ;;
   attach|wire)
@@ -1449,6 +1508,7 @@ case "$cmd" in
   wire) gh_wire "$1" "$2" ;;
   next) gh_next "$1" "$NEXT_CLAIM" ;;
   claim) gh_claim "$1" ;;
+  blocked) gh_blocked "$1" ;;
   label)
     n="$1"; shift
     edit=()

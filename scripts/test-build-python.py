@@ -386,6 +386,48 @@ class AdapterContract(unittest.TestCase):
         self.assertFalse(transport.base.still_ready("PROJ-8", "ready-for-agent", "me"))
         self.assertTrue(transport.base.still_ready("PROJ-7", "ready-for-agent", "me"))
 
+    def test_linear_blockers_prints_open_blockers_only(self):
+        ns = load_python_adapter("linear")
+        transport = LinearTransport(ns)
+        blocked = transport.issue_for_test("BLK-1", "Blocked ticket", "brief")
+        blocked["inverseRelations"]["nodes"] = [
+            {"type": "blocks", "issue": {"identifier": "OPEN-1", "state": {"type": "started"}}},
+            {"type": "blocks", "issue": {"identifier": "DONE-1", "state": {"type": "completed"}}},
+            {"type": "related", "issue": {"identifier": "REL-1", "state": {"type": "started"}}},
+        ]
+        free = transport.issue_for_test("FREE-1", "Free ticket", "brief")
+        transport.issues.update({"BLK-1": blocked, "FREE-1": free})
+        with self.assertRaises(SystemExit) as done:
+            _, printed = output_of(transport.base.blockers, "BLK-1")
+        self.assertEqual(done.exception.code, 0)
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream), self.assertRaises(SystemExit) as done:
+            transport.base.blockers("BLK-1")
+        self.assertEqual(stream.getvalue().split(), ["OPEN-1"])
+        with self.assertRaises(SystemExit) as none:
+            transport.base.blockers("FREE-1")
+        self.assertEqual(none.exception.code, 1)
+
+    def test_jira_blockers_prints_open_blockers_only(self):
+        ns = load_python_adapter("jira")
+        transport = JiraTransport(ns)
+        blocked = transport.issue_for_test("PROJ-9", "Blocked ticket", "brief")
+        blocked["fields"]["issuelinks"] = [
+            {"type": {"name": "Blocks"}, "inwardIssue": {"key": "PROJ-1", "fields": {"status": {"statusCategory": {"key": "indeterminate"}}}}},
+            {"type": {"name": "Blocks"}, "inwardIssue": {"key": "PROJ-2", "fields": {"status": {"statusCategory": {"key": "done"}}}}},
+            {"type": {"name": "Blocks"}, "outwardIssue": {"key": "PROJ-3", "fields": {"status": {"statusCategory": {"key": "indeterminate"}}}}},
+        ]
+        free = transport.issue_for_test("PROJ-10", "Free ticket", "brief")
+        transport.issues.update({"PROJ-9": blocked, "PROJ-10": free})
+        stream = io.StringIO()
+        with contextlib.redirect_stdout(stream), self.assertRaises(SystemExit) as done:
+            transport.base.blockers("PROJ-9")
+        self.assertEqual(done.exception.code, 0)
+        self.assertEqual(stream.getvalue().split(), ["PROJ-1"])
+        with self.assertRaises(SystemExit) as none:
+            transport.base.blockers("PROJ-10")
+        self.assertEqual(none.exception.code, 1)
+
     def test_build_links_accepts_crlf_bodies(self):
         ns = load_python_adapter("linear")
         body = "Build parent: [Build](https://linear.example/BLD-1)\r\n\r\nbrief"

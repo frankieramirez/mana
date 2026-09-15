@@ -32,11 +32,12 @@ npx skills add frankieramirez/mana -a codex
 
 ## The loop
 
-Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, [sift](#sift) for an incoming report, or [cast](#cast) for a ready ticket.
+Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, [sift](#sift) for an incoming report, or [cast](#cast) for a ready ticket. When you do not know which applies, [portal](#portal) reads the board and names the next one.
 
 | Stage | Skill | What it leaves behind |
 |-------|-------|-----------------------|
 | Set up a repo | [setup-mana](#setup-mana), [attune](#attune) | Tracker configuration and repo defaults |
+| Find the next move | [portal](#portal) | One skill, one ticket, and the prompt that starts it |
 | Decide | [scry](#scry) | A decision map and a spec |
 | Triage the inbox | [sift](#sift) | Issues sorted by state, ready ones with an agent brief |
 | File the build tickets | [conjure](#conjure) | Session-sized tickets in build order |
@@ -49,7 +50,7 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 
 Build work meets at a `ready-for-agent` issue with an agent brief. A person merges the PR; [tracker closing rules](#trackers) determine when the ticket closes. `cast next` picks up the next ready ticket.
 
-After setup, use `sift` for incoming work and `cast next` for ready tickets. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` when the UI has drifted and you want a ranked list of what to clean up.
+After setup, use `portal` when you are unsure what comes next, `sift` for incoming work, and `cast next` for ready tickets. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` when the UI has drifted and you want a ranked list of what to clean up.
 
 ## Skills
 
@@ -563,6 +564,43 @@ The search includes pinned library source, wire formats, database columns, featu
 
 </details>
 
+### portal
+
+Reads the tracker and the current branch, names the one skill to run next and the ticket to run it on, then asks whether to step through. On a yes it hands the session to that skill with the ticket already chosen. Portal's own reads claim nothing; the routed skill makes the first write.
+
+- Blank: the whole board. An open PR with feedback comes first, then a map with a frontier ticket, then a build effort's next ticket in build order, then the oldest ready ticket, then the inbox.
+- An issue id: classifies that one issue and routes it. A blocked ticket routes to its first open blocker; a closed map routes to its build effort or, when none exists, to filing one.
+
+```text
+# What should I do next?
+/mana:portal
+
+# Which skill does this ticket want?
+/mana:portal 26
+
+# Skip the question and step through
+/mana:portal go
+```
+
+<details>
+<summary>Route order and what it reads</summary>
+
+| Board state | Routes to |
+|-------------|-----------|
+| Current branch's PR has feedback or failing checks | `remedy` or `ward` |
+| Branch has unpushed work and no PR | `scan`, then `reveal` |
+| Open map with a frontier ticket | `scry` on that ticket |
+| Open build effort with an available ticket | `cast` on that ticket |
+| Ready ticket outside any effort | `cast` on that ticket |
+| Build effort with nothing available | `conjure` progress check, naming what holds it |
+| Inbox has untriaged issues | `sift` |
+| Closed map nobody has sliced | `conjure` on the map |
+| Nothing open | Says so; `scry` for a new idea |
+
+Portal reads through the same bundled ticket script as the other skills, plus scry's map script for frontiers, and never passes `--claim`. Every read that fails is reported as unknown rather than treated as empty.
+
+</details>
+
 ### ultima
 
 Audits a whole frontend codebase and renders a ranked HTML report of patterns worth fixing: raw values where tokens exist, screens missing a loading, empty, or error state, elements the keyboard cannot reach, component props that mirror their implementation.
@@ -655,6 +693,7 @@ Use explicit tokens to run skills without waiting for answers. Point each schedu
 | `sift` | `you-pick` | Triages up to 10 issues; leaves rejections for a person |
 | `conjure` | `you-pick` | Accepts the recommended slices and order |
 | `cast` | `next` | Claims the oldest ready, unblocked ticket and builds its PR; stops when none is ready |
+| `portal` | `go` | Routes and steps through to the chosen skill without the closing question; prints the report and stops when nothing can be worked |
 | `scan` | `report`, `fix`, or `comment` | Reports, pushes fixes, or posts PR comments without a closing question |
 | `scan` | `mode:agent` | Returns JSON and leaves action to the caller |
 | `remedy` | `dry-run` or `no-push` | Judges only, or fixes without pushing; leaves `needs-human` items in the summary |
