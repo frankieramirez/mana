@@ -220,22 +220,29 @@ For a local ticket or a direct local build-parent path, use its file membership 
 
 ## Report
 
-```
-Cast: <ticket title> (#NUMBER)
-Claimed: <yes | already mine | no: reason | none: spec path or conversation>
-Branch: <created cast/... | existing branch name>
-Commit: <sha>
-Pushed: <yes, to branch | no, no upstream | no, push failed: reason>
-PR: <url | none: no-pr | none: reason>
-Mergeability: <clean | conflicting: files and base | unknown: reason | skipped: no-pr>
-Evidence: <file list, or none>
-Comment cleanup: <skipped: reason | deleted count, repairs, and open items>
-Validation: <one line>
-Orca: <linked <id>, in-review | not present | failed: reason>
-Open: <any criterion left unmet, or none>
-Build effort: <linked parent and progress, or none>
-Next step: <concrete ticket, review, or closeout prompt; or destination complete>
-```
+Write the result as markdown, not as a code block and not as plain indented lines. A reader scans this in a terminal that renders markdown, so the fields go in a table and the links stay clickable. Emit it exactly in this shape, including the empty header cells:
+
+### Cast: \<ticket title> (#NUMBER)
+
+| | |
+|---|---|
+| **Claimed** | yes \| already mine \| no: reason \| none: spec path or conversation |
+| **Branch** | created cast/... \| existing branch name |
+| **Commit** | sha |
+| **Pushed** | yes, to branch \| no, no upstream \| no, push failed: reason |
+| **PR** | url \| none: no-pr \| none: reason |
+| **Mergeability** | clean \| conflicting: files and base \| unknown: reason \| skipped: no-pr |
+| **Evidence** | file list, or none |
+| **Comment cleanup** | skipped: reason \| deleted count, repairs, and open items |
+| **Validation** | one line |
+| **Orca** | linked \<id>, in-review \| not present \| failed: reason |
+| **Open** | any criterion left unmet, or none |
+
+**Build effort:** \<linked parent and progress, or none>
+
+**Next step:** \<concrete ticket, review, or closeout prompt; or destination complete>
+
+Every row appears, in this order, even when the value is `none`. A cell holds one line: no newlines, no bullets, and a literal pipe inside a value is escaped as `\|`. A value longer than a sentence gets trimmed to the fact rather than wrapped into prose. Paths, commits, and commands go in backticks, and a PR or issue link goes in bare, so the terminal renders it. Anything that does not fit a cell, such as a hazard worth flagging or an out-of-scope edit, goes in sentences under the table, after the two closing lines.
 
 ## Scripts
 
