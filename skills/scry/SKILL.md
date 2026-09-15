@@ -51,7 +51,7 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 - Label `scry:research`, `scry:prototype`, `scry:interrogation`, or `scry:task`: walk its parent map and claim this ticket.
   Treat the legacy label `scry:grilling` as `scry:interrogation` when resuming existing tickets.
 - The same labels under the older `wayfinder:` prefix mean the same thing. Walk them as they are; do not relabel.
-- Any other issue: chart a new map whose destination is informed by that issue.
+- Any other issue: read its body and labels before doing anything. A body with the exact line `Work kind: build`, a `Build parent:` line, or the ready label (the string `docs/agents/triage-labels.md` maps for `ready-for-agent`, else `ready-for-agent`) marks build work, and charting a map from it is never the answer. Say what the issue is and stop: a build effort wants a progress check, and a build ticket wants to be implemented, so give the prompt `Implement <ticket URL>, following its brief.` or `Check progress and close out the build effort at <parent URL> once the pending work is complete.` Any other issue charts a new map whose destination is informed by that issue.
 
 ## Execution spine
 

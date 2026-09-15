@@ -11,7 +11,13 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view PARENT_ID
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> children PARENT_ID
 ```
 
-Read each member's current status and resolution, its blockers and assignee, and linked PR state. Include tickets listed in the accepted order even if attachment failed. Missing slices, unreadable tickets, failed enumeration, or uncertain PR state leave the effort incomplete. An empty member list is not proof of completion. Local files use the same checks against the parent index and ticket files.
+Read each member's current status and resolution, its blockers and assignee, and linked PR state. Blockers come from the script, never from a guess at the body:
+
+```bash
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> blocked MEMBER_ID
+```
+
+It prints the open blockers one per line and exits 1 when there are none. Include tickets listed in the accepted order even if attachment failed. Missing slices, unreadable tickets, failed enumeration, or uncertain PR state leave the effort incomplete. An empty member list is not proof of completion. Local files use the same checks against the parent index and ticket files.
 
 Choose the first open, ready, unclaimed ticket in build order whose blockers are complete. A canceled blocker needs evidence that its requirement was satisfied or explicitly dropped before its dependents become available. Scope the choice to this effort; a global `next` result can belong to another project effort.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.27.0
+
+- Add `portal`, a read-only router. Run it with nothing and it reads the current branch, open maps and their frontiers, open build efforts and their members, the oldest ready ticket, and the triage inbox, then names one skill and one ticket and asks whether to step through. On a yes it reads that skill's own SKILL.md and follows it with the ticket as the argument, so the routed skill makes the first write. Run it with an issue id and it classifies that issue (map, map ticket, build effort, ready ticket, blocked ticket, waiting on a person, untriaged, pull request, closed) and routes it the same way. `go` skips the question. Build order wins over the global ready queue, a ticket you already hold comes first, and a blocked ticket routes to its first open blocker.
+- `tickets.sh` gains `blocked ID`, which prints the open blockers of an issue one per line and exits 1 when there are none, on GitHub through the dependencies API with the `Blocked by:` line as the fallback, and on Linear and Jira through their relations. Portal and the build progress checks read it instead of guessing from the body.
+- `scry` no longer charts a map from build work. Given an issue that carries `Work kind: build`, a `Build parent:` line, or the ready label, it says what the issue is and hands over the implementation or progress prompt instead of seeding a new map from it.
+
 ## 0.26.1
 
 - `cast` now ends in a rendered table instead of a wall of text. The report template was a fenced block of `Key: value` lines, so the final response came out as preformatted text that a terminal shows as one unformatted blob, and the runs that did look good were the model reformatting on its own. The template is markdown now: a heading, a two-column table of the fixed fields, and the `Build effort` and `Next step` lines under it, with one line per cell and links left bare so they stay clickable.
