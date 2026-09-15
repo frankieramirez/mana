@@ -460,7 +460,7 @@ Builds one ready ticket or spec, commits the change, and opens a PR with visual 
 <details>
 <summary>Branch handling, validation, and additional commands</summary>
 
-Cast uses the current branch. Starting on the default branch creates `<id>-<slug>` before any edit, or whatever pattern the `Branches:` line in the `## Agent skills` block names; it never switches to an existing branch. A branch a worktree tool made, still empty and unpushed, is renamed to the same pattern before the first edit. Set the pattern with `attune branches`.
+Cast uses the current branch. Starting on the default branch creates `<id>-<slug>` before any edit, or whatever pattern the `Branches:` line in the `## Agent skills` block names; it never switches to an existing branch. Cast renames a branch a worktree tool made, still empty and unpushed, to the same pattern before the first edit. Set the pattern with `attune branches`.
 
 The build loads the agent brief when available and uses TDD at named seams for meaningful behavior changes when a test harness exists. It keeps the smallest shape that satisfies the ticket and adds no helper or abstraction without a consumer that exists now. Required project checks still run; successful validation is reused when no later edit or unresolved concern needs a fresh run. Before the spec check, a bundled comment reviewer audits code comments added or modified in the session. Cast audits the deletions, preserves protected comments, and repairs confusing code within the ticket scope, then validates any edits. It skips this pass when no code comments changed. It checks the diff against the ticket before committing, then the default PR flow pushes, creating an upstream if needed; with `no-pr`, it pushes only when an upstream already exists.
 

@@ -27,7 +27,7 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 
 - **One ticket.** The invocation names the work. Do not wander onto adjacent issues.
 - **Smallest shape that passes.** Build the least structure that satisfies the ticket, and write one plain line when one line does the job. A helper, option, or abstraction needs a consumer that exists now. This is YAGNI: you aren't gonna need it.
-- **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1). The one rename it performs is of an empty, unpushed branch a worktree tool made, so the name follows the repo's convention instead of the tool's.
+- **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1). It renames only an empty, unpushed branch a worktree tool made, so the name follows the repo's convention.
 - **Claim before work.** A ticket from the tracker gets assigned to the person driving this session first, so a parallel session skips it. Held by someone else: stop.
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
 - **Leave the review to a later pass.** This skill commits the implementation. It does not run a multi-reviewer critique.
@@ -121,7 +121,7 @@ When the current branch is one a worktree tool made, such as `<login>/<worktree-
 git branch -m <name from the pattern>
 ```
 
-Skip the rename when the branch already follows the pattern, when it has commits past the default branch, or when it has an upstream, since a rename there would orphan a checkout or a PR somewhere else. Any other current branch is the working branch as it stands.
+Skip the rename for a branch that already follows the pattern. Skip it too for one with commits past the default branch or an upstream, since a rename there would orphan a checkout or a PR somewhere else. Any other current branch is the working branch as it stands.
 
 **A path.** Read that file. It is the spec and the contract.
 

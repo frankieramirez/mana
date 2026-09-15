@@ -111,7 +111,7 @@ Existing labels are never renamed or deleted on the tracker. The report names th
 
 **validation.** Show the current line. Run the proposed command once before writing it, always, including a value passed on the invocation. It is written only when it runs clean. It refuses to run: say what failed and write nothing.
 
-**branches.** Show the current line, or say the default `<id>-<slug>` is in effect. The value is a pattern with `<id>` for the lowercased ticket id and `<slug>` for a short kebab slug from the title, such as `feat/<id>-<slug>` or `<slug>`. Without a ticket the building skill drops `<id>` and the separator after it. Refuse a value with no `<slug>`, with spaces, or that `git check-ref-format --branch` rejects once the placeholders are filled with `42` and `x`. Write `Branches: <pattern>` in the block, or remove the line to return to the default.
+**branches.** Show the current line, or say the default `<id>-<slug>` is in effect. The value is a pattern with `<id>` for the lowercased ticket id and `<slug>` for a short kebab slug from the title, such as `feat/<id>-<slug>` or `<slug>`. Without a ticket the building skill drops `<id>` and the separator after it. Refuse a value with no `<slug>`. Refuse one that `git check-ref-format --branch` rejects once the placeholders are filled with `42` and `x`. Write `Branches: <pattern>` in the block, or remove the line to return to the default.
 
 **proof.** Three choices: a screenshot or recording tool the host offers, Orca's embedded browser (`orca screenshot`, only inside an Orca worktree), or command output rendered to an image. Report whether `gh` is 2.99.0 or newer, since `--attach` needs it. Writing nothing is a choice, and it is the default.
 
