@@ -180,20 +180,29 @@ gh_is_blocked() {
   return 1
 }
 
-# Prints the open blockers of an issue, one number per line, via API or a Blocked by: line.
-# Exit 0 when at least one is open, exit 1 when none.
 gh_blocked() {
   local n="$1"
-  local raw body ids id st found=1
-  if raw=$(gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
+  local ids
+  if ids=$(gh_open_blockers_from_api "$n"); then
+    :
+  else
+    ids=$(gh_open_blockers_from_body "$n")
+  fi
+  [ -n "$ids" ] || return 1
+  printf '%s\n' "$ids"
+}
+
+gh_open_blockers_from_api() {
+  local n="$1"
+  gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
     (if type == "array" then . else (.blocked_by // []) end)
     | .[] | select(.state == "open" or .state == "OPEN") | .number
-  ' 2>/dev/null); then
-    ids=$(printf '%s\n' "$raw" | grep -E '^[0-9]+$' || true)
-    [ -n "$ids" ] || return 1
-    printf '%s\n' "$ids"
-    return 0
-  fi
+  ' 2>/dev/null | grep -E '^[0-9]+$' || [ "${PIPESTATUS[0]}" -eq 0 ]
+}
+
+gh_open_blockers_from_body() {
+  local n="$1"
+  local body ids id st
   body=$(gh_body "$n") || die "cannot read $n"
   ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
   for id in $ids; do
@@ -201,10 +210,8 @@ gh_blocked() {
     st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state 2>/dev/null || true)
     if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
       printf '%s\n' "$id"
-      found=0
     fi
   done
-  return "$found"
 }
 
 gh_check() {

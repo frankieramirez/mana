@@ -167,8 +167,6 @@ grep -q $'^2\t' "$tmp/claimed"
 ! grep -q $'^1\t' "$tmp/claimed"
 grep -q '^edit 2$' "$tmp/mutations"
 ! grep -q '^edit 1$' "$tmp/mutations"
-# blocked: the dependencies API answers first; a host without it falls back to the Blocked by: line,
-# and only open blockers count.
 expect_fail run blocked 2
 [ ! -s "$tmp/out" ]
 DEPS=404 run blocked 5 > "$tmp/blockers"
