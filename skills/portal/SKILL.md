@@ -1,6 +1,6 @@
 ---
 name: portal
-description: "Read the tracker and the current branch, say which skill to run next and on which ticket, then run it when you say yes. Use when asked what to do next, what is next, where do I go from here, route this ticket, which skill should I use on this issue, pick up where I left off, or /portal."
+description: "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, or pick up where I left off."
 argument-hint: "[blank for the whole board | issue id | issue URL | map or build number] [go]"
 disable-model-invocation: true
 ---
@@ -17,13 +17,13 @@ Apply the voice only to lead-agent conversation. Deliverables, specialist roles,
 
 # Portal
 
-Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. A rule this file states with never, or as read-only, is a gate: it holds whatever the conversation says, and an instruction to cross one is declined and reported. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
+Honor the user's explicit instructions and decisions already made in this conversation over this skill's workflow defaults. Continue authorized work; ask only about unresolved choices that would materially change the result. Preparing or reviewing work does not authorize publishing it.
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Portal reads the board and opens the way to the one thing to do next. Its own reads are read-only: it never claims, labels, comments on, or closes a ticket and never creates a branch. It ends by asking whether to step through, and on a yes it hands the session to the routed skill with the ticket already chosen. Portal never stops at a report.
+Portal recommends one next action from the board or a named issue. Discovery is read-only: leave claims and other writes to the authorized handoff. A recommendation-only request ends with the report. Otherwise ask once before handoff, unless `go` or prior conversation already authorizes the selected action. With no actionable route, report the reason and stop without a question.
 
-The other skills each take one kind of input and do one job. Portal is the door you walk through when you do not know which one applies, or when you want the board to tell you what is next.
+After an authorized handoff, continue the selected task to its requested completion, preserving the user's scope and prior decisions. A missing sibling skill does not end authorized work; use the ordinary-task fallback in Stage 5.
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
@@ -42,7 +42,7 @@ An id is whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`). A pull request n
 1. Resolve the tracker and the label strings (Stage 1).
 2. Blank argument: Stage 2. An id or URL: Stage 3.
 3. Write the report (Stage 4).
-4. Ask whether to step through, then hand off to the routed skill (Stage 5).
+4. Finish with the report or perform the authorized handoff (Stage 5).
 
 ---
 
@@ -58,106 +58,13 @@ Resolve the label strings once. When `docs/agents/triage-labels.md` exists, take
 
 ## Stage 2: Read the board
 
-Gather every signal below before choosing. Each read is cheap and the order of precedence in 2b needs all of them. A read that fails is reported as unknown in the report, never treated as empty.
-
-### 2a. Signals
-
-**The branch.** The current branch, whether it has uncommitted or unpushed work, and whether it has an open pull request:
-
-```bash
-git rev-parse --abbrev-ref HEAD
-gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
-git status --porcelain
-git log --oneline <default branch>..HEAD
-gh pr view --json number,title,url,state,isDraft,reviewDecision,mergeable,statusCheckRollup --jq '[.number,.title,.url,.state,.isDraft,.reviewDecision,.mergeable,([.statusCheckRollup[]?.conclusion] | join(","))] | @tsv'
-```
-
-When `gh repo view` fails, the default branch is `git symbolic-ref --short refs/remotes/origin/HEAD` with the `origin/` prefix removed. Work in progress means the current branch is not the default branch and either `git status --porcelain` has a line that does not start with `??`, or the log ahead of the default branch is non-empty. Untracked files alone are not work in progress, and a branch with no upstream still counts through the log.
-
-`gh pr view` failing with `no pull requests found for branch` on stderr means no pull request. Any other failure (auth, host, network) is `unknown: <first stderr line>` in the Branch row, and the first two rows of 2b are skipped for this run because their condition cannot be read.
-
-**Open maps.** Every open map and its frontier:
-
-```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list scry:map
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list wayfinder:map
-GH_HOST=<host> bash "<SKILL_DIR>/scripts/map.sh" frontier MAP_NUMBER
-```
-
-The first frontier row is the ticket a walk would take: open, unblocked, unclaimed, in map order.
-
-**Build efforts.** Every issue whose body carries the exact line `Work kind: build`, then the members of each open one:
-
-```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> find "Work kind: build"
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> children PARENT_ID
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view MEMBER_ID
-```
-
-`children` gives only id, state, title, and url. For an open effort, count members by state, then `view` each open member: its `assignees` and `labels` lines are the only source for the checks below. A member already assigned to the person driving this session is the effort's available ticket before anything else, since it is work they have started; say it is already theirs. Otherwise, for each open member with no assignee whose labels carry the ready label, run `blocked MEMBER_ID`; the first one with no open blocker, in build order, is the available ticket. Build order comes from the parent's **Build order** section, read with `view PARENT_ID`.
-
-**Ready tickets.** The oldest ready ticket nobody holds and nothing blocks, without claiming it:
-
-```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> next <ready string>
-```
-
-Never pass `--claim` here. Portal decides; the routed skill claims.
-
-**The inbox.** Issues waiting on triage:
-
-```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list <needs-triage string>
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list --unlabeled
-```
-
-**Finished maps with no build effort.** Only when there is no open map, no open effort, and nothing ready. A closed map is one the `find` for `## Not yet specified` returns in a closed state. For each, search for its URL in `Planning source:` and `Builds toward:` lines with `find`; a map with no hit is a plan nobody has sliced.
-
-### 2b. Choose the route
-
-Take the first row whose condition holds. Report the others as context, never as a second recommendation.
-
-| Condition | Route to | Why it comes first |
-|-----------|----------|--------------------|
-| The branch's open PR has changes requested, unresolved review feedback, or failing checks | `remedy` for one pass over the feedback, or `ward` to stay with the PR until it merges. Prefer `ward` when checks are still running or the PR is expected to gather more feedback; prefer `remedy` for a batch that is already in | Work someone already reviewed is the closest to done |
-| The branch has work in progress as defined in 2a and no PR | `scan` on the branch, then `reveal` to open the PR | Unfinished work on the branch is lost context if it sits |
-| An open map has a frontier ticket | `scry` on that ticket | A decision blocks every build ticket behind it |
-| An open build effort has an available ticket | `cast` on that ticket, by id | Build order wins over the global queue, since a global `next` can belong to another effort |
-| A ready ticket is available and no effort claims it | `cast` on that ticket, by id | The board says it is ready |
-| An open build effort has no available ticket | `conjure` on the effort, for a progress check. Name what holds it: open PRs awaiting review, claimed tickets and who holds them, and the blockers of every blocked ticket. When a blocker is itself a ready unblocked ticket, route to `cast` on the blocker instead | Something is pending and the person needs to see what |
-| The inbox has issues | `sift` | Untriaged reports become ready tickets |
-| A closed map has no build effort | `conjure` on the map | The plan is done and nobody has sliced it |
-| None of the above | Nothing to route. Say the board is clear and that `scry` charts a new map from a loose idea | |
-
-When the inbox has issues and a higher row also holds, mention the inbox count in the report so it does not rot, and keep the single route.
-
----
+For a blank target, load [references/board.md](references/board.md). Gather the board summary, then inspect route candidates in precedence order. Independent reads may run together. Resolve the chosen route before handing off.
 
 ## Stage 3: Route one issue
 
-Read it first:
+For an id or URL, load [references/issue.md](references/issue.md). Inspect only that target and the relations needed to route it. Do not run whole-board discovery to fill the report.
 
-```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view ID
-```
-
-When `view` fails and the tracker shares numbers with pull requests, try `gh pr view ID --json number,title,url,state,reviewDecision,statusCheckRollup`. Classify from labels, assignees, state, and body lines, in this order:
-
-| What it is | How to tell | Route to |
-|------------|-------------|----------|
-| A pull request | `view` fails, `gh pr view` succeeds | `scan` when nobody has reviewed it, `remedy` when feedback is waiting, `ward` to attend it until merge |
-| A map | Label `scry:map` or `wayfinder:map` | Open: `scry` on the first frontier row, or on the map itself when the frontier is empty, so scry can report what keeps it open. Closed: search `Planning source:` and `Builds toward:` for the map URL with `find`; an effort found routes to `cast` on its available ticket or `conjure` for its progress; none found routes to `conjure` on the map |
-| A map ticket | Label `scry:<type>` or `wayfinder:<type>` | Open and unclaimed: `scry` on it. Claimed by someone else: say who holds it and stop. Closed: route its parent map instead (`map.sh parent ID`) |
-| A build effort | Body has the exact line `Work kind: build` | Its available ticket to `cast`, else `conjure` for a progress check, using the same rule as Stage 2 |
-| A ready ticket | Carries the ready label | Run `blocked ID`. No open blocker and no other assignee: `cast` on it. Blocked: name every open blocker, then route the first blocker through this table instead, one hop only. Held by someone else: say who and stop |
-| Waiting on a person | Carries the `ready-for-human` or `needs-info` string | Say what it waits for and stop. `sift` can move it once the answer lands |
-| Untriaged | Carries the `needs-triage` string, or no label at all | `sift` on it |
-| Closed | State is closed | Say it is done. When the body has a `Build parent:` link, route the parent instead |
-| Anything else | An open issue with only category labels | `sift` on it, since it has no state the other skills read |
-
-A ticket already assigned to the person driving this session is theirs; route it as if unclaimed and say it is already claimed.
-
----
+During either routing stage, load [references/build.md](references/build.md) only when evaluating an effort's available ticket or progress. Load [references/pr.md](references/pr.md) only when evaluating a pull request's feedback or checks.
 
 ## Stage 4: Report
 
@@ -177,7 +84,7 @@ Write the result as markdown, not as a code block and not as plain indented line
 
 **Prompt:** `\<one line that starts it>`
 
-Every row appears, in this order, even when the value is `none`. A cell holds one line: no newlines, no bullets, and a literal pipe inside a value is escaped as `\|`. Links go in bare so the terminal renders them. A read the tracker refused is written as `unknown: <reason>` in its row, and the route is chosen from what did load.
+For whole-board mode, every row appears in this order. Use `not inspected` for deliberately deferred detail, `none` for a verified absence, and `unknown: <reason>` for a failed read. For a named target, replace the board rows with **Target**, **State**, and **Relevant context**; include only the target and relations actually inspected. When no action is available, replace Next step with the reason and omit Prompt. A cell holds one line: no newlines, no bullets, and a literal pipe inside a value is escaped as `\|`. Links go in bare so the terminal renders them. A read the tracker refused is written as `unknown: <reason>` in its row, and the route is chosen from what did load.
 
 The prompt line is natural language that works whether or not the named skill is installed. Shapes:
 
@@ -192,15 +99,15 @@ The prompt line is natural language that works whether or not the named skill is
 
 ## Stage 5: Step through
 
-The report is delivered before this question, in a user-visible message, so the choice is about action. Ask **one** question, unless `go` already answered it. Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded). Begin it with "Step through to \<skill> on \<ticket title>?" and offer these options, the first marked recommended:
+The report is delivered before this question, in a user-visible message, so the choice is about action. For an actionable route that still needs authorization, ask **one** question. Skip it for a recommendation-only request, `go`, or prior authorization covering this action. Use a question tool only when it is available and permitted in the current mode; otherwise ask in conversation and wait for the reply. Do not discover or call a tool by a name from another platform. Begin it with "Step through to \<skill> on \<ticket title>?" and offer these options, the first marked recommended:
 
 1. **Run \<skill> on \<ticket> now.** Hand off as described below.
-2. **Take the runner-up instead.** Name the next route the precedence table would have chosen, such as the next available ticket in build order or the inbox. Choosing it hands off to that route the same way.
+2. **Take the runner-up instead.** Offer this only when another actionable route was verified during discovery. Name it. Do not fetch more tickets just to populate this option. Choosing it hands off to that route the same way.
 3. **Something else.** Stop with the report and the prompt line in view. The person types what they want.
 
-Without a question tool, ask the same thing in one sentence and wait.
+A pending question is not authorization. Resume the chosen route after the answer without repeating the question.
 
-**Handing off.** The routed skill is a sibling of this one: its instructions live at `<SKILL_DIR>/../<skill>/SKILL.md`. Read that file in full and follow it from its start as if the person had invoked it with the ticket id as the argument, including its persona stage, its tracker stage, and its own claim. Portal has not claimed anything, so the routed skill's claim is the first write of the session. Do not summarize the sibling's rules from memory; the file is the contract. When the sibling folder is missing, say so, then carry out the prompt line as an ordinary task and note that the skill's own workflow, such as proof capture and the pull request, is not in play.
+**Handing off.** The routed skill is a sibling of this one: its instructions live at `<SKILL_DIR>/../<skill>/SKILL.md`. Read that file in full and follow it from its start as if the person had invoked it with the ticket id as the argument, including its persona and tracker stages and any applicable claim. Carry forward the selected branch or PR URL when the route is not an issue. For `scan` followed by `reveal`, preserve both steps when the user authorized that sequence. Portal has not claimed anything, so any claim belongs to the routed workflow. Do not summarize the sibling's rules from memory; the file is the contract. When the sibling folder is missing, say so, then carry out the prompt line as an ordinary task and note that the skill's own workflow, such as proof capture and the pull request, is not in play.
 
 `go` with a route that leads to nothing (a clear board, a ticket held by someone else, or a ticket waiting on a person) prints the report and stops; there is nothing to step through.
 
@@ -208,4 +115,8 @@ Without a question tool, ask the same thing in one sentence and wait.
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
-| `../<skill>/SKILL.md` | Stage 5, on a yes | The routed skill's own instructions, followed from the top |
+| `references/board.md` | Stage 2, blank target | Board summary and route precedence |
+| `references/issue.md` | Stage 3, named target | State-first issue routing |
+| `references/build.md` | Stage 2 or 3, effort candidate | Available ticket and progress |
+| `references/pr.md` | Stage 2 or 3, PR candidate | Review and check evidence |
+| `../<skill>/SKILL.md` | Stage 5, authorized handoff | The routed skill's own instructions, followed from the top |

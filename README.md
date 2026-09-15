@@ -566,10 +566,10 @@ The search includes pinned library source, wire formats, database columns, featu
 
 ### portal
 
-Reads the tracker and the current branch, names the one skill to run next and the ticket to run it on, then asks whether to step through. On a yes it hands the session to that skill with the ticket already chosen. Portal's own reads claim nothing; the routed skill makes the first write.
+Reads the tracker and the current branch, names the one skill to run next and the ticket to run it on, then asks whether to step through. On a yes it hands the session to that skill with the ticket already chosen. Portal's discovery claims nothing; the routed workflow makes any authorized writes. A recommendation-only request ends at the report, and prior authorization skips the question.
 
 - Blank: the whole board. An open PR with feedback comes first, then a map with a frontier ticket, then a build effort's next ticket in build order, then the oldest ready ticket, then the inbox.
-- An issue id: classifies that one issue and routes it. A blocked ticket routes to its first open blocker; a closed map routes to its build effort or, when none exists, to filing one.
+- An issue id: inspects that target and the relations needed to route it, with a compact target report. Closed state takes precedence over ready labels. A blocked ticket routes to its first open blocker; a closed map routes to its build effort or, when none exists, to filing one.
 
 ```text
 # What should I do next?
