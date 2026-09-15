@@ -116,6 +116,7 @@ Changes one repo setting after setup and shows which skills read it. Persona con
 |---------|-----------------|
 | `labels` | Names for the seven triage roles; creates missing tracker labels |
 | `validation` | The `Validation:` line, after the command runs clean |
+| `branches` | The branch name pattern, `<id>-<slug>` by default, that ticket building creates or renames to |
 | `proof` | How pull request proof gets captured |
 | `docs` | Single context (`CONTEXT.md`) or multi context (`CONTEXT-MAP.md`) |
 | `peer` | The installed CLI that receives the diff for a second opinion on every review |
@@ -459,7 +460,7 @@ Builds one ready ticket or spec, commits the change, and opens a PR with visual 
 <details>
 <summary>Branch handling, validation, and additional commands</summary>
 
-Cast uses the current branch. Starting on the default branch creates `cast/<number>-<slug>` before any edit; it never switches to an existing branch. An Orca worktree already has its branch.
+Cast uses the current branch. Starting on the default branch creates `<id>-<slug>` before any edit, or whatever pattern the `Branches:` line in the `## Agent skills` block names; it never switches to an existing branch. Cast renames a branch a worktree tool made, still empty and unpushed, to the same pattern before the first edit. Set the pattern with `attune branches`.
 
 The build loads the agent brief when available and uses TDD at named seams for meaningful behavior changes when a test harness exists. It keeps the smallest shape that satisfies the ticket and adds no helper or abstraction without a consumer that exists now. Required project checks still run; successful validation is reused when no later edit or unresolved concern needs a fresh run. Before the spec check, a bundled comment reviewer audits code comments added or modified in the session. Cast audits the deletions, preserves protected comments, and repairs confusing code within the ticket scope, then validates any edits. It skips this pass when no code comments changed. It checks the diff against the ticket before committing, then the default PR flow pushes, creating an upstream if needed; with `no-pr`, it pushes only when an upstream already exists.
 

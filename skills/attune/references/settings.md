@@ -7,6 +7,7 @@ Nothing here is required. Every reader falls back, so removing a setting is alwa
 | Setting | Lives in | Default when unset | Read by |
 |---------|----------|--------------------|---------|
 | labels | The table rows in `docs/agents/triage-labels.md`, and the `Triage labels:` line | The label string equals the role name | Triage, ticket filing, ticket building, map walking |
+| branches | The `Branches:` line in the `## Agent skills` block | `<id>-<slug>`, so a ticket gives `42-flat-tax` and no ticket gives `flat-tax` | Ticket building, when it creates or renames the working branch |
 | validation | The `Validation:` line in the `## Agent skills` block | Each skill detects a test command from the repo's manifest and docs | Review, feedback resolution, ticket building, merge repair |
 | proof | The `Proof:` line in the block | The capturing skill picks a route from what the host offers | Pull request bodies |
 | docs | The `Domain docs:` line in the block, plus whether `CONTEXT.md` or `CONTEXT-MAP.md` exists | Single context, and the file is created by whichever skill first has something to write in it | Anything that reads project vocabulary |

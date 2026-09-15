@@ -27,7 +27,7 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 
 - **One ticket.** The invocation names the work. Do not wander onto adjacent issues.
 - **Smallest shape that passes.** Build the least structure that satisfies the ticket, and write one plain line when one line does the job. A helper, option, or abstraction needs a consumer that exists now. This is YAGNI: you aren't gonna need it.
-- **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1).
+- **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1). It renames only an empty, unpushed branch a worktree tool made, so the name follows the repo's convention.
 - **Claim before work.** A ticket from the tracker gets assigned to the person driving this session first, so a parallel session skips it. Held by someone else: stop.
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
 - **Leave the review to a later pass.** This skill commits the implementation. It does not run a multi-reviewer critique.
@@ -66,7 +66,7 @@ Parse tokens, then treat the remainder as the target.
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too. Ticket ids are whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`).
 
-The operations below are `next`, `claim`, and `view`; build progress also uses `children`, `body`, `update-body`, `comment`, and `close`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Inside an Orca worktree, `orca linear` is such a connector for Linear: `orca linear issue <id> --comments --relations --json` is `view`, `orca linear assignee set` is `claim`, and `orca linear --help` lists the rest. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation, excluding bodies marked `Work kind: build`. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is a build parent, closed, missing the ready label, or still blocked, unassign yourself and stop before creating `cast/<id>-*`. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered ticket file with `Status: ready-for-agent`, no `Work kind: build` marker, and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
+The operations below are `next`, `claim`, and `view`; build progress also uses `children`, `body`, `update-body`, `comment`, and `close`. On Linear or Jira, when the host exposes a connector for that tracker, use it for them; it is already authenticated. Inside an Orca worktree, `orca linear` is such a connector for Linear: `orca linear issue <id> --comments --relations --json` is `view`, `orca linear assignee set` is `claim`, and `orca linear --help` lists the rest. `next` through a connector means: the oldest open issue carrying the ready label, with no assignee and no open blocking relation, excluding bodies marked `Work kind: build`. `claim` means: read the assignee, stop if it is someone else, assign yourself, read it again. After a connector `next` plus `claim`, view the ticket. If it is a build parent, closed, missing the ready label, or still blocked, unassign yourself and stop before creating the working branch. Otherwise run the script with the adapter flags. GitHub always goes through the script. Never mix the two in one run. For `local`, the ticket is a file: `next` is the lowest-numbered ticket file with `Status: ready-for-agent`, no `Work kind: build` marker, and no open `Blocked by:`, and claim is rewriting that line to `Status: claimed`. Re-read the file after claiming; if a `Blocked by:` file is still open, set `Status: ready-for-agent` and stop. For `other`, follow the tracker file's Conventions by hand.
 
 ## Stage 1: Load
 
@@ -98,20 +98,30 @@ Prefer, in this order: the latest comment headed `## Agent Brief`; a linked spec
 
 **Orca card.** Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), link the ticket to the worktree card once it is claimed. GitHub: `orca worktree set --worktree active --issue <n> --json`. Linear: `--linear-issue <ENG-42>` instead. Jira, local, or other: `--comment "<id> <title>"` instead, since the card has no field for those. Skip this for a spec path or the conversation.
 
-**Branch.** Compare the current branch with the repo default:
+**Branch.** Read the `Branches:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md`. It holds the branch name pattern, with `<id>` standing for the ticket id and `<slug>` for a short kebab slug from the title. An absent line means `<id>-<slug>`. The id is lowercased as it appears on the tracker, so the default gives `42-flat-tax` and `eng-42-flat-tax`. For a spec path or the conversation with no ticket, drop `<id>` and the separator after it, so the default gives `flat-tax`. The name never carries the skill's name or the user's login unless the pattern spells them out.
+
+Compare the current branch with the repo default:
 
 ```bash
 git rev-parse --abbrev-ref HEAD
 gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+git rev-parse HEAD "origin/<default>"
+git config branch.<current>.remote
 ```
 
-When they match, create the working branch now, before any edit, and never commit to the default branch:
+When the names match, create the working branch now, before any edit, and never commit to the default branch:
 
 ```bash
-git switch -c cast/<id>-<short-kebab-slug-from-the-title>
+git switch -c <name from the pattern>
 ```
 
-The id is lowercased as it appears on the tracker (`cast/42-flat-tax`, `cast/eng-42-flat-tax`). For a spec path or the conversation with no ticket, name it `cast/<slug>`. Any other current branch is the working branch as it stands.
+When the current branch is one a worktree tool made, such as `<login>/<worktree-name>`, it usually has no commits of its own and no upstream: `git rev-parse HEAD` equals the default branch tip, and `git config branch.<current>.remote` prints nothing. Rename it in place so the PR carries the convention:
+
+```bash
+git branch -m <name from the pattern>
+```
+
+Skip the rename for a branch that already follows the pattern. Skip it too for one with commits past the default branch or an upstream, since a rename there would orphan a checkout or a PR somewhere else. Any other current branch is the working branch as it stands.
 
 **A path.** Read that file. It is the spec and the contract.
 
@@ -227,7 +237,7 @@ Write the result as markdown, not as a code block and not as plain indented line
 | | |
 |---|---|
 | **Claimed** | yes \| already mine \| no: reason \| none: spec path or conversation |
-| **Branch** | created cast/... \| existing branch name |
+| **Branch** | created \<name> \| renamed \<old> to \<name> \| existing \<name> |
 | **Commit** | sha |
 | **Pushed** | yes, to branch \| no, no upstream \| no, push failed: reason |
 | **PR** | url \| none: no-pr \| none: reason |
