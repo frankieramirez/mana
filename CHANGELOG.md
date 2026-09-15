@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.26.1
+
+- `cast` now ends in a rendered table instead of a wall of text. The report template was a fenced block of `Key: value` lines, so the final response came out as preformatted text that a terminal shows as one unformatted blob, and the runs that did look good were the model reformatting on its own. The template is markdown now: a heading, a two-column table of the fixed fields, and the `Build effort` and `Next step` lines under it, with one line per cell and links left bare so they stay clickable.
+
 ## 0.26.0
 
 - `dispel` no longer invents facts to replace the wording it strips. Asked to rewrite prose sitting next to a code block, it read a constant out of the code and documented the schedule that constant produces, in 3 of 3 runs, where the same model without the skill did so in 0 of 3. The rules told it to replace vague wording by naming the mechanism or the number and never said what to do when the source supplies neither. A new Fidelity section scopes the substitution rules to facts the source states, makes exempt text read-only in both directions, and adds a self-check for anything carried out of it. After the change the same case is clean in 3 of 3 runs. The PR description case moved the same way, from inventing a key-rotation reason the prompt never gave in 3 of 3 runs to stating the behavior without a reason in 3 of 3, while the same model without the skill still invents it every time.
