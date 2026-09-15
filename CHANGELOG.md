@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.27.1
+
+- Make `portal` honor recommendation-only requests and prior handoff authorization. Route closed targets before workflow labels, read unresolved PR threads and complete check state, and use question tools only when permitted. Split board and target routing into stage-loaded references, defer lower-priority detail, and report only inspected context for named targets. Shorten its discovery description.
+
 ## 0.27.0
 
 - Add `portal`, a read-only router. Run it with nothing and it reads the current branch, open maps and their frontiers, open build efforts and their members, the oldest ready ticket, and the triage inbox, then names one skill and one ticket and asks whether to step through. On a yes it reads that skill's own SKILL.md and follows it with the ticket as the argument, so the routed skill makes the first write. Run it with an issue id and it classifies that issue (map, map ticket, build effort, ready ticket, blocked ticket, waiting on a person, untriaged, pull request, closed) and routes it the same way. `go` skips the question. Build order wins over the global ready queue, a ticket you already hold comes first, and a blocked ticket routes to its first open blocker.
