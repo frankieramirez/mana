@@ -73,7 +73,10 @@ elif a[0]=='api':
                 if d.get('parent')==n: print(k)
     elif endpoint.endswith('/dependencies/blocked_by'):
         if os.environ.get('DEPS')=='404': fail('HTTP 404 Not Found')
-        print('0' if 'length' in q else '')
+        open_ids=[k for k in issue(n).get('blocked_by',[]) if issue(k)['state']=='OPEN']
+        if 'length' in q: print(len(open_ids))
+        elif '.number' in q: print('\n'.join(open_ids))
+        else: fail('unexpected blocked_by query: '+q)
     elif n:
         issue(n)
         assert q=='.id', q
@@ -112,6 +115,7 @@ state['3'].update(state='CLOSED',body='Build parent: [Build](https://github.com/
 state['6'].update(parent='5')
 state['7']['body']='Build parent: [Build](https://github.com/acme/widgets/issues/1)\r\n\r\nSlice literal [x].'
 state['5']['body']='Blocked by: #2, #3\r\n\r\nSlice literal [x].'
+state['6']['blocked_by']=['2','3']
 Path(os.environ['GH_FIXTURE'],'state.json').write_text(json.dumps(state))
 PY
 run() { bash "$root/skills/sift/scripts/tickets.sh" --repo acme/widgets "$@"; }
@@ -169,8 +173,14 @@ grep -q '^edit 2$' "$tmp/mutations"
 ! grep -q '^edit 1$' "$tmp/mutations"
 expect_fail run blocked 2
 [ ! -s "$tmp/out" ]
+run blocked 6 > "$tmp/blockers"
+[ "$(cat "$tmp/blockers")" = "2" ]
+run next ready > "$tmp/next"
+! grep -q $'^6\t' "$tmp/next"
 DEPS=404 run blocked 5 > "$tmp/blockers"
 [ "$(cat "$tmp/blockers")" = "2" ]
 DEPS=404 expect_fail run blocked 4
+# The API answers first: an empty API result wins over a Blocked by: line.
+expect_fail run blocked 5
 python3 "$root/scripts/test-build-python.py"
 echo 'build ticket adapter fixtures: ok'

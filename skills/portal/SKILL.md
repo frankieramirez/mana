@@ -66,11 +66,15 @@ Gather every signal below before choosing. Each read is cheap and the order of p
 
 ```bash
 git rev-parse --abbrev-ref HEAD
+gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
 git status --porcelain
+git log --oneline <default branch>..HEAD
 gh pr view --json number,title,url,state,isDraft,reviewDecision,mergeable,statusCheckRollup --jq '[.number,.title,.url,.state,.isDraft,.reviewDecision,.mergeable,([.statusCheckRollup[]?.conclusion] | join(","))] | @tsv'
 ```
 
-A failing `gh pr view` means no pull request for this branch. Unpushed commits: `git log --oneline @{upstream}..HEAD` when an upstream exists.
+When `gh repo view` fails, the default branch is `git symbolic-ref --short refs/remotes/origin/HEAD` with the `origin/` prefix removed. Work in progress means the current branch is not the default branch and either `git status --porcelain` has a line that does not start with `??`, or the log ahead of the default branch is non-empty. Untracked files alone are not work in progress, and a branch with no upstream still counts through the log.
+
+`gh pr view` failing with `no pull requests found for branch` on stderr means no pull request. Any other failure (auth, host, network) is `unknown: <first stderr line>` in the Branch row, and the first two rows of 2b are skipped for this run because their condition cannot be read.
 
 **Open maps.** Every open map and its frontier:
 
@@ -87,9 +91,10 @@ The first frontier row is the ticket a walk would take: open, unblocked, unclaim
 ```bash
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> find "Work kind: build"
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> children PARENT_ID
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> view MEMBER_ID
 ```
 
-For an open effort, count members by state. A member already assigned to the person driving this session is the effort's available ticket before anything else, since it is work they have started; say it is already theirs. Otherwise, for each open member with no assignee that carries the ready label, run `blocked MEMBER_ID`; the first one with no open blocker, in build order, is the available ticket. Read the parent's **Build order** section with `view PARENT_ID` when the child listing does not give the order.
+`children` gives only id, state, title, and url. For an open effort, count members by state, then `view` each open member: its `assignees` and `labels` lines are the only source for the checks below. A member already assigned to the person driving this session is the effort's available ticket before anything else, since it is work they have started; say it is already theirs. Otherwise, for each open member with no assignee whose labels carry the ready label, run `blocked MEMBER_ID`; the first one with no open blocker, in build order, is the available ticket. Build order comes from the parent's **Build order** section, read with `view PARENT_ID`.
 
 **Ready tickets.** The oldest ready ticket nobody holds and nothing blocks, without claiming it:
 
@@ -115,7 +120,7 @@ Take the first row whose condition holds. Report the others as context, never as
 | Condition | Route to | Why it comes first |
 |-----------|----------|--------------------|
 | The branch's open PR has changes requested, unresolved review feedback, or failing checks | `remedy` for one pass over the feedback, or `ward` to stay with the PR until it merges. Prefer `ward` when checks are still running or the PR is expected to gather more feedback; prefer `remedy` for a batch that is already in | Work someone already reviewed is the closest to done |
-| The branch has uncommitted or unpushed work and no PR | `scan` on the branch, then `reveal` to open the PR | Unfinished work on the branch is lost context if it sits |
+| The branch has work in progress as defined in 2a and no PR | `scan` on the branch, then `reveal` to open the PR | Unfinished work on the branch is lost context if it sits |
 | An open map has a frontier ticket | `scry` on that ticket | A decision blocks every build ticket behind it |
 | An open build effort has an available ticket | `cast` on that ticket, by id | Build order wins over the global queue, since a global `next` can belong to another effort |
 | A ready ticket is available and no effort claims it | `cast` on that ticket, by id | The board says it is ready |

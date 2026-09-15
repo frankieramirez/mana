@@ -17,7 +17,7 @@ This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin 
 - The Archmage voice lives in `skills/attune/references/archmage.md`, with `archmage-session.md` and `persona-activation.md` beside it. `scripts/sync-persona.sh` copies the voice into every skill, rewrites each activation block, and generates `output-styles/archmage.md` for Claude Code. Edit the attune sources and run that script.
 - Everything under `agents/` is generated. Edit the reference file named in the table in `scripts/sync-agent.sh` (`skills/banish/references/comment-reaper.md`, `skills/mimic/references/ghost.md`, `skills/mend/references/weaver.md`) and run that script. Adding an agent means a new table row plus a line in `plugin.json`.
 - Every behavior change bumps `version` in `.claude-plugin/plugin.json` and gets a line in `CHANGELOG.md`. Claude Code caches plugins by version, so a change without a bump does not reach installed copies.
-- Nothing here references another plugin, marketplace, or skill by name. Skills must work standalone under Codex, Cursor, or Copilot where only the `SKILL.md` and its folder are installed.
+- Nothing here references another plugin, marketplace, or skill by name. Skills must work standalone under Codex, Cursor, or Copilot where only the `SKILL.md` and its folder are installed. The one exception is `portal`, whose job is to name the skill it hands off to; it reads a sibling's `SKILL.md` when the folder is present and falls back to a plain prompt when it is not.
 
 ## Checks
 
