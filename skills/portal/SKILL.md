@@ -77,6 +77,7 @@ Write the result as markdown, not as a code block and not as plain indented line
 | **Branch** | name, then clean \| uncommitted \| unpushed, then the PR state or `no PR` |
 | **Maps** | count open and the first frontier ticket, or `none` |
 | **Build effort** | title, done/total, then held by you \| available \| blocked \| awaiting review counts, or `none` |
+| **Roadmap** | current milestone and done/total, or `none` |
 | **Ready** | the oldest ready ticket nobody holds, or `none` |
 | **Inbox** | count needing triage |
 
@@ -93,6 +94,7 @@ The prompt line is natural language that works whether or not the named skill is
 - `Check progress and close out the build effort at <parent URL> once the pending work is complete.` for a stalled effort.
 - `Use the completed planning map <map URL> to propose the implementation work, keeping the map as the planning source.` for a map with no effort.
 - `Triage <issue URL>.` for the inbox.
+- `Report the roadmap and the next milestone to start.` for a clear board with a roadmap.
 - `Review the pull request <PR URL>.` or `Resolve the review feedback on <PR URL>.` for a PR.
 
 ---

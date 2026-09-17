@@ -110,6 +110,8 @@ EOF
 
 Notes record: domain; files every session should read; standing preferences; any owning doc that later resolutions should update (a decision log, a spec).
 
+When the `## Agent skills` block in `CLAUDE.md` or `AGENTS.md` has a `Roadmap:` line, read that issue and, in the last interrogation round, ask which of its milestones this map serves, recommending the first one that is not `done`. Write the answer into Notes as one line, `Milestone: <name> on [<roadmap title>](<roadmap URL>)`, with the name spelled exactly as the roadmap's heading. A map that serves no milestone gets no line, and the report says so. Do not write the roadmap; its own skill derives status from this line.
+
 ### 2d. File the tickets you can specify
 
 A ticket is ready to file when you can state its **Question** precisely. Sharpness of the question matters. Whether you can answer it yet does not.

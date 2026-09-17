@@ -153,7 +153,7 @@ Validation: <the command and its result | none recorded, each skill detects one>
 Wrote: <files written or updated in place>
 ```
 
-Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker and any existing persona or style setting was defaulted. To change one of those later, the label names, the validation command, the branch name pattern, how pull request proof is captured, a persona or session style, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks.
+Say that the files apply to new sessions and that editing them by hand is fine. Everything except the tracker and any existing persona or style setting was defaulted. To change one of those later, the label names, the validation command, the branch name pattern, how pull request proof is captured, a persona or session style, a second opinion reviewer, or the worktree files, edit the block directly, or run the `attune` skill when it is installed. To switch trackers, run this one again and name the tracker (`setup-mana linear`), or say you want to switch and it asks. End with one line offering the `vision` skill, when it is installed, to chart a roadmap of milestones on the tracker; setup never charts one itself.
 
 ## References
 

@@ -14,6 +14,7 @@ Open tickets are omitted from the body. They are children, found by `map.sh fron
 ## Notes
 
 <domain; files every session should read; standing preferences for this effort; owning doc if resolutions should land somewhere besides the ticket>
+Milestone: <name> on [<roadmap title>](<roadmap URL>)   <!-- only when the repo has a roadmap and this map serves one of its milestones -->
 
 ## Decisions so far
 

@@ -15,6 +15,7 @@ Nothing here is required. Every reader falls back, so removing a setting is alwa
 | worktree | `.worktreeinclude` and `orca.yaml` at the repo root | Nothing is copied or shared into a fresh worktree | Orca, when it creates a worktree |
 | pr-surface | The `## Pull requests as a request surface` section of `docs/agents/issue-tracker.md` | `No.`, so triage sees issues only | Triage |
 | key | The `Project:` and `Adapter flags:` lines of `docs/agents/issue-tracker.md` | The bundled script falls back to `LINEAR_TEAM` or `JIRA_PROJECT` | Every tracker call in every skill |
+| roadmap | The `Roadmap:` line in the `## Agent skills` block | No roadmap; the roadmap skill falls back to searching for the `Work kind: roadmap` marker | The roadmap skill, map charting, build effort filing, routing |
 | pointer | Which of `CLAUDE.md` and `AGENTS.md` holds the block | Whichever one exists | Every setting above |
 | persona | The `Persona:` line in the `## Agent skills` block | Off, with ordinary skill behavior | Every skill's lead agent |
 | style | The `Style:` line in the block plus `docs/agents/archmage.md`; under Claude Code, the `mana:archmage` output style | Off, with the host's ordinary voice | The host at session start, and every skill's lead agent |

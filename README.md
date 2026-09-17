@@ -38,6 +38,7 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 |-------|-------|-----------------------|
 | Set up a repo | [setup-mana](#setup-mana), [attune](#attune) | Tracker configuration and repo defaults |
 | Find the next move | [portal](#portal) | One skill, one ticket, and the prompt that starts it |
+| Hold the roadmap | [vision](#vision) | Ordered milestones with derived status, what is left, and the next milestone to start |
 | Decide | [scry](#scry) | A decision map and a spec |
 | Triage the inbox | [sift](#sift) | Issues sorted by state, ready ones with an agent brief |
 | File the build tickets | [conjure](#conjure) | Session-sized tickets in build order |
@@ -50,7 +51,7 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 
 Build work meets at a `ready-for-agent` issue with an agent brief. A person merges the PR; [tracker closing rules](#trackers) determine when the ticket closes. `cast next` picks up the next ready ticket.
 
-After setup, use `portal` when you are unsure what comes next, `sift` for incoming work, and `cast next` for ready tickets. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` when the UI has drifted and you want a ranked list of what to clean up.
+After setup, use `portal` when you are unsure what comes next, `sift` for incoming work, and `cast next` for ready tickets. Run `vision` once to chart the milestones, and again whenever you want to know how much is left; every map and build effort names the milestone it serves. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` when the UI has drifted and you want a ranked list of what to clean up.
 
 ## Skills
 
@@ -596,9 +597,42 @@ Reads the tracker and the current branch, names the one skill to run next and th
 | Build effort with nothing available | `conjure` progress check, naming what holds it |
 | Inbox has untriaged issues | `sift` |
 | Closed map nobody has sliced | `conjure` on the map |
+| Roadmap has a milestone left | `vision` for the next milestone |
 | Nothing open | Says so; `scry` for a new idea |
 
 Portal reads through the same bundled ticket script as the other skills, plus scry's map script for frontiers, and never passes `--claim`. Every read that fails is reported as unknown rather than treated as empty.
+
+</details>
+
+### vision
+
+Holds one roadmap on the tracker: a destination and ordered milestones. Every map and build effort names the milestone it serves with a line in its own body, so nothing writes the roadmap when they close and two sessions finishing at once cannot collide. Each run derives every milestone's status from those linked issues, rewrites the roadmap under a guard, and reports the current milestone, what is left, and the one prompt to start next. No dates, no estimates: progress is counts.
+
+- Blank with no roadmap: interviews you for the destination and three to six milestones, creates the issue, and writes the `Roadmap:` pointer into the `## Agent skills` block.
+- Blank with a roadmap: reconciles and reports. `add`, `done`, `reopen`, and `order` edit the milestones first.
+
+```text
+# Chart the roadmap
+/mana:vision
+
+# Where are we, and what should we start next?
+/mana:vision
+
+# Add a milestone at the end
+/mana:vision add Billing self-serve
+```
+
+<details>
+<summary>Status rules and what links up</summary>
+
+| Status | When |
+|--------|------|
+| `planned` | Nothing names the milestone |
+| `deciding` | An open map names it |
+| `building` | Every map naming it is closed, and an effort is open or the map still needs slicing |
+| `done` | At least one build effort names it and everything naming it is closed, or you confirmed it with `done <n>` |
+
+A map's Notes and a build parent's body carry `Milestone: <name> on [Roadmap](url)`. `scry` asks for the milestone when it charts a map, `conjure` copies the line into the build parent, and `portal` routes to `vision` when the board is otherwise clear. Maps and efforts with no line are counted as unattached in the report rather than blocked.
 
 </details>
 
