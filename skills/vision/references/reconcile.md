@@ -17,7 +17,7 @@ printf 'original_body=%s\n' "$snapshot_path"
 
 ### 3b. Apply an edit
 
-`add`, `done`, `reopen`, or `order` changes the **Milestones** section of the replacement body as `references/roadmap-shape.md` describes. `done` on a milestone whose derived status is not `done` writes a `Confirmed done:` line with the reason the user gave; `reopen` removes it. An edit that names a milestone number that does not exist stops without writing.
+`add`, `done`, `reopen`, or `order` changes the **Milestones** section of the replacement body as `references/roadmap-shape.md` describes. `done` writes a `Confirmed done:` line with the reason the user gave, whatever the previous status, since the line is idempotent and `reopen` removes it. An edit that names a milestone number that does not exist stops without writing.
 
 ### 3c. Find the members
 
@@ -39,12 +39,12 @@ For each milestone, apply the first matching row:
 
 | Status | Rule |
 |--------|------|
-| `done` | A `Confirmed done:` line is present, or every map naming it is closed, at least one map or effort names it, and every effort naming it is closed |
-| `building` | Every map naming it is closed and at least one effort naming it is open |
+| `done` | A `Confirmed done:` line is present, or at least one effort names it, every map naming it is closed, and every effort naming it is closed |
+| `building` | Every map naming it is closed and at least one map or effort names it. This covers an open effort, and a closed map with no effort yet, whose Left line reads `plan implementation from <map title>` |
 | `deciding` | At least one open map names it |
 | `planned` | Nothing names it |
 
-A milestone the previous body marked `done` by the rules alone, that now has an open member, goes back to `building` or `deciding`; only a `Confirmed done:` line holds. The **current** milestone is the first one that is not `done`.
+A closed map counts as sliced only when an effort names the milestone. Before writing `plan implementation from <map title>`, run `find "<map URL>"` and read each hit for a `Planning source:` line naming that map; an effort found that way is a member of the milestone even without a `Milestone:` line, so record it under Efforts. A milestone the previous body marked `done` by the rules alone, that now has an open member, goes back to `building` or `deciding`; only a `Confirmed done:` line holds. The **current** milestone is the first one that is not `done`.
 
 For the current milestone only, fetch the details needed by `references/report.md`. On GitHub, read each open map's frontier:
 
@@ -58,7 +58,7 @@ For each open effort, use the bundled ticket script with the resolved adapter fl
 
 ### 3e. Write
 
-Rewrite the body from the snapshot: the same sections in the same order, each milestone's status, its Maps and Efforts lines, and its Left line updated, and any **Not yet planned** line whose name now matches a milestone removed. Preserve every other line. Write under the guard:
+Rewrite the body from the snapshot: the same sections in the same order, each milestone's status, its Maps and Efforts lines, and its Left line updated, and any **Not yet planned** line whose name now matches a milestone removed. A milestone that is not current gets its Left line from the 3c counts alone, such as `2 maps open, 1 effort open`, with no frontier or ticket-level fetch; only the current milestone's Left line uses the detail fetched in 3d. Preserve every other line. Write under the guard:
 
 ```bash
 original_body='<recorded absolute snapshot path>'

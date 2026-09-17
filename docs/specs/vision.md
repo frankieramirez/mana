@@ -56,8 +56,8 @@ Status is derived, never typed by hand:
 |--------|------|
 | `planned` | no map and no effort names this milestone |
 | `deciding` | at least one open map names it |
-| `building` | every map naming it is closed and at least one effort naming it is open |
-| `done` | every map closed and every effort delivered, or the user confirmed it with `done <n>` |
+| `building` | every map naming it is closed and at least one map or effort names it, which covers an open effort and a closed map that still needs slicing |
+| `done` | at least one effort names it, every map is closed, and every effort is delivered, or the user confirmed it with `done <n>` |
 
 The flip to `done` is automatic. The report names any milestone whose status changed this run, and `reopen <n>` undoes a `done` confirmation. The current milestone is the first one not `done`. A milestone with nothing linked is `planned`; `vision` never invents maps or efforts for it.
 

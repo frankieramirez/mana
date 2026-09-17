@@ -88,7 +88,7 @@ peer         unset, the diff stays on this machine     review
 worktree     .worktreeinclude present, no orca.yaml    fresh worktrees
 pr-surface   No, issues only                           triage
 key          ENG, verified as frankie                  every tracker call
-roadmap      unset, no roadmap                         the roadmap skill, scry, conjure, portal
+roadmap      unset, no roadmap                         the roadmap skill, map charting, effort filing, routing
 pointer      AGENTS.md                                 everything above
 persona      off                                      every skill's lead agent
 style        off                                      the host, every turn of a session

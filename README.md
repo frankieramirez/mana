@@ -629,8 +629,8 @@ Holds one roadmap on the tracker: a destination and ordered milestones. Every ma
 |--------|------|
 | `planned` | Nothing names the milestone |
 | `deciding` | An open map names it |
-| `building` | Every map naming it is closed and an open build effort names it |
-| `done` | Everything naming it is closed, or you confirmed it with `done <n>` |
+| `building` | Every map naming it is closed, and an effort is open or the map still needs slicing |
+| `done` | At least one build effort names it and everything naming it is closed, or you confirmed it with `done <n>` |
 
 A map's Notes and a build parent's body carry `Milestone: <name> on [Roadmap](url)`. `scry` asks for the milestone when it charts a map, `conjure` copies the line into the build parent, and `portal` routes to `vision` when the board is otherwise clear. Maps and efforts with no line are counted as unattached in the report rather than blocked.
 

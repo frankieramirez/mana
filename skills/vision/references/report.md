@@ -17,7 +17,7 @@ Write the result as markdown, not as a code block. A cell holds one line, and li
 
 **Prompt:** `\<one line that starts it>`
 
-Name any milestone whose status changed this run, in one sentence above the table. Next step is the first row that holds for the current milestone:
+Name any milestone whose status changed this run, in one sentence above the table. Next step is the first row that holds for the current milestone. When no milestone is current, only the last two rows apply:
 
 | Condition | Next step | Prompt |
 |-----------|-----------|--------|
@@ -27,6 +27,7 @@ Name any milestone whose status changed this run, in one sentence above the tabl
 | A closed map has no effort | Plan implementation from the map | `Use the completed planning map <map URL> to propose the implementation work, keeping the map as the planning source.` |
 | An open effort has nothing available | Check the build effort | `Check progress and close out the build effort at <parent URL> once the pending work is complete.` |
 | The milestone is `planned` | Chart a new planning map | `Chart a map toward <milestone outcome>, serving milestone <name> on <roadmap URL>.` |
+| Every milestone is `done` and Not yet planned has lines | Add the next milestone | `Add milestone <first unplanned line> to the roadmap at <roadmap URL>.` |
 | Every milestone is `done` and nothing is unplanned | none | Say the destination is reached and omit the prompt |
 
 The prompt describes an ordinary task without depending on another installed skill. The report completes a roadmap-only request. Continue further work when it is part of the user's explicit request.

@@ -56,7 +56,7 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list --unlabeled
 
 **The roadmap.** Only when a `Roadmap:` line exists in the `## Agent skills` block, or `find "Work kind: roadmap"` returns exactly one open issue. Read its body with `view` and take the first `### n. <name>` whose `Status:` line is not `done` as the current milestone, with the done count over the total. This is a body read only; portal never recomputes status or writes the roadmap.
 
-**Finished maps with no build effort.** Only when there is no open map, no open effort, and nothing ready. A closed map is one the `find` for `## Not yet specified` returns in a closed state. For each, search for its URL in `Planning source:` and `Builds toward:` lines with `find`; a map with no hit is a plan nobody has sliced.
+**Finished maps with no build effort.** Only when there is no open map, no open effort, and nothing ready. A closed map is one the `find` for `## Not yet specified` returns in a closed state. For each, search for its URL with `find`, then read each hit's body and count it only when the URL sits on a `Planning source:` or `Builds toward:` line. A body that begins `Work kind: roadmap` lists map URLs under its Maps lines and is never an effort. A map with no counted hit is a plan nobody has sliced.
 
 ### 2b. Choose the route
 

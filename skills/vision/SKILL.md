@@ -45,3 +45,16 @@ Use `scripts/tickets.sh` for tracker operations with the resolved adapter flags.
 Use `scripts/map.sh` for GitHub map frontier reads. Its optional repository argument is `owner/repo`, not the ticket script's adapter flags. Other trackers use the Wayfinding operations in their tracker configuration.
 
 The optional persona reference loads only during the persona stage above. Workflow-specific references load only at their named stage.
+
+## References
+
+| Reference | Load at | Purpose |
+|-----------|---------|---------|
+| `references/archmage.md` | Persona at invocation, when enabled | The Archmage voice |
+| `references/tracker.md` | Route step 1 | Tracker resolution and finding the roadmap |
+| `references/scratch.md` | Route step 1 on a local tracker, or on exit 3 | The roadmap as a file |
+| `references/chart.md` | Route step 2 | Creating the roadmap and its pointer |
+| `references/roadmap-shape.md` | Route steps 2 and 3, loaded by chart.md and reconcile.md | Roadmap body, the upward link, edits |
+| `references/milestones.md` | Route step 2, loaded by chart.md | Settling the destination and milestones |
+| `references/reconcile.md` | Route step 3 | Snapshot, edits, membership, status derivation, guarded write |
+| `references/report.md` | Route step 4 | The report table and the next-step rules |
