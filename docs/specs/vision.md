@@ -79,7 +79,7 @@ The pointer lives in the `## Agent skills` block as `Roadmap: #12` (or a Linear 
 
 Directory `skills/vision/`. Frontmatter `name: vision`, `disable-model-invocation: true`. Description in plain English: roadmap, milestones, what is left, what should we do next at a high level, where are we, `/vision`.
 
-Bundled script: a copy of `skills/sift/scripts/tickets.sh`, added to the copy check in `scripts/validate.sh`. The persona block comes from `scripts/sync-persona.sh`, which also drops `references/archmage.md`.
+Bundled scripts: checked copies of `skills/sift/scripts/tickets.sh` and `skills/scry/scripts/map.sh`. The latter supplies GitHub frontier reads when only the roadmap skill is installed. The persona block comes from `scripts/sync-persona.sh`, which also drops `references/archmage.md`.
 
 ### Arguments
 
@@ -93,13 +93,15 @@ Bundled script: a copy of `skills/sift/scripts/tickets.sh`, added to the copy ch
 | `order 3 1 2` | reorder, then Stage 3 |
 | `you-pick` | accept every recommended answer in the charting round |
 
+The root routes to `tracker.md`, `chart.md`, `reconcile.md`, and `report.md` at the corresponding stage. Schema and interview detail load only within the workflow that needs them. The report describes ordinary next actions without requiring sibling skills.
+
 ### Stage 1: Tracker
 
 Same as `portal`: read `docs/agents/issue-tracker.md`, resolve adapter flags, pass `GH_HOST` inline. Resolve the roadmap by the rules under Discovery.
 
 ### Stage 2: Chart
 
-Load `references/milestones.md`. Interrogate the destination, then the milestones, breadth-first at milestone grain: each milestone is one outcome a user could notice, ordered by what unblocks what. This is scry Stage 2b one level up and reuses the round shape from scry's interrogation reference, rewritten here so the skill stands alone. Write the body, create the issue with `tickets.sh create "Roadmap: <destination in a few words>"`, write the `Roadmap:` line into the `## Agent skills` block, and stop. Charting is one session.
+Load `references/milestones.md`. Interrogate the destination, then the milestones, breadth-first at milestone grain: each milestone is one outcome a user could notice, ordered by what unblocks what. This is scry Stage 2b one level up and reuses the round shape from scry's interrogation reference, rewritten here so the skill stands alone. Write the body, create the issue with `tickets.sh create "Roadmap: <destination in a few words>" --label roadmap`, write the `Roadmap:` line into the `## Agent skills` block, and report. Ensure the dedicated `roadmap` label before creating the issue. Reuse supplied outcomes and authorization; ask only about material gaps. Read project documents only to resolve relevant uncertainty. Continue a broader explicit request after the roadmap result.
 
 ### Stage 3: Reconcile
 
@@ -143,7 +145,7 @@ Next step rules, first match wins:
 - **attune.** Add the `roadmap` setting, its line in the block order, and its row in the settings table.
 - **setup-mana.** At the end, offer to run `vision` to chart a roadmap. Do not chart inside setup.
 - **README.** A `### vision` section after `portal`, and a sentence in The loop.
-- **CHANGELOG and version.** `0.29.0`.
+- **CHANGELOG and version.** `0.29.1`.
 - **Local tracker.** The roadmap is `.scratch/roadmap.md`, following the scratch conventions, and members link by path.
 - **Tests.** None beyond `scripts/validate.sh`. Status derivation is prose the model follows, so there is no script to fixture.
 

@@ -13,7 +13,7 @@ Work kind: roadmap
 
 ## Notes
 
-<files every session should read; standing preferences; owning docs>
+<relevant documents with when to consult them; standing preferences>
 
 ## Milestones
 
@@ -62,7 +62,7 @@ A map or effort with no such line is allowed. The report counts it as unattached
 
 ## Edits
 
-- **add.** Append `### <next number>. <name>` with `Status: planned`, an outcome the user gives or one drafted from the name and confirmed, `Maps: none`, `Efforts: none`, and `Left: chart a map`. Remove a **Not yet planned** line with the same name.
+- **add.** Append `### <next number>. <name>` with `Status: planned`, an outcome the user gives or one drafted within their authorized scope; ask if a material ambiguity remains, `Maps: none`, `Efforts: none`, and `Left: chart a map`. Remove a **Not yet planned** line with the same name.
 - **done.** Add `Confirmed done: <reason>` after the milestone's `Status:` line. The reason is what the user said; ask when they gave none.
 - **reopen.** Remove the `Confirmed done:` line. The next reconcile recomputes the status.
 - **order.** Renumber the headings in the given order. Every existing number appears exactly once or the edit stops. Member links follow their milestone by name, so nothing else changes.

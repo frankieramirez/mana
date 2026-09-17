@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.29.1
+
+- Fix roadmap creation with a dedicated label and bundle the map frontier reader for standalone installs. Keep roadmap workflow instructions in stage-loaded references, reuse supplied decisions and authorization, and read project documents only to resolve relevant gaps. Shorten roadmap and settings discovery descriptions.
+
 ## 0.29.0
 
 - Add `vision`, a roadmap above the ticket level. The roadmap is one tracker issue marked `Work kind: roadmap` with a destination and ordered milestones. Maps and build efforts point up at it with a `Milestone:` line in their own bodies, so closing them writes nothing to the roadmap and two sessions finishing at once cannot collide. `vision` is the only writer: it charts the roadmap through a milestone-grain interview, and on every later run derives each milestone's status (`planned`, `deciding`, `building`, `done`) from the linked issues, rewrites the body under the same expected-body guard scry uses, and reports the current milestone, what is left, unattached work, and one prompt to start next. `add`, `done`, `reopen`, and `order` edit the milestones. No dates, no estimates.

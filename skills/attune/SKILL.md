@@ -1,6 +1,6 @@
 ---
 name: attune
-description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, the branch name pattern, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, the tracker key, the roadmap issue, the Archmage persona for skill workflows, or the Archmage style for every turn of a session. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, change the branch naming convention, set the branch name pattern, rename the triage labels, enable or disable Archmage, set Archmage as the output style or the session voice, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, point the skills at the roadmap, or /attune."
+description: "Inspect or change repository workflow settings. Use to set validation or branch naming, change triage labels, configure review or proof, set the roadmap pointer, adjust persona or session style, or /attune."
 argument-hint: "[blank to list every setting] [labels | validation | branches | proof | docs | peer | worktree | pr-surface | key | roadmap | pointer | persona | style] [new value]"
 ---
 

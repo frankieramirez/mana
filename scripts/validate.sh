@@ -121,6 +121,7 @@ skills/sift/scripts/tickets.sh skills/ultima/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/portal/scripts/tickets.sh
 skills/sift/scripts/tickets.sh skills/vision/scripts/tickets.sh
 skills/scry/scripts/map.sh skills/portal/scripts/map.sh
+skills/scry/scripts/map.sh skills/vision/scripts/map.sh
 skills/sift/references/agent-brief.md skills/ultima/references/agent-brief.md
 skills/setup-mana/references/triage-labels.md skills/attune/references/triage-labels.md
 EOF
