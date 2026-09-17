@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.29.0
+
+- Add `vision`, a roadmap above the ticket level. The roadmap is one tracker issue marked `Work kind: roadmap` with a destination and ordered milestones. Maps and build efforts point up at it with a `Milestone:` line in their own bodies, so closing them writes nothing to the roadmap and two sessions finishing at once cannot collide. `vision` is the only writer: it charts the roadmap through a milestone-grain interview, and on every later run derives each milestone's status (`planned`, `deciding`, `building`, `done`) from the linked issues, rewrites the body under the same expected-body guard scry uses, and reports the current milestone, what is left, unattached work, and one prompt to start next. `add`, `done`, `reopen`, and `order` edit the milestones. No dates, no estimates.
+- `scry` asks which milestone a new map serves when the repo has a roadmap and writes the line into the map's Notes. `conjure` copies it into the build parent. `portal` shows a Roadmap row and routes to `vision` when the board is otherwise clear. `attune roadmap` sets the `Roadmap:` pointer line, and `setup-mana` offers the skill at the end.
+
 ## 0.28.0
 
 - Branch names no longer carry the skill's name or the user's login. `cast` used to create `cast/<id>-<slug>` from the default branch and keep whatever branch a worktree tool handed it, which is how `cast/62-macos-14-x64-exclusion` and `frankieramirez/portal-59` ended up on pull requests. The name now comes from a `Branches:` line in the `## Agent skills` block, `<id>-<slug>` when the line is absent, so the same tickets give `62-macos-14-x64-exclusion` and `59-<slug>`. A tool-made branch that has no commits of its own and no upstream is renamed to the pattern before the first edit; one with commits or a remote is left alone. `attune branches` sets or removes the line. `scan` and the pull request closing line read the ticket id from the start of the branch name after any prefix, so older `cast/` branches still resolve.

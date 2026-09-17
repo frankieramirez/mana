@@ -54,6 +54,8 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list <needs-triage string>
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> list --unlabeled
 ```
 
+**The roadmap.** Only when a `Roadmap:` line exists in the `## Agent skills` block, or `find "Work kind: roadmap"` returns exactly one open issue. Read its body with `view` and take the first `### n. <name>` whose `Status:` line is not `done` as the current milestone, with the done count over the total. This is a body read only; portal never recomputes status or writes the roadmap.
+
 **Finished maps with no build effort.** Only when there is no open map, no open effort, and nothing ready. A closed map is one the `find` for `## Not yet specified` returns in a closed state. For each, search for its URL in `Planning source:` and `Builds toward:` lines with `find`; a map with no hit is a plan nobody has sliced.
 
 ### 2b. Choose the route
@@ -70,6 +72,7 @@ For an open branch PR, load [pr.md](pr.md) before evaluating the first row. Take
 | An open build effort has no available ticket | `conjure` on the effort, for a progress check. Name what holds it: open PRs awaiting review, claimed tickets and who holds them, and the blockers of every blocked ticket. When a blocker is itself a ready unblocked ticket, route to `cast` on the blocker instead | Something is pending and the person needs to see what |
 | The inbox has issues | `sift` | Untriaged reports become ready tickets |
 | A closed map has no build effort | `conjure` on the map | The plan is done and nobody has sliced it |
-| None of the above | Nothing to route. Say the board is clear and that `scry` charts a new map from a loose idea | |
+| A roadmap exists and has a milestone that is not `done` | `vision`, for its report and next prompt | The board is clear, and the roadmap says what to start |
+| None of the above | Nothing to route. Say the board is clear and that `scry` charts a new map from a loose idea, or `vision` charts a roadmap | |
 
 When the inbox has issues and a higher row also holds, mention the inbox count in the report so it does not rot, and keep the single route.

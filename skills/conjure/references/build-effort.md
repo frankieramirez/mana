@@ -9,6 +9,7 @@ Create `Build: <implementation outcome>` with the category label only. Its body 
 ```markdown
 Work kind: build
 Planning source: [<map or spec title>](<URL or path>)
+Milestone: <name> on [<roadmap title>](<roadmap URL>)
 
 ## Destination
 
@@ -29,6 +30,8 @@ Planning source: [<map or spec title>](<URL or path>)
 
 Finish filing the accepted slices, then work the first available ticket.
 ```
+
+The `Milestone:` line is copied verbatim from the planning map's Notes when the map has one, so the roadmap can find this effort. A spec or conversation source with no such line gets none, unless the `## Agent skills` block has a `Roadmap:` line and the user names a milestone; then write it in the same shape with the name spelled exactly as the roadmap's heading. Never write the roadmap itself.
 
 For a conversation source, put the agreed plan and its boundaries in the parent so a later session can recover it. For a planning map, read **Out of scope** too: distinguish implementation deferred until planning finished from features explicitly excluded from the build. Resolve any ambiguous build boundary before slicing.
 

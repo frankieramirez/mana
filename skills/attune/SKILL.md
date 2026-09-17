@@ -1,7 +1,7 @@
 ---
 name: attune
-description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, the branch name pattern, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, the tracker key, the Archmage persona for skill workflows, or the Archmage style for every turn of a session. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, change the branch naming convention, set the branch name pattern, rename the triage labels, enable or disable Archmage, set Archmage as the output style or the session voice, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, or /attune."
-argument-hint: "[blank to list every setting] [labels | validation | branches | proof | docs | peer | worktree | pr-surface | key | pointer | persona | style] [new value]"
+description: "Change one setting the other skills read for this repo, without redoing setup: the triage label names, the command that proves the project works, the branch name pattern, how pull request proof is captured, the domain docs layout, whether a second CLI reviews every diff, the worktree files, whether pull requests enter triage as requests, the tracker key, the roadmap issue, the Archmage persona for skill workflows, or the Archmage style for every turn of a session. Run it with nothing to see every current setting and what reads it. Use when asked to change the validation command, set the test command, change the branch naming convention, set the branch name pattern, rename the triage labels, enable or disable Archmage, set Archmage as the output style or the session voice, add or remove a peer reviewer, turn off the second reviewer, fix the Linear team key, point the skills at the roadmap, or /attune."
+argument-hint: "[blank to list every setting] [labels | validation | branches | proof | docs | peer | worktree | pr-surface | key | roadmap | pointer | persona | style] [new value]"
 ---
 
 <!-- BEGIN MANA PERSONA -->
@@ -88,6 +88,7 @@ peer         unset, the diff stays on this machine     review
 worktree     .worktreeinclude present, no orca.yaml    fresh worktrees
 pr-surface   No, issues only                           triage
 key          ENG, verified as frankie                  every tracker call
+roadmap      unset, no roadmap                         the roadmap skill, scry, conjure, portal
 pointer      AGENTS.md                                 everything above
 persona      off                                      every skill's lead agent
 style        off                                      the host, every turn of a session
@@ -132,6 +133,8 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> check
 
 This is the repair path for a setup run that wrote the config before the key was there. Running it with no change, just to verify, is a useful run: the user exports `LINEAR_API_KEY`, comes back, and confirms. Exit 3 or a missing variable: name the variable and leave the file as it is.
 
+**roadmap.** Show the current line, or say no roadmap is set. The value is a tracker id, an issue URL, or a local path. Before writing, read the target with the bundled script (or the file) and confirm its body has the exact line `Work kind: roadmap`; refuse anything else, and say the roadmap skill charts one. Write `Roadmap: <value>` in the block, or remove the line. Removing the line does not close or delete the issue.
+
 **pointer.** Move the `## Agent skills` block between `CLAUDE.md` and `AGENTS.md`, removing it from the file it left while preserving every setting line, including `Persona:` and `Style:`. A symlink pair is one file: report that and stop.
 
 **persona.** With `archmage`, add or replace `Persona: archmage` in the block. With `off`, remove the line. An already matching setting is a no-op; disabling an absent setting creates no file or block. A bare `persona` invocation reports the current value and offers `archmage` and `off`; a named supported value writes immediately. Persona works without `docs/agents/issue-tracker.md`. An unsupported requested value writes nothing and explains the supported values. An unknown saved value behaves as off until changed. Apply a successfully changed voice to subsequent narration immediately, including this run's report, while preserving its required fields.
@@ -160,6 +163,7 @@ Triage labels: ...
 Validation: ...
 Proof: ...
 Domain docs: ...
+Roadmap: ...
 Peer reviewer: ...
 Persona: archmage
 Style: archmage. Read docs/agents/archmage.md before the first reply and use that voice for the whole session.
