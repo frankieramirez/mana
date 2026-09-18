@@ -1,52 +1,55 @@
 # Roadmap shape
 
-The roadmap is one tracker issue. Its body is an index: it names milestones and links the maps and efforts that serve them. Decisions stay on maps, briefs stay on tickets, and the roadmap gists nothing twice.
+The roadmap explains the route from the current project to its destination. Keep milestone-level reasoning here and link to maps for detailed decisions and efforts for implementation briefs.
 
 ## Body
 
-```markdown
-Work kind: roadmap
+Use this outline, omitting optional sections and empty fields. Milestone headings and `Status:` lines remain stable for readers that consume the roadmap.
 
+```markdown
 ## Destination
 
-<what is true when the roadmap is done, one or two lines>
+<the user capability or project outcome this roadmap will establish>
 
-## Notes
+## Where we stand
 
-<relevant documents with when to consult them; standing preferences>
+<verified baseline, work underway, and the most consequential gap, with sources>
 
 ## Milestones
 
-### 1. <name>
+### 1. <outcome name>
 
-Status: planned | deciding | building | done
-<one sentence outcome a user could notice>
+Status: planned | deciding | building | verifying | done
 
-Maps: [<title>](<url>), [<title>](<url>)
+<what this delivers and why it matters; why it comes here and what it depends on>
+
+**Complete when**
+- <observable criterion, with evidence when satisfied>
+
+<material uncertainty, its consequence, and how to resolve it, when relevant>
+
+Maps: [<title>](<url>)
 Efforts: [<title>](<url>)
-Left: <one line, or nothing>
-
-### 2. <name>
-
-Status: planned
-<outcome>
-
-Maps: none
-Efforts: none
-Left: chart a map
+Left: <concrete remaining outcome, decision, or verification>
 
 ## Not yet planned
 
-<!-- milestones too dim to name yet, one line each -->
+<future scope and the decision needed to include it, when relevant>
 
 ## Out of scope
 
-<!-- what the destination rules out, one line each with the reason -->
+<exclusions and reasons, when relevant>
+
+## References
+
+<owning documents linked to the relevant file or section, with why they matter>
 ```
 
-`Work kind: roadmap` is the first line and matches exactly. The `Status:` line under each milestone is rewritten on every reconcile. A `Confirmed done: <reason>` line after `Status:` records a `done` edit and is the only status the rules do not recompute.
+Use repository links for documents on a remote tracker. Omit Maps and Efforts when empty. Do not print `Maps: none`, `Efforts: none`, or generic `Left: chart a map`. No visible work-kind metadata is required. Existing `Work kind: roadmap` bodies remain readable; remove that line when migrating an authorized update, after ensuring the `roadmap` label on a remote tracker. Keep a local roadmap's title and top-level status.
 
-The **Left** line is written by the skill from the current state: the number of open maps and tickets still open under the milestone, the effort awaiting review, or `chart a map` for a planned milestone. Keep it to one line.
+Rewrite milestone `Status:` from evidence on reconcile. A `Confirmed done: <reason>` line after it records the user's explicit override; keep the reason visible and distinguish confirmation from verified evidence. Completion criteria are stable scope: do not silently weaken them to match delivered work.
+
+The **Left** line explains the most useful remaining action or gap. Omit it for done milestones. Counts may support a conclusion, but do not replace it.
 
 ## The upward link
 
@@ -58,11 +61,11 @@ Milestone: <milestone name> on [<roadmap title>](<roadmap URL>)
 
 The name matches a `### n. <name>` heading exactly, case and all. The URL is how the skill finds members with `find`. On a local tracker the URL is the roadmap file path relative to the repo root.
 
-A map or effort with no such line is allowed. The report counts it as unattached so drift is visible.
+A map or effort with no such line is allowed. Inspect plausible matches before recommending new work; report unresolved associations by title and consequence.
 
 ## Edits
 
-- **add.** Append `### <next number>. <name>` with `Status: planned`, an outcome the user gives or one drafted within their authorized scope; ask if a material ambiguity remains, `Maps: none`, `Efforts: none`, and `Left: chart a map`. Remove a **Not yet planned** line with the same name.
+- **add.** Append `### <next number>. <name>` with an outcome and completion criteria from the user or drafted within their authorized scope. Load `milestones.md` for destination coverage and sequencing; ask if a material ambiguity remains. Reconcile existing work before assigning status. Remove a **Not yet planned** line with the same name.
 - **done.** Add `Confirmed done: <reason>` after the milestone's `Status:` line. The reason is what the user said; ask when they gave none.
 - **reopen.** Remove the `Confirmed done:` line. The next reconcile recomputes the status.
 - **order.** Renumber the headings in the given order. Every existing number appears exactly once or the edit stops. Member links follow their milestone by name, so nothing else changes.

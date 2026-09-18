@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.30.0
+
+- Ground roadmaps in project scope and existing work, explain milestone priorities, and require outcome evidence for completion. Reuse clear existing-work matches before proposing new planning, report unresolved associations, and add a verifying state for missing proof. Replace the fixed report table and empty fields with a concise assessment. Identify roadmaps by pointer or label while retaining legacy marker compatibility. Add scenario-based roadmap regressions.
+
 ## 0.29.2
 
 - Add an optional maintainer tool to grade saved prose-skill outputs with Jev, with synthetic seed cases and offline tests. Reports preserve probabilities and token usage. Pilot findings document missed scope changes; installed skills remain unchanged and live grading stays outside CI.

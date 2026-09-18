@@ -1,34 +1,27 @@
 # Report progress
 
-Write the result as markdown, not as a code block. A cell holds one line, and links go in bare so the terminal renders them. Refer to milestones by name and issues by title with the link wrapped inside.
+Lead with the most consequential conclusion and link to the roadmap. Explain what is underway and the gap that matters next. Distinguish verified facts from proposed choices. Name meaningful status changes, including any completion based on explicit confirmation.
 
-### Vision
+Use short paragraphs and, when helpful, a compact list of milestones with their outcome and status. Avoid a mandatory table, empty counts, and administrative rows such as "Unattached: 8". Name relevant unlinked work and explain the association decision. Describe future scope by the decision holding it back. Counts are supporting evidence, never a completion percentage across unequal milestones.
 
-| | |
-|---|---|
-| **Destination** | one line |
-| **Milestones** | done/total, then the names in order with each status |
-| **Current** | name and status, then maps closed/open and efforts delivered/open |
-| **Left** | the current milestone's Left line |
-| **Unattached** | count of maps and efforts naming no milestone, or `none` |
-| **Unplanned** | count of Not yet planned lines, or `none` |
+Finish with **Next step:** a concrete action and why it matters, followed by **Prompt:** a short ordinary-language request with the relevant link. Prefer continuing existing work. Resolve a plausible existing-work association before suggesting a new map. The prompt must not depend on another installed skill.
 
-**Next step:** \<action> on \<milestone or ticket with link>. \<One sentence on why.>
+Choose the next action from inspected evidence:
 
-**Prompt:** `\<one line that starts it>`
+| Situation | Action |
+|-----------|--------|
+| Existing work plausibly serves the milestone but its association is unresolved | Inspect or settle that association; name the candidate and uncertainty |
+| An open map has a frontier ticket | Resolve that ticket |
+| An open map has no frontier | Inspect what keeps that map open |
+| An effort has an available ticket | Implement that ticket following its brief |
+| A closed map has no effort covering its outcome | Plan the missing implementation from that map |
+| An effort has no available ticket | Name the blocker or inspect its pending work; do not imply it can close |
+| Delivery is reported complete but evidence is missing | Verify the specific unsatisfied completion criterion |
+| Delivery is demonstrably incomplete | Plan or continue the missing work, using existing planning where applicable |
+| No existing work covers an unstarted outcome | Chart a map for that outcome and its milestone |
+| All milestones are done and future scope remains | Explain the decision needed to include the next outcome; do not automatically commit to it |
+| All milestones are done and the destination is covered | Report the evidence or explicit confirmations supporting completion; omit the prompt |
 
-Name any milestone whose status changed this run, in one sentence above the table. Next step is the first row that holds for the current milestone. When no milestone is current, only the last two rows apply:
+These are decision rules, not a rigid priority queue. Prefer an actionable task that unblocks the current outcome; explain any recommendation to advance independent work instead. Never claim a frontier, blocker, or completion check that was not inspected. A failed read produces a concrete verification step and an explicit uncertainty.
 
-| Condition | Next step | Prompt |
-|-----------|-----------|--------|
-| An open map has a frontier ticket | Resolve the map ticket | `Resolve <ticket URL> on its map.` |
-| An open map has no frontier ticket | Inspect the map | `Inspect <map URL> and resolve what keeps it open.` |
-| An open effort has an available ticket | Implement the ticket | `Implement <ticket URL>, following its brief.` |
-| A closed map has no effort | Plan implementation from the map | `Use the completed planning map <map URL> to propose the implementation work, keeping the map as the planning source.` |
-| An open effort has nothing available | Check the build effort | `Check progress and close out the build effort at <parent URL> once the pending work is complete.` |
-| The milestone is `planned` | Chart a new planning map | `Chart a map toward <milestone outcome>, serving milestone <name> on <roadmap URL>.` |
-| Every milestone is `done` and Not yet planned has lines | Add the next milestone | `Add milestone <first unplanned line> to the roadmap at <roadmap URL>.` |
-| Every milestone is `done` and nothing is unplanned | none | Say the destination is reached and omit the prompt |
-
-The prompt describes an ordinary task without depending on another installed skill. The report completes a roadmap-only request. Continue further work when it is part of the user's explicit request.
-
+A roadmap-only request ends with this report. Continue broader work only within the user's authorization.

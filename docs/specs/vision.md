@@ -1,161 +1,42 @@
 # Spec: the vision skill
 
-Destination: a repo set up with mana can hold one roadmap on its tracker, every map and build effort names the milestone it serves, and `vision` reports the current milestone, how much of it is left, and the exact next prompt. Portal routes to it when the board is otherwise clear.
+A project roadmap explains how current capabilities reach the destination. Milestones carry observable completion criteria and sequencing rationale. The report names the next useful action from inspected project evidence.
 
-## Why
+## Contracts
 
-After a map closes there is no answer to "what next" above the ticket level, and no view of how much of the larger goal remains. Product teams work against a roadmap with milestones. This gives the skills the same thing, kept where concurrent sessions cannot clobber it.
+- One tracker issue, identified by the saved `Roadmap:` pointer or `roadmap` label. The legacy `Work kind: roadmap` line remains readable. New bodies omit visible machine metadata. Local trackers use `.scratch/roadmap.md` with a title and top-level status.
+- Maps and build efforts link upward through `Milestone: <name> on [<roadmap title>](<url>)`. Closing work never writes the roadmap. Authorized charting or updates can link clear existing-work matches under per-member body guards; ambiguous or conflicting links require a decision.
+- Reconciliation snapshots the roadmap and writes under `update-body --expected-body`. Failed required reads preserve its saved body. Member writes are independent and partial success is reported. Read-only requests leave both roadmap and members unchanged.
+- Destination requirements belong to a milestone or verified baseline evidence. Milestone scope does not shrink to match whatever work happened to close.
 
-## Decisions already made
+## Charting
 
-- **The roadmap is one tracker issue**, marked by the exact body line `Work kind: roadmap`. Not a file in the repo: two maps closing on two branches would conflict, and the file would be stale off main. One issue works unchanged on GitHub, Linear, Jira, and local files through `tickets.sh`.
-- **Nothing points down from the roadmap.** Maps and build efforts point up with a body line, the way build tickets carry `Planning source:`. Closing a map or delivering an effort writes nothing to the roadmap, so concurrent closeouts never touch the same body.
-- **`vision` is the only writer.** Status is derived on read from the linked maps and efforts, then written under the `update-body --expected-body` guard scry already uses in closeout. Two `vision` sessions at once is the only possible conflict and the guard catches it.
-- **No dates, no estimates.** Progress is counts: milestones done over total, and inside the current one, maps closed over open and efforts delivered over open.
-- **The name is `vision`.** The top section of the body is `Destination`, matching the map body, so the skill name and the section name stay distinct.
+Read relevant release scope and inspect plausible existing work, including closed planning sources. Separate verified baseline from proposed scope. Each milestone explains its user value and why it comes here, with observable completion criteria. Identify uncertainties that could change the sequence. Catch-all milestones need justified workstreams or a proposed split. Preserve user decisions and ask only for material missing choices.
 
-## Roadmap body
+Create the labelled issue and save the pointer. Link clear matches within authorization, reconcile evidence, then report. Draft requests stop before writes. Creation does not initialize every milestone as planned.
 
-```markdown
-Work kind: roadmap
+## Status
 
-## Destination
+Apply in order:
 
-<what is true when the roadmap is done, one or two lines>
+| Status | Evidence |
+|--------|----------|
+| done | Explicit user confirmation, or all completion criteria verified and no open member work |
+| deciding | An open member map |
+| building | An open effort, implementation needed from a closed map, or an identified delivery gap in work already started |
+| verifying | Delivery reported complete but evidence missing |
+| planned | No established activity |
 
-## Notes
+Closed issues alone never prove an outcome. Legacy outcomes without criteria need scope-preserving criteria before verification. `done <n>` records an explicit reason; `reopen <n>` removes that override and recomputes status. `add` and `order` preserve existing member names. Renaming remains outside this workflow because links use milestone names.
 
-<files every session should read; standing preferences; owning docs>
+## Presentation
 
-## Milestones
+The issue opens with Destination and Where we stand, followed by numbered milestones. Keep `Status:` lines for consumers. Include useful links and concrete remaining actions; omit empty Maps and Efforts fields. References belong after the milestones. Future scope names the decision needed to include it.
 
-### 1. <name>  [planned | deciding | building | done]
+The conversational report leads with the consequential conclusion and a roadmap link. Explain meaningful changes and remaining gaps, then supply a next action and ordinary-language prompt. Use counts only as supporting evidence. No forced wide table, raw unattached counts, or invented dates and estimates.
 
-<one sentence outcome>
+## Integration and validation
 
-Maps: [<title>](url), [<title>](url)
-Efforts: [<title>](url)
-Left: <one line, or "nothing">
+The routing skill and settings accept pointers or labels plus legacy markers. Planning maps and build efforts retain their upward-link format. Standalone installs keep the existing bundled ticket and frontier scripts; no new runtime is needed.
 
-### 2. <name>  [planned]
-
-...
-
-## Not yet planned
-
-<!-- milestones too dim to name; the roadmap's fog -->
-
-## Out of scope
-
-<!-- what the destination rules out -->
-```
-
-Status is derived, never typed by hand:
-
-| Status | Rule |
-|--------|------|
-| `planned` | no map and no effort names this milestone |
-| `deciding` | at least one open map names it |
-| `building` | every map naming it is closed and at least one map or effort names it, which covers an open effort and a closed map that still needs slicing |
-| `done` | at least one effort names it, every map is closed, and every effort is delivered, or the user confirmed it with `done <n>` |
-
-The flip to `done` is automatic. The report names any milestone whose status changed this run, and `reopen <n>` undoes a `done` confirmation. The current milestone is the first one not `done`. A milestone with nothing linked is `planned`; `vision` never invents maps or efforts for it.
-
-## The upward link
-
-A map's Notes carry one line:
-
-```
-Milestone: <milestone name> on [<roadmap title>](<roadmap url>)
-```
-
-A build parent carries the same line, copied from its planning map by `conjure`. `vision` discovers members with `find "<roadmap url>"` across all states and verifies the line in each body, the way conjure verifies `Part of #<map>`. A mention alone does not establish membership.
-
-## Discovery
-
-The pointer lives in the `## Agent skills` block as `Roadmap: #12` (or a Linear or Jira key, or a local path), inserted after `Domain docs:`. Skills read that line first. When it is absent, `find "Work kind: roadmap"` is the fallback, and more than one open hit stops with the list. `attune roadmap <id>` sets or removes the line.
-
-## The skill
-
-Directory `skills/vision/`. Frontmatter `name: vision`, `disable-model-invocation: true`. Description in plain English: roadmap, milestones, what is left, what should we do next at a high level, where are we, `/vision`.
-
-Bundled scripts: checked copies of `skills/sift/scripts/tickets.sh` and `skills/scry/scripts/map.sh`. The latter supplies GitHub frontier reads when only the roadmap skill is installed. The persona block comes from `scripts/sync-persona.sh`, which also drops `references/archmage.md`.
-
-### Arguments
-
-| Input | Effect |
-|-------|--------|
-| none, no roadmap | Stage 2: chart |
-| none, roadmap exists | Stage 3: reconcile and report |
-| `add <name>` | append a milestone, then Stage 3 |
-| `done <n>` | confirm milestone n is done while something linked is still open, then Stage 3 |
-| `reopen <n>` | undo a `done` confirmation, then Stage 3 |
-| `order 3 1 2` | reorder, then Stage 3 |
-| `you-pick` | accept every recommended answer in the charting round |
-
-The root routes to `tracker.md`, `chart.md`, `reconcile.md`, and `report.md` at the corresponding stage. Schema and interview detail load only within the workflow that needs them. The report describes ordinary next actions without requiring sibling skills.
-
-### Stage 1: Tracker
-
-Same as `portal`: read `docs/agents/issue-tracker.md`, resolve adapter flags, pass `GH_HOST` inline. Resolve the roadmap by the rules under Discovery.
-
-### Stage 2: Chart
-
-Load `references/milestones.md`. Interrogate the destination, then the milestones, breadth-first at milestone grain: each milestone is one outcome a user could notice, ordered by what unblocks what. This is scry Stage 2b one level up and reuses the round shape from scry's interrogation reference, rewritten here so the skill stands alone. Write the body, create the issue with `tickets.sh create "Roadmap: <destination in a few words>" --label roadmap`, write the `Roadmap:` line into the `## Agent skills` block, and report. Ensure the dedicated `roadmap` label before creating the issue. Reuse supplied outcomes and authorization; ask only about material gaps. Read project documents only to resolve relevant uncertainty. Continue a broader explicit request after the roadmap result.
-
-### Stage 3: Reconcile
-
-Read the roadmap body and snapshot it. Find every issue whose body names the roadmap URL and read its state, its `Milestone:` line, and whether it is a map (`scry:map` or `wayfinder:map`) or an effort (`Work kind: build`). An effort is delivered when its build parent is closed. Recompute every status by the table above. Rewrite the body under the guard; on a mismatch, reread once and retry, then stop and report. Clear a `Not yet planned` line when a milestone with that name now exists.
-
-### Stage 4: Report
-
-Markdown, not a code block, in the portal shape:
-
-```
-### Vision
-
-| | |
-|---|---|
-| **Destination** | one line |
-| **Milestones** | done/total |
-| **Current** | name, status, maps closed/open, efforts delivered/open |
-| **Left** | the milestone's Left line |
-| **Unattached** | maps and efforts naming no milestone |
-| **Unplanned** | count of Not yet planned lines |
-
-**Next step:** <skill> on <milestone or ticket with link>. <why>
-
-**Prompt:** `<one line that starts it>`
-```
-
-Next step rules, first match wins:
-
-1. The current milestone has an open map with a frontier ticket: `scry` on that ticket.
-2. It has an open effort with an available ticket: `cast` on that ticket.
-3. It has a closed map with no effort: `conjure` on the map.
-4. It has an open effort with nothing available: `conjure` on the effort for a progress check.
-5. It is `planned`: `scry` to chart a map, with the prompt `Chart a map toward <milestone outcome>, serving milestone <name> on <roadmap URL>.`
-6. Every milestone is `done` and nothing is unplanned: say so and stop.
-
-## Hooks in other skills
-
-- **scry Stage 2c.** When a roadmap resolves, ask which milestone the map serves, offering the current one as the recommendation, and write the `Milestone:` line into Notes. A map that serves none is allowed and says so. The handoff reference does not change.
-- **conjure Stage 3.** Copy the planning map's `Milestone:` line into the build parent body. A spec source with no line gets none.
-- **portal.** Add a **Roadmap** row to the board table: current milestone and done/total, or `none`. Replace the last route row: when a roadmap exists and has a milestone that is not `done`, route to `vision`; otherwise say the board is clear and `scry` charts from a loose idea. Add `vision` to the handoff sibling list.
-- **attune.** Add the `roadmap` setting, its line in the block order, and its row in the settings table.
-- **setup-mana.** At the end, offer to run `vision` to chart a roadmap. Do not chart inside setup.
-- **README.** A `### vision` section after `portal`, and a sentence in The loop.
-- **CHANGELOG and version.** `0.29.1`.
-- **Local tracker.** The roadmap is `.scratch/roadmap.md`, following the scratch conventions, and members link by path.
-- **Tests.** None beyond `scripts/validate.sh`. Status derivation is prose the model follows, so there is no script to fixture.
-
-## Decided in interrogation
-
-The milestone flip is automatic with `reopen` as the undo. No dates. The pointer is the block line. Unattached maps and efforts are allowed and reported. Portal routes to `vision` last. The local tracker is supported. Charting stops after the roadmap issue. The change is implemented directly on one branch as one pull request rather than through a build effort.
-
-## Out of scope
-
-- Native GitHub milestones, Linear projects, or Jira versions. Possible later as enrichment on top of the issue.
-- More than one roadmap per repo.
-- Dates, estimates, or velocity.
-- Automatic writes to the roadmap from scry, conjure, or cast.
+Run `scripts/validate.sh`. Behavioral cases and their assessment criteria live in `evals/vision/`; they exercise first-run discovery, incomplete delivery evidence, and compatibility. These are agent scenarios, not regex tests of instruction wording.
