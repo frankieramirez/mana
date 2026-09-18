@@ -4,6 +4,8 @@
 
 Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in agents that read `SKILL.md` files, including Codex, Cursor, Copilot, and Gemini CLI.
 
+Maintainers can grade saved skill outputs with the optional [semantic eval pilot](evals/semantic/README.md). Installed skills do not require it.
+
 [Install](#install) · [The loop](#the-loop) · [Skills](#skills) · [Trackers](#trackers) · [Unattended](#unattended) · [Orca](#orca)
 
 ## Install

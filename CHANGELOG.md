@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.29.2
+
+- Add an optional maintainer tool to grade saved prose-skill outputs with Jev, with synthetic seed cases and offline tests. Reports preserve probabilities and token usage. Pilot findings document missed scope changes; installed skills remain unchanged and live grading stays outside CI.
+
 ## 0.29.1
 
 - Fix roadmap creation with a dedicated label and bundle the map frontier reader for standalone installs. Keep roadmap workflow instructions in stage-loaded references, reuse supplied decisions and authorization, and read project documents only to resolve relevant gaps. Shorten roadmap and settings discovery descriptions.
