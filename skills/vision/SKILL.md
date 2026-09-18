@@ -17,24 +17,24 @@ Apply the voice only to lead-agent conversation. Deliverables, specialist roles,
 
 # Vision
 
-Keep one roadmap of ordered milestones and derive progress from the maps and build efforts linked to it.
+Keep one evidence-based roadmap that explains milestone priorities and the next useful action.
 
 Honor explicit user instructions and decisions already made over workflow defaults. Continue through the requested result; ask only about unresolved choices that would materially change it. Reporting progress alone does not authorize implementation work. If a real permission or missing prerequisite prevents completion, explain it and finish independent authorized work.
 
 ## Shared contracts
 
-- The roadmap carries the exact body line `Work kind: roadmap`. Maps and build efforts link up through a `Milestone:` line in their own bodies; closing them requires no roadmap write.
-- Reconciliation derives status from members, preserving explicit `Confirmed done:` overrides. Snapshot the body and guard updates against concurrent changes. Incomplete reads leave the saved roadmap unchanged.
-- Default reporting uses counts without dates or estimates. Use milestone names and linked issue titles in user-facing output.
+- The saved pointer or `roadmap` label identifies the roadmap; legacy body markers remain readable. Maps and build efforts link up through a `Milestone:` line in their own bodies; closing them requires no roadmap write.
+- Reconciliation derives activity from members and completion from outcome evidence, preserving explicit `Confirmed done:` overrides. Snapshot the body and guard updates against concurrent changes. Incomplete reads leave the saved roadmap unchanged.
+- Default reporting explains progress and remaining gaps without inventing dates or estimates. Counts support the assessment. Use milestone names and linked issue titles in user-facing output.
 
 `<SKILL_DIR>` is the absolute directory containing this file. Substitute it directly in bundled script commands.
 
 ## Route
 
 1. **Resolve:** load [references/tracker.md](references/tracker.md) to find the tracker and roadmap. For a local roadmap, also load [references/scratch.md](references/scratch.md).
-2. **Chart:** when no roadmap exists, load [references/chart.md](references/chart.md). It loads the body schema and milestone guidance. Create the roadmap and save its pointer, then report.
+2. **Chart:** when no roadmap exists, load [references/chart.md](references/chart.md). It loads the body schema and milestone guidance. Create the roadmap and save its pointer, then reconcile existing work and report.
 3. **Reconcile:** for an existing roadmap, load [references/reconcile.md](references/reconcile.md), including for `add <name>`, `done <n>`, `reopen <n>`, or `order <n n ...>`. It loads the schema, applies the edit, and refreshes status under the body guard.
-4. **Report:** load [references/report.md](references/report.md) after charting or reconciliation. A roadmap-only request is complete when the roadmap and pointer are saved and the next-step report is delivered. Continue a broader explicitly authorized request after that result.
+4. **Report:** load [references/report.md](references/report.md) after charting or reconciliation. A creation or update is complete when authorized writes and the next-step report are delivered. Draft and read-only requests end with the proposed or derived assessment without writes. Continue a broader explicitly authorized request after that result.
 
 `you-pick`, "make the decisions", or "you pick" authorizes recommended choices for charting. Preserve decisions already supplied without requiring that token.
 
@@ -55,6 +55,6 @@ The optional persona reference loads only during the persona stage above. Workfl
 | `references/scratch.md` | Route step 1 on a local tracker, or on exit 3 | The roadmap as a file |
 | `references/chart.md` | Route step 2 | Creating the roadmap and its pointer |
 | `references/roadmap-shape.md` | Route steps 2 and 3, loaded by chart.md and reconcile.md | Roadmap body, the upward link, edits |
-| `references/milestones.md` | Route step 2, loaded by chart.md | Settling the destination and milestones |
-| `references/reconcile.md` | Route step 3 | Snapshot, edits, membership, status derivation, guarded write |
-| `references/report.md` | Route step 4 | The report table and the next-step rules |
+| `references/milestones.md` | Charting, adding a milestone, or deriving legacy criteria | Grounding scope and milestone outcomes |
+| `references/reconcile.md` | Charting and route step 3 | Snapshot, edits, membership, status derivation, guarded write |
+| `references/report.md` | Route step 4 | The conversational report and next-step rules |

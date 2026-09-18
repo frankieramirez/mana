@@ -2,7 +2,7 @@
 
 Load `references/roadmap-shape.md` and `references/milestones.md`.
 
-Use the supplied destination and milestones, resolving only missing choices with `references/milestones.md`. Load project context or a relevant ADR only when needed to interpret an outcome or constraint. The chart is ready when the destination and ordered milestone outcomes are clear; unresolved future outcomes belong under **Not yet planned**.
+Ground the chart and inspect existing work as `references/milestones.md` describes. Load `references/reconcile.md` for discovery and evidence rules. Before creation, settle milestone outcomes and completion criteria, account for destination coverage, and identify clear member matches. A draft request stops with the proposed roadmap and associations, without writes.
 
 Create the dedicated `roadmap` label, then the issue. This label identifies the roadmap without putting it in a build or triage queue:
 
@@ -22,5 +22,5 @@ Check the label operation before creating the issue. Exit 3 from either operatio
 
 Then write the pointer. Add `Roadmap: <id or URL>` to the `## Agent skills` block of the file that holds it, after `Domain docs:` when that line exists and otherwise before `Peer reviewer:`, `Persona:`, and `Style:`. Change only that one line; keep every other line's text and order. The block is absent: create it in the existing instruction file, preferring `CLAUDE.md`, holding only this line.
 
-Load `references/report.md` with every milestone `planned`. Charting alone is complete after the report. Continue into further planning or implementation only when the user has authorized that broader work.
+After saving the pointer, link clear existing-work matches and reconcile under `references/reconcile.md`. Derive initial status from that work and its evidence; do not initialize everything as planned. Load `references/report.md`. Charting alone is complete after the report. Continue into further planning or implementation only when the user has authorized that broader work.
 

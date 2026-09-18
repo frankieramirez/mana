@@ -608,9 +608,9 @@ Portal reads through the same bundled ticket script as the other skills, plus sc
 
 ### vision
 
-Holds one roadmap on the tracker: a destination and ordered milestones. Every map and build effort names the milestone it serves with a line in its own body, so nothing writes the roadmap when they close and two sessions finishing at once cannot collide. Each run derives every milestone's status from those linked issues, rewrites the roadmap under a guard, and reports the current milestone, what is left, and the one prompt to start next. No dates, no estimates: progress is counts.
+Holds one roadmap on the tracker: a destination and ordered milestones. Every map and build effort names the milestone it serves with a line in its own body, so nothing writes the roadmap when they close and two sessions finishing at once cannot collide. Each run derives activity from linked work and checks completion against outcome evidence. The roadmap explains priorities and remaining gaps, then gives the next useful action. Dates and estimates are omitted by default; counts support the assessment.
 
-- Blank with no roadmap: interviews you for the destination and three to six milestones, creates the issue, and writes the `Roadmap:` pointer into the `## Agent skills` block.
+- Blank with no roadmap: reads the relevant project scope and existing work, drafts milestones with completion criteria and sequencing rationale, creates the labelled issue, and writes the `Roadmap:` pointer into the `## Agent skills` block.
 - Blank with a roadmap: reconciles and reports. `add`, `done`, `reopen`, and `order` edit the milestones first.
 
 ```text
@@ -632,9 +632,10 @@ Holds one roadmap on the tracker: a destination and ordered milestones. Every ma
 | `planned` | Nothing names the milestone |
 | `deciding` | An open map names it |
 | `building` | Every map naming it is closed, and an effort is open or the map still needs slicing |
-| `done` | At least one build effort names it and everything naming it is closed, or you confirmed it with `done <n>` |
+| `verifying` | Delivery is reported complete but outcome evidence is incomplete |
+| `done` | Every completion criterion has evidence and no member work remains open, or you confirmed it with `done <n>` |
 
-A map's Notes and a build parent's body carry `Milestone: <name> on [Roadmap](url)`. `scry` asks for the milestone when it charts a map, `conjure` copies the line into the build parent, and `portal` routes to `vision` when the board is otherwise clear. Maps and efforts with no line are counted as unattached in the report rather than blocked.
+A map's Notes and a build parent's body carry `Milestone: <name> on [Roadmap](url)`. `scry` asks for the milestone when it charts a map, `conjure` copies the line into the build parent, and `portal` routes to `vision` when the board is otherwise clear. Existing work is inspected before new planning is recommended. Authorized updates link clear matches; ambiguous associations are reported by title. Saved pointers and the `roadmap` label identify new roadmaps, while legacy body markers remain readable.
 
 </details>
 

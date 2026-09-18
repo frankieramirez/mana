@@ -133,7 +133,7 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> check
 
 This is the repair path for a setup run that wrote the config before the key was there. Running it with no change, just to verify, is a useful run: the user exports `LINEAR_API_KEY`, comes back, and confirms. Exit 3 or a missing variable: name the variable and leave the file as it is.
 
-**roadmap.** Show the current line, or say no roadmap is set. The value is a tracker id, an issue URL, or a local path. Before writing, read the target with the bundled script (or the file) and confirm its body has the exact line `Work kind: roadmap`; refuse anything else, and say the roadmap skill charts one. Write `Roadmap: <value>` in the block, or remove the line. Removing the line does not close or delete the issue.
+**roadmap.** Show the current line, or say no roadmap is set. The value is a tracker id, an issue URL, or a local path. Before writing, read the target with the bundled script (or the file) and confirm it has Destination and Milestones sections; accept a labelled roadmap or a legacy `Work kind: roadmap` body, and allow the user-selected pointer to identify an otherwise valid roadmap. Refuse an unrelated body. Write `Roadmap: <value>` in the block, or remove the line. Removing the line does not close or delete the issue.
 
 **pointer.** Move the `## Agent skills` block between `CLAUDE.md` and `AGENTS.md`, removing it from the file it left while preserving every setting line, including `Persona:` and `Style:`. A symlink pair is one file: report that and stop.
 

@@ -29,24 +29,33 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> find "<roadmap URL>"
 
 Read each hit's body. A member is an issue whose body has a `Milestone:` line naming this roadmap's URL, as `references/roadmap-shape.md` shows. A bare mention is not membership. Classify each member: a **map** carries the label `scry:map` or `wayfinder:map`; an **effort** carries the exact body line `Work kind: build`. Anything else is ignored. Record the milestone name each one names; a name that matches no milestone counts as **unattached** and is reported.
 
-Maps and efforts that never name the roadmap are also unattached. Count them once with `list scry:map`, `list wayfinder:map`, and `find "Work kind: build"`, subtracting the members already found. Count only; do not read their bodies.
+Also discover work that predates the roadmap: `list scry:map`, `list wayfinder:map`, and `find "Work kind: build"`. Search relevant milestone terms with `find` for closed planning work and read plausible candidates' bodies. Deduplicate by issue id. Inspect their scope and evidence against milestone criteria; a matching title alone does not establish membership. Closed historical work may establish the baseline without becoming a member.
 
-A search that fails leaves the roadmap unchanged. Report `unknown: <reason>` and stop before writing.
+For an authorized creation or update, add the `Milestone:` line to a clear match using `update-body --expected-body` with its own snapshot. Preserve the rest of that body and reread after writing. Do not replace a link to another roadmap or milestone automatically. Ambiguous matches, work spanning milestones, and failed link writes are reported by title with the decision needed; never count a proposed or failed link as persisted membership. A draft or report-only request proposes these associations without editing members. Do not create replacement planning for a plausible existing match while its association is unresolved.
+
+A failed required read leaves the saved roadmap unchanged. Report what could not be established. Member linking is not atomic: if a later operation fails, report links already saved and retry discovery next run. On a concurrent member edit, reread once and retry only if the association remains clear; a second mismatch leaves that link unresolved.
 
 ### 3d. Derive status
 
-For each milestone, apply the first matching row:
+First follow `Planning source:` links: for each closed member map, run `find "<map URL>"` and verify each hit's body. An effort with that exact planning source and no conflicting `Milestone:` line also serves the milestone; record it once. Conflicting associations remain unresolved. Do this before deriving status, so existing implementation is not overlooked.
+
+Read the milestone's completion criteria against delivered evidence in linked work and relevant owning documents. Record which criteria are satisfied with sources and what is missing. Closed issues alone do not prove the outcome, and one effort need not cover the entire milestone. Legacy milestones without criteria keep their outcome as the scope; draft criteria from it using `milestones.md`, flag material ambiguity, and never infer completion from closure alone.
+
+Apply the first matching row:
 
 | Status | Rule |
 |--------|------|
-| `done` | A `Confirmed done:` line is present, or at least one effort names it, every map naming it is closed, and every effort naming it is closed |
-| `building` | Every map naming it is closed and at least one map or effort names it. This covers an open effort, and a closed map with no effort yet, whose Left line reads `plan implementation from <map title>` |
-| `deciding` | At least one open map names it |
-| `planned` | Nothing names it |
+| `done` | A `Confirmed done:` override exists, or every completion criterion has verified evidence, no member work remains open, and no unresolved association could change that assessment |
+| `deciding` | At least one member map is open |
+| `building` | An effort is open, a closed map needs implementation, or evidence identifies delivery still missing |
+| `verifying` | Member work is closed or the outcome is reported delivered, but completion evidence is incomplete |
+| `planned` | No work or delivery evidence establishes activity yet |
 
-A closed map counts as sliced only when an effort names the milestone. Before writing `plan implementation from <map title>`, run `find "<map URL>"` and read each hit for a `Planning source:` line naming that map; an effort found that way is a member of the milestone even without a `Milestone:` line, so record it under Efforts. A milestone the previous body marked `done` by the rules alone, that now has an open member, goes back to `building` or `deciding`; only a `Confirmed done:` line holds. The **current** milestone is the first one that is not `done`.
+Use `building` for an identified delivery gap only when work has started; a wholly unstarted milestone stays `planned`. An open map can coexist with building work: describe both in the assessment. Unknown evidence is not a demonstrated failure. Previously derived `done` can reopen when evidence or member state changes; only an explicit confirmation holds. `reopen` removes that override and recomputes status, so verified completion may still yield done.
 
-For the current milestone only, fetch the details needed by `references/report.md`. On GitHub, read each open map's frontier:
+The **current** milestone is the first not done. Also identify consequential blockers or independent work elsewhere when they affect the recommended next action. Unresolved associations take precedence over recommending duplicate planning.
+
+For the recommended action, fetch the details needed by `references/report.md`. On GitHub, read each open map's frontier:
 
 ```bash
 bash "<SKILL_DIR>/scripts/map.sh" frontier MAP_ID OWNER/REPO
@@ -58,7 +67,9 @@ For each open effort, use the bundled ticket script with the resolved adapter fl
 
 ### 3e. Write
 
-Rewrite the body from the snapshot: the same sections in the same order, each milestone's status, its Maps and Efforts lines, and its Left line updated, and any **Not yet planned** line whose name now matches a milestone removed. A milestone that is not current gets its Left line from the 3c counts alone, such as `2 maps open, 1 effort open`, with no frontier or ticket-level fetch; only the current milestone's Left line uses the detail fetched in 3d. Preserve every other line. Write under the guard:
+Update the snapshot's milestone statuses and verified links, completion evidence, and concrete Left lines. Refresh **Where we stand** from inspected evidence; preserve the user's scope and reasoning. Remove empty Maps and Efforts fields. Remove an unplanned line only when its scope is accounted for by a milestone. Inspect evidence for a milestone before changing its completion status; fetch detailed frontier or build-ticket availability only for the recommended next action.
+
+Keep legacy Notes and other user content unless migrating it without losing meaning. Ensure the remote `roadmap` label before removing a legacy marker. Skip a write when nothing changed. For report-only requests that exclude writes, report the derived assessment and proposed updates without saving them. Otherwise write under the guard:
 
 ```bash
 original_body='<recorded absolute snapshot path>'
