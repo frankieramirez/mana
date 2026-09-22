@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-exec python3 -B scripts/shared_assets.py --only agents "$@"
+exec python3 -B scripts/shared_assets.py "$@"

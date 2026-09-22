@@ -1,0 +1,22 @@
+{
+  "type":"object",
+  "additionalProperties":false,
+  "required":["report","checks"],
+  "properties":{
+    "report":{"type":"string"},
+    "checks":{
+      "type":"array",
+      "items":{
+        "type":"object",
+        "additionalProperties":false,
+        "required":["command","status","exit_code","claim"],
+        "properties":{
+          "command":{"type":"string"},
+          "status":{"type":"string","enum":["passed","failed","blocked","unrun","stale"]},
+          "exit_code":{"type":["integer","null"]},
+          "claim":{"type":"string"}
+        }
+      }
+    }
+  }
+}

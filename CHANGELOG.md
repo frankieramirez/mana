@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.31.1
+
+- Reject Git index changes in workflow eval cases that disallow commits, including staging an otherwise allowed edit or unstaging pre-existing user work. Add regressions for both cases.
+
+## 0.31.0
+
+- Distinguish visual demonstrations from executed checks and unverified claims in build and PR workflows. Preserve proving-command failures when rendering output and report stale or unavailable evidence accurately.
+- Quote temporary body-file paths in GitHub issue creation dry runs so paths containing spaces remain usable.
+- Centralize shared-asset ownership and synchronization, verify all standalone skill payloads, and add offline regression coverage plus an optional isolated workflow eval pilot for maintainers.
+
 ## 0.30.0
 
 - Ground roadmaps in project scope and existing work, explain milestone priorities, and require outcome evidence for completion. Reuse clear existing-work matches before proposing new planning, report unresolved associations, and add a verifying state for missing proof. Replace the fixed report table and empty fields with a concise assessment. Identify roadmaps by pointer or label while retaining legacy marker compatibility. Add scenario-based roadmap regressions.

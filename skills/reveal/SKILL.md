@@ -43,7 +43,7 @@ The remainder after any tokens is the target.
 
 1. Resolve the branch and any existing pull request (Stage 1).
 2. Push, creating the upstream if needed (Stage 2).
-3. Capture proof (Stage 3).
+3. Capture evidence (Stage 3).
 4. Write the body and ship (Stage 4).
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
@@ -112,7 +112,8 @@ Reveal: <title>
 PR: <url>
 Mergeability: <clean | conflicting: files and base | unknown: reason>
 Attach: <yes | skipped: reason>
-Evidence: <file list>
+Evidence: <files and what they demonstrate>
+Validation: <command, checked state, outcome, and unverified claims>
 Orca: <in-review | not present | failed: reason>
 ```
 
@@ -120,6 +121,6 @@ Orca: <in-review | not present | failed: reason>
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
-| `references/capture.md` | Stage 3 | What to record, and the SVG stand-in |
+| `references/capture.md` | Stage 3 | Evidence kinds, check outcomes, and capture |
 | `references/body.md` | Stage 4 | Scannable PR body: trees and diffs |
 | `references/attach.md` | Stage 4 | Image paths, `--attach`, `open-pr.sh` |

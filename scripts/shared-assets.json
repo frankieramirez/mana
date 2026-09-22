@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "copies": [
+    {
+      "source": "skills/banish/references/comment-reaper.md",
+      "destinations": [
+        "skills/cast/references/comment-reaper.md"
+      ]
+    },
+    {
+      "source": "skills/reveal/references/capture.md",
+      "destinations": [
+        "skills/cast/references/capture.md"
+      ]
+    },
+    {
+      "source": "skills/reveal/references/body.md",
+      "destinations": [
+        "skills/cast/references/body.md"
+      ]
+    },
+    {
+      "source": "skills/reveal/references/attach.md",
+      "destinations": [
+        "skills/cast/references/attach.md"
+      ]
+    },
+    {
+      "source": "skills/reveal/scripts/open-pr.sh",
+      "destinations": [
+        "skills/cast/scripts/open-pr.sh"
+      ]
+    },
+    {
+      "source": "skills/reveal/scripts/text-frame.sh",
+      "destinations": [
+        "skills/cast/scripts/text-frame.sh"
+      ]
+    },
+    {
+      "source": "skills/sift/references/agent-brief.md",
+      "destinations": [
+        "skills/conjure/references/agent-brief.md",
+        "skills/ultima/references/agent-brief.md"
+      ]
+    },
+    {
+      "source": "skills/conjure/references/build-progress.md",
+      "destinations": [
+        "skills/cast/references/build-progress.md"
+      ]
+    },
+    {
+      "source": "skills/sift/scripts/tickets.sh",
+      "destinations": [
+        "skills/conjure/scripts/tickets.sh",
+        "skills/cast/scripts/tickets.sh",
+        "skills/setup-mana/scripts/tickets.sh",
+        "skills/scan/scripts/tickets.sh",
+        "skills/attune/scripts/tickets.sh",
+        "skills/ultima/scripts/tickets.sh",
+        "skills/portal/scripts/tickets.sh",
+        "skills/vision/scripts/tickets.sh"
+      ]
+    },
+    {
+      "source": "skills/scry/scripts/map.sh",
+      "destinations": [
+        "skills/portal/scripts/map.sh",
+        "skills/vision/scripts/map.sh"
+      ]
+    },
+    {
+      "source": "skills/setup-mana/references/triage-labels.md",
+      "destinations": [
+        "skills/attune/references/triage-labels.md"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "source": "skills/banish/references/comment-reaper.md",
+      "destination": "agents/comment-reaper.md",
+      "name": "comment-reaper",
+      "description": "Deletes comments that do not earn their place and flags the code they were covering for. Report-only on code; edits comments only."
+    },
+    {
+      "source": "skills/mimic/references/ghost.md",
+      "destination": "agents/ghost.md",
+      "name": "ghost",
+      "description": "Builds a voice profile from the user's own writing (session messages, PR comments, PR descriptions, commits) and returns a filled-in draft with the evidence. Read-only; never writes the profile.",
+      "tools": "Read, Bash, Grep, Glob"
+    },
+    {
+      "source": "skills/mend/references/weaver.md",
+      "destination": "agents/weaver.md",
+      "name": "weaver",
+      "description": "Resolves conflict hunks in an in-progress merge, rebase, cherry-pick, or revert. Keeps both intents when they fit. Edits conflicted files only; never aborts or commits."
+    }
+  ],
+  "persona": {
+    "voice": "skills/attune/references/archmage.md",
+    "session": "skills/attune/references/archmage-session.md",
+    "activation": "skills/attune/references/persona-activation.md",
+    "skill_root": "skills",
+    "voice_destination": "references/archmage.md",
+    "entry_destination": "SKILL.md",
+    "style_destination": "output-styles/archmage.md"
+  }
+}

@@ -1,0 +1,436 @@
+{
+  "version": 1,
+  "skills": {
+    "attune": {
+      "required": [
+        "SKILL.md",
+        "references/archmage-session.md",
+        "references/archmage.md",
+        "references/persona-activation.md",
+        "references/settings.md",
+        "references/triage-labels.md",
+        "references/worktree.md",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "augur": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/proof.md"
+      ],
+      "smoke": [],
+      "project_links": {}
+    },
+    "banish": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/comment-reaper.md"
+      ],
+      "smoke": [],
+      "project_links": {}
+    },
+    "cast": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/attach.md",
+        "references/body.md",
+        "references/build-progress.md",
+        "references/capture.md",
+        "references/comment-cleanup.md",
+        "references/comment-reaper.md",
+        "references/spec-check.md",
+        "references/tdd.md",
+        "scripts/open-pr.sh",
+        "scripts/text-frame.sh",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/open-pr.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/text-frame.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "conjure": {
+      "required": [
+        "SKILL.md",
+        "references/agent-brief.md",
+        "references/archmage.md",
+        "references/build-effort.md",
+        "references/build-progress.md",
+        "references/scratch.md",
+        "references/slicing.md",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {
+        "references/scratch.md": [
+          "../build.md"
+        ]
+      }
+    },
+    "dispel": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md"
+      ],
+      "smoke": [],
+      "project_links": {}
+    },
+    "mend": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/checks.md",
+        "references/sources.md",
+        "references/weaver.md",
+        "scripts/conflict-state"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/conflict-state",
+          "args": [],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "mimic": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/ghost.md",
+        "references/voice-profile.md"
+      ],
+      "smoke": [],
+      "project_links": {}
+    },
+    "portal": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/board.md",
+        "references/build.md",
+        "references/issue.md",
+        "references/pr.md",
+        "scripts/map.sh",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/map.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "remedy": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/evaluation-rubric.md",
+        "references/fixer-prompt.md",
+        "references/scout-prompt.md",
+        "references/verifier-prompt.md",
+        "scripts/pr-threads"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/pr-threads",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "reveal": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/attach.md",
+        "references/body.md",
+        "references/capture.md",
+        "scripts/open-pr.sh",
+        "scripts/text-frame.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/open-pr.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/text-frame.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "scan": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/diff-scope.md",
+        "references/findings-schema.json",
+        "references/finish-review.md",
+        "references/peer-review.md",
+        "references/personas/augmentation-evoker.md",
+        "references/personas/balance-druid.md",
+        "references/personas/demonology-warlock.md",
+        "references/personas/discipline-priest.md",
+        "references/personas/fire-mage.md",
+        "references/personas/havoc-demon-hunter.md",
+        "references/personas/lore-bard.md",
+        "references/personas/marksmanship-hunter.md",
+        "references/personas/protection-warrior.md",
+        "references/personas/restoration-shaman.md",
+        "references/personas/retribution-paladin.md",
+        "references/personas/subtlety-rogue.md",
+        "references/personas/unholy-death-knight.md",
+        "references/personas/windwalker-monk.md",
+        "references/report-example.md",
+        "references/subagent-template.md",
+        "references/validator.md",
+        "references/voice.md",
+        "scripts/review.sh",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/review.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "scry": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/domain.md",
+        "references/github-ops.md",
+        "references/handoff.md",
+        "references/interrogate.md",
+        "references/map-shape.md",
+        "references/prototype.md",
+        "references/research.md",
+        "references/scratch.md",
+        "scripts/map.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/map.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {
+        "references/handoff.md": [
+          "map-url",
+          "build-url"
+        ]
+      }
+    },
+    "setup-mana": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/issue-tracker-github.md",
+        "references/issue-tracker-jira.md",
+        "references/issue-tracker-linear.md",
+        "references/issue-tracker-local.md",
+        "references/issue-tracker-other.md",
+        "references/triage-labels.md",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "sift": {
+      "required": [
+        "SKILL.md",
+        "references/agent-brief.md",
+        "references/archmage.md",
+        "references/interrogate.md",
+        "references/out-of-scope.md",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "ultima": {
+      "required": [
+        "SKILL.md",
+        "references/agent-brief.md",
+        "references/archmage.md",
+        "references/candidates-schema.json",
+        "references/finish-audit.md",
+        "references/fix-one.md",
+        "references/lens-template.md",
+        "references/lenses/accessibility.md",
+        "references/lenses/component-architecture.md",
+        "references/lenses/design-system.md",
+        "references/lenses/interaction-states.md",
+        "scripts/tickets.sh",
+        "scripts/ultima.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/ultima.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
+    "vision": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/chart.md",
+        "references/milestones.md",
+        "references/reconcile.md",
+        "references/report.md",
+        "references/roadmap-shape.md",
+        "references/scratch.md",
+        "references/tracker.md",
+        "scripts/map.sh",
+        "scripts/tickets.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/map.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {
+        "references/scratch.md": [
+          ".scratch/roadmap.md"
+        ]
+      }
+    },
+    "ward": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/ci.md",
+        "references/feedback.md",
+        "references/watch-state.md",
+        "scripts/pr-watch.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/pr-watch.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    }
+  }
+}

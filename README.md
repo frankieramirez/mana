@@ -4,6 +4,8 @@
 
 Agent skills I use across personal and work projects. They work in Claude Code as a plugin and in agents that read `SKILL.md` files, including Codex, Cursor, Copilot, and Gemini CLI.
 
+Maintainers can verify standalone packages and run isolated workflow scenarios using the [maintenance guide](docs/MAINTAINING.md) and [workflow eval pilot](evals/workflows/README.md). These checks do not add dependencies to installed skills.
+
 Maintainers can grade saved skill outputs with the optional [semantic eval pilot](evals/semantic/README.md). Installed skills do not require it.
 
 [Install](#install) · [The loop](#the-loop) · [Skills](#skills) · [Trackers](#trackers) · [Unattended](#unattended) · [Orca](#orca)
@@ -447,7 +449,7 @@ A refused remote write keeps the parent in `.scratch/<slug>/build.md` and missin
 
 ### cast
 
-Builds one ready ticket or spec, commits the change, and opens a PR with visual proof.
+Builds one ready ticket or spec, commits the change, and opens a PR with visual evidence.
 
 - Claims the ticket first so another session skips it.
 - Pushes and opens the PR by default. With `no-pr`, it skips the PR and pushes only if the branch already has an upstream.
@@ -481,7 +483,7 @@ The PR includes visual evidence and the [tracker's closing line](#trackers). In 
 Opens or updates a PR for the current branch with a scannable description and visual proof.
 
 - The body combines a short explanation with a compact tree or structural diff.
-- Proof can be a screenshot, recording, or command-output image. Docs and backend changes get an SVG of the proving command.
+- Evidence can be a screenshot, recording, or command-output image. Reports name executed checks and their results; summary illustrations establish no behavioral outcome.
 
 ```text
 # Current branch

@@ -31,9 +31,12 @@ done
 for p in $(python3 -c 'import json;print(" ".join(json.load(open(".claude-plugin/plugin.json")).get("agents",[])))'); do
   [ -f "$p" ] || err "plugin.json agent path missing: $p"
 done
-scripts/sync-agent.sh --check || err "generated agents are out of sync"
-scripts/sync-persona.sh --check || err "persona references or activation blocks are out of sync"
+scripts/sync-assets.sh --check || err "shared assets are out of sync"
 scripts/test-persona.sh || err "persona synchronization fixtures failed"
+python3 -B -m unittest discover -s scripts -p 'test_reliability.py' || err "reliability fixtures failed"
+python3 -B scripts/verify_packages.py || err "standalone packages failed"
+python3 -B evals/workflows/run.py --check || err "workflow definitions failed"
+python3 -B -m unittest discover -s evals/workflows -p 'test_*.py' || err "workflow grader fixtures failed"
 scripts/test-ward.sh || err "PR attendance fixtures failed"
 scripts/test-scry-map.sh || err "scry map closeout fixtures failed"
 scripts/test-build-tickets.sh || err "build ticket adapter fixtures failed"
@@ -100,32 +103,6 @@ for s in skills/*/scripts/* scripts/*.sh; do
   [ -x "$s" ] || err "$s is not executable"
   head -1 "$s" | grep -q bash && { bash -n "$s" || err "$s does not parse"; }
 done
-
-while read -r a b; do
-  [ -n "${a:-}" ] || continue
-  cmp -s "$a" "$b" || err "$a and $b differ; edit $(dirname "$(dirname "$a")")/ and copy to $(dirname "$(dirname "$b")")/"
-done <<'EOF'
-skills/banish/references/comment-reaper.md skills/cast/references/comment-reaper.md
-skills/reveal/references/capture.md skills/cast/references/capture.md
-skills/reveal/references/body.md skills/cast/references/body.md
-skills/reveal/references/attach.md skills/cast/references/attach.md
-skills/reveal/scripts/open-pr.sh skills/cast/scripts/open-pr.sh
-skills/reveal/scripts/text-frame.sh skills/cast/scripts/text-frame.sh
-skills/sift/references/agent-brief.md skills/conjure/references/agent-brief.md
-skills/conjure/references/build-progress.md skills/cast/references/build-progress.md
-skills/sift/scripts/tickets.sh skills/conjure/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/cast/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/setup-mana/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/scan/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/attune/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/ultima/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/portal/scripts/tickets.sh
-skills/sift/scripts/tickets.sh skills/vision/scripts/tickets.sh
-skills/scry/scripts/map.sh skills/portal/scripts/map.sh
-skills/scry/scripts/map.sh skills/vision/scripts/map.sh
-skills/sift/references/agent-brief.md skills/ultima/references/agent-brief.md
-skills/setup-mana/references/triage-labels.md skills/attune/references/triage-labels.md
-EOF
 
 # 5c. Every scan persona has the shared shape and its stub names its own file.
 for p in skills/scan/references/personas/*.md; do
