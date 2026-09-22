@@ -2,7 +2,7 @@
 
 ## 0.32.0
 
-- `scry` ends every session by shipping the files it wrote. Stage 1 records the working tree before any write. The new Stage 4 compares against it, lists the research notes, glossary and ADR edits, owning docs, prototypes, and local ticket files the session left behind, and asks whether to open a pull request for them. On a yes it branches off the default branch when needed, commits only those paths so the user's own changes stay out, pushes, opens or updates the pull request with no closing keyword, and comments the link on the ticket. `pr` skips the question and `no-pr` leaves the files uncommitted. Prototypes stay out of the pull request unless the user adds them.
+- `scry` ends every session by shipping the files it wrote. Stage 1 records the working tree before any write. The new Stage 4 compares against it, lists the research notes, glossary and ADR edits, owning docs, prototypes, and local ticket files the session left behind, and asks whether to open a pull request for them. On a yes it branches off the default branch when needed, commits only those paths so the user's own changes stay out, pushes, opens or updates the pull request with no closing keyword, and comments the link on the ticket, or on the map when charting. `pr` skips the question and `no-pr` leaves the files uncommitted. Prototypes stay out of the pull request unless the user adds them.
 
 ## 0.31.1
 

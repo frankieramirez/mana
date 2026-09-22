@@ -42,7 +42,7 @@ git branch --show-current
 git config branch.<current>.remote
 ```
 
-Never commit to the default branch. When the current branch is the default, create one before committing, and the uncommitted files move with it:
+Never commit to the default branch or a detached `HEAD`. An empty `git branch --show-current` means `HEAD` is detached, so skip the `branch.<current>.remote` read. When the current branch is the default or `HEAD` is detached, create one before committing, and the uncommitted files move with it:
 
 ```bash
 git switch -c <name>

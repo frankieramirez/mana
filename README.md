@@ -407,7 +407,7 @@ The map lives on GitHub, with project context in `CONTEXT.md`, decision records 
 
 Tracker labels are `scry:map` and `scry:<type>`. Existing maps with `wayfinder:*` labels still work. If GitHub refuses a write with 403, the same map structure lands under `.scratch/<slug>/`.
 
-At the end of a session, scry lists any files it wrote (research notes, glossary and ADR edits, prototypes) and asks whether to open a pull request for them. Files you changed before the session stay out of the commit.
+At the end of a session, scry lists any files it wrote (research notes, glossary and ADR edits, prototypes) and asks whether to open a pull request for them. Prototypes stay out of the pull request unless you choose to include them. Files you changed before the session stay out of the commit.
 
 ```text
 /mana:scry 92 you-pick   # accept recommended answers
