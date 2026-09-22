@@ -510,7 +510,7 @@ gh_create() {
   if [ "$dry" = "1" ]; then
     printf 'command\tgh issue create --repo %s --title %q' "$OWNER/$REPO" "$title"
     printf ' --label %q' "$@"
-    printf ' --body-file %s\n' "$tmp"
+    printf ' --body-file %q\n' "$tmp"
     echo "tickets.sh: dry-run left the body file at $tmp; delete it after running the command" >&2
     return
   fi

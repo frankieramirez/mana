@@ -15,7 +15,7 @@ This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin 
 - Scripts under `skills/*/scripts/` are bash. The GitHub paths depend only on `git` and `gh`. The Linear and Jira paths inside `tickets.sh` use `python3` with the standard library and nothing else. No jq binary, no node, no pip packages.
 - A `SKILL.md` shows a bundled script with its path written into the command, as `bash "<SKILL_DIR>/scripts/x.sh"`. Never `SKILL_DIR="..."` on a line above it. A worktree-isolated or sandboxed session refuses an interpreter whose script path it cannot read off the command line, so the variable form costs the run several turns before the model falls back. Variables in other arguments are fine.
 - The Archmage voice lives in `skills/attune/references/archmage.md`, with `archmage-session.md` and `persona-activation.md` beside it. `scripts/sync-persona.sh` copies the voice into every skill, rewrites each activation block, and generates `output-styles/archmage.md` for Claude Code. Edit the attune sources and run that script.
-- Everything under `agents/` is generated. Edit the reference file named in the table in `scripts/sync-agent.sh` (`skills/banish/references/comment-reaper.md`, `skills/mimic/references/ghost.md`, `skills/mend/references/weaver.md`) and run that script. Adding an agent means a new table row plus a line in `plugin.json`.
+- Everything under `agents/` is generated. Edit the reference file named in the manifest in `scripts/shared-assets.json` (`skills/banish/references/comment-reaper.md`, `skills/mimic/references/ghost.md`, `skills/mend/references/weaver.md`) and run `scripts/sync-assets.sh`. Adding an agent means a new manifest entry plus a line in `plugin.json`.
 - Every behavior change bumps `version` in `.claude-plugin/plugin.json` and gets a line in `CHANGELOG.md`. Claude Code caches plugins by version, so a change without a bump does not reach installed copies.
 - Nothing here references another plugin, marketplace, or skill by name. Skills must work standalone under Codex, Cursor, or Copilot where only the `SKILL.md` and its folder are installed. The one exception is `portal`, whose job is to name the skill it hands off to; it reads a sibling's `SKILL.md` when the folder is present and falls back to a plain prompt when it is not.
 
@@ -35,3 +35,5 @@ Triage labels: defaults. See `docs/agents/triage-labels.md`.
 Validation: `scripts/validate.sh`
 Proof: command output as an image
 Domain docs: single-context: CONTEXT.md and docs/adr/
+
+Shared-asset ownership lives in `scripts/shared-assets.json`. Run `scripts/sync-assets.sh` after canonical edits; its `--check` mode is read-only. The agent and persona sync commands are scoped wrappers.

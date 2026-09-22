@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 - <<'PY'
+import json
 import pathlib
 import shutil
 import subprocess
@@ -13,6 +14,11 @@ with tempfile.TemporaryDirectory(prefix='mana persona ') as temporary:
     root = pathlib.Path(temporary)
     (root / 'scripts').mkdir()
     shutil.copy2(repository / 'scripts/sync-persona.sh', root / 'scripts/sync-persona.sh')
+    shutil.copy2(repository / 'scripts/shared_assets.py', root / 'scripts/shared_assets.py')
+    manifest = json.loads((repository / 'scripts/shared-assets.json').read_text())
+    manifest['copies'] = []
+    manifest['agents'] = []
+    (root / 'scripts/shared-assets.json').write_text(json.dumps(manifest))
     source = root / 'skills/attune/references'
     source.mkdir(parents=True)
     for name in ('archmage.md', 'archmage-session.md', 'persona-activation.md'):
@@ -181,6 +187,8 @@ with tempfile.TemporaryDirectory(prefix='mana persona ') as temporary:
     root_fixture = root / 'root-symlink-fixture'
     (root_fixture / 'scripts').mkdir(parents=True)
     shutil.copy2(root / 'scripts/sync-persona.sh', root_fixture / 'scripts/sync-persona.sh')
+    shutil.copy2(root / 'scripts/shared_assets.py', root_fixture / 'scripts/shared_assets.py')
+    shutil.copy2(root / 'scripts/shared-assets.json', root_fixture / 'scripts/shared-assets.json')
     (root_fixture / 'skills').symlink_to(external, target_is_directory=True)
     result = subprocess.run(['bash', str(root_fixture / 'scripts/sync-persona.sh')],
                             cwd=root_fixture, capture_output=True, text=True)

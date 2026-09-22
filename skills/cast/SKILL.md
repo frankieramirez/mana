@@ -55,7 +55,7 @@ Parse tokens, then treat the remainder as the target.
 2. Build it (Stage 2).
 3. Clean up comments in this session's changes (Stage 2a), then check the diff against the ticket (Stage 3).
 4. Commit, and push only when the branch already has an upstream (Stage 4).
-5. Capture proof and open the pull request (Stage 5). Skip when `no-pr`.
+5. Capture evidence and open the pull request (Stage 5). Skip when `no-pr`.
 6. Report the ticket result, then check its build parent and give the next action (Stage 6).
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
@@ -210,7 +210,7 @@ fi
 
 Same rebase-or-stop rule as Stage 4. Never force-push.
 
-Capture at least one proof file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`; see the closing line in `references/body.md`). Then run `scripts/open-pr.sh` with the title, body file, and attaches.
+Capture at least one evidence file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`; see the closing line in `references/body.md`). Then run `scripts/open-pr.sh` with the title, body file, and attaches.
 
 The script repeats the preflight and checks GitHub after writing. If exit 4 reports conflicts after writing, rerun the preflight command to fetch the current base before using the same resolution procedure. Validate and refresh proof, then push and update the PR. Limit this to two resolution passes per run; continued base movement gets a concrete handoff. Exit 5 means mergeability remains unknown: report the URL and uncertainty without claiming the PR is ready. Existing PRs keep their review state. Clean mergeability applies to the checked snapshot; it does not guarantee future base changes or semantic compatibility.
 
@@ -242,9 +242,9 @@ Write the result as markdown, not as a code block and not as plain indented line
 | **Pushed** | yes, to branch \| no, no upstream \| no, push failed: reason |
 | **PR** | url \| none: no-pr \| none: reason |
 | **Mergeability** | clean \| conflicting: files and base \| unknown: reason \| skipped: no-pr |
-| **Evidence** | file list, or none |
+| **Evidence** | files and what they demonstrate, or none |
 | **Comment cleanup** | skipped: reason \| deleted count, repairs, and open items |
-| **Validation** | one line |
+| **Validation** | command, checked state, outcome, and unverified claims |
 | **Orca** | linked \<id>, in-review \| not present \| failed: reason |
 | **Open** | any criterion left unmet, or none |
 
@@ -267,6 +267,6 @@ Every row appears, in this order, even when the value is `none`. A cell holds on
 | `references/comment-cleanup.md` | Stage 2a, when this session changes code comments | Audit deletions and repair confusing code |
 | `references/comment-reaper.md` | Stage 2a, through comment cleanup | Scoped comment reviewer instructions |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
-| `references/capture.md` | Stage 5 | What to record, and the SVG stand-in |
+| `references/capture.md` | Stage 5 | Evidence kinds, check outcomes, and capture |
 | `references/body.md` | Stage 5 | Scannable PR body: trees and diffs |
 | `references/attach.md` | Stage 5 | Image paths, `--attach`, `open-pr.sh` |

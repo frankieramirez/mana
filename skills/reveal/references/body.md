@@ -1,6 +1,6 @@
 # Body
 
-A reviewer should see the change in a glance. One sentence, then a shape. The attached proof sits under them.
+A reviewer should see the change in a glance. One sentence, then a shape. The evidence and its limits sit under them.
 
 GitHub renders fenced `text`, `diff`, and `mermaid` in a pull request. It will not render an HTML file. A UI mockup is a screenshot from capture.
 
@@ -123,6 +123,10 @@ The sentence above the shape is how a person talks.
 - Contractions are fine.
 
 If the repo has a pull request template (`PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/PULL_REQUEST_TEMPLATE/*`, `docs/PULL_REQUEST_TEMPLATE.md`), start from that file and fill it. Keep the shape and the evidence.
+
+## Validation record
+
+Include the evidence distinctions from `references/capture.md`: what was demonstrated, which checks executed against which state and with what result, and what remains unverified. Keep failed, blocked, stale, and unrun checks visible. A rendered attachment cannot turn any of those into a passed check.
 
 ## Closing line
 
