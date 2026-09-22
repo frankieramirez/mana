@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.1
+
+- Reject Git index changes in workflow eval cases that disallow commits, including staging an otherwise allowed edit or unstaging pre-existing user work. Add regressions for both cases.
+
 ## 0.31.0
 
 - Distinguish visual demonstrations from executed checks and unverified claims in build and PR workflows. Preserve proving-command failures when rendering output and report stale or unavailable evidence accurately.

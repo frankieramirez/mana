@@ -157,7 +157,7 @@ The plan is complete when all five packages meet their acceptance criteria, dete
 
 ## Execution record
 
-All five work packages are implemented. Shipped behavior is versioned as 0.31.0.
+All five work packages are implemented. Shipped behavior is versioned as 0.31.1.
 
 | Package | Delivered evidence |
 |---------|--------------------|
@@ -167,6 +167,6 @@ All five work packages are implemented. Shipped behavior is versioned as 0.31.0.
 | 4 | Eight synthetic workflow cases have observed passing agent runs; runner failures and a corrected grader judgment are retained and explained in `evals/workflows/findings.md`. |
 | 5 | `docs/MAINTAINING.md` documents the failure-to-regression process and links historical or synthetic seed regressions. |
 
-Local validation: `scripts/validate.sh` passes. Similarity was checked against upstream revision `414e9d6be166c15d9fb10595204530802ad007ef`; every comparison is below 0.30, with a worst ratio of 0.24. The new offline suites contain 12 reliability tests and 11 workflow fixture/grader tests. Live runs remain separate from CI, use one validated host version, and establish no general reliability rate.
+Local validation: `scripts/validate.sh` passes. Similarity was checked against upstream revision `414e9d6be166c15d9fb10595204530802ad007ef`; every comparison is below 0.30, with a worst ratio of 0.24. The new offline suites contain 12 reliability tests and 13 workflow fixture/grader tests. Live runs remain separate from CI, use one validated host version, and establish no general reliability rate.
 
 An additional adapter regression found while executing the plan was fixed: dry-run issue creation now quotes temporary body paths containing spaces. The canonical helper and all bundled copies are synchronized.

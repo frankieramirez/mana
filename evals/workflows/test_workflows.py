@@ -105,6 +105,29 @@ class WorkflowTests(unittest.TestCase):
         response['report'] = 'Ran the full installed skill.'
         self.assertTrue(run.grade(case, work, before, response, [event('write app.txt')]))
 
+    def test_no_commit_case_rejects_staging_allowed_edit(self):
+        case, work, before = self.fixture('missing-sibling')
+        (work / 'app.txt').write_text('new\n')
+        response = {'report': 'Skill is unavailable; completed the local edit.', 'checks': []}
+        events = [event('write app.txt')]
+        self.assertEqual(run.grade(case, work, before, response, events), [])
+        run.git(work, 'add', 'app.txt')
+        self.assertEqual(run.git(work, 'rev-parse', 'HEAD'), before['head'])
+        self.assertEqual(run.grade(case, work, before, response, events), ['unrequested index change'])
+
+    def test_no_commit_case_preserves_existing_staged_work(self):
+        case, work, before = self.fixture('missing-sibling')
+        (work / 'notes.txt').write_text('existing staged edit\n')
+        run.git(work, 'add', 'notes.txt')
+        before['index'] = run.git(work, 'diff', '--cached', '--binary')
+        before['product_state'] = run.product_state(work)
+        (work / 'app.txt').write_text('new\n')
+        response = {'report': 'Skill is unavailable; completed the local edit.', 'checks': []}
+        events = [event('write app.txt')]
+        self.assertEqual(run.grade(case, work, before, response, events), [])
+        run.git(work, 'reset', '-q', 'HEAD', '--', 'notes.txt')
+        self.assertEqual(run.grade(case, work, before, response, events), ['unrequested index change'])
+
     def test_setup_failure_has_durable_result(self):
         with patch.object(run.shutil, 'which', return_value=None):
             result = run.execute(self.cases['capture-pass'], self.root, 1)
