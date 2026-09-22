@@ -1,7 +1,7 @@
 ---
 name: scry
 description: "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, or /scry."
-argument-hint: "[loose idea | map number | ticket number | issue URL] [you-pick]"
+argument-hint: "[loose idea | map number | ticket number | issue URL] [you-pick] [pr | no-pr]"
 disable-model-invocation: true
 ---
 
@@ -42,6 +42,8 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 | Token | Effect |
 |-------|--------|
 | `you-pick` | On interrogation rounds, accept every recommended answer. Same meaning as the user saying "make the decisions" or "you pick". |
+| `pr` | At Stage 4, commit the files this session wrote, push, and open or update a pull request without asking. |
+| `no-pr` | At Stage 4, list the files this session wrote and leave them uncommitted. |
 
 **No number or URL (a loose idea).** Chart a new map.
 
@@ -59,10 +61,19 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 2. Decide chart vs walk from the arguments (above).
 3. Chart: Stage 2, then stop. Walking tickets is a later session.
 4. Walk: Stage 3. Check for an already finished map, or resolve one ticket and file new fog. Check closeout before stopping.
+5. Ship: Stage 4 runs before the final report on every path that ends the session, including the early stops. It finds the files this session wrote and offers them as a pull request.
 
 ---
 
 ## Stage 1: Tracker
+
+Record the working tree before any write, so Stage 4 can tell this session's files from the user's:
+
+```bash
+git status --porcelain=v1 -uall
+```
+
+Keep the printed list in the conversation. Shell state does not persist. Outside a git checkout, note that Stage 4 has nothing to ship.
 
 If `docs/agents/issue-tracker.md` exists, read it. Its `Tracker:` line names the tracker. On `github`, follow its "Wayfinding operations" section for any mechanic it specifies (extra labels, owning docs, parent-link fallbacks) and continue below. On any other tracker, that section replaces `map.sh` entirely: it says what a map, a ticket, a blocking edge, a claim, and a resolution are there, and which connector or API to use. Follow it for every operation in Stage 2 and Stage 3, keep the same map body and ticket shapes from `references/map-shape.md`, and skip the rest of this stage. When it says maps are not supported, read `references/scratch.md` and keep the map under `.scratch/`. Missing file: GitHub via `gh`, using the operations in `references/github-ops.md`.
 
@@ -138,7 +149,7 @@ Everything still too dim to phrase stays in **Not yet specified**. Do not pre-sl
 
 For each `research` ticket just created, read `references/research.md` and spawn a generic subagent seeded with that file plus the ticket's Question. They run as one concurrent batch. Charting hand-resolves nothing else.
 
-After recording the research results, run Stage 3f's closeout check. Stop. Charting is one session.
+After recording the research results, run Stage 3f's closeout check, then Stage 4. Stop. Charting is one session.
 
 ---
 
@@ -217,7 +228,7 @@ If this answer shows a ticket sits past the destination, close that ticket and m
 
 If the decision invalidates other tickets, update or close them.
 
-Run the closeout check below, then stop. Closing the parent finishes this session and does not count as working another ticket.
+Run the closeout check below, then Stage 4, then stop. Closing the parent finishes this session and does not count as working another ticket.
 
 ### 3f. Close out the map
 
@@ -269,6 +280,14 @@ On another tracker, apply the same checks through its Wayfinding operations and 
 
 ---
 
+## Stage 4: Ship session files
+
+Load `references/ship.md`. Compare the tree with the Stage 1 baseline to find the files this session wrote: research notes, glossary and ADR edits, owning docs, prototypes, local ticket files. When there are none, say so in one line.
+
+Otherwise ask whether to open a pull request for them, unless `pr`, `no-pr`, or an earlier message in this conversation already answered. A pull request publishes work, so `you-pick` does not answer this question. The reference covers the branch, the commit that leaves the user's own changes out, the pull request, and the line in the report.
+
+---
+
 ## References
 
 | Reference | Load at | Purpose |
@@ -281,3 +300,4 @@ On another tracker, apply the same checks through its Wayfinding operations and 
 | `references/research.md` | Stage 2e; Stage 3 on research | AFK cited notes under `docs/research/` |
 | `references/prototype.md` | Stage 3 on prototype | Cheap artifact to react to |
 | `references/scratch.md` | Stage 1, exit 3 only | Local map when GitHub writes fail |
+| `references/ship.md` | Stage 4 | Commit, push, and open a pull request for the files this session wrote |

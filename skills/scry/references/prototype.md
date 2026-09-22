@@ -21,4 +21,4 @@ If the question is ambiguous and the user is away, pick the shape that matches t
 
 Link the artifact from the ticket. Then load `interrogate.md` and walk the reaction. The prototype is evidence for the decision. It is not the destination.
 
-When the decision lands, keep the validated answer on the ticket. Leave the prototype where it is, marked as throwaway, or on a branch that is obviously not the main line.
+When the decision lands, keep the validated answer on the ticket. Leave the prototype where it is, marked as throwaway, or on a branch that is obviously not the main line. Stage 4 leaves it out of the pull request unless the user asks for it.

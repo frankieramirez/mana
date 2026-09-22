@@ -25,7 +25,7 @@ The subagent does not close the ticket. The parent session posts the gist, links
 - <url or path>: <what it established>
 ```
 
-Stay on the current branch. Do not switch branches to isolate the note. Commit only if the parent session asked you to.
+Stay on the current branch. Do not switch branches to isolate the note, and do not commit. The parent session ships the file in Stage 4.
 
 ## Dispatch
 
