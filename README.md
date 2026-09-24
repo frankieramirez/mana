@@ -48,6 +48,7 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 | File the build tickets | [conjure](#conjure) | Session-sized tickets in build order |
 | Build | [cast](#cast) | A committed change and a PR with proof |
 | Review | [scan](#scan), [augur](#augur) | Findings, optional fixes, and evidence the change is safe |
+| Check agents can run and verify the app | [leyline](#leyline) | Conformance findings for the control CLI and feature map, with probe results |
 | Audit the frontend | [ultima](#ultima) | A ranked HTML report of UI patterns worth fixing, with tickets or one fix on request |
 | Answer feedback | [remedy](#remedy), [mimic](#mimic) | Resolved feedback and paste-ready replies |
 | Attend an open PR | [ward](#ward) | Validated fixes and continued monitoring until merge or closure |
@@ -642,6 +643,31 @@ Holds one roadmap on the tracker: a destination and ordered milestones. Every ma
 | `done` | Every completion criterion has evidence and no member work remains open, or you confirmed it with `done <n>` |
 
 A map's Notes and a build parent's body carry `Milestone: <name> on [Roadmap](url)`. `scry` asks for the milestone when it charts a map, `conjure` copies the line into the build parent, and `portal` routes to `vision` when the board is otherwise clear. Existing work is inspected before new planning is recommended. Authorized updates link clear matches; ambiguous associations are reported by title. Saved pointers and the `roadmap` label identify new roadmaps, while legacy body markers remain readable.
+
+</details>
+
+### leyline
+
+Checks that a project gives agents an honest way to find a feature, run the app, and report what happened: a control CLI and a feature map the project owns, held to a shared contract.
+
+- Checks feature and scenario records, the tests that register them, and how a user reaches each feature, without running any project code.
+- Validates run reports: zero executed tests, a missing prerequisite, or an exit code that disagrees with the report is never a pass.
+- With your agreement, runs the project's CLI in a throwaway worktree and applies a declared break patch to prove the right check fails.
+
+```text
+# Check this repo's control setup
+/mana:leyline
+
+# Also run the probes for one feature
+/mana:leyline run:briefing
+```
+
+<details>
+<summary>The contract and the probes</summary>
+
+The project's `## Agent skills` block names its control skill with a `Control:` line. That skill gives the CLI prefix and where records, test registrations, and break patches live. The CLI answers `list`, `describe`, `feature`, `changed`, and `release`, prints one JSON report with `--json`, and exits 0 passed, 1 failed, 2 usage, or 3 incomplete. The full contract is in `skills/leyline/references/contract.md`.
+
+`run` builds a worktree of HEAD and probes list, describe, an unknown id, a baseline run, the break patch, the restored run, and two runs at once. A probe that could not happen is reported as blocked, never passed. This version checks an existing setup; drafting a feature map and generating a CLI come later.
 
 </details>
 

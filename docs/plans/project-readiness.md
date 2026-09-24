@@ -1,6 +1,6 @@
 # Project readiness plan
 
-Status: planned, M1 next
+Status: M1 implemented in mana; ultima dynamic probes awaiting approval
 Date: 2026-09-24
 
 ## Outcome
@@ -99,7 +99,7 @@ In mana:
 - `skills/leyline/scripts/conform.sh` is bash with embedded python3 stdlib, laid out like `skills/ultima/scripts/ultima.sh`:
   - `static <repo>` reads files and never runs project code. It checks that the `Control:` line resolves, the control skill names its prefix, records parse, ids are unique, `sourceRoots` exist, and every scenario has a literal `scenario(` binding.
   - `report <file>` validates a report against the contract, including that the exit code agrees with the status.
-  - `dynamic <repo> --trust` runs project code only with explicit consent. It runs `list`, `describe`, and one `feature`, then three probes. Controlled failure: in a disposable worktree, apply the project's declared break patch, expect exit 1 naming that scenario, restore, and expect exit 0. Zero match: expect exit 3. Parallel: two worktrees at once with no collision.
+  - `dynamic <repo> --trust` runs project code only with explicit consent. It runs `list`, `describe`, and one `feature`, then three probes. Controlled failure: in a disposable worktree, apply the project's declared break patch, expect exit 1 naming that scenario, restore, and expect exit 0. Unknown id: expect exit 2. Parallel: two concurrent runs from one worktree, both passing with distinct run ids.
 - `scripts/test-leyline.sh` drives a fake control CLI with modes pass, fail, zero, blocked, malformed, lying exit, and hang, and proves the checker catches each one. `scripts/validate.sh` runs it.
 - A `scripts/package-contracts.json` entry, a README section, version 0.33.0, and a CHANGELOG line.
 
@@ -111,6 +111,26 @@ Acceptance:
 - `conform.sh static` on ultima runs no project code, confirmed by a PATH shim that logs any invocation.
 - The ultima findings are recorded as found, followed by the result after the proposed patch.
 - `bash scripts/validate.sh` passes.
+
+### M1 results
+
+Shipped in mana 0.33.0: `skills/leyline` with `references/contract.md`, `references/conformance.md`, and `scripts/conform.sh`, plus `scripts/test-leyline.sh` in `validate.sh`. The fixtures cover 16 static violations, 10 report lies, and 12 dynamic modes of a fake CLI (break ignored, unknown id accepted, list incomplete, exit that disagrees with its report, zero executed, pass with a missing prerequisite, missing contract, reused run id, shared port, incomplete, hang, and an honest run). Each fails for its own rule and the honest CLI passes.
+
+ultima, static, unchanged checkout (`7b479d4`): not conformant, 9 errors and 3 warnings.
+
+| Rule | Count | Finding |
+|---|---|---|
+| `control.pointer` | 1 | `AGENTS.md` has no `Control:` line |
+| `feature.knowledge` | 6 | No feature records who settled its intent |
+| `scenario.orphan-binding` | 2 | `scripts/verification/model.test.ts` registers fixture ids; narrowing `Bindings:` to `packages, apps` clears them |
+| `feature.source-roots` | 2 (warn) | `dialog` and `motion` list no source roots; ultima derives them from catalogue items |
+| `break.none` | 1 (warn) | No break patches |
+
+ultima, report, a real `verify feature dialog --json` run (139 seconds): the report kept every judge rule. It was incomplete with exit 3, because the locked Chromium build is missing here and `consumer-smoke` could not fetch from the network, and it named the missing prerequisite. The only contract gap was the missing `contract` field.
+
+ultima, static, with a local draft patch (not pushed): conformant, 2 warnings. The draft adds an optional `knowledge` field to the feature schema and sets it to `proposed` on every record, adds `contract: "control/0"` to the run report, adds `Control:` to `AGENTS.md`, adds key lines to the existing `testing-ultima-docs` skill, and declares one break patch for `dialog.keyboard-dismissal`. ultima's verification unit tests pass on the draft except the SIGINT cancellation test, which fails the same way on the unchanged checkout when run on its own in this container.
+
+Not yet run: `conform.sh dynamic` against ultima. It executes ultima's own code and needs explicit approval. In this container the baseline would come back blocked, not passed, because the Chromium build ultima locks is not installed.
 
 ### M2: tailor clankhaven
 

@@ -1,8 +1,8 @@
 {
   "name": "mana",
   "displayName": "mana",
-  "version": "0.32.1",
-  "description": "Agent skills, cast as spells: multi-reviewer code review, PR feedback resolution without comment noise, sustained PR monitoring and repair, replies that read like you typed them, comment removal, one question repo setup for GitHub, Linear, or Jira with a settings skill to change any of it, maps of decision tickets, filing build tickets from a plan, building a ready ticket, opening a pull request with visual evidence, inbox triage, a router that reads the board and names the next skill and ticket, a roadmap of milestones whose status is derived from the maps and build efforts that serve them, merge conflict resolution, and blast radius proofs, and whole-frontend audits of design system drift, interaction states, accessibility, and component interfaces with an HTML report.",
+  "version": "0.33.0",
+  "description": "Agent skills, cast as spells: multi-reviewer code review, PR feedback resolution without comment noise, sustained PR monitoring and repair, replies that read like you typed them, comment removal, one question repo setup for GitHub, Linear, or Jira with a settings skill to change any of it, maps of decision tickets, filing build tickets from a plan, building a ready ticket, opening a pull request with visual evidence, inbox triage, a router that reads the board and names the next skill and ticket, a roadmap of milestones whose status is derived from the maps and build efforts that serve them, merge conflict resolution, and blast radius proofs, and whole-frontend audits of design system drift, interaction states, accessibility, and component interfaces with an HTML report, and checks that a project's control CLI and feature map let agents run and verify it honestly.",
   "author": {
     "name": "Frankie Ramirez",
     "url": "https://github.com/frankieramirez"

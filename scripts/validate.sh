@@ -42,6 +42,7 @@ scripts/test-scry-map.sh || err "scry map closeout fixtures failed"
 scripts/test-build-tickets.sh || err "build ticket adapter fixtures failed"
 scripts/test-open-pr.sh || err "open-pr conflict fixtures failed"
 scripts/test-ultima.sh || err "ultima audit fixtures failed"
+scripts/test-leyline.sh || err "leyline conformance fixtures failed"
 python3 -B -m unittest discover -s evals/semantic -p 'test_*.py' || err "semantic eval runner fixtures failed"
 
 # 2a. Every output style has the frontmatter the Claude Code picker needs.
