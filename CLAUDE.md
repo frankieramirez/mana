@@ -1,6 +1,6 @@
 # Working in this repo
 
-This is Frankie Ramirez's personal skills repo. It is both a Claude Code plugin (`mana`, marketplace `frankieramirez`) and a skills.sh source. One layout serves both: `skills/<name>/SKILL.md` plus `agents/`.
+This is the `mana` skills repo. It is both a Claude Code plugin (`mana`, marketplace `frankieramirez`) and a skills.sh source. One layout serves both: `skills/<name>/SKILL.md` plus `agents/`.
 
 ## Conventions
 
