@@ -116,6 +116,25 @@
       "smoke": [],
       "project_links": {}
     },
+    "leyline": {
+      "required": [
+        "SKILL.md",
+        "references/archmage.md",
+        "references/contract.md",
+        "references/conformance.md",
+        "scripts/conform.sh"
+      ],
+      "smoke": [
+        {
+          "script": "scripts/conform.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
+      "project_links": {}
+    },
     "mend": {
       "required": [
         "SKILL.md",

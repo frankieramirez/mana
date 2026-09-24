@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.33.0
+
+- Add `leyline`, which checks that a project gives agents an honest way to find a feature, run the app, and report what happened. The project owns a control CLI and a feature map; `leyline` holds them to the `control/0` contract in `references/contract.md`. `conform.sh static` reads the `Control:` line, the control skill, feature and scenario records, literal `scenario(...)` registrations in tests, and break patches without running project code. `conform.sh report` rejects a run report whose status and exit disagree, that passes with zero executed or unexecuted expected cases, or that passes with a missing prerequisite or a changed checkout. `conform.sh dynamic --trust` runs the project's CLI in a worktree of HEAD and probes list, describe, an unknown id, a baseline run, a declared break patch that must fail naming its scenario, the restored run, and two concurrent runs. A fake control CLI covers each violation in `scripts/test-leyline.sh`.
+
 ## 0.32.1
 
 - Describe the plugin, marketplace, and README by what the skills do instead of whose they are.
