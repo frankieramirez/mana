@@ -434,7 +434,6 @@ def git(repo, *args, check=True):
 
 
 def dynamic(root, feature, timeout, keep):
-    static = check_static(root)
     probes = []
 
     def probe(name, status, detail, result=None):
@@ -445,26 +444,11 @@ def dynamic(root, feature, timeout, keep):
                 entry["stderr"] = result["stderr"][-2000:]
         probes.append(entry)
 
-    command = static["control"]["keys"].get("Command")
-    prepare = static["control"]["keys"].get("Prepare")
-    doc = {"contract": CONTRACT, "mode": "dynamic", "root": root, "static": {"conformant": static["conformant"], "findings": static["findings"]},
-           "worktree": None, "feature": None, "probes": probes}
-    if not command:
-        probe("control", "blocked", "no Command: line in a control skill reached from the Control: line")
-        return doc
+    doc = {"contract": CONTRACT, "mode": "dynamic", "root": root, "static": None, "worktree": None, "feature": None, "probes": probes}
     if git(root, "rev-parse", "--is-inside-work-tree", check=False).returncode != 0:
         probe("control", "blocked", "not a git checkout, so there is no disposable worktree to run in")
         return doc
-
-    if feature is None:
-        with_break = [static["scenarios"][s] for s in static["breaks"] if s in static["scenarios"]]
-        feature = with_break[0] if with_break else (static["features"][0] if static["features"] else None)
-    if feature is None:
-        probe("control", "blocked", "no feature records to run")
-        return doc
-    doc["feature"] = feature
-    dirty = git(root, "status", "--porcelain", check=False).stdout.strip()
-    if dirty:
+    if git(root, "status", "--porcelain", check=False).stdout.strip():
         doc["excludedChanges"] = "the worktree is built from HEAD; uncommitted changes in the checkout were not probed"
 
     tmp = tempfile.mkdtemp(prefix="conform-")
@@ -474,6 +458,22 @@ def dynamic(root, feature, timeout, keep):
         git(root, "worktree", "add", "--detach", "--quiet", tree, "HEAD")
         created = True
         doc["worktree"] = tree
+        # Every probe input comes from HEAD, the same bytes the CLI runs against.
+        tree = os.path.realpath(tree)
+        static = check_static(tree)
+        doc["static"] = {"conformant": static["conformant"], "findings": static["findings"]}
+        command = static["control"]["keys"].get("Command")
+        prepare = static["control"]["keys"].get("Prepare")
+        if not command:
+            probe("control", "blocked", "HEAD has no Command: line in a control skill reached from the Control: line")
+            return doc
+        if feature is None:
+            with_break = [static["scenarios"][s] for s in static["breaks"] if s in static["scenarios"]]
+            feature = with_break[0] if with_break else (static["features"][0] if static["features"] else None)
+        if feature is None:
+            probe("control", "blocked", "HEAD has no feature records to run")
+            return doc
+        doc["feature"] = feature
         if prepare:
             r = run_cli(prepare, [], tree, timeout)
             if r["exit"] != 0:
@@ -531,7 +531,7 @@ def dynamic(root, feature, timeout, keep):
             probe("break", "blocked", f"no break patch declared for a scenario of {feature}")
         else:
             sid = patches[0]
-            patch = os.path.join(inside(root, static["control"]["keys"]["Breaks"]), sid + ".patch")
+            patch = os.path.join(inside(tree, static["control"]["keys"]["Breaks"]), sid + ".patch")
             applied = git(tree, "apply", patch, check=False)
             if applied.returncode != 0:
                 probe("break", "failed", f"the break patch for {sid} no longer applies: {applied.stderr.strip()}")
@@ -543,10 +543,14 @@ def dynamic(root, feature, timeout, keep):
                         probe("break", "passed", f"the break patch fails the run and names {sid}", broken[0])
                     else:
                         probe("break", "failed", f"the run failed but no failed check names {sid}, so the failure may be unrelated", broken[0])
-                git(tree, "apply", "-R", patch, check=False)
-                restored = run_feature("restore", {0})
-                if restored:
-                    probe("restore", "passed", "reverting the break patch passes again", restored[0])
+                reverted = git(tree, "apply", "-R", patch, check=False)
+                if reverted.returncode != 0:
+                    probe("restore", "blocked", f"the break patch for {sid} did not revert, so the worktree no longer matches HEAD: {reverted.stderr.strip()}")
+                    base = None
+                else:
+                    restored = run_feature("restore", {0})
+                    if restored:
+                        probe("restore", "passed", "reverting the break patch passes again", restored[0])
 
         if base:
             results = [None, None]
@@ -566,7 +570,7 @@ def dynamic(root, feature, timeout, keep):
             else:
                 probe("parallel", "failed", f"concurrent runs exited {[r['exit'] for r in results]} with run ids {sorted(map(str, ids))}", results[1])
         else:
-            probe("parallel", "blocked", "the baseline did not pass")
+            probe("parallel", "blocked", "the baseline did not pass, or the worktree no longer matches HEAD")
     finally:
         if created and not keep:
             git(root, "worktree", "remove", "--force", tree, check=False)

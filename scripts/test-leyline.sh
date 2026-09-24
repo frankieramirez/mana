@@ -47,6 +47,8 @@ if args[:1] == ["feature"]:
         os.rmdir(lock)
     text = open("src/greet.txt").read().strip()
     ok = text == "hello" or mode == "ignores-break"
+    if mode == "scribble" and text != "hello":
+        open("src/greet.txt", "a").write("scribbled\n")  # a run that edits the file its break patch touched
     executed = [] if mode == "zero" else ["greet.hello"]
     prereqs = [{"need": "browser", "status": "missing" if mode in ("blocked-pass", "incomplete") else "present", "detail": None}]
     check = {"id": "unit", "status": "passed" if ok else "failed", "reason": "ran the greeting test",
@@ -222,6 +224,18 @@ with tempfile.TemporaryDirectory(prefix="leyline-") as td:
     got, _ = probes("hang", 1, "--timeout", "2")
     assert got["baseline"] == "failed", got
     assert len(git(repo, "worktree", "list").stdout.strip().splitlines()) == 1
+
+    # dynamic: a break patch that cannot be reverted blocks the restore and parallel probes.
+    got, _ = probes("scribble", 3)
+    assert got["break"] == "passed" and got["restore"] == "blocked" and got["parallel"] == "blocked", got
+
+    # dynamic: every probe input comes from HEAD, never from uncommitted records in the checkout.
+    write(repo, "verification/features/extra.json", json.dumps({
+        "id": "extra", "summary": "Only in the working copy", "aliases": [], "sourceRoots": ["src/greet.txt"],
+        "knowledge": "proposed", "reach": [{"command": "app extra"}]}))
+    got, doc = probes("honest", 0)
+    assert got["list"] == "passed" and "excludedChanges" in doc, (got, doc)
+    (repo / "verification/features/extra.json").unlink()
 
     # dynamic: uncommitted changes are named as excluded, never silently probed.
     (repo / "src/greet.txt").write_text("goodbye\n")
