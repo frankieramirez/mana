@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.36.0
+
+- Add optional Performance & Delivery audits with separate performance and build/deployment specialists. Discover execution and release boundaries without running project commands, distinguish source cost hypotheses from attributable existing measurements, and preserve examined-scope gaps in the offline report. Add synthetic cost and release fixtures with independent specialist evaluation.
+
 ## 0.35.0
 
 - Add optional Security audits to `ultima`, with focused access-control, input-boundary and sensitive-data specialists. Profile security surfaces, verify enclosing controls and source traces, preserve qualified static claims, redact sensitive evidence, and show coverage in the offline report. Security findings become planning or decision briefs. Add synthetic boundary fixtures and independent specialist evaluation.

@@ -61,6 +61,135 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
     assert arch['recommended_lenses'] == ['system-architecture'], arch['recommended_lenses']
     run('orient', '--category', 'nonsense', cwd=backend, code=1)
 
+    performance = json.loads(run('orient', '--category', 'performance-delivery', cwd=backend))
+    assert performance['recommended_lenses'] == ['performance', 'delivery']
+    assert 'performance-delivery' not in profile['categories']
+    assert 'performance-delivery' in json.loads(run('orient', '--category', 'all', cwd=backend))['categories']
+    surfaces = performance['performance_delivery_surfaces']
+    assert surfaces['execution_paths']['status'] == 'heuristic'
+    assert 'api/main.py' in surfaces['execution_paths']['files']
+    assert surfaces['build_boundaries']['files'] == ['pyproject.toml']
+    assert surfaces['ci_configuration']['status'] == 'not-discovered'
+    assert surfaces['external_deployment']['status'] == 'unavailable'
+
+    delivery_only = tmp / 'delivery-only'
+    write(delivery_only, '.gitlab-ci.yml', 'release: manual\n')
+    init(delivery_only)
+    delivery_profile = json.loads(run('orient', '--category', 'performance-delivery', cwd=delivery_only))
+    assert delivery_profile['recommended_lenses'] == ['delivery']
+    assert delivery_profile['performance_delivery_surfaces']['ci_configuration']['files'] == ['.gitlab-ci.yml']
+    pd_root = tmp / 'pd-fixture'
+    shutil.copytree('evals/ultima/performance-delivery', pd_root)
+    init(pd_root)
+    narrowed_pd = json.loads(run('orient', '--path', 'api', '--category', 'performance-delivery', cwd=pd_root))
+    assert narrowed_pd['recommended_lenses'] == ['performance']
+    assert not narrowed_pd['performance_delivery_surfaces']['release_contracts']['files']
+    pd_run = tmp / 'pd-run'
+    pd_run.mkdir()
+    write(pd_run, 'profile.json', json.loads(run('orient', '--category', 'performance-delivery', cwd=pd_root)))
+    def quote(file, line, role=None):
+        item = dict(file=file, line=line, quote=(pd_root / file).read_text().splitlines()[line - 1])
+        return dict(item, role=role) if role else item
+    cost = trace('Order export repeats item reads', category='performance-delivery', effort='M',
+        impact='medium', reach='package', evidence_status='static', cost_assessment='source-hypothesis',
+        problem='Export runs one item query per order; runtime cost has not been measured.',
+        scenario='An export with many orders performs one item read per order before writing the response.',
+        fix='Batch item reads for the exported order set.', root_cause='per-order item query',
+        affected_boundary='order export item reads',
+        invariant=(pd_root / 'docs/contracts.md').read_text().splitlines()[2], invariant_source='docs/contracts.md:3',
+        flow='export_orders consumes list_orders, which calls db.query once per order.',
+        verification='Proposed: with 100 orders assert one batched item query and unchanged export contents.',
+        trace=[quote('api/orders.py', 12, 'source'), quote('api/orders.py', 3, 'boundary'), quote('api/orders.py', 12, 'consumer')])
+    bad_invariant = dict(cost, title='Unsupported cost contract', root_cause='invented contract', invariant='Invented rule')
+    bad_pattern = dict(cost, title='Pattern bypass', root_cause='pattern bypass', evidence_kind='pattern', action='fix',
+        instances=[quote('api/orders.py', i) for i in (1, 3, 12)])
+    write(pd_run, 'performance.json', dict(lens='performance', candidates=[cost, bad_invariant, bad_pattern],
+        coverage=dict(status='complete', files_read=3, notes=['Bounded preview is an accepted tradeoff.'])))
+    run('merge', str(pd_run), '--roster', 'performance')
+    costs = {c['title']: c for c in json.loads((pd_run / 'merged.json').read_text())['candidates']}
+    assert costs[cost['title']]['strength'] == 75
+    assert costs[bad_invariant['title']]['strength'] == 50
+    assert costs[bad_pattern['title']]['action'] == 'plan'
+
+    measured = dict(cost, title='Catalog materialization dominates the supplied profile',
+        root_cause='materialize whole catalog', affected_boundary='catalog page',
+        fix='Fetch the visible page at the store boundary.', evidence_status='runtime', cost_assessment='measured-bottleneck',
+        invariant=(pd_root / 'docs/contracts.md').read_text().splitlines()[4], invariant_source='docs/contracts.md:5',
+        flow='catalog_page materializes all products and filters them before slicing for render.',
+        runtime_evidence='results/catalog-profile.txt:6 records a supplied synthetic executed profile.',
+        measurement=dict(quote('results/catalog-profile.txt', 6), command='python bench_catalog.py --rows 100000 --page-size 20',
+            revision='fixture-catalog-v1', environment='isolated local synthetic store', workload='100000 products, first page of 20',
+            result='100000 records materialized; 82% sampled request CPU attributed to materialization/filtering',
+            attribution='catalog_page all_products and public filtering; no production inference'),
+        trace=[quote('api/catalog.py', 1, 'source'), quote('api/catalog.py', 2, 'boundary'), quote('api/catalog.py', 4, 'consumer')])
+    missing_measurement = dict(measured, title='Unsupported measurement', root_cause='unattributed measurement', measurement={})
+    invented_measurement = dict(measured, title='Invented result', root_cause='invented result',
+        measurement=dict(measured['measurement'], quote='invented profiler result'))
+    missing_flow = dict(cost, title='Unconnected cost quotes', root_cause='missing flow', flow='')
+    write(pd_run, 'performance.json', dict(lens='performance', candidates=[cost, measured, missing_measurement, invented_measurement, missing_flow],
+        coverage=dict(status='complete', files_read=3, notes=['Bounded preview is an accepted tradeoff.'])))
+    overlap = dict(cost, category='architecture', title='Architecture view of batched reads', cost_assessment='')
+    distinct_cost = dict(cost, category='data-reliability', title='Different cause at the same source', root_cause='separate cause')
+    write(pd_run, 'system-architecture.json', dict(lens='system-architecture', candidates=[overlap], coverage={'status':'complete'}))
+    write(pd_run, 'data-integrity.json', dict(lens='data-integrity', candidates=[distinct_cost], coverage={'status':'complete'}))
+    write(pd_run, 'delivery.json', dict(lens='delivery', candidates=[],
+        coverage=dict(status='complete', absent_scope=['CI configuration'], unavailable_scope=['partner-production deployment'])))
+    run('merge', str(pd_run), '--roster', 'system-architecture,performance,data-integrity,delivery')
+    pd_merged = json.loads((pd_run / 'merged.json').read_text())
+    costs = {c['title']: c for c in pd_merged['candidates']}
+    combined = next(c for c in pd_merged['candidates'] if c['root_cause'] == cost['root_cause'])
+    assert combined['strength'] == 75 and combined['cost_assessment'] == 'source-hypothesis', combined
+    assert set(combined['categories']) == {'architecture', 'performance-delivery'}
+    assert pd_merged['counts']['dedup_merged'] == 1
+    assert distinct_cost['title'] in costs
+    assert costs[measured['title']]['cost_assessment'] == 'measured-bottleneck'
+    for invalid_cost in (missing_measurement, invented_measurement, missing_flow):
+        assert costs[invalid_cost['title']]['strength'] == 50, costs[invalid_cost['title']]
+    for invalid_cost in (missing_measurement, invented_measurement):
+        assert costs[invalid_cost['title']]['evidence_status'] == 'static'
+        assert costs[invalid_cost['title']]['cost_assessment'] == 'source-hypothesis'
+    assert combined['action'] == 'plan'
+    pd_ids = {c['title']: c['id'] for c in pd_merged['candidates']}
+    write(pd_run, 'reconciled.json', pd_merged)
+    run('merge', str(pd_run), '--reconciled', str(pd_run / 'reconciled.json'))
+    revised_pd = json.loads((pd_run / 'merged.json').read_text())
+    assert {c['title']: c['id'] for c in revised_pd['candidates']} == pd_ids
+    combined2 = next(c for c in revised_pd['candidates'] if c['id'] == combined['id'])
+    assert combined2['strength'] == 75 and combined2['cost_assessment'] == 'source-hypothesis'
+    run('render', str(pd_run))
+    pd_html = (pd_run / 'report.html').read_text()
+    assert 'id="cat-performance-delivery"' in pd_html
+    assert 'Performance &amp; Delivery' in pd_html
+    assert '<dt>Performance &amp; Delivery</dt><dd class="">partial</dd>' in pd_html
+    assert 'absent scope: CI configuration' in pd_html and 'unavailable scope: partner-production deployment' in pd_html
+    assert 'source hypothesis' in pd_html and 'measured bottleneck' in pd_html
+    assert 'Unverified execution reference' in pd_html
+    assert 'Existing measurement attribution' in pd_html and 'Proposed verification / acceptance' in pd_html
+    assert '@media print' in pd_html and 'id="f-75"' in pd_html and '<script' not in pd_html.lower()
+    for value in pd_ids.values():
+        assert f'id="{value}"' in pd_html and f'href="#{value}"' in pd_html
+
+    pd_eval = tmp / 'pd-evaluation'
+    pd_eval.mkdir()
+    write(pd_eval, 'profile.json', json.loads(run('orient', '--category', 'performance-delivery', cwd=pd_root)))
+    for lens in ('performance', 'delivery'):
+        artifact = json.loads(pathlib.Path(f'evals/ultima/results/performance-delivery/{lens}.json').read_text())
+        for candidate in artifact['candidates']:
+            for item in candidate['trace'] + candidate['instances'] + ([candidate['measurement']] if candidate.get('measurement') else []):
+                assert item['quote'].strip() in (pd_root / item['file']).read_text().splitlines()[item['line'] - 1], item
+        write(pd_eval, lens + '.json', artifact)
+    run('merge', str(pd_eval), '--roster', 'performance,delivery')
+    evaluated = json.loads((pd_eval / 'merged.json').read_text())
+    assert len(evaluated['candidates']) == 3
+    assert all(c['strength'] == 100 and c['action'] == 'plan' for c in evaluated['candidates'])
+    assert sorted(c['cost_assessment'] for c in evaluated['candidates']) == ['', 'measured-bottleneck', 'source-hypothesis']
+    assert all(c['plan_status'] == 'documented' for c in evaluated['candidates'])
+    assert any('preview' in note for note in evaluated['coverage']['performance']['notes'])
+    assert evaluated['coverage']['delivery']['absent_scope'] and evaluated['coverage']['delivery']['unavailable_scope']
+    assert all('preview' not in c['title'].lower() and 'external' not in c['title'].lower() for c in evaluated['candidates'])
+    run('render', str(pd_eval))
+    assert '<dt>Performance &amp; Delivery</dt><dd class="">partial</dd>' in (pd_eval / 'report.html').read_text()
+
     security = tmp / 'security'
     write(security, 'api/routes.py', 'def read_invoice(request):\n    return load_invoice(request.invoice_id)\n')
     write(security, 'api/store.py', 'def load_invoice(invoice_id):\n    return invoices[invoice_id]\n')
