@@ -968,7 +968,6 @@ h5{margin:0;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
 p{margin:0}
 .top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.5rem 2rem;padding-bottom:2rem;border-bottom:1px solid var(--line)}
 .top .id{display:flex;flex-direction:column;gap:.9rem}
-.lede{max-width:34rem;color:var(--muted)}
 .stats{display:grid;grid-template-columns:repeat(3,auto);gap:1.5rem}
 .stat{display:flex;flex-direction:column;gap:.2rem}
 .stat b{font-family:var(--pixel);font-size:2.2rem;line-height:1;font-weight:500}
@@ -995,7 +994,6 @@ dd{margin:.15rem 0 0;overflow-wrap:anywhere}
 a:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
 .category-tabs{margin:2rem 0 1rem;padding:.5rem}
 .category-tabs label{font-size:.95rem;padding:.65rem 1rem}
-.category-status{margin:1rem 0;color:var(--soft)}
 .system-map pre{white-space:pre-wrap;overflow-wrap:anywhere}
 .card:target{display:block!important;outline:2px solid var(--cyan)}
 .tabs label{font:inherit;font-size:.78rem;padding:.3rem .8rem;border-radius:6px;cursor:pointer;color:var(--muted)}
@@ -1235,9 +1233,7 @@ out = []
 out.append('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">')
 out.append('<title>Ultima audit: %s</title><style>%s</style></head><body><div class="page"><main>' % (e(repo), CSS))
 
-out.append('<header class="top"><div class="id">%s<div class="kicker">Ultima · Project audit</div><h1>%s</h1>'
-           '<p class="lede">%d supported findings, %d uncertain, %d dismissed. Ranked by impact and reach; confidence and effort remain visible.</p></div>' % (
-               WORDMARK, e(repo), len(strong), len(weak), len(dismissed)))
+out.append('<header class="top"><div class="id">%s<div class="kicker">Ultima · Project audit</div><h1>%s</h1></div>' % (WORDMARK, e(repo)))
 out.append('<div class="stats"><div class="stat"><b style="color:%s">%d</b><span>Supported</span></div><div class="stat"><b style="color:%s">%d</b><span>Weaker</span></div><div class="stat"><b style="color:%s">%d</b><span>Dismissed</span></div></div></header>' % (
     COLOR[100], len(strong), COLOR[75], len(weak), COLOR[50], len(dismissed)))
 
@@ -1264,6 +1260,7 @@ def unexamined_source(lens):
     cov = doc.get("coverage", {}).get(lens, {})
     skipped = cov.get("dirs_skipped") or cov.get("skipped") or []
     return any(not (set(str(path).strip("/").split("/")) & excluded_dirs) for path in skipped)
+category_coverage = []
 for category, label in CATEGORY_LABEL.items():
     expected = CATEGORY_LENSES[category]
     completed = [l for l in expected if statuses.get(l) == "ok"]
@@ -1271,9 +1268,7 @@ for category, label in CATEGORY_LABEL.items():
     examined = [l for l in completed if doc.get("coverage", {}).get(l, {}).get("status") == "complete"
                 and not unexamined_source(l)]
     status = "complete" if len(examined) == len(expected) else ("partial" if attempted else "not examined")
-    count = sum(category in c["categories"] for c in cands)
-    out.append('<p class="category-status" data-category="%s"><strong>%s:</strong> %s coverage. Findings: %d. Specialists completed: %d of %d.</p>' % (
-        category, e(label), status, count, len(completed), len(expected)))
+    category_coverage.append(dd(label, e(status)))
 out.append(metadata_html)
 map_data = profile.get("system_map", {})
 if map_data:
@@ -1317,12 +1312,12 @@ out.append('<section class="sec"><div class="rankhead"><h2>Ranked candidates</h2
            '<input type="radio" name="f" id="f-75"><label for="f-75">Supported</label>'
            '<input type="radio" name="f" id="f-50"><label for="f-50">Uncertain</label></fieldset></div>')
 out.append('<ol class="rank">%s</ol></section>' % "".join(rank_row(c) for c in cards))
-out.append('<section class="cards">%s<p class="empty">No findings match this category and confidence. Check coverage above.</p></section>' % "".join(card(c) for c in cards))
+out.append('<section class="cards">%s<p class="empty">No findings match this category and confidence. See Coverage for audit limits.</p></section>' % "".join(card(c) for c in cards))
 
 dis = "".join('<li><span>%s</span><span class="why">%s · %s</span></li>' % (
     e(d.get("title")), e(LENS_LABEL.get(d.get("lens"), d.get("lens") or "")), e(d.get("reason"))) for d in dismissed)
 risk = "".join('<li><span class="tag">%s</span><span>%s</span></li>' % (e(LENS_LABEL.get(r.get("lens"), r.get("lens"))), e(r.get("text"))) for r in risks)
-cov_items = []
+cov_items = list(category_coverage)
 for lens, c in (doc.get("coverage", {}) or {}).items():
     if isinstance(c, dict):
         bits = []
@@ -1351,10 +1346,10 @@ out.append('<div class="trio"><section><h2>Dismissed</h2>%s</section><section><h
                "".join(cov_items) or dd("Notes", "none")))
 
 if strong:
-    first = strong[0]
-    recommendation = doc.get("recommendation") or "%s impact across %s scope. Next action: %s." % (first["impact"].capitalize(), first["reach"], first["action"].replace("-", " "))
+    recommendation = doc.get("recommendation")
+    recommendation_html = '<p>%s</p>' % e(recommendation) if recommendation else ''
     steps = ''.join('<li><a href="#%s">%s</a> · %s</li>' % (e(c['id']), e(c['title']), e(c['action'].replace('-', ' '))) for c in strong[:5])
-    out.append('<section class="start overview-content"><div class="body"><h2>Recommended work order</h2><p>%s</p><ol>%s</ol></div></section>' % (e(recommendation), steps))
+    out.append('<section class="start overview-content"><div class="body"><h2>Recommended work order</h2>%s<ol>%s</ol></div></section>' % (recommendation_html, steps))
 
 out.append('<footer class="foot"><span>generated by ultima</span><span>head %s</span></footer></main></div></body></html>' % e(head))
 

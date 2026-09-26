@@ -166,9 +166,13 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
         assert hydrated['lenses'][0]['status'] == 'ok'
         run('render', str(focused))
         focused_html = (focused / 'report.html').read_text()
-        assert '<strong>Architecture:</strong> ' + expected + ' coverage.' in focused_html, coverage
-        assert '<strong>UX &amp; accessibility:</strong> not examined coverage.' in focused_html
-        assert '<strong>Data &amp; reliability:</strong> not examined coverage.' in focused_html
+        assert '<dt>Architecture</dt><dd class="">' + expected + '</dd>' in focused_html, coverage
+        assert '<dt>UX &amp; accessibility</dt><dd class="">not examined</dd>' in focused_html
+        assert '<dt>Data &amp; reliability</dt><dd class="">not examined</dd>' in focused_html
+        assert 'category-status' not in focused_html
+        assert 'Specialists completed:' not in focused_html
+        assert '<p class="lede">' not in focused_html
+        assert focused_html.index('<h2>Coverage</h2>') < focused_html.index('<dt>Architecture</dt>')
 
     documented = trace('Documented migration', remediation=['Add a durable key.', 'Backfill before enforcing uniqueness.'],
                        compatibility='Accept old requests during rollout.', rollback='Disable the new writer before reverting.')

@@ -27,7 +27,7 @@ Read `merged.json` in full. Re-read the strongest findings against the actual so
 - **Tighten** a title so it names the wrong thing and the right thing in twelve words.
 - **Raise** a candidate's strength only by adding evidence that satisfies its evidence-kind gate. Never raise it by editing the number alone; pass 2 re-applies the gates.
 
-- **Recommend** by setting a top-level `recommendation` string: one or two sentences on why rank 1 comes first, naming its supported impact, reach, and readiness compared with the next candidate. The report prints it in the Recommended work order block. Leave it out and the script writes a plain line from the numbers.
+- **Recommend** by setting a top-level `recommendation` string: one or two sentences on why rank 1 comes first, naming its supported impact, reach, and readiness compared with the next candidate. The report prints it in the Recommended work order block. Omit it when the ranked list already explains the order. The renderer adds no generic recommendation.
 
 You may not add a candidate no lens produced, and you may not delete a dismissal.
 
@@ -45,7 +45,7 @@ Pass 2 restores the gates, rescores, resorts, and renumbers. `merged.json` is no
 bash "<SKILL_DIR>/scripts/ultima.sh" render "$RUN_DIR"
 ```
 
-The script writes `$RUN_DIR/report.html` from `merged.json`, `profile.json`, and `metadata.json`, and prints the path. Never write the HTML yourself: the report embeds quoted repo code, and the script escapes every field. The report uses offline CSS category controls and no network dependency. Overview shows all findings and the system map. UX, Architecture, and Data & Reliability filter the same finding elements, preserving IDs and anchors. Coverage distinguishes partially examined categories from categories not examined; an empty category is not a clean bill of health.
+The script writes `$RUN_DIR/report.html` from `merged.json`, `profile.json`, and `metadata.json`, and prints the path. Never write the HTML yourself: the report embeds quoted repo code, and the script escapes every field. The report uses offline CSS category controls and no network dependency. Overview shows all findings and the system map. UX, Architecture, and Data & Reliability filter the same finding elements, preserving IDs and anchors. Keep category status in Coverage; the tab counts already show finding totals. Coverage distinguishes partially examined categories from categories not examined. Keep report copy specific to findings, decisions, and audit limits. Do not repeat counts in prose or narrate what the controls already show.
 
 Update `metadata.json` with `report` set to that path.
 

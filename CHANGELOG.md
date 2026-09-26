@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.34.1
+
+- Trim repeated Ultima report summaries. Keep category status in Coverage, show totals once, and omit generic recommendation text when the ranked work list already explains the order.
+
 ## 0.34.0
 
 - Expand `ultima` to whole-project audits with UX, Architecture, and Data & Reliability categories. Profile backend and monorepo scopes, verify shared system context, and dispatch specialists for system boundaries, data integrity, and failure recovery alongside the frontend lenses. Accept sourced flow traces for single boundary defects, rank impact separately from confidence, preserve stable finding IDs, and distinguish accepted decisions from violations or decisions needing review. The offline report adds keyboard-accessible category and confidence controls with coverage status and printable findings. Structural changes become migration briefs; immediate fixes cover the entire verified pattern. Add backend, trace, reconciliation, and report regressions.
