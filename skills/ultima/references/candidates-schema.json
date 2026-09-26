@@ -1,14 +1,27 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Frontend Audit Candidates",
-  "description": "What each lens subagent writes to its artifact file. A candidate is a pattern across files, with every instance quoted, never a single point finding.",
+  "title": "Project Audit Candidates",
+  "description": "Specialist findings for UX, architecture, and data reliability. Confidence and impact are independent.",
   "type": "object",
-  "required": ["lens", "candidates", "residual_risks", "coverage"],
+  "required": [
+    "lens",
+    "candidates",
+    "residual_risks",
+    "coverage"
+  ],
   "properties": {
     "lens": {
       "description": "Lens identifier; matches the artifact filename stem.",
       "type": "string",
-      "enum": ["design-system", "interaction-states", "accessibility", "component-architecture"]
+      "enum": [
+        "design-system",
+        "interaction-states",
+        "accessibility",
+        "component-architecture",
+        "system-architecture",
+        "data-integrity",
+        "failure-recovery"
+      ]
     },
     "candidates": {
       "description": "Each pattern this lens will stand behind at strength 50 or above. Empty when there are none. At most 8.",
@@ -16,7 +29,23 @@
       "maxItems": 8,
       "items": {
         "type": "object",
-        "required": ["title", "problem", "fix", "effort", "strength", "instances"],
+        "required": [
+          "title",
+          "problem",
+          "fix",
+          "effort",
+          "strength",
+          "instances",
+          "category",
+          "evidence_kind",
+          "impact",
+          "reach",
+          "root_cause",
+          "affected_boundary",
+          "verification",
+          "decision_status",
+          "evidence_status"
+        ],
         "properties": {
           "title": {
             "description": "The pattern, twelve words or fewer, naming the wrong thing and the right thing.",
@@ -28,53 +57,94 @@
             "type": "string"
           },
           "fix": {
-            "description": "The concrete change, naming the token, component, prop shape, or attribute to use. Never 'be consistent'.",
+            "description": "Concrete proposed remedy with its behavioral result and affected interface.",
             "type": "string"
           },
           "wins": {
             "description": "Short bullets, six words or fewer each, on what improves once the fix lands.",
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "maxItems": 8
           },
           "effort": {
             "description": "S: mechanical edits at every instance in one sitting. M: edits plus a small local change per instance. L: needs a new shared piece or a design decision first.",
             "type": "string",
-            "enum": ["S", "M", "L"]
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
           },
           "strength": {
-            "description": "100: every quoted instance is mechanically checkable against the repo's own source of truth. 75: three or more quoted instances and a fix grounded in a convention the repo already follows somewhere. 50: one or two instances, or taste. The merge demotes a 75 or 100 with fewer than 3 instances to 50.",
+            "description": "Confidence: 100 mechanically established, 75 supported by quoted evidence and a grounded remedy, 50 uncertain. Patterns require three instances. Traces require all path roles, two distinct locations, a sourced invariant, a scenario, and verification. Agreement never promotes confidence.",
             "type": "integer",
-            "enum": [50, 75, 100]
+            "enum": [
+              50,
+              75,
+              100
+            ]
           },
           "instances": {
-            "description": "Every occurrence you are counting, each with the verbatim line. Deduplicated by file and line in the merge.",
+            "description": "Quoted evidence locations. Trace steps also count as instances during merge. Repetition is required only for pattern findings.",
             "type": "array",
             "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["file", "line", "quote"],
+              "required": [
+                "file",
+                "line",
+                "quote"
+              ],
               "properties": {
-                "file": { "description": "Path relative to the repo root.", "type": "string" },
-                "line": { "description": "The line the quote sits on. A wrong line is worse than no instance.", "type": "integer", "minimum": 1 },
-                "quote": { "description": "The verbatim line or fragment that shows the pattern.", "type": "string", "maxLength": 300 }
+                "file": {
+                  "description": "Path relative to the repo root.",
+                  "type": "string"
+                },
+                "line": {
+                  "description": "The line the quote sits on. A wrong line is worse than no instance.",
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "quote": {
+                  "description": "The verbatim line or fragment that shows the pattern.",
+                  "type": "string",
+                  "maxLength": 300
+                }
               }
             }
           },
           "before": {
             "description": "A short representative snippet as it is today. Optional.",
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
-              "language": { "type": "string" },
-              "code": { "type": "string", "maxLength": 2000 }
+              "language": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string",
+                "maxLength": 2000
+              }
             }
           },
           "after": {
             "description": "The same snippet after the fix. Optional.",
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
-              "language": { "type": "string" },
-              "code": { "type": "string", "maxLength": 2000 }
+              "language": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string",
+                "maxLength": 2000
+              }
             }
           },
           "tokens": {
@@ -82,39 +152,290 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["found"],
+              "required": [
+                "found"
+              ],
               "properties": {
-                "found": { "type": "string" },
-                "name": { "type": ["string", "null"] },
-                "value": { "type": ["string", "null"] },
-                "source": { "description": "file:line where the token or component is defined.", "type": ["string", "null"] }
+                "found": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "source": {
+                  "description": "file:line where the token or component is defined.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
               }
             }
           },
           "convention_source": {
             "description": "file:line of the spot in this repo that already does it right. Required for a design-system candidate at 75 or 100 that names no sourced token.",
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "prior_decision": {
-            "description": "The doc (CONTEXT.md, an ADR, a standards file) that already settles this pattern the other way, or null. A non-null value sends the candidate to Dismissed with the doc cited.",
-            "type": ["string", "null"]
+            "description": "Source document for an accepted tradeoff, a violated decision, or a decision proposed for review. Set decision_status explicitly.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "ux",
+              "architecture",
+              "data-reliability"
+            ],
+            "description": "Report category, independent of the contributing specialist."
+          },
+          "evidence_kind": {
+            "type": "string",
+            "enum": [
+              "pattern",
+              "trace"
+            ],
+            "description": "pattern is repeated drift; trace is a proven boundary or flow defect."
+          },
+          "impact": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "description": "Consequence supported by the problem and scenario; does not express confidence."
+          },
+          "reach": {
+            "type": "string",
+            "enum": [
+              "local",
+              "package",
+              "system"
+            ],
+            "description": "Extent of the affected behavior, supported by the traced callers."
+          },
+          "evidence_status": {
+            "type": "string",
+            "enum": [
+              "static",
+              "runtime"
+            ],
+            "description": "Use static for source inspection. Runtime requires an existing executed evidence reference."
+          },
+          "decision_status": {
+            "type": "string",
+            "enum": [
+              "none",
+              "accepted",
+              "violated",
+              "revisit"
+            ],
+            "description": "accepted is dismissed; violated is an implementation defect; revisit needs a decision before implementation."
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "fix",
+              "plan",
+              "decision-needed"
+            ],
+            "description": "Traces and large changes always become plans; revisited decisions always need a decision."
+          },
+          "remediation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ordered migration and verification steps for a structural plan."
+          },
+          "root_cause": {
+            "type": "string",
+            "description": "Specific underlying cause used for deduplication."
+          },
+          "affected_boundary": {
+            "type": "string",
+            "description": "Named interface or boundary; matching code locations alone do not imply matching causes."
+          },
+          "invariant": {
+            "type": "string",
+            "description": "The required property violated by a trace."
+          },
+          "invariant_source": {
+            "type": "string",
+            "description": "Document, contract, or code location establishing the invariant."
+          },
+          "scenario": {
+            "type": "string",
+            "description": "Concrete trigger, traced behavior and resulting consequence; distinguish observation from inference."
+          },
+          "verification": {
+            "type": "string",
+            "description": "Behavioral check that would establish the issue and prove the remedy."
+          },
+          "decision_reason": {
+            "type": "string",
+            "description": "Changed assumptions or evidence requiring an accepted decision to be reconsidered."
+          },
+          "compatibility": {
+            "type": "string",
+            "description": "Compatibility constraints and consumers affected by the proposed migration."
+          },
+          "rollback": {
+            "type": "string",
+            "description": "How to reverse the migration or why a reversal is unavailable."
+          },
+          "runtime_evidence": {
+            "type": "string",
+            "description": "Path and result of an executed check; never a proposed test."
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "line",
+                "quote",
+                "role"
+              ],
+              "properties": {
+                "file": {
+                  "description": "Path relative to the repo root.",
+                  "type": "string"
+                },
+                "line": {
+                  "description": "The line the quote sits on. A wrong line is worse than no instance.",
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "quote": {
+                  "description": "The verbatim line or fragment that shows the pattern.",
+                  "type": "string",
+                  "maxLength": 300
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "source",
+                    "boundary",
+                    "consumer"
+                  ],
+                  "description": "Role in the trace. One location may serve two roles; at least two distinct locations are needed overall."
+                }
+              }
+            },
+            "description": "Ordered trace with quoted source, boundary and consumer steps. All roles required for a strong trace."
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "evidence_kind": {
+                  "const": "trace"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "trace",
+                "invariant",
+                "invariant_source",
+                "scenario"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "decision_status": {
+                  "const": "revisit"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "prior_decision",
+                "decision_reason"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "evidence_status": {
+                  "const": "runtime"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "runtime_evidence"
+              ]
+            }
+          }
+        ]
       }
     },
     "residual_risks": {
       "description": "Concerns you could not raise to a candidate, including limits of your own search.",
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "coverage": {
       "description": "What you read and what you skipped, so the report can say what the audit did not see.",
       "type": "object",
       "properties": {
-        "files_read": { "type": "integer" },
-        "dirs_skipped": { "type": "array", "items": { "type": "string" } },
-        "notes": { "type": "array", "items": { "type": "string" } }
-      }
+        "files_read": {
+          "type": "integer"
+        },
+        "dirs_skipped": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Record traced flows, unexamined boundaries, static-only limits, and the search scope of absence claims."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ],
+          "description": "complete only when the selected scope and important flows were examined; record limits and skipped source as partial. This is coverage, not a correctness certification."
+        }
+      },
+      "required": [
+        "status",
+        "files_read",
+        "dirs_skipped",
+        "notes"
+      ]
     }
   }
 }

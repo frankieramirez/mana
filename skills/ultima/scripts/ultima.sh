@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# ultima.sh: the deterministic parts of a frontend audit.
+# ultima.sh: the deterministic parts of a project audit.
 #
-#   orient [--path DIR] [--since DAYS] [--run-dir DIR] [--out FILE]
+#   orient [--path DIR] [--category all|ux|architecture|data-reliability] [--since DAYS] [--run-dir DIR] [--out FILE]
 #       Profile the checkout: framework, styling approach, design-system source of truth,
 #       token values, component inventory, hot spots from recent git history, decision
 #       docs, and installed lint rules the lenses should defer to. Prints one JSON object
 #       and writes it to RUN_DIR/profile.json when --run-dir is given. Exit 2 when no
-#       frontend is detected under the scope.
+#       applicable project source is detected under the selected scope and categories.
 #
 #   merge RUN_DIR [--reconciled FILE] [--out FILE] [--roster a,b,c]
 #       Pass 1: read every lens artifact in RUN_DIR (plus RUN_DIR/returns/<lens>.json when
 #       the artifact is missing), validate each candidate, apply the mechanical gates in
 #       order (instance dedupe, the three-instance gate, the design-system source gate, the
-#       prior-decision dismissal), merge near-duplicates across lenses, promote corroborated
-#       candidates once, score against the hot spots in profile.json, sort, and number.
+#       decision routing), merge matching causes and remedies across lenses, rank impact
+#       separately from confidence, assign stable IDs, and number.
 #       Writes merged.json. Pass 2 (--reconciled): take the model's edited copy and restore
 #       the gates, scores, numbering, and counts. --roster lists the dispatched lenses so a
 #       missing artifact is reported.
@@ -42,13 +42,14 @@ need_python() {
 
 cmd_orient() {
   need_python
-  local path="." since="90" run_dir="" out=""
+  local path="." since="90" run_dir="" out="" category="all"
   while [ $# -gt 0 ]; do
     case "$1" in
       --path) path="${2:-}"; shift 2 ;;
       --since) since="${2:-}"; shift 2 ;;
       --run-dir) run_dir="${2:-}"; shift 2 ;;
       --out) out="${2:-}"; shift 2 ;;
+      --category) category="${2:-}"; shift 2 ;;
       -h|--help) usage; exit 0 ;;
       *) die "orient: unknown argument $1" ;;
     esac
@@ -58,7 +59,7 @@ cmd_orient() {
   local root
   root=$(git rev-parse --show-toplevel 2>/dev/null) || die "orient: not inside a git checkout"
   [ -n "$out" ] || { [ -z "$run_dir" ] || out="$run_dir/profile.json"; }
-  ULTIMA_ROOT="$root" ULTIMA_PATH="$path" ULTIMA_SINCE="$since" ULTIMA_OUT="$out" \
+  ULTIMA_ROOT="$root" ULTIMA_PATH="$path" ULTIMA_SINCE="$since" ULTIMA_OUT="$out" ULTIMA_CATEGORY="$category" \
     python3 - <<'PY'
 import json, os, re, subprocess, sys
 from collections import Counter
@@ -67,11 +68,17 @@ root = os.path.realpath(os.environ["ULTIMA_ROOT"])
 scope_arg = os.environ["ULTIMA_PATH"]
 since = int(os.environ["ULTIMA_SINCE"])
 out_path = os.environ.get("ULTIMA_OUT") or ""
+categories = os.environ["ULTIMA_CATEGORY"].split(",")
+if any(c not in ("all", "ux", "architecture", "data-reliability") for c in categories) or ("all" in categories and len(categories) > 1):
+    sys.exit("ultima.sh orient: invalid category")
+if categories == ["all"]:
+    categories = ["ux", "architecture", "data-reliability"]
 
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", "out", ".next", ".nuxt", ".svelte-kit", ".output",
              "coverage", "vendor", "__generated__", "generated", ".turbo", ".cache", "storybook-static",
              ".angular", "target", ".venv", "venv"}
 FRONTEND_EXT = (".tsx", ".jsx", ".vue", ".svelte", ".astro", ".css", ".scss", ".sass", ".less", ".ts", ".js", ".mjs", ".html")
+SOURCE_EXT = FRONTEND_EXT + (".py", ".go", ".rs", ".java", ".kt", ".cs", ".rb", ".php", ".ex", ".exs", ".swift", ".c", ".h", ".cpp", ".sh", ".sql")
 COMPONENT_EXT = (".tsx", ".jsx", ".vue", ".svelte", ".astro")
 FRAMEWORKS = [("react", "react"), ("preact", "preact"), ("vue", "vue"), ("svelte", "svelte"),
               ("@angular/core", "angular"), ("solid-js", "solid"), ("lit", "lit"), ("astro", "astro")]
@@ -106,7 +113,7 @@ def rel(p):
 def walk(base):
     for dirpath, dirnames, filenames in os.walk(base):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS and not d.startswith("."))
-        yield dirpath, dirnames, filenames
+        yield dirpath, dirnames, sorted(f for f in filenames if not os.path.islink(os.path.join(dirpath, f)))
 
 
 def read_json(path):
@@ -150,6 +157,7 @@ def detect_packages(base):
             "a11y_lint": a11y,
             "style_lint": style_lint,
             "workspaces": bool(data.get("workspaces")),
+            "dependencies": sorted(deps),
         })
     return found
 
@@ -164,7 +172,7 @@ def hot_spots(scope_rel):
     counts = Counter()
     for line in raw.splitlines():
         line = line.strip()
-        if not line or not line.lower().endswith(FRONTEND_EXT):
+        if not line or not line.lower().endswith(SOURCE_EXT):
             continue
         parts = set(line.split("/"))
         if parts & SKIP_DIRS:
@@ -284,7 +292,7 @@ def docs():
         if m and domain_line is None:
             domain_line = m.group(1).strip()
     for name in ("CONTEXT.md", "CONTEXT-MAP.md", "DESIGN.md", "STYLEGUIDE.md", "docs/DESIGN.md", "docs/design-system.md",
-                 "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md"):
+                 "ARCHITECTURE.md", "docs/architecture.md", "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md"):
         if os.path.exists(os.path.join(root, name)):
             listed.append(name)
     if domain_line:
@@ -310,46 +318,70 @@ def docs():
     return {"domain_docs_line": domain_line, "files": listed, "adrs": adrs[:60]}
 
 
-packages = detect_packages(root)
+scope_abs = os.path.realpath(os.path.join(root, scope_arg)) if not os.path.isabs(scope_arg) else os.path.realpath(scope_arg)
+if scope_abs != root and not scope_abs.startswith(root + os.sep):
+    sys.exit("ultima.sh orient: path is outside the checkout")
+scope_rel = rel(scope_abs) if scope_abs != root else "."
+scope_reason = "whole checkout" if scope_rel == "." else "path argument"
+packages = detect_packages(scope_abs)
 frontend_packages = [p for p in packages if p["frameworks"]]
+# An explicit subdirectory may inherit its containing package's framework.
+if not frontend_packages and scope_rel != ".":
+    frontend_packages = [p for p in detect_packages(root) if p["frameworks"] and
+                         (p["dir"] == "." or scope_rel.startswith(p["dir"] + "/"))]
+chosen = frontend_packages[0] if frontend_packages else None
 
-if scope_arg not in (".", ""):
-    scope_abs = os.path.realpath(os.path.join(root, scope_arg)) if not os.path.isabs(scope_arg) else os.path.realpath(scope_arg)
-    if scope_abs != root and not scope_abs.startswith(root + os.sep):
-        print("ultima.sh orient: path is outside the checkout", file=sys.stderr)
-        sys.exit(1)
-    scope_rel = rel(scope_abs) if scope_abs != root else "."
-    chosen = None
-    for p in frontend_packages:
-        if p["dir"] == scope_rel or scope_rel.startswith(p["dir"].rstrip("/") + "/") or p["dir"] == ".":
-            if chosen is None or len(p["dir"]) > len(chosen["dir"]):
-                chosen = p
-    scope_reason = "path argument"
-else:
-    scope_abs, scope_rel, chosen = root, ".", None
-    scope_reason = "whole checkout"
-    if len(frontend_packages) == 1:
-        chosen = frontend_packages[0]
-        if chosen["dir"] != ".":
-            scope_rel = chosen["dir"]
-            scope_abs = os.path.join(root, scope_rel)
-            scope_reason = "only frontend package"
-    elif len(frontend_packages) > 1:
-        top, _, _ = hot_spots(".")
-        best, best_n = None, -1
-        for p in frontend_packages:
-            prefix = "" if p["dir"] == "." else p["dir"].rstrip("/") + "/"
-            n = sum(h["commits"] for h in top if h["file"].startswith(prefix)) if prefix else 0
-            if n > best_n:
-                best, best_n = p, n
-        chosen = best
-        if chosen and chosen["dir"] != ".":
-            scope_rel = chosen["dir"]
-            scope_abs = os.path.join(root, scope_rel)
-        scope_reason = "frontend package with the most recent commits; pass path: to choose another"
-
-if chosen is None and frontend_packages:
-    chosen = frontend_packages[0]
+MANIFESTS = {"package.json", "go.mod", "go.work", "Cargo.toml", "pyproject.toml", "requirements.txt",
+             "Pipfile", "Gemfile", "composer.json", "pom.xml", "build.gradle", "build.gradle.kts",
+             "mix.exs", "Package.swift", "CMakeLists.txt", "Makefile"}
+source_files, manifests, entrypoints, data_files, deployment_files = [], [], [], [], []
+for directory, _, filenames in walk(scope_abs):
+    for filename in filenames:
+        path = rel(os.path.join(directory, filename))
+        if filename in MANIFESTS or filename.endswith((".csproj", ".sln")):
+            manifests.append(path)
+        if filename.lower().endswith(SOURCE_EXT):
+            source_files.append(path)
+        if re.search(r"(^|/)(main|server|app|index|worker|cli)\.[^.]+$|(^|/)(routes|controllers|handlers|cmd)/", path):
+            entrypoints.append(path)
+        if re.search(r"(^|/)(migrations?|models?|schemas?|repositories|stores?|queues?|jobs|db|database)(/|\.)|\.(sql|prisma)$", path, re.I):
+            data_files.append(path)
+        if filename.startswith(("Dockerfile", "docker-compose", "compose.")) or re.search(r"(^|/)(deploy|infra|terraform|k8s)/|\.tf$", path):
+            deployment_files.append(path)
+# Hidden CI configuration is listed explicitly; generated and dependency trees stay excluded.
+workflow_dir = os.path.join(scope_abs, ".github", "workflows")
+if os.path.isdir(workflow_dir):
+    deployment_files.extend(rel(os.path.join(workflow_dir, f)) for f in sorted(os.listdir(workflow_dir))
+                            if f.endswith((".yml", ".yaml")) and not os.path.islink(os.path.join(workflow_dir, f)))
+components = [{"name": p["name"] or p["dir"], "path": p["dir"], "manifest":
+               (p["dir"] + "/" if p["dir"] != "." else "") + "package.json"} for p in packages]
+for manifest in manifests:
+    if manifest.endswith("package.json"):
+        continue
+    directory = os.path.dirname(manifest) or "."
+    if not any(c["path"] == directory for c in components):
+        components.append({"name": directory, "path": directory, "manifest": manifest})
+if not components and source_files:
+    components.append({"name": os.path.basename(scope_abs), "path": scope_rel, "manifest": None})
+by_name = {p["name"]: p for p in packages if p["name"]}
+edges = [{"from": p["dir"], "to": by_name[d]["dir"], "source":
+          (p["dir"] + "/" if p["dir"] != "." else "") + "package.json", "kind": "declared dependency"}
+         for p in packages for d in p["dependencies"] if d in by_name]
+map_lists = {"manifests": manifests, "entrypoints": entrypoints, "data_files": data_files,
+             "deployment_files": deployment_files}
+system_map = {k: v[:300] for k, v in map_lists.items()}
+system_map.update({"components": components[:300], "dependency_edges": edges[:300],
+                  "source_count": len(source_files), "source_files": source_files[:300],
+                  "coverage": {"truncated": [k for k, v in dict(map_lists, components=components, dependency_edges=edges, source_files=source_files).items() if len(v) > 300],
+                               "notes": ["Discovery seeds only; verify boundaries and trace important flows before dispatch.",
+                                         "Dependency edges cover declared local JavaScript package dependencies only; runtime and other language edges require inspection."],
+                               "excluded_dirs": sorted(SKIP_DIRS)}})
+has_frontend = any(p["frameworks"] for p in packages) or any(f.endswith(COMPONENT_EXT + (".html", ".css", ".scss")) for f in source_files)
+category_lenses = {"ux": ["design-system", "interaction-states", "accessibility", "component-architecture"],
+                   "architecture": ["system-architecture"], "data-reliability": ["data-integrity", "failure-recovery"]}
+applicable = {"ux": has_frontend, "architecture": bool(source_files or manifests),
+              "data-reliability": bool(source_files)}
+recommended = [lens for category in categories if applicable[category] for lens in category_lenses[category]]
 
 top, churn_total, churn_files = hot_spots(scope_rel)
 styling = sorted(set((chosen["styling_deps"] if chosen else []) + styling_from_files(scope_abs)))
@@ -360,7 +392,7 @@ if scope_rel != ".":
     ddirs = sorted(set(ddirs + root_dirs))
 tokens = parse_tokens(dfiles)
 inv = inventory(scope_abs)
-framework = chosen["frameworks"][0] if chosen and chosen["frameworks"] else None
+framework = chosen["frameworks"][0] if chosen and chosen["frameworks"] else ("html" if has_frontend else None)
 lint = {"a11y": sorted({d for p in packages for d in p["a11y_lint"]}),
         "style": sorted({d for p in packages for d in p["style_lint"]})}
 
@@ -369,13 +401,17 @@ profile = {
     "root": root,
     "head": head or None,
     "scope": {"path": scope_rel, "reason": scope_reason},
+    "categories": categories,
+    "category_applicability": applicable,
+    "recommended_lenses": recommended,
+    "system_map": system_map,
     "framework": framework,
     "meta": chosen["meta"] if chosen else [],
     "styling": styling,
     "design_system": {
         "files": dfiles,
         "dirs": ddirs,
-        "libraries": chosen["libraries"] if chosen else [],
+        "libraries": sorted({lib for p in frontend_packages for lib in p["libraries"]}),
         "tokens": tokens,
         "token_count": len(tokens),
     },
@@ -392,8 +428,8 @@ if out_path:
     with open(out_path, "w", encoding="utf-8") as fh:
         fh.write(text + "\n")
 print(text)
-if framework is None or (inv["count"] == 0 and not top):
-    print("ultima.sh orient: no frontend detected under %s" % scope_rel, file=sys.stderr)
+if not recommended:
+    print("ultima.sh orient: no applicable project source for selected categories under %s" % scope_rel, file=sys.stderr)
     sys.exit(2)
 PY
 }
@@ -415,21 +451,22 @@ cmd_merge() {
   [ -z "$reconciled" ] || [ -f "$reconciled" ] || die "merge: reconciled file missing: $reconciled"
   ULTIMA_RUN_DIR="$run_dir" ULTIMA_RECONCILED="$reconciled" ULTIMA_OUT="${out:-$run_dir/merged.json}" ULTIMA_ROSTER="$roster" \
     python3 - <<'PY'
-import datetime, json, math, os, re, sys
+import datetime, hashlib, json, os, re, sys
 
 run_dir = os.environ["ULTIMA_RUN_DIR"]
 reconciled = os.environ.get("ULTIMA_RECONCILED") or ""
 out_path = os.environ["ULTIMA_OUT"]
 roster = [r for r in (os.environ.get("ULTIMA_ROSTER") or "").split(",") if r]
 
-LENSES = ["design-system", "interaction-states", "accessibility", "component-architecture"]
+LENSES = ["design-system", "interaction-states", "accessibility", "component-architecture",
+          "system-architecture", "data-integrity", "failure-recovery"]
+CATEGORY = {l: "ux" for l in LENSES[:4]}
+CATEGORY.update({"system-architecture": "architecture", "data-integrity": "data-reliability", "failure-recovery": "data-reliability"})
+IMPACT = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+REACH = {"local": 1, "package": 2, "system": 3}
 LENS_ORDER = {name: i for i, name in enumerate(LENSES)}
 STRENGTHS = (50, 75, 100)
 EFFORT = {"S": 2, "M": 3, "L": 5}
-STRENGTH_POINTS = {100: 3, 75: 2, 50: 1}
-PROMOTE = {50: 75, 75: 100, 100: 100}
-STOP = {"the", "a", "an", "of", "in", "on", "to", "for", "and", "or", "with", "without", "is", "are", "no", "not",
-        "into", "from", "by", "at", "as", "use", "uses", "using", "instead"}
 
 
 def warn(msg):
@@ -439,16 +476,6 @@ def warn(msg):
 def load_json(path):
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
-
-
-def words(title):
-    return {w for w in re.findall(r"[a-z0-9]+", str(title).lower()) if w not in STOP and len(w) > 1}
-
-
-def jaccard(a, b):
-    if not a or not b:
-        return 0.0
-    return len(a & b) / len(a | b)
 
 
 def clean_instances(raw):
@@ -503,6 +530,23 @@ def clean_snippet(raw):
     return {"language": str(raw.get("language") or "text")[:30], "code": code.rstrip()[:2000]}
 
 
+def text_field(c, key):
+    value = c.get(key)
+    return value.strip() if isinstance(value, str) else ""
+
+
+def clean_trace(raw):
+    out = []
+    if isinstance(raw, list):
+        for step in raw:
+            if not isinstance(step, dict) or step.get("role") not in ("source", "boundary", "consumer"):
+                continue
+            instances = clean_instances([step])
+            if instances:
+                out.append(dict(instances[0], role=step["role"]))
+    return out
+
+
 def normalize(c, lens):
     if not isinstance(c, dict):
         return None, "not an object"
@@ -524,7 +568,11 @@ def normalize(c, lens):
     effort = str(c.get("effort") or "M").upper()[:1]
     if effort not in EFFORT:
         effort = "M"
-    instances = clean_instances(c.get("instances"))
+    trace = clean_trace(c.get("trace"))
+    evidence_kind = c.get("evidence_kind", "pattern")
+    if evidence_kind not in ("pattern", "trace"):
+        return None, "unknown evidence kind"
+    instances = clean_instances((c.get("instances") if isinstance(c.get("instances"), list) else []) + trace)
     if not instances:
         return None, "no quoted instance"
     wins = [str(w).strip() for w in c.get("wins", []) if isinstance(w, (str, int, float)) and str(w).strip()] if isinstance(c.get("wins"), list) else []
@@ -534,7 +582,40 @@ def normalize(c, lens):
     prior = prior.strip() if isinstance(prior, str) and prior.strip() else None
     conv = c.get("convention_source")
     conv = conv.strip() if isinstance(conv, str) and conv.strip() else None
-    return {
+    category = c.get("category", CATEGORY[lens])
+    if category not in CATEGORY.values():
+        return None, "unknown category"
+    decision = c.get("decision_status", "accepted" if prior else "none")
+    if decision not in ("none", "accepted", "violated", "revisit"):
+        return None, "unknown decision status"
+    action = c.get("action", "plan" if evidence_kind == "trace" or effort == "L" else "fix")
+    if action not in ("fix", "plan", "decision-needed"):
+        return None, "unknown action"
+    if evidence_kind == "trace" or effort == "L":
+        action = "plan"
+    if decision == "revisit":
+        action = "decision-needed"
+    cause, boundary = text_field(c, "root_cause"), text_field(c, "affected_boundary")
+    identity = [cause or title.strip(), boundary, fix.strip(), evidence_kind, decision, prior]
+    finding_id = "F-" + hashlib.sha256(json.dumps(identity).encode()).hexdigest()[:12]
+    if reconciled and re.fullmatch(r"F-[a-f0-9]{12}", str(c.get("id", ""))):
+        finding_id = c["id"]
+    extra = {k: text_field(c, k) for k in ("invariant", "invariant_source", "scenario", "verification",
+             "decision_reason", "compatibility", "rollback", "runtime_evidence")}
+    return dict(extra, **{
+        "id": finding_id,
+        "category": category,
+        "categories": sorted(set([category] + [CATEGORY[l] for l in lenses])),
+        "evidence_kind": evidence_kind,
+        "evidence_status": "runtime" if c.get("evidence_status") == "runtime" else "static",
+        "trace": trace,
+        "impact": c.get("impact") if c.get("impact") in IMPACT else "medium",
+        "reach": c.get("reach") if c.get("reach") in REACH else "local",
+        "root_cause": cause,
+        "affected_boundary": boundary,
+        "decision_status": decision,
+        "action": action,
+        "remediation": [x.strip() for x in c.get("remediation", []) if isinstance(x, str) and x.strip()] if isinstance(c.get("remediation"), list) else [],
         "title": " ".join(title.split())[:120],
         "lens": lenses[0],
         "lenses": sorted(set(lenses), key=lambda l: LENS_ORDER[l]),
@@ -552,27 +633,43 @@ def normalize(c, lens):
         "gates": [],
         "corroborated": False,
         "promoted": False,
-    }, None
+    }), None
 
 
 def apply_gates(c):
-    if c["strength"] >= 75 and len(c["instances"]) < 3:
-        c["gates"].append("demoted: fewer than 3 quoted instances")
+    reasons = []
+    if c["evidence_kind"] == "trace":
+        locations = {(x["file"], x["line"]) for x in c["trace"]}
+        roles = {x["role"] for x in c["trace"]}
+        if len(locations) < 2 or roles != {"source", "boundary", "consumer"} or not all(c[k] for k in ("invariant", "invariant_source", "scenario", "verification")):
+            reasons.append("incomplete trace evidence")
+    elif len(c["instances"]) < 3:
+        reasons.append("fewer than 3 quoted instances")
+    if c["lens"] == "design-system" and not (any(t.get("source") for t in c["tokens"]) or c["convention_source"]):
+        reasons.append("fix names no token or component source")
+    if c["decision_status"] in ("accepted", "violated", "revisit") and not c["prior_decision"]:
+        reasons.append("decision has no source document")
+    if c["decision_status"] == "revisit" and not c["decision_reason"]:
+        reasons.append("decision has no changed assumption or evidence")
+    if c["evidence_status"] == "runtime" and not c["runtime_evidence"]:
+        reasons.append("runtime claim has no evidence reference")
+        c["evidence_status"] = "static"
+    required_plan = ("remediation", "compatibility", "rollback", "verification")
+    c["plan_missing"] = [k for k in required_plan if not c[k]] if c["action"] == "plan" else []
+    c["plan_status"] = "incomplete" if c["plan_missing"] else ("documented" if c["action"] == "plan" else "not-applicable")
+    if reasons and c["strength"] >= 75:
         c["strength"] = 50
-    if c["lens"] == "design-system" and c["strength"] >= 75:
-        sourced = any(t.get("source") for t in c["tokens"]) or bool(c["convention_source"])
-        if not sourced:
-            c["gates"].append("demoted: fix names no token or component source")
-            c["strength"] = 50
+        c["gates"].extend("demoted: " + r for r in reasons)
     return c
 
 
 def same_pattern(a, b):
-    if jaccard(words(a["title"]), words(b["title"])) >= 0.6:
-        return True
-    fa = {(i["file"], i["line"]) for i in a["instances"]}
-    fb = {(i["file"], i["line"]) for i in b["instances"]}
-    return jaccard(fa, fb) >= 0.5
+    # Shared locations or similar titles alone do not establish a shared cause.
+    if a["evidence_kind"] != b["evidence_kind"] or a["decision_status"] != b["decision_status"] or a["prior_decision"] != b["prior_decision"]:
+        return False
+    if a["root_cause"] and b["root_cause"] and a["affected_boundary"] and b["affected_boundary"]:
+        return all(a[k].casefold() == b[k].casefold() for k in ("root_cause", "affected_boundary", "fix"))
+    return a["title"].casefold() == b["title"].casefold() and a["fix"].casefold() == b["fix"].casefold()
 
 
 def merge_into(keep, other):
@@ -598,6 +695,11 @@ def merge_into(keep, other):
     keep["convention_source"] = keep["convention_source"] or other["convention_source"]
     keep["prior_decision"] = keep["prior_decision"] or other["prior_decision"]
     keep["lenses"] = sorted(set(keep["lenses"]) | set(other["lenses"]), key=lambda l: LENS_ORDER[l])
+    keep["categories"] = sorted(set(keep["categories"] + other["categories"]))
+    keep["impact"] = max((keep["impact"], other["impact"]), key=IMPACT.get)
+    keep["reach"] = max((keep["reach"], other["reach"]), key=REACH.get)
+    if other["action"] == "plan" and keep["action"] == "fix":
+        keep["action"] = "plan"
     keep["gates"] = keep["gates"] + [g for g in other["gates"] if g not in keep["gates"]]
     if effort_rank(other["effort"]) > effort_rank(keep["effort"]):
         keep["effort"] = other["effort"]
@@ -616,23 +718,21 @@ if os.path.exists(profile_path):
         warn("profile.json is not valid JSON; scoring without hot spots")
 hot = [h["file"] for h in (profile.get("hot_spots", {}).get("top") or []) if isinstance(h, dict) and h.get("file")]
 hot_set = set(hot)
-top5 = set(hot[:5])
 
 
 def score(c):
     files = {i["file"] for i in c["instances"]}
-    churn_share = (len(files & hot_set) / len(files)) if files else 0.0
-    S = STRENGTH_POINTS[c["strength"]]
-    I = min(4, 1 + int(math.floor(math.log2(len(c["instances"])))))
-    H = 10 + int(round(10 * churn_share)) + (5 if files & top5 else 0)
-    E = EFFORT[c["effort"]]
-    c["score"] = {"S": S, "I": I, "H": H, "E": E, "churn_share": round(churn_share, 2),
-                  "total": int(round(S * I * H * 2 / E))}
+    churn_share = len(files & hot_set) / len(files) if files else 0.0
+    # Independent dimensions remain visible. Churn is only the last tie-breaker.
+    c["score"] = {"impact": IMPACT[c["impact"]], "reach": REACH[c["reach"]],
+                  "confidence": c["strength"], "effort": EFFORT[c["effort"]],
+                  "churn_share": round(churn_share, 2)}
     return c
 
 
 def sort_key(c):
-    return (-c["strength"], -c["score"]["total"], -len(c["instances"]), LENS_ORDER[c["lens"]], c["title"].lower())
+    return (-(c["strength"] >= 75), -IMPACT[c["impact"]], -REACH[c["reach"]],
+            -c["strength"], EFFORT[c["effort"]], -c["score"]["churn_share"], c["id"])
 
 
 counts = {"malformed": 0, "demoted_instances": 0, "demoted_source": 0, "dismissed_prior_decision": 0,
@@ -669,7 +769,7 @@ if reconciled:
         work.append(n)
 else:
     passno = 1
-    names = roster or LENSES
+    names = roster or profile.get("recommended_lenses") or LENSES
     for name in names:
         if name not in LENS_ORDER:
             warn("unknown lens in roster: " + name)
@@ -683,13 +783,16 @@ else:
             counts["lenses_missing"].append(name)
             lenses_meta.append({"name": name, "status": "missing", "candidates_in": 0})
             continue
-        try:
-            art = load_json(path)
-        except ValueError:
-            counts["lenses_missing"].append(name)
-            lenses_meta.append({"name": name, "status": "unparseable", "candidates_in": 0})
-            continue
-        if not isinstance(art, dict):
+        art = None
+        for candidate_path, source in ((path, hydration), (os.path.join(run_dir, "returns", name + ".json"), "return")):
+            try:
+                candidate_art = load_json(candidate_path)
+            except (ValueError, OSError):
+                continue
+            if isinstance(candidate_art, dict) and candidate_art.get("lens") == name and isinstance(candidate_art.get("candidates"), list):
+                art, hydration = candidate_art, source
+                break
+        if art is None:
             counts["lenses_missing"].append(name)
             lenses_meta.append({"name": name, "status": "unparseable", "candidates_in": 0})
             continue
@@ -704,6 +807,7 @@ else:
             n, why = normalize(c, name)
             if n is None:
                 counts["malformed"] += 1
+                lenses_meta[-1]["status"] = "partial"
                 dismissed.append({"title": str(c.get("title", "?"))[:80] if isinstance(c, dict) else "?",
                                   "lens": name, "reason": "malformed: " + why, "stage": "merge"})
                 continue
@@ -712,7 +816,7 @@ else:
 def gate_candidates(work):
     kept = []
     for c in work:
-        if c["prior_decision"]:
+        if c["prior_decision"] and c["decision_status"] == "accepted":
             counts["dismissed_prior_decision"] += 1
             dismissed.append({"title": c["title"], "lens": c["lens"], "reason": "settled by " + c["prior_decision"],
                               "stage": "merge"})
@@ -743,19 +847,13 @@ def dedupe_across_lenses(kept):
     return merged
 
 
-def promote_corroborated(merged):
-    for c in merged:
-        if c["corroborated"] and not c["promoted"] and len(c["instances"]) >= 3 and c["strength"] < 100:
-            c["strength"] = PROMOTE[c["strength"]]
-            c["promoted"] = True
-            counts["promoted"] += 1
-            c["gates"].append("promoted: two lenses agree")
-    return merged
+# Agreement records provenance; it never increases confidence.
+merged = dedupe_across_lenses(gate_candidates(work))
 
-
-merged = promote_corroborated(dedupe_across_lenses(gate_candidates(work)))
-
+if len({c["id"] for c in merged}) != len(merged):
+    sys.exit("ultima.sh merge: duplicate finding IDs in reconciliation; preserve each original identity")
 for c in merged:
+    apply_gates(c)
     score(c)
 merged.sort(key=sort_key)
 for i, c in enumerate(merged, 1):
@@ -764,10 +862,11 @@ for i, c in enumerate(merged, 1):
 strong = [c for c in merged if c["strength"] >= 75]
 weak = [c for c in merged if c["strength"] < 75]
 result = {
+    "schema_version": 2,
     "pass": passno,
     "generated_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "lenses": lenses_meta,
-    "counts": dict(counts, strong=len(strong), weak=len(weak), total=len(merged)),
+    "counts": dict(counts, strong=len(strong), weak=len(weak), total=len(merged), decision_needed=sum(c["action"] == "decision-needed" for c in merged)),
     "candidates": merged,
     "dismissed": dismissed,
     "residual_risks": residual_risks,
@@ -820,9 +919,13 @@ def load(name):
 profile = load("profile.json")
 meta = load("metadata.json")
 LENS_LABEL = {"design-system": "Design system", "interaction-states": "Interaction states",
-              "accessibility": "Accessibility", "component-architecture": "Component architecture"}
+              "accessibility": "Accessibility", "component-architecture": "Component architecture",
+              "system-architecture": "System architecture", "data-integrity": "Data integrity", "failure-recovery": "Failure recovery"}
+CATEGORY_LABEL = {"ux": "UX & accessibility", "architecture": "Architecture", "data-reliability": "Data & reliability"}
+CATEGORY_LENSES = {"ux": list(LENS_LABEL)[:4], "architecture": ["system-architecture"],
+                   "data-reliability": ["data-integrity", "failure-recovery"]}
 EFFORT_LABEL = {"S": "small", "M": "medium", "L": "large"}
-COLOR = {100: "#8ff5ff", 75: "#e8b45a", 50: "#6b7089"}
+COLOR = {100: "#8ff5ff", 75: "#e8b45a", 50: "#a8acc4"}
 
 WORDMARK = (
     '<svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 688 184" role="img" aria-label="mana">'
@@ -865,7 +968,6 @@ h5{margin:0;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
 p{margin:0}
 .top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.5rem 2rem;padding-bottom:2rem;border-bottom:1px solid var(--line)}
 .top .id{display:flex;flex-direction:column;gap:.9rem}
-.lede{max-width:34rem;color:var(--muted)}
 .stats{display:grid;grid-template-columns:repeat(3,auto);gap:1.5rem}
 .stat{display:flex;flex-direction:column;gap:.2rem}
 .stat b{font-family:var(--pixel);font-size:2.2rem;line-height:1;font-weight:500}
@@ -885,19 +987,25 @@ dd{margin:.15rem 0 0;overflow-wrap:anywhere}
 .lens .s{font-family:var(--mono);font-size:.75rem;color:var(--dim);white-space:nowrap}
 .rankhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem}
 .rankhead h2{margin:0}
-.tabs{display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--tab)}
-.tabs input{position:absolute;opacity:0;width:0;height:0}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--tab)}
+.tabs input{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}
+.tabs legend{font-size:.8rem;color:var(--soft);padding:0 .4rem}
+.tabs input:focus-visible+label{outline:2px solid var(--cyan);outline-offset:2px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+.category-tabs{margin:2rem 0 1rem;padding:.5rem}
+.category-tabs label{font-size:.95rem;padding:.65rem 1rem}
+.system-map pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.card:target{display:block!important;outline:2px solid var(--cyan)}
 .tabs label{font:inherit;font-size:.78rem;padding:.3rem .8rem;border-radius:6px;cursor:pointer;color:var(--muted)}
 .tabs label:hover{color:#fff}
-main:has(#f-all:checked) label[for=f-all],main:has(#f-100:checked) label[for=f-100],main:has(#f-75:checked) label[for=f-75]{background:var(--line);color:#fff}
-main:has(#f-100:checked) [data-s="75"],main:has(#f-75:checked) [data-s="100"]{display:none}
-.empty{display:none;padding:2rem;text-align:center;color:var(--dim);font-style:italic;border:1px dashed var(--line);border-radius:12px}
-main:has(#f-100:checked):not(:has([data-s="100"])) .empty,main:has(#f-75:checked):not(:has([data-s="75"])) .empty,main:not(:has([data-s])) .empty{display:block}
+main:has(#f-all:checked) label[for=f-all],main:has(#f-100:checked) label[for=f-100],main:has(#f-75:checked) label[for=f-75],main:has(#f-50:checked) label[for=f-50]{background:var(--line);color:#fff}
+main:has(#f-100:checked) [data-s]:not([data-s="100"]),main:has(#f-75:checked) [data-s]:not([data-s="75"]),main:has(#f-50:checked) [data-s]:not([data-s="50"]){display:none}
+.empty{display:none;padding:2rem;text-align:center;color:var(--soft);border:1px dashed var(--line);border-radius:12px}
 ol.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
-ol.rank li{display:grid;grid-template-columns:2rem minmax(0,1fr) 7rem 3.5rem;align-items:center;gap:1rem;padding:.7rem 1rem;border-radius:6px;background:var(--glass)}
+ol.rank li{display:grid;grid-template-columns:2rem minmax(0,1fr) 5rem 4rem;align-items:center;gap:1rem;padding:.7rem 1rem;border-radius:6px;background:var(--glass)}
 ol.rank li:hover{background:var(--hover)}
 .num{font-family:var(--pixel);font-size:1rem;color:var(--dim)}
-ol.rank a{color:var(--fg);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ol.rank a{color:var(--fg);font-weight:500;min-width:0;overflow-wrap:anywhere}
 .bar{display:flex;align-items:center;gap:.5rem}
 .bar i{flex:1;height:4px;border-radius:2px;background:#1c2040;overflow:hidden;display:block}
 .bar i b{display:block;height:100%}
@@ -976,8 +1084,22 @@ ul.list .tag{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;colo
 .start dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.9rem 1.5rem;padding:1rem 0 0;border-top:1px solid var(--line);font-size:.88rem}
 .start .dimmed{color:var(--muted)}
 .foot{margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;font-size:.75rem;color:var(--dim);font-family:var(--mono)}
-@media print{.page{background:#fff}body{color:#000}.card{break-inside:avoid}main{max-width:none}}
+@media(max-width:40rem){ol.rank li{grid-template-columns:2rem minmax(0,1fr);gap:.5rem}.bar,.sc{display:none}.card .body{padding:1.1rem}.category-tabs label{padding:.6rem}.card header{gap:.6rem}}
+@media print{.page,body{background:#fff!important;color:#000!important}main{max-width:none}.tabs,.empty{display:none!important}[data-category],.overview-content,[data-s]{display:block!important}.card{break-inside:avoid;background:#fff!important}main *{color:#000!important;text-shadow:none!important;box-shadow:none!important}details>*{display:block!important}.card .accent{display:none}}
+
 """
+
+for category in ("all", *CATEGORY_LABEL):
+    selector = "main:has(#cat-%s:checked)" % category
+    CSS += selector + " label[for=cat-%s]{background:var(--line);color:#fff}" % category
+    if category != "all":
+        CSS += selector + ' [data-category]:not([data-category~="%s"]){display:none}' % category
+        CSS += selector + ' .overview-content{display:none}'
+    category_match = '[data-category~="%s"]' % category if category != "all" else ""
+    for strength in ("all", "100", "75", "50"):
+        match = '[data-s="%s"]' % strength if strength != "all" else '[data-s]'
+        CSS += selector + ':has(#f-%s:checked):not(:has(article%s%s)) .empty{display:block}' % (strength, category_match, match)
+
 
 
 def e(v):
@@ -1016,22 +1138,29 @@ def chip(text, cls=""):
 def card(c):
     s = c.get("score", {})
     col = color_of(c)
-    factors = "S %s x I %s x H %s x 2 / E %s" % (s.get("S"), s.get("I"), s.get("H"), s.get("E"))
     inst = c.get("instances", [])
     files = sorted({i["file"] for i in inst})
     hot = int(round(100 * (s.get("churn_share") or 0)))
-    parts = ['<article class="card" id="c%d" data-s="%d">' % (c["rank"], c["strength"])]
+    parts = ['<article class="card" id="%s" data-s="%d" data-category="%s">' % (e(c["id"]), c["strength"], e(" ".join(c["categories"]))) ]
     parts.append('<div class="accent" style="background:linear-gradient(90deg,%s,transparent 70%%)"></div><div class="body">' % col)
     chips = [chip(LENS_LABEL.get(l, l), "lens") for l in c.get("lenses", [c.get("lens")])]
-    chips.append('<span class="chip" style="border-color:%s;color:%s">strength %d</span>' % (col, col, c["strength"]))
+    chips.append('<span class="chip" style="border-color:%s;color:%s">confidence %d</span>' % (col, col, c["strength"]))
     chips.append(chip("%d instances" % len(inst)))
     chips.append(chip("effort %s" % EFFORT_LABEL.get(c.get("effort"), c.get("effort"))))
-    chips.append(chip("hot path %d%%" % hot))
-    chips.append('<span class="chip score" title="%s">score %s</span>' % (e(factors), e(s.get("total"))))
+    chips.append(chip("%s impact" % c["impact"]))
+    chips.append(chip("%s reach" % c["reach"]))
+    chips.append(chip(c["action"].replace("-", " ")))
+    chips.append(chip("source inspection" if c["evidence_status"] == "static" else "runtime evidence"))
     parts.append('<header><span class="big" style="color:%s">%s</span><div class="ttl"><h3>%s</h3><div class="chips">%s</div></div></header>' % (
         col, rank_label(c["rank"]), e(c["title"]), "".join(chips)))
     parts.append('<div class="inner">')
     parts.append('<section><h4>Problem</h4><p>%s</p></section>' % e(c["problem"]))
+    if c["evidence_kind"] == "trace":
+        parts.append('<section><h4>Traced flow</h4><ol class="ev">%s</ol></section>' % "".join(
+            '<li><strong>%s</strong> <span class="loc">%s:%s</span> <code>%s</code></li>' %
+            (e(t["role"]), e(t["file"]), e(t["line"]), e(t["quote"])) for t in c["trace"]))
+        parts.append('<section><h4>Invariant</h4><p>%s</p><p class="conv">Source: %s</p></section>' % (e(c["invariant"]), e(c["invariant_source"])))
+        parts.append('<section><h4>Failure scenario</h4><p>%s</p></section>' % e(c["scenario"]))
     shown, rest = inst[:3], inst[3:]
     ev = '<ul class="ev">%s</ul>' % "".join(instance_row(i) for i in shown)
     if rest:
@@ -1056,10 +1185,20 @@ def card(c):
     if c.get("convention_source"):
         fix += '<p class="conv">Already done right at <code>%s</code></p>' % e(c["convention_source"])
     parts.append(fix + "</section>")
+    for key, label in (("verification", "Verification"), ("compatibility", "Compatibility"), ("rollback", "Rollback"),
+                       ("decision_reason", "Decision to review"), ("runtime_evidence", "Executed evidence")):
+        if c.get(key):
+            parts.append('<section><h4>%s</h4><p>%s</p></section>' % (label, e(c[key])))
+    if c.get("prior_decision"):
+        parts.append('<section><h4>Documented decision</h4><p>%s: %s</p></section>' % (e(c["decision_status"]), e(c["prior_decision"])))
+    if c.get("plan_missing"):
+        parts.append('<section><h4>Planning needed</h4><p>Before implementation, establish: %s. This finding needs further planning.</p></section>' % e(', '.join(c["plan_missing"])))
+    if c.get("remediation"):
+        parts.append('<section><h4>Migration steps</h4><ol>%s</ol></section>' % "".join('<li>%s</li>' % e(x) for x in c["remediation"]))
     if c.get("wins"):
         parts.append('<section><h4>Wins</h4><ul class="wins">%s</ul></section>' % "".join("<li>%s</li>" % e(w) for w in c["wins"]))
     parts.append("</div></div>")
-    foot = ["%d files" % len(files)]
+    foot = [c["id"], "%d files" % len(files), "%d%% of evidence files changed recently" % hot]
     if c.get("corroborated"):
         foot.append("two lenses agree")
     foot.extend(c.get("gates") or [])
@@ -1068,20 +1207,9 @@ def card(c):
 
 
 def rank_row(c):
-    col = color_of(c)
-    return ('<li data-s="%d"><span class="num">%s</span><a href="#c%d">%s</a>'
-            '<span class="bar"><i><b style="width:%d%%;background:%s"></b></i><span style="color:%s">%d</span></span>'
-            '<span class="sc">%s</span></li>') % (
-        c["strength"], rank_label(c["rank"]), c["rank"], e(c["title"]), c["strength"], col, col, c["strength"], e(c.get("score", {}).get("total")))
-
-
-def plain_table(cands):
-    rows = []
-    for c in cands:
-        rows.append('<tr><td class="num">%d</td><td>%s</td><td class="l">%s</td><td class="m" style="color:%s">%d</td><td class="m">%d</td><td>%s</td><td class="m r">%s</td></tr>' % (
-            c["rank"], e(c["title"]), e(", ".join(LENS_LABEL.get(l, l) for l in c.get("lenses", []))), color_of(c), c["strength"],
-            len(c.get("instances", [])), e(EFFORT_LABEL.get(c.get("effort"), c.get("effort"))), e(c.get("score", {}).get("total"))))
-    return ('<div class="tbl"><table class="plain"><thead><tr><th>#</th><th>Candidate</th><th>Lens</th><th>Strength</th><th>Instances</th><th>Effort</th><th class="r">Score</th></tr></thead><tbody>%s</tbody></table></div>' % "".join(rows))
+    return ('<li data-s="%d" data-category="%s"><span class="num">%s</span><a href="#%s">%s</a>'
+            '<span class="bar">%s</span><span class="sc" aria-label="confidence %d">%d</span></li>') % (
+        c["strength"], e(" ".join(c["categories"])), rank_label(c["rank"]), e(c["id"]), e(c["title"]), e(c["impact"]), c["strength"], c["strength"])
 
 
 def dd(label, value, cls=""):
@@ -1091,8 +1219,7 @@ def dd(label, value, cls=""):
 cands = doc.get("candidates", [])
 strong = [c for c in cands if c["strength"] >= 75]
 weak = [c for c in cands if c["strength"] < 75]
-cards = strong[:12]
-more = strong[12:]
+cards = cands
 dismissed = doc.get("dismissed", [])
 risks = [r for r in doc.get("residual_risks", []) if isinstance(r, dict)]
 ds = profile.get("design_system", {}) or {}
@@ -1106,10 +1233,8 @@ out = []
 out.append('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">')
 out.append('<title>Ultima audit: %s</title><style>%s</style></head><body><div class="page"><main>' % (e(repo), CSS))
 
-out.append('<header class="top"><div class="id">%s<div class="kicker">Ultima · Frontend audit</div><h1>%s</h1>'
-           '<p class="lede">%d candidates worth acting on, %d weaker, %d dismissed. Ranked by strength, then by score.</p></div>' % (
-               WORDMARK, e(repo), len(strong), len(weak), len(dismissed)))
-out.append('<div class="stats"><div class="stat"><b style="color:%s">%d</b><span>Act on</span></div><div class="stat"><b style="color:%s">%d</b><span>Weaker</span></div><div class="stat"><b style="color:%s">%d</b><span>Dismissed</span></div></div></header>' % (
+out.append('<header class="top"><div class="id">%s<div class="kicker">Ultima · Project audit</div><h1>%s</h1></div>' % (WORDMARK, e(repo)))
+out.append('<div class="stats"><div class="stat"><b style="color:%s">%d</b><span>Supported</span></div><div class="stat"><b style="color:%s">%d</b><span>Weaker</span></div><div class="stat"><b style="color:%s">%d</b><span>Dismissed</span></div></div></header>' % (
     COLOR[100], len(strong), COLOR[75], len(weak), COLOR[50], len(dismissed)))
 
 design = " · ".join((ds.get("libraries") or []) + (ds.get("dirs") or []) + (ds.get("files") or [])[:4]) or "none found"
@@ -1121,7 +1246,54 @@ meta_items = [
     dd("Tokens parsed", e(ds.get("token_count", 0))),
     dd("Hot spots", e("%d files touched in %s days" % (hs.get("files_touched", 0), hs.get("since_days", "?")))),
 ]
-out.append('<dl class="meta">%s<div class="wide"><dt>Design system</dt><dd class="mono" style="color:#b9bedb;font-size:.82rem">%s</dd></div></dl>' % ("".join(meta_items), e(design)))
+metadata_html = '<dl class="meta overview-content">%s<div class="wide"><dt>Design system</dt><dd class="mono" style="color:#b9bedb;font-size:.82rem">%s</dd></div></dl>' % ("".join(meta_items), e(design))
+
+out.append('<fieldset class="tabs category-tabs"><legend>Audit category</legend>')
+for category, label in [("all", "Overview"), *CATEGORY_LABEL.items()]:
+    count = len(cands) if category == "all" else sum(category in c["categories"] for c in cands)
+    out.append('<input type="radio" name="category" id="cat-%s"%s><label for="cat-%s">%s <span>(%d)</span></label>' % (
+        category, ' checked' if category == "all" else '', category, e(label), count))
+out.append('</fieldset>')
+statuses = {l["name"]: l["status"] for l in doc.get("lenses", [])}
+excluded_dirs = set(profile.get("system_map", {}).get("coverage", {}).get("excluded_dirs", [])) | {".git", "node_modules", "vendor", "dist", "build", ".venv", "venv"}
+def unexamined_source(lens):
+    cov = doc.get("coverage", {}).get(lens, {})
+    skipped = cov.get("dirs_skipped") or cov.get("skipped") or []
+    return any(not (set(str(path).strip("/").split("/")) & excluded_dirs) for path in skipped)
+category_coverage = []
+for category, label in CATEGORY_LABEL.items():
+    expected = CATEGORY_LENSES[category]
+    completed = [l for l in expected if statuses.get(l) == "ok"]
+    attempted = [l for l in expected if l in statuses]
+    examined = [l for l in completed if doc.get("coverage", {}).get(l, {}).get("status") == "complete"
+                and not unexamined_source(l)]
+    status = "complete" if len(examined) == len(expected) else ("partial" if attempted else "not examined")
+    category_coverage.append(dd(label, e(status)))
+out.append(metadata_html)
+map_data = profile.get("system_map", {})
+if map_data:
+    out.append('<section class="sec system-map overview-content"><h2>System map</h2><p>Discovery seeds; declared dependencies do not establish runtime flow.</p><ul class="list">')
+    for component in map_data.get("components", []):
+        out.append('<li><strong>%s</strong><span class="why">%s%s</span></li>' % (e(component["name"]), e(component["path"]), ' · ' + e(component["manifest"]) if component.get("manifest") else ''))
+    out.append('</ul>')
+    edges = map_data.get("dependency_edges", [])
+    if edges:
+        out.append('<h3>Declared package dependencies</h3><ul class="list">%s</ul>' % ''.join('<li>%s → %s <span class="why">%s</span></li>' % (e(x['from']), e(x['to']), e(x['source'])) for x in edges))
+    for key, label in (("entrypoints", "Entry points to inspect"), ("data_files", "Data and persistence"), ("deployment_files", "Delivery configuration")):
+        paths = map_data.get(key, [])
+        if paths:
+            out.append('<details><summary>%s (%d)</summary><ul class="ev">%s</ul></details>' % (label, len(paths), ''.join('<li>%s</li>' % e(x) for x in paths)))
+    for note in map_data.get("coverage", {}).get("notes", []):
+        out.append('<p class="conv">%s</p>' % e(note))
+    if map_data.get("coverage", {}).get("truncated"):
+        out.append('<p>Discovery lists truncated: %s</p>' % e(', '.join(map_data['coverage']['truncated'])))
+    context_path = os.path.join(run_dir, "system-context.md")
+    if os.path.isfile(context_path):
+        with open(context_path, encoding="utf-8") as context_file:
+            out.append('<details><summary>Verified flows and audit context</summary><pre>%s</pre></details>' % e(context_file.read()))
+    else:
+        out.append('<p>Verified flow map unavailable. Discovery alone is not a deep architecture audit.</p>')
+    out.append('</section>')
 
 lens_tiles = []
 for l in doc.get("lenses", []):
@@ -1129,27 +1301,23 @@ for l in doc.get("lenses", []):
     ok = status == "ok"
     label = "ok · %d in" % l.get("candidates_in", 0) if ok else status
     dot = COLOR[100] if ok else "#c96b6b"
-    lens_tiles.append('<div class="lens"><div class="n"><span class="dot" style="background:%s;box-shadow:0 0 8px %s"></span><span>%s</span></div><span class="s">%s</span></div>' % (
-        dot, dot, e(LENS_LABEL.get(l.get("name"), l.get("name"))), e(label)))
+    lens_tiles.append('<div class="lens" data-category="%s"><div class="n"><span class="dot" style="background:%s;box-shadow:0 0 8px %s"></span><span>%s</span></div><span class="s">%s</span></div>' % (
+        next((c for c, names in CATEGORY_LENSES.items() if l.get("name") in names), ""), dot, dot, e(LENS_LABEL.get(l.get("name"), l.get("name"))), e(label)))
 if lens_tiles:
     out.append('<section class="sec"><h2>Lenses</h2><div class="lenses">%s</div></section>' % "".join(lens_tiles))
 
-out.append('<section class="sec"><div class="rankhead"><h2>Ranked candidates</h2><div class="tabs">'
+out.append('<section class="sec"><div class="rankhead"><h2>Ranked candidates</h2><fieldset class="tabs"><legend>Confidence</legend>'
            '<input type="radio" name="f" id="f-all" checked><label for="f-all">All</label>'
-           '<input type="radio" name="f" id="f-100"><label for="f-100">Strong</label>'
-           '<input type="radio" name="f" id="f-75"><label for="f-75">Moderate</label></div></div>')
+           '<input type="radio" name="f" id="f-100"><label for="f-100">Established</label>'
+           '<input type="radio" name="f" id="f-75"><label for="f-75">Supported</label>'
+           '<input type="radio" name="f" id="f-50"><label for="f-50">Uncertain</label></fieldset></div>')
 out.append('<ol class="rank">%s</ol></section>' % "".join(rank_row(c) for c in cards))
-out.append('<section class="cards">%s<p class="empty">No candidates at this strength.</p></section>' % "".join(card(c) for c in cards))
-
-if more:
-    out.append('<section class="sec"><h2>More candidates</h2>%s</section>' % plain_table(more))
-if weak:
-    out.append('<section class="sec" style="margin-top:3.5rem"><h2>Weaker candidates</h2>%s</section>' % plain_table(weak))
+out.append('<section class="cards">%s<p class="empty">No findings match this category and confidence. See Coverage for audit limits.</p></section>' % "".join(card(c) for c in cards))
 
 dis = "".join('<li><span>%s</span><span class="why">%s · %s</span></li>' % (
     e(d.get("title")), e(LENS_LABEL.get(d.get("lens"), d.get("lens") or "")), e(d.get("reason"))) for d in dismissed)
 risk = "".join('<li><span class="tag">%s</span><span>%s</span></li>' % (e(LENS_LABEL.get(r.get("lens"), r.get("lens"))), e(r.get("text"))) for r in risks)
-cov_items = []
+cov_items = list(category_coverage)
 for lens, c in (doc.get("coverage", {}) or {}).items():
     if isinstance(c, dict):
         bits = []
@@ -1178,26 +1346,10 @@ out.append('<div class="trio"><section><h2>Dismissed</h2>%s</section><section><h
                "".join(cov_items) or dd("Notes", "none")))
 
 if strong:
-    first = strong[0]
-    s1 = first.get("score", {})
-    why = "Strength %d, %s effort, %d%% hot path" % (first["strength"], EFFORT_LABEL.get(first.get("effort"), first.get("effort")), int(round(100 * (s1.get("churn_share") or 0))))
-    text = doc.get("recommendation")
-    if not isinstance(text, str) or not text.strip():
-        nxt = strong[1].get("score", {}).get("total") if len(strong) > 1 else None
-        text = "Highest score%s, %d quoted instances across %d files, and a fix the candidate names." % (
-            " (%s versus %s for the next)" % (s1.get("total"), nxt) if nxt is not None else " (%s)" % s1.get("total"),
-            len(first.get("instances", [])), len({i["file"] for i in first.get("instances", [])}))
-    items = [dd("Why first", e(why))]
-    if first.get("wins"):
-        items.append(dd("Unblocks", e(", ".join(first["wins"][:2]))))
-    if len(strong) > 1:
-        second = strong[1]
-        items.append(dd("Then", '<a href="#c%d">%s %s</a>' % (second["rank"], rank_label(second["rank"]), e(second["title"]))))
-    coldest = min(strong[1:], key=lambda c: (c.get("score", {}).get("churn_share") or 0, -c["rank"])) if len(strong) > 2 else None
-    if coldest is not None and (coldest.get("score", {}).get("churn_share") or 0) == 0:
-        items.append(dd("Skip for now", '<a href="#c%d">%s %s</a> · 0%% hot path, no active churn' % (coldest["rank"], rank_label(coldest["rank"]), e(coldest["title"])), "dimmed"))
-    out.append('<section class="start"><div class="body"><div class="pick"><h2>Start here</h2><a href="#c%d"><span class="big">%s</span>%s</a><p>%s</p></div><dl>%s</dl></div></section>' % (
-        first["rank"], rank_label(first["rank"]), e(first["title"]), e(text), "".join(items)))
+    recommendation = doc.get("recommendation")
+    recommendation_html = '<p>%s</p>' % e(recommendation) if recommendation else ''
+    steps = ''.join('<li><a href="#%s">%s</a> · %s</li>' % (e(c['id']), e(c['title']), e(c['action'].replace('-', ' '))) for c in strong[:5])
+    out.append('<section class="start overview-content"><div class="body"><h2>Recommended work order</h2>%s<ol>%s</ol></div></section>' % (recommendation_html, steps))
 
 out.append('<footer class="foot"><span>generated by ultima</span><span>head %s</span></footer></main></div></body></html>' % e(head))
 

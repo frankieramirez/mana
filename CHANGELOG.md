@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.34.1
+
+- Trim repeated Ultima report summaries. Keep category status in Coverage, show totals once, and omit generic recommendation text when the ranked work list already explains the order.
+
+## 0.34.0
+
+- Expand `ultima` to whole-project audits with UX, Architecture, and Data & Reliability categories. Profile backend and monorepo scopes, verify shared system context, and dispatch specialists for system boundaries, data integrity, and failure recovery alongside the frontend lenses. Accept sourced flow traces for single boundary defects, rank impact separately from confidence, preserve stable finding IDs, and distinguish accepted decisions from violations or decisions needing review. The offline report adds keyboard-accessible category and confidence controls with coverage status and printable findings. Structural changes become migration briefs; immediate fixes cover the entire verified pattern. Add backend, trace, reconciliation, and report regressions.
+
 ## 0.33.0
 
 - Add `leyline`, which checks that a project gives agents an honest way to find a feature, run the app, and report what happened. The project owns a control CLI and a feature map; `leyline` holds them to the `control/0` contract in `references/contract.md`. `conform.sh static` reads the `Control:` line, the control skill, feature and scenario records, literal `scenario(...)` registrations in tests, and break patches without running project code. `conform.sh report` rejects a run report whose status and exit disagree, that passes with zero executed or unexecuted expected cases, or that passes with a missing prerequisite or a changed checkout. `conform.sh dynamic --trust` runs the project's CLI in a worktree of HEAD and probes list, describe, an unknown id, a baseline run, a declared break patch that must fail naming its scenario, the restored run, and two concurrent runs. Every probe input comes from HEAD, and a break patch that fails to revert blocks the restore and parallel probes. A fake control CLI covers each violation in `scripts/test-leyline.sh`.

@@ -26,7 +26,7 @@ The comparison is the repo's own best component: the one whose interface is smal
 - **A `className` pass-through on a leaf primitive.** That is the escape hatch primitives are supposed to have.
 - **Taste about naming or file layout** with no repeated cost behind it.
 - **Timing and lifecycle bugs.** Those are defects for a code review, not architecture.
-- **Anything a standards file settles.** Emit with `prior_decision` set.
+- **Anything a standards file settles.** Record the decision status and cite `prior_decision`; distinguish an accepted exception from a violation.
 
 ## Evidence bar
 
@@ -40,15 +40,20 @@ Quote the props declaration, the wrapper, or the fixed value, with `file:line`, 
 
 ## Output
 
-Write the full artifact with every schema field to `{run_dir}/{lens_name}.json` (contract: `references/candidates-schema.json`). Return the compact shape: `lens`, `residual_risks`, `coverage`, and `candidates` with title, strength, effort, instance count, the first three instances, `convention_source`, and `prior_decision`. No prose outside the JSON.
+Use category `ux` and evidence_kind `pattern`. Follow the full artifact and compact return contract in `references/lens-template.md`. Include the common impact, reach, root cause, boundary, verification, decision, and action fields. No prose outside the JSON return.
 
-For interface candidates, `before` is the current props declaration and `after` is the union or the primitive that replaces it. Keep both short enough to read on a card.
+Use short `before` and `after` snippets when they clarify the proposed change. Design-system findings retain sourced `tokens[]` where applicable.
 
 ```json
 {
   "lens": "component-architecture",
   "candidates": [],
   "residual_risks": [],
-  "coverage": {"files_read": 0, "dirs_skipped": [], "notes": []}
+  "coverage": {
+    "status": "partial",
+    "files_read": 0,
+    "dirs_skipped": [],
+    "notes": []
+  }
 }
 ```

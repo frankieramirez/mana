@@ -6,10 +6,10 @@ One candidate, on the current branch, with the project's validation run before t
 
 Print each check with its answer. A failed check stops the fix: write the candidate as a ticket-shaped brief to `$RUN_DIR/tickets/<rank>-<slug>.md` using `references/agent-brief.md`, print the path, and say which check stopped it.
 
-1. **Settled elsewhere?** Re-read the prior-decisions block and any doc the candidate or its instances cite. A doc that settles the pattern the other way stops the fix; the candidate should have been dismissed, so record it in `reconciled.json` too, then re-run merge pass 2 and render as documented in `references/finish-audit.md` so `merged.json` and `report.html` drop the candidate, and print the new report path.
-2. **Whole pattern or hot instances?** Effort S: every instance. Effort M: instances in files the profile lists as hot spots, with the rest listed for a ticket. Effort L: stop; this is a ticket.
+1. **Settled elsewhere?** Re-read the prior-decisions block and any doc the candidate or its instances cite. An accepted documented tradeoff stops the fix; the candidate should have been dismissed, so record it in `reconciled.json` too, then re-run merge pass 2 and render as documented in `references/finish-audit.md` so `merged.json` and `report.html` drop the candidate, and print the new report path.
+2. **Eligible atomic fix?** Only action `fix` with confidence at least 75 and decision_status other than `revisit` qualifies. Plans, trace findings, decision-needed work, and effort L become local briefs with their migration and verification details. For S or M patterns, fix the entire verified pattern atomically. If it cannot fit a bounded validated change, write a plan; never fix only the hot files.
 3. **New dependency or new shared piece?** A fix that adds a package, a new primitive, or a new token stops here. Adding to the design system is a decision, not a cleanup.
-4. **What proves it?** Name the check that exercises the touched components: the Validation command, a typecheck, a story, a visual snapshot, a unit test. When nothing in the repo exercises them, say so, and keep the change to the instances a check does cover.
+4. **What proves it?** Name the check that verifies the entire affected pattern and its callers, using the candidate verification and project validation. If the check covers only some required instances, write a plan instead of a partial fix.
 5. **Tree clean?** Run `git status --porcelain`. A dirty tree means implement and validate, then report the diff and stop without committing, so the user can commit it with their own work.
 
 ## The edit
@@ -24,7 +24,7 @@ A validation failure means revert the edit that caused it, re-run, and report th
 
 ## The commit
 
-Tree was clean at check 5: stage only the files in the instance list and commit with the repo's convention. The default subject is `refactor(ui): <candidate title>`. Print the sha.
+Tree was clean at check 5: stage only the files in the instance list and commit with the repo's convention. Use the project's commit scope for the affected area; the default subject is `refactor: <candidate title>`. Print the sha.
 
 Tree was dirty: no commit. Print the changed files and the validation result.
 
@@ -33,7 +33,7 @@ Stop there. Do not push, do not open a PR, and do not start the next candidate; 
 ## Report
 
 ```
-Fixed: <title> (rank <n>)
+Fixed: <title> (<id>, rank <n>)
 Instances: <fixed>/<total>, <skipped> left for a ticket
 Validation: <command> passed | failed at <what>
 Commit: <sha> | not committed (dirty tree)

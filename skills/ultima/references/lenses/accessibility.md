@@ -39,15 +39,20 @@ Quote the element or the handler, with `file:line`, for every instance.
 
 ## Output
 
-Write the full artifact with every schema field to `{run_dir}/{lens_name}.json` (contract: `references/candidates-schema.json`). Return the compact shape: `lens`, `residual_risks`, `coverage`, and `candidates` with title, strength, effort, instance count, the first three instances, `convention_source`, and `prior_decision`. No prose outside the JSON.
+Use category `ux` and evidence_kind `pattern`. Follow the full artifact and compact return contract in `references/lens-template.md`. Include the common impact, reach, root cause, boundary, verification, decision, and action fields. No prose outside the JSON return.
 
-Note in `problem` when a candidate is only verifiable in a real browser, such as focus order after a portal renders. The report should tell the reader what to check by hand.
+Use short `before` and `after` snippets when they clarify the proposed change. Design-system findings retain sourced `tokens[]` where applicable.
 
 ```json
 {
   "lens": "accessibility",
   "candidates": [],
   "residual_risks": [],
-  "coverage": {"files_read": 0, "dirs_skipped": [], "notes": []}
+  "coverage": {
+    "status": "partial",
+    "files_read": 0,
+    "dirs_skipped": [],
+    "notes": []
+  }
 }
 ```
