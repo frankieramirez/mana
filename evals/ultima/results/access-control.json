@@ -1,0 +1,146 @@
+{
+  "lens": "access-control",
+  "candidates": [
+    {
+      "title": "Legacy invoice reads need tenant ownership enforcement",
+      "problem": "An authenticated caller selecting another tenant's invoice reaches a read and return path without tenant ownership enforcement. The synthetic request selects invoice b as tenant alpha, while the store assigns b to beta. This establishes a static application contract violation; deployment exposure and successful exploitation are unverified.",
+      "fix": "Register the legacy handler through the existing tenant_invoice policy inside authenticated, preserving authentication before ownership checks and denying mismatched tenants before handler side effects.",
+      "effort": "M",
+      "strength": 100,
+      "instances": [
+        {
+          "file": "api/example.py",
+          "line": 5,
+          "quote": "return SimpleNamespace(invoice_id='b', session=SimpleNamespace(\n        valid=True, tenant_id='alpha', token='[REDACTED]'))"
+        },
+        {
+          "file": "api/routes.py",
+          "line": 17,
+          "quote": "'/legacy/invoice': authenticated(legacy_invoice),"
+        },
+        {
+          "file": "api/middleware.py",
+          "line": 6,
+          "quote": "if not request.session.valid:\n            raise PermissionError('authentication required')\n        return handler(request)"
+        },
+        {
+          "file": "api/routes.py",
+          "line": 7,
+          "quote": "invoice = load_invoice(request.invoice_id)\n    audit(request)\n    return invoice"
+        },
+        {
+          "file": "api/store.py",
+          "line": 3,
+          "quote": "INVOICES = {'a': SimpleNamespace(tenant_id='alpha'), 'b': SimpleNamespace(tenant_id='beta')}"
+        },
+        {
+          "file": "api/store.py",
+          "line": 6,
+          "quote": "def load_invoice(invoice_id):\n    return INVOICES[invoice_id]"
+        }
+      ],
+      "category": "security",
+      "evidence_kind": "trace",
+      "impact": "high",
+      "reach": "local",
+      "root_cause": "The legacy invoice registration applies authentication but omits the existing tenant_invoice ownership policy.",
+      "affected_boundary": "ROUTES /legacy/invoice: authenticated request to tenant-owned invoice read",
+      "verification": "Proposed checks, not executed: a valid alpha session requesting b must raise PermissionError without returning an invoice or invoking audit; an alpha session requesting a must retain its successful result; an invalid session must be rejected before lookup. Repeat owner and non-owner checks for /invoice.",
+      "decision_status": "violated",
+      "prior_decision": "docs/security.md:3-6",
+      "evidence_status": "static",
+      "action": "plan",
+      "remediation": [
+        "Wrap legacy_invoice with tenant_invoice within the existing authenticated registration.",
+        "Add focused owner, non-owner and invalid-session checks for both route registrations and verify rejection precedes handler side effects."
+      ],
+      "compatibility": "Keep route names, successful response objects and authentication ordering. Clients relying on cross-tenant legacy reads will instead receive the existing ownership denial; that behavior contradicts the documented contract.",
+      "rollback": "If compatibility prevents rollout, disable the legacy endpoint while correcting callers. Restoring its unscoped registration restores the documented violation.",
+      "invariant": "Only the owning tenant may read an invoice.",
+      "invariant_source": "docs/security.md:3",
+      "scenario": "A caller capable of supplying a valid session for alpha and selecting invoice b reaches the legacy route. authenticated accepts the valid flag, legacy_invoice loads b without comparing tenants, and the store identifies b as owned by beta. Assuming audit completes normally, the handler returns b. The source already establishes the unauthorized read; no runtime check, reachable deployment or successful exploit is claimed.",
+      "trace": [
+        {
+          "file": "api/example.py",
+          "line": 5,
+          "quote": "return SimpleNamespace(invoice_id='b', session=SimpleNamespace(\n        valid=True, tenant_id='alpha', token='[REDACTED]'))",
+          "role": "source"
+        },
+        {
+          "file": "api/routes.py",
+          "line": 17,
+          "quote": "'/legacy/invoice': authenticated(legacy_invoice),",
+          "role": "boundary"
+        },
+        {
+          "file": "api/middleware.py",
+          "line": 6,
+          "quote": "if not request.session.valid:\n            raise PermissionError('authentication required')\n        return handler(request)",
+          "role": "boundary"
+        },
+        {
+          "file": "api/routes.py",
+          "line": 7,
+          "quote": "invoice = load_invoice(request.invoice_id)\n    audit(request)\n    return invoice",
+          "role": "consumer"
+        },
+        {
+          "file": "api/store.py",
+          "line": 3,
+          "quote": "INVOICES = {'a': SimpleNamespace(tenant_id='alpha'), 'b': SimpleNamespace(tenant_id='beta')}",
+          "role": "consumer"
+        },
+        {
+          "file": "api/store.py",
+          "line": 6,
+          "quote": "def load_invoice(invoice_id):\n    return INVOICES[invoice_id]",
+          "role": "consumer"
+        }
+      ],
+      "flow": "The synthetic request supplies invoice b and a valid alpha session. ROUTES applies authenticated to legacy_invoice; that wrapper only checks session.valid and forwards the same request. The handler loads the selected object through the direct dictionary store and returns it after audit. Unlike /invoice, this registration never enters tenant_invoice. All five source files and the enclosing registrations, wrappers, store and audit implementation were inspected; no framework or alternate dispatch implementation is supplied.",
+      "assessment": "demonstrated",
+      "control_review": [
+        {
+          "file": "api/routes.py",
+          "line": 17,
+          "quote": "'/legacy/invoice': authenticated(legacy_invoice),\n    '/invoice': authenticated(tenant_invoice(scoped_invoice)),"
+        },
+        {
+          "file": "api/middleware.py",
+          "line": 6,
+          "quote": "if not request.session.valid:\n            raise PermissionError('authentication required')\n        return handler(request)"
+        },
+        {
+          "file": "api/middleware.py",
+          "line": 14,
+          "quote": "invoice = load_invoice(request.invoice_id)\n        if invoice.tenant_id != request.session.tenant_id:\n            raise PermissionError('wrong tenant')\n        return handler(request)"
+        },
+        {
+          "file": "docs/security.md",
+          "line": 6,
+          "quote": "The application must enforce tenant ownership regardless of gateway configuration."
+        }
+      ]
+    }
+  ],
+  "residual_risks": [
+    "No deployment dispatcher or session issuance and validation implementation is supplied; caller reachability and authentication guarantees beyond the synthetic valid flag are unresolved.",
+    "External gateway policy is unavailable. The explicit application ownership requirement makes that gap irrelevant to proving this local code violation, but production impact remains unestablished."
+  ],
+  "coverage": {
+    "status": "partial",
+    "files_read": 6,
+    "dirs_skipped": [],
+    "notes": [
+      "Inspected docs/security.md and all five api source files. Traced legacy and scoped registrations through authentication, ownership policy, invoice lookup, audit and return.",
+      "The scoped /invoice registration correctly combines authentication and tenant ownership for the supplied store; it is coverage, not a candidate.",
+      "Static inspection only; no project code executed or external systems contacted. No deployed dispatcher, framework guarantees or runtime evidence supplied. Sensitive source values are redacted in the artifact."
+    ],
+    "unavailable_controls": [
+      "Deployment identity and routing",
+      "Deployed gateway policy",
+      "External log collector configuration",
+      "Secret-store controls"
+    ]
+  }
+}

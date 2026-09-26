@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ultima.sh: the deterministic parts of a project audit.
 #
-#   orient [--path DIR] [--category all|ux|architecture|data-reliability] [--since DAYS] [--run-dir DIR] [--out FILE]
+#   orient [--path DIR] [--category all|ux|architecture|data-reliability|security] [--since DAYS] [--run-dir DIR] [--out FILE]
 #       Profile the checkout: framework, styling approach, design-system source of truth,
 #       token values, component inventory, hot spots from recent git history, decision
 #       docs, and installed lint rules the lenses should defer to. Prints one JSON object
@@ -42,7 +42,7 @@ need_python() {
 
 cmd_orient() {
   need_python
-  local path="." since="90" run_dir="" out="" category="all"
+  local path="." since="90" run_dir="" out="" category="ux,architecture,data-reliability"
   while [ $# -gt 0 ]; do
     case "$1" in
       --path) path="${2:-}"; shift 2 ;;
@@ -69,10 +69,10 @@ scope_arg = os.environ["ULTIMA_PATH"]
 since = int(os.environ["ULTIMA_SINCE"])
 out_path = os.environ.get("ULTIMA_OUT") or ""
 categories = os.environ["ULTIMA_CATEGORY"].split(",")
-if any(c not in ("all", "ux", "architecture", "data-reliability") for c in categories) or ("all" in categories and len(categories) > 1):
+if any(c not in ("all", "ux", "architecture", "data-reliability", "security") for c in categories) or ("all" in categories and len(categories) > 1):
     sys.exit("ultima.sh orient: invalid category")
 if categories == ["all"]:
-    categories = ["ux", "architecture", "data-reliability"]
+    categories = ["ux", "architecture", "data-reliability", "security"]
 
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", "out", ".next", ".nuxt", ".svelte-kit", ".output",
              "coverage", "vendor", "__generated__", "generated", ".turbo", ".cache", "storybook-static",
@@ -376,11 +376,43 @@ system_map.update({"components": components[:300], "dependency_edges": edges[:30
                                "notes": ["Discovery seeds only; verify boundaries and trace important flows before dispatch.",
                                          "Dependency edges cover declared local JavaScript package dependencies only; runtime and other language edges require inspection."],
                                "excluded_dirs": sorted(SKIP_DIRS)}})
+security_patterns = {
+    "authentication": r"authenticat|verify_session|jwt|oauth|session|login",
+    "authorization": r"authoriz|permission|tenant|ownership|policy|rbac",
+    "untrusted_input": r"request|req\.|argv|stdin|upload|deserialize|subprocess|innerHTML",
+    "sensitive_data": r"password|secret|token|credential|personal|invoice|cookie",
+}
+security_matches = {surface: [] for surface in security_patterns}
+security_unreadable = []
+if "security" in categories:
+    for path in source_files:
+        try:
+            with open(os.path.join(root, path), encoding="utf-8", errors="replace") as source:
+                content = source.read()
+        except OSError:
+            security_unreadable.append(path)
+            continue
+        for surface, pattern in security_patterns.items():
+            if re.search(pattern, path + "\n" + content, re.I):
+                security_matches[surface].append(path)
+security_surfaces = {surface: {
+    "status": ("discovered" if matches else "not-discovered") if "security" in categories else "not-examined",
+    "files": matches[:300], "truncated": len(matches) > 300,
+} for surface, matches in security_matches.items()}
+security_surfaces["unreadable_files"] = security_unreadable
+security_surfaces["external_controls"] = {"status": "unavailable",
+    "notes": ["Deployment identity, gateway policies and secret-store controls require supplied evidence; no external systems were contacted."]}
 has_frontend = any(p["frameworks"] for p in packages) or any(f.endswith(COMPONENT_EXT + (".html", ".css", ".scss")) for f in source_files)
 category_lenses = {"ux": ["design-system", "interaction-states", "accessibility", "component-architecture"],
                    "architecture": ["system-architecture"], "data-reliability": ["data-integrity", "failure-recovery"]}
 applicable = {"ux": has_frontend, "architecture": bool(source_files or manifests),
-              "data-reliability": bool(source_files)}
+              "data-reliability": bool(source_files), "security": bool(source_files)}
+category_lenses["security"] = (
+    (["access-control"] if any(security_surfaces[k]["files"] for k in ("authentication", "authorization")) or entrypoints else []) +
+    (["input-boundaries"] if security_surfaces["untrusted_input"]["files"] else []) +
+    (["sensitive-data"] if security_surfaces["sensitive_data"]["files"] else []))
+if applicable["security"] and not category_lenses["security"]:
+    category_lenses["security"] = ["access-control"]
 recommended = [lens for category in categories if applicable[category] for lens in category_lenses[category]]
 
 top, churn_total, churn_files = hot_spots(scope_rel)
@@ -403,6 +435,7 @@ profile = {
     "scope": {"path": scope_rel, "reason": scope_reason},
     "categories": categories,
     "category_applicability": applicable,
+    "security_surfaces": security_surfaces,
     "recommended_lenses": recommended,
     "system_map": system_map,
     "framework": framework,
@@ -459,9 +492,10 @@ out_path = os.environ["ULTIMA_OUT"]
 roster = [r for r in (os.environ.get("ULTIMA_ROSTER") or "").split(",") if r]
 
 LENSES = ["design-system", "interaction-states", "accessibility", "component-architecture",
-          "system-architecture", "data-integrity", "failure-recovery"]
+          "system-architecture", "data-integrity", "failure-recovery", "access-control", "input-boundaries", "sensitive-data"]
 CATEGORY = {l: "ux" for l in LENSES[:4]}
-CATEGORY.update({"system-architecture": "architecture", "data-integrity": "data-reliability", "failure-recovery": "data-reliability"})
+CATEGORY.update({"system-architecture": "architecture", "data-integrity": "data-reliability", "failure-recovery": "data-reliability",
+                 "access-control": "security", "input-boundaries": "security", "sensitive-data": "security"})
 IMPACT = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 REACH = {"local": 1, "package": 2, "system": 3}
 LENS_ORDER = {name: i for i, name in enumerate(LENSES)}
@@ -591,7 +625,7 @@ def normalize(c, lens):
     action = c.get("action", "plan" if evidence_kind == "trace" or effort == "L" else "fix")
     if action not in ("fix", "plan", "decision-needed"):
         return None, "unknown action"
-    if evidence_kind == "trace" or effort == "L":
+    if evidence_kind == "trace" or effort == "L" or category == "security" or any(CATEGORY[l] == "security" for l in lenses):
         action = "plan"
     if decision == "revisit":
         action = "decision-needed"
@@ -601,7 +635,7 @@ def normalize(c, lens):
     if reconciled and re.fullmatch(r"F-[a-f0-9]{12}", str(c.get("id", ""))):
         finding_id = c["id"]
     extra = {k: text_field(c, k) for k in ("invariant", "invariant_source", "scenario", "verification",
-             "decision_reason", "compatibility", "rollback", "runtime_evidence")}
+             "decision_reason", "compatibility", "rollback", "runtime_evidence", "flow", "assessment")}
     return dict(extra, **{
         "id": finding_id,
         "category": category,
@@ -609,6 +643,7 @@ def normalize(c, lens):
         "evidence_kind": evidence_kind,
         "evidence_status": "runtime" if c.get("evidence_status") == "runtime" else "static",
         "trace": trace,
+        "control_review": clean_instances(c.get("control_review")),
         "impact": c.get("impact") if c.get("impact") in IMPACT else "medium",
         "reach": c.get("reach") if c.get("reach") in REACH else "local",
         "root_cause": cause,
@@ -636,6 +671,27 @@ def normalize(c, lens):
     }), None
 
 
+def source_matches(item):
+    root = profile.get("root")
+    if not root:
+        return False
+    path = os.path.realpath(os.path.join(root, item["file"]))
+    scope = os.path.realpath(os.path.join(root, profile.get("scope", {}).get("path", ".")))
+    if not path.startswith(scope + os.sep):
+        return False
+    try:
+        with open(path, encoding="utf-8") as source:
+            lines = source.read().splitlines()
+        quoted = item["quote"].splitlines()
+        actual = "\n".join(lines[item["line"] - 1:item["line"] - 1 + len(quoted)])
+        parts = item["quote"].split("[REDACTED]")
+        if not any(part.strip() for part in parts):
+            return False
+        return re.search(".*?".join(re.escape(part) for part in parts), actual) is not None
+    except (OSError, UnicodeError):
+        return False
+
+
 def apply_gates(c):
     reasons = []
     if c["evidence_kind"] == "trace":
@@ -654,6 +710,17 @@ def apply_gates(c):
     if c["evidence_status"] == "runtime" and not c["runtime_evidence"]:
         reasons.append("runtime claim has no evidence reference")
         c["evidence_status"] = "static"
+    if "security" in c["categories"]:
+        c["action"] = "decision-needed" if c["decision_status"] == "revisit" else "plan"
+        if c["evidence_kind"] != "trace" or not c["flow"] or not c["control_review"]:
+            reasons.append("security requires a connected trace and enclosing control review")
+        if c["assessment"] != "demonstrated":
+            reasons.append("security impact depends on an unresolved assumption")
+        source = re.fullmatch(r"(.+):(\d+)", c["invariant_source"])
+        if not source or not source_matches({"file": source[1], "line": int(source[2]), "quote": c["invariant"]}):
+            reasons.append("security invariant does not match its source")
+        if not all(source_matches(item) for item in c["trace"] + c["control_review"]):
+            reasons.append("security evidence does not match in-scope source")
     required_plan = ("remediation", "compatibility", "rollback", "verification")
     c["plan_missing"] = [k for k in required_plan if not c[k]] if c["action"] == "plan" else []
     c["plan_status"] = "incomplete" if c["plan_missing"] else ("documented" if c["action"] == "plan" else "not-applicable")
@@ -920,10 +987,12 @@ profile = load("profile.json")
 meta = load("metadata.json")
 LENS_LABEL = {"design-system": "Design system", "interaction-states": "Interaction states",
               "accessibility": "Accessibility", "component-architecture": "Component architecture",
-              "system-architecture": "System architecture", "data-integrity": "Data integrity", "failure-recovery": "Failure recovery"}
-CATEGORY_LABEL = {"ux": "UX & accessibility", "architecture": "Architecture", "data-reliability": "Data & reliability"}
+              "system-architecture": "System architecture", "data-integrity": "Data integrity", "failure-recovery": "Failure recovery",
+              "access-control": "Access control", "input-boundaries": "Input boundaries", "sensitive-data": "Sensitive data"}
+CATEGORY_LABEL = {"ux": "UX & accessibility", "architecture": "Architecture", "data-reliability": "Data & reliability", "security": "Security"}
 CATEGORY_LENSES = {"ux": list(LENS_LABEL)[:4], "architecture": ["system-architecture"],
-                   "data-reliability": ["data-integrity", "failure-recovery"]}
+                   "data-reliability": ["data-integrity", "failure-recovery"],
+                   "security": ["access-control", "input-boundaries", "sensitive-data"]}
 EFFORT_LABEL = {"S": "small", "M": "medium", "L": "large"}
 COLOR = {100: "#8ff5ff", 75: "#e8b45a", 50: "#a8acc4"}
 
@@ -1155,6 +1224,10 @@ def card(c):
         col, rank_label(c["rank"]), e(c["title"]), "".join(chips)))
     parts.append('<div class="inner">')
     parts.append('<section><h4>Problem</h4><p>%s</p></section>' % e(c["problem"]))
+    if "security" in c["categories"]:
+        parts.append('<p><strong>Assessment:</strong> %s</p><p>%s</p>' % (e(c.get("assessment")), e(c.get("flow"))))
+        parts.append('<details><summary>Enclosing controls inspected</summary><ul class="instances">%s</ul></details>' %
+                     "".join(instance_row(i) for i in c.get("control_review", [])))
     if c["evidence_kind"] == "trace":
         parts.append('<section><h4>Traced flow</h4><ol class="ev">%s</ol></section>' % "".join(
             '<li><strong>%s</strong> <span class="loc">%s:%s</span> <code>%s</code></li>' %
@@ -1266,7 +1339,7 @@ for category, label in CATEGORY_LABEL.items():
     completed = [l for l in expected if statuses.get(l) == "ok"]
     attempted = [l for l in expected if l in statuses]
     examined = [l for l in completed if doc.get("coverage", {}).get(l, {}).get("status") == "complete"
-                and not unexamined_source(l)]
+                and not unexamined_source(l) and not doc.get("coverage", {}).get(l, {}).get("unavailable_controls")]
     status = "complete" if len(examined) == len(expected) else ("partial" if attempted else "not examined")
     category_coverage.append(dd(label, e(status)))
 out.append(metadata_html)
@@ -1326,6 +1399,8 @@ for lens, c in (doc.get("coverage", {}) or {}).items():
         skipped = c.get("dirs_skipped") or c.get("skipped")
         if skipped:
             bits.append("skipped <code>%s</code>" % e(", ".join(map(str, skipped))))
+        if c.get("unavailable_controls"):
+            bits.append("unavailable controls: " + e(", ".join(map(str, c["unavailable_controls"]))))
         for note in c.get("notes") or []:
             bits.append(e(note))
         cov_items.append(dd(LENS_LABEL.get(lens, lens), " · ".join(bits) or "no notes"))

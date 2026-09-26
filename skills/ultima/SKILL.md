@@ -1,6 +1,6 @@
 ---
 name: ultima
-description: "Audit a whole project for UX problems, architecture weaknesses, and data reliability risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, or /ultima."
+description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, and security boundaries using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, or /ultima."
 argument-hint: "[path:<dir>] [category:<a,b>] [lens:<a,b>] [since:<days>] [report|tickets|fix[:<n>]]"
 ---
 
@@ -20,7 +20,7 @@ Honor the user's explicit instructions and decisions already made in this conver
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Audit the whole project by default. UX specialists find repeated interface problems; architecture and data reliability specialists trace important flows across boundaries. Ground each finding in repository evidence and documented decisions. Deliver one offline report with Overview, UX, Architecture, and Data & Reliability tabs, then follow the requested action mode.
+Audit the whole project by default. UX specialists find repeated interface problems; architecture and data reliability specialists trace important flows across boundaries. Ground each finding in repository evidence and documented decisions. Deliver one offline report with Overview, UX, Architecture, Data & Reliability, and Security tabs, then follow the requested action mode.
 
 For a review of one change, offer a diff review instead. This audit reports the scope actually inspected; it does not certify security, performance, or production behavior.
 
@@ -54,7 +54,7 @@ Parse for these tokens. Anything else is an error; say so and stop.
 | Token | Effect |
 |-------|--------|
 | `path:<dir>` | Audit only that directory; default is the repository root, including its packages. |
-| `category:<a,b>` | Select `all`, `ux`, `architecture`, or `data-reliability`; comma lists are allowed without mixing `all` with another category. Default `all`. |
+| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, or `security`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security is opt-in through `security`, `all`, or its lenses. |
 | `lens:<a,b>` | Override the recommended roster with named lenses from the table below. |
 | `since:<days>` | Churn window for hot spots. Default 90. |
 | `report` | Skip the Stage 6 question: the report is the deliverable. |
@@ -68,7 +68,7 @@ Two action tokens together, or an unknown category or lens name, stop with a one
 Create the run directory first (Stage 3 has the block; run it now, then come back), then profile the checkout into it:
 
 ```bash
-bash "<SKILL_DIR>/scripts/ultima.sh" orient --path <explicit dir or repository root> --category <categories or all> --since <days> --run-dir "$RUN_DIR"
+bash "<SKILL_DIR>/scripts/ultima.sh" orient --path <explicit dir or repository root> --category <categories or ux,architecture,data-reliability> --since <days> --run-dir "$RUN_DIR"
 ```
 
 The script writes `$RUN_DIR/profile.json`. It inventories manifests, components, dependency edges, entrypoints, data files, and deployment files under `system_map`, alongside frontend conventions, churn, decision docs, and lint packages. These are discovery seeds, not a verified architecture model. Use `recommended_lenses` unless `lens:` overrides it. Missing frontend code does not stop an architecture audit. Exit 2 means no applicable source for the selected categories: report that and stop. An explicit lens roster determines the categories passed to profiling, so a category filter cannot block a lens override. Exit 4 means no `python3`: gather the same profile shape by hand and disclose this in Coverage.
@@ -78,12 +78,15 @@ The script writes `$RUN_DIR/profile.json`. It inventories manifests, components,
 | `ux` | `design-system`, `interaction-states`, `accessibility`, `component-architecture` |
 | `architecture` | `system-architecture` |
 | `data-reliability` | `data-integrity`, `failure-recovery` |
+| `security` | `access-control`, `input-boundaries`, `sensitive-data` |
+
+Security profiling adds path-only `security_surfaces` discovery seeds for authentication and authorization, untrusted input, and sensitive data. Missing keyword matches do not establish non-applicability. At Stage 2 verify applicability from actual entrypoints and registrations, update `recommended_lenses` for relevant surfaces, and record absent surfaces and unavailable external controls in shared context. The existing capacity-aware dispatch runs the selected security lenses alongside other specialists.
 
 ## Stage 2: Verify the shared context
 
 Read the profile's decision docs and relevant ADRs, including decisions about package ownership, persistence, deployment, and recovery. Follow imports and registrations to verify the important components and flows seeded by `system_map`. Trace representative entrypoints through their owners and downstream effects, including cross-package contracts where the scope permits. Prioritize consequential flows over file counts or churn. Record inaccessible dependencies and unresolved links explicitly.
 
-Write `$RUN_DIR/system-context.md` with the verified boundaries, important flows and file references, documented decisions, and coverage limits. Distinguish discovered paths from verified dependencies. This file is shared evidence for specialists, not permission to expand an explicit path scope. Include a concise `<prior-decisions>` block with doc paths; no docs means an empty block and a coverage note. An accepted tradeoff, a violation of that decision, and a proposal to revisit it are different outcomes.
+Write `$RUN_DIR/system-context.md` with the verified boundaries, important flows and file references, documented decisions, and coverage limits. Distinguish discovered paths from verified dependencies. This file is shared evidence for specialists, not permission to expand an explicit path scope. For Security, trace trust transitions and the identity or tenant attached to each flow; inspect enclosing middleware, policy registration, and framework guarantees before treating a control as absent. An unavailable gateway or identity-provider policy is a coverage gap. Keep its deployment assumptions unresolved. Include a concise `<prior-decisions>` block with doc paths; no docs means an empty block and a coverage note. An accepted tradeoff, a violation of that decision, and a proposal to revisit it are different outcomes.
 
 ## Stage 3: Run directory and roster
 
@@ -109,7 +112,7 @@ Before assembling any prompt, read these from this skill's directory in one para
 
 Fill the template for each lens and spawn it as a **generic subagent**. Do not use typed agent names. Omit the `mode` parameter so the user's permission settings apply. Launch up to the host's active-agent capacity; the lenses are read-only and can inspect the same files at once. A blocking spawn returns its result directly. An asynchronous spawn returns an ID: retain it and use the host's supported wait or completion mechanism to collect its result. Refill as slots free until every lens has run. If the host offers only serial blocking calls, run them one at a time.
 
-Each lens receives: its lens file, the schema, the prior-decisions block, the profile path, the shared system-context path, and the one-line context values from the template's slot table. Lenses are **read-only** toward the project: non-mutating inspection only. The one permitted write is their own artifact file under `$RUN_DIR`. They never edit project files, install packages, start servers, switch branches, or commit.
+Each lens receives: its lens file, the schema, the prior-decisions block, the profile path, the shared system-context path, and the one-line context values from the template's slot table. Lenses are **read-only** toward the project: non-mutating inspection only. The one permitted write is their own artifact file under `$RUN_DIR`. They never edit project files, install packages, start servers, switch branches, or commit. Never run active exploits, send traffic to external systems, or install scanners during audit inspection. Redact secret values and personal data with `[REDACTED]` before writing shared context, findings, returns, or reports; retain useful file and line references. Inspect only the minimum sensitive material needed to establish the flow, and never publish secret values.
 
 Collect **every** spawned lens before Stage 5; a merge on a partial roster is a defect. For any lens whose artifact is missing or fails to parse, write its return to `$RUN_DIR/returns/<lens>.json`. The merge can use that file only when the return carries the full artifact shape, with all finding fields and evidence; a compact return with no artifact behind it is a failed lens. A lens that returned nothing usable is a failed lens: name it in Coverage, never invent its candidates.
 

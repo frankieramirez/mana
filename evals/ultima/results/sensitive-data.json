@@ -1,0 +1,112 @@
+{
+  "lens": "sensitive-data",
+  "candidates": [
+    {
+      "title": "Replace session token logging with safe audit metadata",
+      "problem": "The legacy invoice handler passes the session token directly to the logging API, violating the documented logging contract. If INFO logging is enabled and the record is retained, readers of those logs could obtain a caller session token; logger configuration, token validity and production exposure are unverified.",
+      "fix": "Remove the token argument and log only explicitly approved nonsecret audit metadata.",
+      "effort": "M",
+      "strength": 100,
+      "instances": [
+        {
+          "file": "api/routes.py",
+          "line": 6,
+          "quote": "def legacy_invoice(request):"
+        },
+        {
+          "file": "api/routes.py",
+          "line": 8,
+          "quote": "    audit(request)"
+        },
+        {
+          "file": "api/telemetry.py",
+          "line": 5,
+          "quote": "    logging.info('session=%s', request.session.token)"
+        }
+      ],
+      "category": "security",
+      "evidence_kind": "trace",
+      "impact": "high",
+      "reach": "local",
+      "root_cause": "The audit helper interpolates a raw session credential into an INFO log message.",
+      "affected_boundary": "legacy_invoice request session to Python logging",
+      "verification": "Proposed isolated regression: capture INFO records while invoking the authenticated legacy route with a synthetic marker token and valid invoice; assert neither formatted messages nor raw record arguments contain that marker, while an approved audit event remains. This check was not executed.",
+      "decision_status": "violated",
+      "prior_decision": "docs/security.md:4",
+      "evidence_status": "static",
+      "action": "plan",
+      "remediation": [
+        "Replace token logging with an allowlisted audit event containing no session credential.",
+        "Inspect audit consumers for dependencies on this field and migrate them to approved metadata.",
+        "Add an isolated logging regression using synthetic data and verify both message and record arguments."
+      ],
+      "compatibility": "The legacy route return value and authentication behavior can remain unchanged. Any downstream consumer relying on the token log field needs migration; collector consumers are unavailable.",
+      "rollback": "Revert only the replacement metadata if it causes compatibility problems; keep token emission removed and temporarily omit the audit event if necessary.",
+      "invariant": "Session token values must never appear in logs.",
+      "invariant_source": "docs/security.md:4",
+      "scenario": "A caller with request.session.valid true invokes /legacy/invoice with an existing invoice ID. The handler forwards the request to audit, which supplies request.session.token as the INFO message argument. With INFO enabled this formats the token into the record; external collector retention and access are unknown. No execution or exploitation is claimed.",
+      "trace": [
+        {
+          "file": "api/routes.py",
+          "line": 6,
+          "quote": "def legacy_invoice(request):",
+          "role": "source"
+        },
+        {
+          "file": "api/routes.py",
+          "line": 8,
+          "quote": "    audit(request)",
+          "role": "boundary"
+        },
+        {
+          "file": "api/telemetry.py",
+          "line": 5,
+          "quote": "    logging.info('session=%s', request.session.token)",
+          "role": "consumer"
+        }
+      ],
+      "flow": "ROUTES registers the legacy handler under authenticated. That wrapper checks session.valid then calls legacy_invoice; after a successful invoice lookup the handler calls audit(request), which directly supplies the session token to logging.info. All five Python source files were inspected; no in-scope logging filter or alternate audit implementation exists. External logger and collector controls remain unknown.",
+      "assessment": "demonstrated",
+      "control_review": [
+        {
+          "file": "api/routes.py",
+          "line": 17,
+          "quote": "    '/legacy/invoice': authenticated(legacy_invoice),"
+        },
+        {
+          "file": "api/middleware.py",
+          "line": 6,
+          "quote": "        if not request.session.valid:\n            raise PermissionError('authentication required')\n        return handler(request)"
+        },
+        {
+          "file": "api/telemetry.py",
+          "line": 4,
+          "quote": "def audit(request):\n    logging.info('session=%s', request.session.token)"
+        }
+      ]
+    }
+  ],
+  "residual_risks": [
+    "The credential example is explicitly synthetic and is not evidence of a live secret.",
+    "Invoice ownership controls were inspected for context; the legacy authorization boundary is distinct from this logging finding and belongs to the access-control lens.",
+    "No response serializer, deployment configuration, external storage policy, or runtime evidence was supplied."
+  ],
+  "coverage": {
+    "status": "partial",
+    "files_read": 6,
+    "dirs_skipped": [
+      ".git"
+    ],
+    "notes": [
+      "Read all five Python files and docs/security.md after the supplied profile and shared context.",
+      "Traced legacy request authentication, invoice retrieval, audit invocation, and raw token logging; inspected the correctly tenant-scoped /invoice route as an alternate path.",
+      "Bounded absence inspection covered every Python file in the supplied fixture and the complete telemetry helper; no in-scope log filtering configuration was present.",
+      "Only static inspection was performed. No project code or external service was executed."
+    ],
+    "unavailable_controls": [
+      "External gateway deployment and identity policies",
+      "Logging level, logger filters, collector configuration, retention and reader permissions",
+      "External secret-store controls"
+    ]
+  }
+}

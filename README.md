@@ -49,14 +49,14 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 | Build | [cast](#cast) | A committed change and a PR with proof |
 | Review | [scan](#scan), [augur](#augur) | Findings, optional fixes, and evidence the change is safe |
 | Check agents can run and verify the app | [leyline](#leyline) | Conformance findings for the control CLI and feature map, with probe results |
-| Audit the project | [ultima](#ultima) | A tabbed HTML report of UX, architecture, and data reliability findings, with tickets or one fix on request |
+| Audit the project | [ultima](#ultima) | A tabbed HTML report of UX, architecture, data reliability, and optional security findings, with tickets or one fix on request |
 | Answer feedback | [remedy](#remedy), [mimic](#mimic) | Resolved feedback and paste-ready replies |
 | Attend an open PR | [ward](#ward) | Validated fixes and continued monitoring until merge or closure |
 | Repair along the way | [mend](#mend), [banish](#banish), [reveal](#reveal), [dispel](#dispel) | Finished merges, fewer comments, PR bodies, and edited prose |
 
 Build work meets at a `ready-for-agent` issue with an agent brief. A person merges the PR; [tracker closing rules](#trackers) determine when the ticket closes. `cast next` picks up the next ready ticket.
 
-After setup, use `portal` when you are unsure what comes next, `sift` for incoming work, and `cast next` for ready tickets. Run `vision` once to chart the milestones, and again whenever you want to know how much is left; every map and build effort names the milestone it serves. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` for a ranked audit of project architecture, data reliability, or UX drift.
+After setup, use `portal` when you are unsure what comes next, `sift` for incoming work, and `cast next` for ready tickets. Run `vision` once to chart the milestones, and again whenever you want to know how much is left; every map and build effort names the milestone it serves. Review PRs with `scan`, handle a batch of feedback with `remedy`, and use `augur` when a small diff looks risky. Use `ward` to keep attending an open PR as later feedback and checks arrive. Run `ultima` for a ranked audit of project architecture, data reliability, UX drift, or security boundaries.
 
 ## Skills
 
@@ -673,7 +673,7 @@ The project's `## Agent skills` block names its control skill with a `Control:` 
 
 ### ultima
 
-Audits a whole project and renders an offline HTML report with Overview, UX & accessibility, Architecture, and Data & reliability tabs. Shared system context gives parallel specialists a grounded view of the important flows and documented boundaries.
+Audits a whole project and renders an offline HTML report with Overview, UX & accessibility, Architecture, Data & reliability, and Security tabs. Shared system context gives parallel specialists a grounded view of the important flows and documented boundaries.
 
 UX lenses find repeated interface drift. System architecture, data integrity, and failure recovery lenses trace defects across owners and consumers. A single boundary defect can qualify when the evidence establishes its invariant and consequence. Confidence remains separate from impact; repeated opinions never raise it.
 
@@ -683,6 +683,9 @@ UX lenses find repeated interface drift. System architecture, data integrity, an
 
 # Focus on architecture and data reliability
 /mana:ultima category:architecture,data-reliability report
+
+# Inspect security boundaries without active probing
+/mana:ultima category:security report
 
 # Preserve the focused frontend workflow
 /mana:ultima path:apps/web category:ux report
@@ -694,11 +697,11 @@ UX lenses find repeated interface drift. System architecture, data integrity, an
 <details>
 <summary>Specialists, evidence, and follow-through</summary>
 
-The UX specialists cover design systems, interaction states, accessibility from code, and component interfaces. The architecture specialist follows module ownership and dependency boundaries. Data integrity and failure recovery specialists inspect persistence contracts and interrupted operations. `lens:<a,b>` overrides the recommended roster; `since:<days>` sets the churn window (default 90). Backend-only projects work without a frontend. Explicit paths remain the audit boundary.
+The UX specialists cover design systems, interaction states, accessibility from code, and component interfaces. The architecture specialist follows module ownership and dependency boundaries. Data integrity and failure recovery specialists inspect persistence contracts and interrupted operations. Security lenses cover access control, input boundaries and sensitive-data flows, selected from discovered surfaces and verified shared context. They inspect enclosing controls, redact sensitive values before writing artifacts, and report unavailable external policies as coverage gaps. Audit inspection never runs exploits, contacts external systems or installs scanners. `lens:<a,b>` overrides the recommended roster; `since:<days>` sets the churn window (default 90). Backend-only projects work without a frontend. Explicit paths remain the audit boundary.
 
-The report lives under `/tmp/ultima-<uid>/<run>/report.html`. It uses inline CSS with no scripts or network dependency. Category and confidence controls filter one set of findings with stable links. Overview includes discovery seeds, verified flow context, and the recommended work order. Coverage distinguishes completed specialists from partial or unexamined categories. Source inspection does not establish runtime behavior. Security and Performance & Delivery audits are future extensions.
+The report lives under `/tmp/ultima-<uid>/<run>/report.html`. It uses inline CSS with no scripts or network dependency. Category and confidence controls filter one set of findings with stable links. Overview includes discovery seeds, verified flow context, and the recommended work order. Coverage distinguishes completed specialists from partial or unexamined categories. Source inspection does not establish runtime behavior. Security is opt-in with `category:security`, `category:all`, or a security lens; the default categories remain UX, Architecture, and Data & Reliability. Performance & Delivery remains a future extension.
 
-`tickets` files strong findings through the bundled tracker adapter. Only bounded fix candidates are marked ready for implementation. Structural plans include migration order, compatibility, rollback, and behavioral verification; proposals to revisit decisions retain their source and changed assumptions. `fix` applies an eligible pattern atomically, validates, commits only when the tree started clean, and stops. Plans become local briefs. It never pushes or opens a PR.
+`tickets` files strong findings through the bundled tracker adapter. Only bounded fix candidates are marked ready for implementation. Structural plans include migration order, compatibility, rollback, and behavioral verification; proposals to revisit decisions retain their source and changed assumptions. `fix` applies an eligible pattern atomically, validates, commits only when the tree started clean, and stops. Security findings always become planning or decision briefs with allowed and denied behavioral cases; static evidence does not establish exploitation or production exposure. Plans become local briefs. It never pushes or opens a PR.
 
 </details>
 
