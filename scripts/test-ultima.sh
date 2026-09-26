@@ -72,7 +72,9 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
 
     (repo / "server").mkdir()
     (repo / "server" / "main.go").write_text("package main\n")
-    p = run("orient", "--path", "server", cwd=repo, ok=False)
+    backend_profile = json.loads(run("orient", "--path", "server", cwd=repo).stdout)
+    assert backend_profile["scope"]["path"] == "server"
+    p = run("orient", "--path", "server", "--category", "ux", cwd=repo, ok=False)
     assert p.returncode == 2, p.returncode
     sibling = pathlib.Path(td) / "app-other"
     sibling.mkdir()
@@ -102,7 +104,8 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     (run_dir / "returns" / "accessibility.json").write_text(json.dumps({
         "lens": "accessibility",
         "candidates": [
-            {"title": "Primary color literal repeated in components", "problem": "Same literal.", "fix": "token", "strength": 75,
+            {"title": "Hard-coded primary color instead of --color-primary", "problem": "Same literal.", "fix": "Use var(--color-primary).", "strength": 75,
+             "convention_source": "src/styles/tokens.css:2",
              "instances": [inst("src/components/Button.tsx", 1, "#2563eb"), inst("src/components/Card.tsx", 1, "#2563eb"), inst("src/components/Nav.tsx", 4, "#2563eb")]},
             {"title": "Overlays reimplement Radix dialog", "problem": "p", "fix": "f", "strength": 100,
              "instances": [inst("x.tsx", 1, "a"), inst("y.tsx", 1, "b"), inst("z.tsx", 1, "c")], "prior_decision": "docs/adr/0001-radix.md"},
@@ -115,16 +118,16 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     assert counts["lenses_missing"] == ["interaction-states"], counts
     assert counts["malformed"] == 1, counts
     assert counts["dismissed_prior_decision"] == 1, counts
-    assert counts["demoted_instances"] == 1 and counts["demoted_source"] == 1, counts
+    assert counts["demoted_instances"] == 1 and counts["demoted_source"] == 2, counts
     assert counts["dedup_merged"] == 1 and counts["promoted"] == 0, counts
     top = merged["candidates"][0]
     assert top["rank"] == 1 and top["strength"] == 100 and top["corroborated"] and len(top["instances"]) == 3, top
     assert top["lenses"] == ["design-system", "accessibility"], top["lenses"]
-    assert top["score"]["H"] == 10 + 7 + 5 and top["score"]["I"] == 2, top["score"]
+    assert top["id"].startswith("F-"), top
     assert counts["strong"] == 1 and counts["weak"] == 2, counts
     titles = [d["title"] for d in merged["dismissed"]]
     assert "Overlays reimplement Radix dialog" in titles and "missing fix" in titles, titles
-    assert {l["name"]: l["status"] for l in merged["lenses"]} == {"design-system": "ok", "accessibility": "ok", "interaction-states": "missing"}
+    assert {l["name"]: l["status"] for l in merged["lenses"]} == {"design-system": "partial", "accessibility": "ok", "interaction-states": "missing"}
     assert merged["coverage"]["design-system"]["skipped"] == ["src/legacy"]
 
     rec = dict(merged)
@@ -141,6 +144,7 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     assert merged2["pass"] == 2
     assert [c["title"] for c in merged2["candidates"]][:2] == ["Hard-coded primary color instead of --color-primary", "Ad hoc spacing values"], [c["title"] for c in merged2["candidates"]]
     assert merged2["candidates"][1]["strength"] == 75 and merged2["candidates"][1]["rank"] == 2
+    assert merged2["candidates"][0]["id"] == top["id"]
     assert merged2["counts"]["strong"] == 2 and len(merged2["dismissed"]) == 3, merged2["counts"]
 
     (run_dir / "metadata.json").write_text(json.dumps({"repo": "acme/app", "head": "abc123def456"}))
@@ -165,7 +169,9 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     empty.mkdir()
     run("merge", str(empty), "--roster", "design-system")
     run("render", str(empty))
-    assert "No candidates at this strength" in (empty / "report.html").read_text()
+    assert "No findings match this category and confidence" in (empty / "report.html").read_text()
 
 print("ultima fixture tests: ok")
 PY
+
+bash scripts/test-ultima-project.sh

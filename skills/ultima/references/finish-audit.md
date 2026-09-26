@@ -10,27 +10,24 @@ bash "<SKILL_DIR>/scripts/ultima.sh" merge "$RUN_DIR" --roster "<lens,lens,...>"
 
 The script reads each `$RUN_DIR/<lens>.json`, falls back to `$RUN_DIR/returns/<lens>.json` when the artifact is missing, and applies the gates in this order:
 
-1. Malformed candidates (no title, problem, fix, or quoted instance) go to Dismissed with the reason.
-2. Instances are deduplicated by file and line.
-3. A strength of 75 or 100 with fewer than three instances becomes 50.
-4. A design-system candidate at 75 or 100 with no sourced token and no `convention_source` becomes 50.
-5. A candidate with `prior_decision` set goes to Dismissed, citing the doc.
-6. Candidates whose titles share most of their words, or whose quoted `file:line` sets overlap by half, merge into one: union of instances, higher strength, longer problem, the fix from the stronger one, both lenses recorded.
-7. A candidate two lenses agree on, with three or more instances, is promoted one step, once.
-8. Each candidate is scored against the hot spots in `profile.json`, sorted within strength tiers, and numbered.
+1. Validate the finding and its evidence kind. Patterns retain quoted-instance and convention gates. Traces require the invariant and source, scenario, verification, and all source/boundary/consumer roles across at least two distinct locations.
+2. Apply confidence gates independently of impact and reach. A single traced boundary issue can qualify. Static findings do not claim runtime observations.
+3. Dismiss accepted documented tradeoffs. Preserve violations; route supported proposals to revisit decisions to `decision-needed`.
+4. Merge findings only when root cause, affected boundary, and proposed fix match exactly. Legacy findings without those keys require matching title and fix. Overlapping quotes and similar titles alone are insufficient. Agent agreement never promotes confidence.
+5. Rank strong findings before weaker ones, then by impact, reach, confidence, and effort; use churn only as a tie breaker. Preserve computed stable `id` across reconciliation and category filtering. Rank is a display position, not identity.
 
 It writes `$RUN_DIR/merged.json` and prints one summary line. Exit 4 means no `python3`; do the same steps by hand on the artifacts, write the same shape, and say so in Coverage.
 
 ## Reconcile
 
-Read `merged.json` in full. Copy it to `$RUN_DIR/reconciled.json` and edit only that copy. You may:
+Read `merged.json` in full. Re-read the strongest findings against the actual source, verify connected trace steps and invariant sources, and record any missing inspection in Coverage. Copy it to `$RUN_DIR/reconciled.json` and edit only that copy. You may:
 
 - **Dismiss** a candidate the gates kept but you can see is wrong: the instances are inside the source of truth, the pattern is intentional per a comment the lens missed, or the fix would break something you can name. Move it to `dismissed` with a reason and `"stage": "reconcile"`.
-- **Merge** two candidates the script missed, when they are one pattern described two ways. Union the instances yourself.
+- **Merge** two candidates the script missed, when they are one pattern described two ways. Union compatible evidence yourself; preserve the cause, boundary, and remedy. Link related findings rather than conflating distinct fixes.
 - **Tighten** a title so it names the wrong thing and the right thing in twelve words.
-- **Raise** a candidate's strength only by adding a quoted instance or a `convention_source` that the lens missed. Never raise it by editing the number alone; pass 2 re-applies the gates.
+- **Raise** a candidate's strength only by adding evidence that satisfies its evidence-kind gate. Never raise it by editing the number alone; pass 2 re-applies the gates.
 
-- **Recommend** by setting a top-level `recommendation` string: one or two sentences on why rank 1 comes first, naming its score against the next candidate, its hot files, and how mechanical the fix is. The report prints it in the Start here block. Leave it out and the script writes a plain line from the numbers.
+- **Recommend** by setting a top-level `recommendation` string: one or two sentences on why rank 1 comes first, naming its supported impact, reach, and readiness compared with the next candidate. The report prints it in the Recommended work order block. Leave it out and the script writes a plain line from the numbers.
 
 You may not add a candidate no lens produced, and you may not delete a dismissal.
 
@@ -48,22 +45,22 @@ Pass 2 restores the gates, rescores, resorts, and renumbers. `merged.json` is no
 bash "<SKILL_DIR>/scripts/ultima.sh" render "$RUN_DIR"
 ```
 
-The script writes `$RUN_DIR/report.html` from `merged.json`, `profile.json`, and `metadata.json`, and prints the path. Never write the HTML yourself: the report embeds quoted repo code, and the script escapes every field. The report has inline CSS, no script tag, and no network dependency, so it opens from `file://` anywhere.
+The script writes `$RUN_DIR/report.html` from `merged.json`, `profile.json`, and `metadata.json`, and prints the path. Never write the HTML yourself: the report embeds quoted repo code, and the script escapes every field. The report uses offline CSS category controls and no network dependency. Overview shows all findings and the system map. UX, Architecture, and Data & Reliability filter the same finding elements, preserving IDs and anchors. Coverage distinguishes partially examined categories from categories not examined; an empty category is not a clean bill of health.
 
 Update `metadata.json` with `report` set to that path.
 
 ## Terminal summary
 
-Before entering Stage 6, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. Deliver this summary on every run, including explicit `report`, `tickets`, or `fix[:n]` modes that skip the question tool and runs with no candidates. Use the actual absolute path, for example `[Open frontend audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing or executing an action.
+Before entering Stage 6, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. Deliver this summary on every run, including explicit `report`, `tickets`, or `fix[:n]` modes that skip the question tool and runs with no candidates. Use the actual absolute path, for example `[Open project audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing or executing an action.
 
 Use this shape as prose, not a fenced code block:
 
 ```
-Frontend audit: <repo> at <short sha>, scope <path>
-[Open frontend audit report](<absolute report path>)
+Project audit: <repo> at <short sha>, scope <path>
+[Open project audit report](<absolute report path>)
 
 Top candidates
-  1. <title>  [<lens>, strength <n>, <k> instances, effort <S|M|L>]
+  1. <title>  [<id>, <category>, confidence <n>, impact <level>, action <action>]
   2. ...
   (up to 5)
 
@@ -86,23 +83,25 @@ bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color d73a
 bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ensure-labels --color 0e8a16 "<ready string>"
 ```
 
-Load `references/agent-brief.md`. Write one brief per strong candidate (strength 75 or 100), in rank order. Weaker candidates are not filed unless the user names them. The brief is written against behavior, since paths go stale:
+Load `references/agent-brief.md`. Write one brief per strong candidate (strength 75 or 100), in rank order. Use its stable ID in the source. The merge marks plans with missing migration details as `plan_status: incomplete`. Those tickets explicitly request further planning and list `plan_missing`; they do not imply an implementation-ready plan. Only action `fix` findings receive the ready-for-agent label; plans and decision-needed findings are not ready implementation work. Weaker candidates are not filed unless the user names them. The brief is written against behavior, since paths go stale:
 
 - **Category:** enhancement.
 - **Summary:** the candidate title.
-- **Current behavior:** the `problem`, plus the instance count and the three hottest files as examples.
-- **Desired behavior:** the `fix`, naming the token, component, or attribute.
-- **Key interfaces:** the token or component from `convention_source` or `tokens[]`.
-- **Acceptance criteria:** the check that established the candidate (a grep, a lint rule, a test, or a manual read of each quoted instance) finds no remaining instance under the scope path; the project's Validation command passes; any story or snapshot for the touched components updated.
+- **Current behavior:** the `problem`, plus the supporting pattern or traced flow and representative file references.
+- **Desired behavior:** the `fix`, naming the affected boundary or concrete interface change.
+- **Key interfaces:** the affected boundary, callers, and owners, with evidence references.
+- **Acceptance criteria:** the candidate's verification establishes the intended behavior and the project's Validation command passes. For plans, include remediation order, compatibility, rollback, and dependency prerequisites. For decision-needed work, capture the cited decision and decision_reason with the decision required before implementation.
 - **Out of scope:** the other candidates, by title.
 
 ```bash
-bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> create "<title>" --label "<enhancement string>" --label "<ready string>" <<'EOF'
-Source: frontend audit <short sha>, candidate <rank>
+bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> create "<title>" --label "<enhancement string>" <<'EOF'
+Source: project audit <short sha>, candidate <id> (rank <rank>)
 
 <brief from references/agent-brief.md>
 EOF
 ```
+
+For action `fix`, add `--label "<ready string>"` to that create command. Omit it for plans and decision-needed findings.
 
 Exit 3 from the script means this token cannot write issues. Stop calling it. Write each brief to `$RUN_DIR/tickets/<rank>-<slug>.md` with the same body, print the paths, and tell the user the tickets are local because the tracker refused the write.
 
