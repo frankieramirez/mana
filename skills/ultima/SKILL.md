@@ -1,6 +1,6 @@
 ---
 name: ultima
-description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, and security boundaries using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, or /ultima."
+description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, or /ultima."
 argument-hint: "[path:<dir>] [category:<a,b>] [lens:<a,b>] [since:<days>] [report|tickets|fix[:<n>]]"
 ---
 
@@ -20,7 +20,7 @@ Honor the user's explicit instructions and decisions already made in this conver
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Audit the whole project by default. UX specialists find repeated interface problems; architecture and data reliability specialists trace important flows across boundaries. Ground each finding in repository evidence and documented decisions. Deliver one offline report with Overview, UX, Architecture, Data & Reliability, and Security tabs, then follow the requested action mode.
+Audit the whole project by default. UX specialists find repeated interface problems; architecture and data reliability specialists trace important flows across boundaries. Ground each finding in repository evidence and documented decisions. Deliver one offline report with Overview, UX, Architecture, Data & Reliability, Security, and Performance & Delivery tabs, then follow the requested action mode.
 
 For a review of one change, offer a diff review instead. This audit reports the scope actually inspected; it does not certify security, performance, or production behavior.
 
@@ -54,7 +54,7 @@ Parse for these tokens. Anything else is an error; say so and stop.
 | Token | Effect |
 |-------|--------|
 | `path:<dir>` | Audit only that directory; default is the repository root, including its packages. |
-| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, or `security`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security is opt-in through `security`, `all`, or its lenses. |
+| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, `security`, or `performance-delivery`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security and Performance & Delivery are opt-in through their category, `all`, or their lenses. |
 | `lens:<a,b>` | Override the recommended roster with named lenses from the table below. |
 | `since:<days>` | Churn window for hot spots. Default 90. |
 | `report` | Skip the Stage 6 question: the report is the deliverable. |
@@ -79,12 +79,17 @@ The script writes `$RUN_DIR/profile.json`. It inventories manifests, components,
 | `architecture` | `system-architecture` |
 | `data-reliability` | `data-integrity`, `failure-recovery` |
 | `security` | `access-control`, `input-boundaries`, `sensitive-data` |
+| `performance-delivery` | `performance`, `delivery` |
 
 Security profiling adds path-only `security_surfaces` discovery seeds for authentication and authorization, untrusted input, and sensitive data. Missing keyword matches do not establish non-applicability. At Stage 2 verify applicability from actual entrypoints and registrations, update `recommended_lenses` for relevant surfaces, and record absent surfaces and unavailable external controls in shared context. The existing capacity-aware dispatch runs the selected security lenses alongside other specialists.
+
+Performance & Delivery profiling adds `performance_delivery_surfaces`: heuristic execution paths, build/package boundaries, test entrypoints, CI configuration, deployment topology and release contracts. Missing filename matches do not prove absence. Stage 2 verifies the consequential relationships and adjusts the roster for applicable performance and delivery surfaces. Record absent CI separately from inaccessible external deployment steps. Discovery never runs project commands, load tests or deployments, installs profilers, or modifies CI. Runtime measurements and changes need a separately scoped execution path.
 
 ## Stage 2: Verify the shared context
 
 Read the profile's decision docs and relevant ADRs, including decisions about package ownership, persistence, deployment, and recovery. Follow imports and registrations to verify the important components and flows seeded by `system_map`. Trace representative entrypoints through their owners and downstream effects, including cross-package contracts where the scope permits. Prioritize consequential flows over file counts or churn. Record inaccessible dependencies and unresolved links explicitly.
+
+For Performance & Delivery, trace callers to costly boundaries and consumers, then connect build outputs to their runtime consumers and documented release order. Inspect bounds and cache contracts before assuming avoidable cost. Separate source hypotheses from existing attributable measurements. Verify release gates, migration compatibility and rollback contracts; inaccessible external steps remain coverage gaps.
 
 Write `$RUN_DIR/system-context.md` with the verified boundaries, important flows and file references, documented decisions, and coverage limits. Distinguish discovered paths from verified dependencies. This file is shared evidence for specialists, not permission to expand an explicit path scope. For Security, trace trust transitions and the identity or tenant attached to each flow; inspect enclosing middleware, policy registration, and framework guarantees before treating a control as absent. An unavailable gateway or identity-provider policy is a coverage gap. Keep its deployment assumptions unresolved. Include a concise `<prior-decisions>` block with doc paths; no docs means an empty block and a coverage note. An accepted tradeoff, a violation of that decision, and a proposal to revisit it are different outcomes.
 

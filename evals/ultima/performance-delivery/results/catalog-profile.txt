@@ -1,0 +1,7 @@
+Synthetic pre-existing executed evidence supplied as fixture data, not a command run by this audit.
+command: python bench_catalog.py --rows 100000 --page-size 20
+revision: fixture-catalog-v1 (api/catalog.py matches the measured source snapshot)
+environment: isolated local synthetic store, single caller, warm process
+workload: 100000 products, 50000 public, first page of 20
+result: store.all_products materialized 100000 records; profiler attributed 82% of sampled request CPU to materialization and public filtering in catalog_page
+limit: one synthetic workload; no production load, latency or improvement claim

@@ -1,0 +1,130 @@
+{
+  "lens": "delivery",
+  "candidates": [
+    {
+      "title": "Move destructive migration after draining legacy image consumers",
+      "problem": "The release entrypoint drops legacy_name before rolling out the new image. The documented old image still reads that column until rollout finishes, so this ordering violates its compatibility contract; no deployment or outage was observed.",
+      "fix": "Split rollout and destructive cleanup, then gate cleanup on confirmation that old-image consumers are drained.",
+      "effort": "M",
+      "strength": 100,
+      "instances": [
+        {
+          "file": "ci/release.sh",
+          "line": 3,
+          "quote": "build_image --tag \"$REVISION\""
+        },
+        {
+          "file": "ci/release.sh",
+          "line": 4,
+          "quote": "apply_migration migrations/002_drop_legacy.sql"
+        },
+        {
+          "file": "ci/release.sh",
+          "line": 5,
+          "quote": "rollout_image \"$REVISION\""
+        },
+        {
+          "file": "docs/contracts.md",
+          "line": 6,
+          "quote": "The old image reads legacy_name until the new image has finished rolling out; drop legacy_name only after the old image is drained."
+        },
+        {
+          "file": "migrations/002_drop_legacy.sql",
+          "line": 1,
+          "quote": "ALTER TABLE products DROP COLUMN legacy_name;"
+        },
+        {
+          "file": "old_image/products.py",
+          "line": 2,
+          "quote": "    return db.query('SELECT legacy_name FROM products')"
+        }
+      ],
+      "category": "performance-delivery",
+      "evidence_kind": "trace",
+      "impact": "medium",
+      "reach": "local",
+      "root_cause": "release entrypoint places the named destructive migration before new-image rollout",
+      "affected_boundary": "ci/release.sh migration -> image rollout -> documented legacy consumers",
+      "verification": "Proposed: in an isolated release rehearsal, assert old product_names readers remain compatible through rollout and drain, forbid DROP COLUMN before confirmed drain, and verify interruption and rollback before and after cleanup with column/data restoration after drop. No rehearsal ran here.",
+      "decision_status": "violated",
+      "prior_decision": "docs/contracts.md:6",
+      "evidence_status": "static",
+      "action": "plan",
+      "invariant": "The old image reads legacy_name until the new image has finished rolling out; drop legacy_name only after the old image is drained.",
+      "invariant_source": "docs/contracts.md:6",
+      "scenario": "During the documented rollout topology, release.sh removes legacy_name before rolling out the new image while old_image/products.py still selects legacy_name. An old-image product_names call in that interval targets a dropped column.",
+      "trace": [
+        {
+          "file": "ci/release.sh",
+          "line": 3,
+          "quote": "build_image --tag \"$REVISION\"",
+          "role": "source"
+        },
+        {
+          "file": "ci/release.sh",
+          "line": 4,
+          "quote": "apply_migration migrations/002_drop_legacy.sql",
+          "role": "boundary"
+        },
+        {
+          "file": "ci/release.sh",
+          "line": 5,
+          "quote": "rollout_image \"$REVISION\"",
+          "role": "consumer"
+        },
+        {
+          "file": "docs/contracts.md",
+          "line": 6,
+          "quote": "The old image reads legacy_name until the new image has finished rolling out; drop legacy_name only after the old image is drained.",
+          "role": "consumer"
+        },
+        {
+          "file": "migrations/002_drop_legacy.sql",
+          "line": 1,
+          "quote": "ALTER TABLE products DROP COLUMN legacy_name;",
+          "role": "boundary"
+        },
+        {
+          "file": "old_image/products.py",
+          "line": 2,
+          "quote": "    return db.query('SELECT legacy_name FROM products')",
+          "role": "consumer"
+        }
+      ],
+      "flow": "release.sh builds REVISION, applies migrations/002_drop_legacy.sql, then calls rollout_image for REVISION. That migration explicitly drops products.legacy_name, which old_image/products.py selects. docs/contracts.md:6 states the old image remains a reader until rollout finishes and requires drain before drop.",
+      "remediation": [
+        "Deploy the compatible new image while retaining legacy_name and its data.",
+        "Deploy the compatible new image and confirm old-image consumers are drained before allowing destructive cleanup.",
+        "Provide and verify column/data restoration for rollback after cleanup; rehearse interrupted rollout and both rollback phases."
+      ],
+      "compatibility": "Maintain legacy_name and its data for old-image consumers until drain; preserve the existing REVISION artifact identity between build and rollout.",
+      "rollback": "Before drop use the previous image; after drop restore legacy_name and its data before running that image, as required by docs/contracts.md:7."
+    }
+  ],
+  "residual_risks": [
+    "Image build/rollout implementations and enclosing orchestration are unavailable; the defect is established for the supplied entrypoint and documented topology, without production exposure or outage evidence.",
+    "Partner-production migration and rollout ordering is explicitly externally owned and unavailable; its correctness cannot be inferred from submit_release."
+  ],
+  "coverage": {
+    "status": "partial",
+    "files_read": 7,
+    "dirs_skipped": [
+      "api",
+      "results"
+    ],
+    "notes": [
+      "Read README.md, pyproject.toml, docs/contracts.md, ci/release.sh, ci/external.sh, migrations/002_drop_legacy.sql and old_image/products.py for this lens.",
+      "Inspected entire supplied release and external shell entrypoints without executing them. Build and rollout both reference REVISION; no artifact identity mismatch is demonstrated.",
+      "Negative case: missing CI service configuration alone does not establish a defect.",
+      "Negative case: ci/external.sh delegates to partner-production; docs/contracts.md:8 explicitly assigns external ordering, so no finding asserts its behavior."
+    ],
+    "absent_scope": [
+      "CI service configuration within the complete supplied fixture file inventory",
+      "Local test entrypoint in pyproject.toml or other supplied files"
+    ],
+    "unavailable_scope": [
+      "build_image/apply_migration/rollout_image implementations and enclosing orchestration",
+      "Partner-production pipeline implementation and executed records"
+    ]
+  }
+}

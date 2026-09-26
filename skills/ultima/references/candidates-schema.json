@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Project Audit Candidates",
-  "description": "Specialist findings for project audits, including optional Security. Confidence and impact are independent.",
+  "description": "Specialist findings for project audits, including optional Security and Performance & Delivery. Confidence and impact are independent.",
   "type": "object",
   "required": [
     "lens",
@@ -23,7 +23,9 @@
         "failure-recovery",
         "access-control",
         "input-boundaries",
-        "sensitive-data"
+        "sensitive-data",
+        "performance",
+        "delivery"
       ]
     },
     "candidates": {
@@ -204,7 +206,8 @@
               "ux",
               "architecture",
               "data-reliability",
-              "security"
+              "security",
+              "performance-delivery"
             ],
             "description": "Report category, independent of the contributing specialist."
           },
@@ -291,7 +294,7 @@
           },
           "verification": {
             "type": "string",
-            "description": "Behavioral check that would establish the issue and prove the remedy."
+            "description": "Proposed behavioral or measurement acceptance check, with bounded inputs and an observable pass condition. Never claim it ran here."
           },
           "decision_reason": {
             "type": "string",
@@ -387,6 +390,69 @@
               }
             },
             "description": "Quoted enclosing middleware, policy or framework registration inspected before asserting a missing control."
+          },
+          "cost_assessment": {
+            "type": "string",
+            "enum": [
+              "source-hypothesis",
+              "measured-bottleneck"
+            ],
+            "description": "Performance only: source-derived avoidable work or an existing attributable measured bottleneck. Static proof never establishes runtime cost."
+          },
+          "measurement": {
+            "type": "object",
+            "required": [
+              "file",
+              "line",
+              "quote",
+              "command",
+              "revision",
+              "environment",
+              "workload",
+              "result",
+              "attribution"
+            ],
+            "properties": {
+              "file": {
+                "description": "Path relative to the repo root.",
+                "type": "string"
+              },
+              "line": {
+                "description": "The line the quote sits on. A wrong line is worse than no instance.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "quote": {
+                "description": "Verbatim source fragment with sensitive values replaced by [REDACTED] before writing any artifact; retain surrounding code and file:line.",
+                "type": "string",
+                "maxLength": 300
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "environment": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workload": {
+                "type": "string",
+                "minLength": 1
+              },
+              "result": {
+                "type": "string",
+                "minLength": 1
+              },
+              "attribution": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "description": "Existing executed result, quoted at its location, and attribution to the traced costly boundary. No proposed checks or fabricated metrics."
           }
         },
         "allOf": [
@@ -514,6 +580,20 @@
             "type": "string"
           },
           "description": "External or inaccessible security controls that remain unexamined. Nonempty means partial coverage."
+        },
+        "absent_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Verified absent surfaces."
+        },
+        "unavailable_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Inaccessible configuration, execution paths or external deployment steps. Forces partial examined coverage."
         }
       },
       "required": [
