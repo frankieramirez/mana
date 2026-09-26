@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.35.0
+
+- Add optional Security audits to `ultima`, with focused access-control, input-boundary and sensitive-data specialists. Profile security surfaces, verify enclosing controls and source traces, preserve qualified static claims, redact sensitive evidence, and show coverage in the offline report. Security findings become planning or decision briefs. Add synthetic boundary fixtures and independent specialist evaluation.
+
 ## 0.34.1
 
 - Trim repeated Ultima report summaries. Keep category status in Coverage, show totals once, and omit generic recommendation text when the ranked work list already explains the order.

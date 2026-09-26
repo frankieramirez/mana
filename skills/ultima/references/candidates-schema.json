@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Project Audit Candidates",
-  "description": "Specialist findings for UX, architecture, and data reliability. Confidence and impact are independent.",
+  "description": "Specialist findings for project audits, including optional Security. Confidence and impact are independent.",
   "type": "object",
   "required": [
     "lens",
@@ -20,7 +20,10 @@
         "component-architecture",
         "system-architecture",
         "data-integrity",
-        "failure-recovery"
+        "failure-recovery",
+        "access-control",
+        "input-boundaries",
+        "sensitive-data"
       ]
     },
     "candidates": {
@@ -108,7 +111,7 @@
                   "minimum": 1
                 },
                 "quote": {
-                  "description": "The verbatim line or fragment that shows the pattern.",
+                  "description": "Verbatim source fragment with sensitive values replaced by [REDACTED] before writing any artifact; retain surrounding code and file:line.",
                   "type": "string",
                   "maxLength": 300
                 }
@@ -200,7 +203,8 @@
             "enum": [
               "ux",
               "architecture",
-              "data-reliability"
+              "data-reliability",
+              "security"
             ],
             "description": "Report category, independent of the contributing specialist."
           },
@@ -279,7 +283,7 @@
           },
           "invariant_source": {
             "type": "string",
-            "description": "Document, contract, or code location establishing the invariant."
+            "description": "Document, contract, or code location establishing the invariant. Security requires file:line and the invariant quoted from that location in scope."
           },
           "scenario": {
             "type": "string",
@@ -326,7 +330,7 @@
                   "minimum": 1
                 },
                 "quote": {
-                  "description": "The verbatim line or fragment that shows the pattern.",
+                  "description": "Verbatim source fragment with sensitive values replaced by [REDACTED] before writing any artifact; retain surrounding code and file:line.",
                   "type": "string",
                   "maxLength": 300
                 },
@@ -342,6 +346,47 @@
               }
             },
             "description": "Ordered trace with quoted source, boundary and consumer steps. All roles required for a strong trace."
+          },
+          "flow": {
+            "type": "string",
+            "description": "Explain how the quoted source reaches the boundary and consumer, including enclosing controls and unresolved links."
+          },
+          "assessment": {
+            "type": "string",
+            "enum": [
+              "demonstrated",
+              "inferred"
+            ],
+            "description": "Demonstrated means the stated code invariant violation is established; it does not imply exploitation or production exposure. Inferred risks remain weak."
+          },
+          "control_review": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "line",
+                "quote"
+              ],
+              "properties": {
+                "file": {
+                  "description": "Path relative to the repo root.",
+                  "type": "string"
+                },
+                "line": {
+                  "description": "The line the quote sits on. A wrong line is worse than no instance.",
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "quote": {
+                  "description": "Verbatim source fragment with sensitive values replaced by [REDACTED] before writing any artifact; retain surrounding code and file:line.",
+                  "type": "string",
+                  "maxLength": 300
+                }
+              }
+            },
+            "description": "Quoted enclosing middleware, policy or framework registration inspected before asserting a missing control."
           }
         },
         "allOf": [
@@ -390,6 +435,40 @@
                 "runtime_evidence"
               ]
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "security"
+                }
+              },
+              "required": [
+                "category"
+              ]
+            },
+            "then": {
+              "required": [
+                "flow",
+                "assessment",
+                "control_review",
+                "trace",
+                "invariant",
+                "invariant_source",
+                "scenario"
+              ],
+              "properties": {
+                "evidence_kind": {
+                  "const": "trace"
+                },
+                "action": {
+                  "enum": [
+                    "plan",
+                    "decision-needed"
+                  ]
+                }
+              }
+            }
           }
         ]
       }
@@ -428,6 +507,13 @@
             "partial"
           ],
           "description": "complete only when the selected scope and important flows were examined; record limits and skipped source as partial. This is coverage, not a correctness certification."
+        },
+        "unavailable_controls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "External or inaccessible security controls that remain unexamined. Nonempty means partial coverage."
         }
       },
       "required": [

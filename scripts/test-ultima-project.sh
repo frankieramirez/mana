@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 - <<'PY'
-import copy, json, os, pathlib, re, subprocess, tempfile
+import copy, json, os, pathlib, re, shutil, subprocess, tempfile
 
 script = pathlib.Path('skills/ultima/scripts/ultima.sh').resolve()
 
@@ -60,6 +60,21 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
     arch = json.loads(run('orient', '--category', 'architecture', cwd=backend))
     assert arch['recommended_lenses'] == ['system-architecture'], arch['recommended_lenses']
     run('orient', '--category', 'nonsense', cwd=backend, code=1)
+
+    security = tmp / 'security'
+    write(security, 'api/routes.py', 'def read_invoice(request):\n    return load_invoice(request.invoice_id)\n')
+    write(security, 'api/store.py', 'def load_invoice(invoice_id):\n    return invoices[invoice_id]\n')
+    write(security, 'api/middleware.py', 'def authenticate(request):\n    return verify_session(request.session)\n')
+    write(security, 'docs/security.md', 'Only the owning tenant may read an invoice.\n')
+    init(security)
+    security_profile = json.loads(run('orient', '--category', 'security', cwd=security))
+    assert 'access-control' in security_profile['recommended_lenses']
+    assert security_profile['category_applicability']['security']
+    assert security_profile['security_surfaces']['authentication']['files'] == ['api/middleware.py']
+    assert security_profile['security_surfaces']['external_controls']['status'] == 'unavailable'
+    assert 'security' not in profile['categories'], 'default scope must remain compatible'
+    assert 'access-control' not in arch['recommended_lenses']
+    assert 'security' in json.loads(run('orient', '--category', 'all', cwd=security))['categories']
 
     mono = tmp / 'mono'
     write(mono, 'package.json', {'name': 'root', 'private': True, 'workspaces': ['apps/*', 'packages/*']})
@@ -146,6 +161,8 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
     for value in ids.values():
         assert f'id="{value}"' in html and f'href="#{value}"' in html, value
 
+    assert '<dt>Security</dt><dd class="">not examined</dd>' in html
+
     focused = tmp / 'focused'
     focused.mkdir()
     write(focused, 'profile.json', arch)
@@ -173,6 +190,89 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
         assert 'Specialists completed:' not in focused_html
         assert '<p class="lede">' not in focused_html
         assert focused_html.index('<h2>Coverage</h2>') < focused_html.index('<dt>Architecture</dt>')
+
+    security_run = tmp / 'security-run'
+    security_run.mkdir()
+    write(security_run, 'profile.json', security_profile)
+    finding = trace('Invoice lookup omits the tenant boundary', category='security', effort='S', action='fix',
+        root_cause='unscoped invoice lookup', affected_boundary='invoice reader', evidence_status='static',
+        invariant='Only the owning tenant may read an invoice.', invariant_source='docs/security.md:1',
+        scenario='If a caller supplies another tenant invoice ID, this path selects that invoice; deployment exposure is unknown.',
+        flow='read_invoice passes request.invoice_id to load_invoice, which indexes invoices without a tenant constraint.',
+        assessment='demonstrated',
+        control_review=[dict(file='api/middleware.py', line=2, quote='return verify_session(request.session)')],
+        trace=[dict(file='api/routes.py', line=1, role='source', quote='def read_invoice(request):'),
+               dict(file='api/routes.py', line=2, role='boundary', quote='return load_invoice(request.invoice_id)'),
+               dict(file='api/store.py', line=2, role='consumer', quote='return invoices[invoice_id]')])
+    cases = [finding,
+        dict(finding, title='Missing enclosing control review', root_cause='missing control review', control_review=[]),
+        dict(finding, title='Unrelated quote', root_cause='fabricated quote', trace=[dict(x, quote='invented()') for x in finding['trace']]),
+        dict(finding, title='Missing flow', root_cause='disconnected trace', flow=''),
+        dict(finding, title='No trace allowed as a pattern', root_cause='pattern bypass', evidence_kind='pattern'),
+        dict(finding, title='Runtime without proof', root_cause='runtime overclaim', evidence_status='runtime'),
+        dict(finding, title='Unknown external policy', root_cause='external assumption', assessment='inferred', strength=100)]
+    write(security_run, 'access-control.json', dict(lens='access-control', candidates=cases,
+        coverage=dict(status='partial', files_read=4, dirs_skipped=[], notes=['External policy unavailable.'],
+                      unavailable_controls=['gateway policy']), residual_risks=[]))
+    overlap = dict(finding, title='Separate architecture ownership issue', category='architecture',
+                   root_cause='duplicated ownership', control_review=[])
+    write(security_run, 'system-architecture.json', dict(lens='system-architecture', candidates=[overlap], coverage={'status':'complete'}))
+    run('merge', str(security_run), '--roster', 'access-control,input-boundaries,system-architecture')
+    security_merged = json.loads((security_run / 'merged.json').read_text())
+    security_by_title = {c['title']: c for c in security_merged['candidates']}
+    assert security_by_title[finding['title']]['strength'] == 75
+    assert security_by_title[finding['title']]['action'] == 'plan'
+    assert security_by_title[finding['title']]['evidence_status'] == 'static'
+    for case in cases[1:]:
+        assert security_by_title[case['title']]['strength'] == 50, security_by_title[case['title']]
+    assert overlap['title'] in security_by_title
+    run('render', str(security_run))
+    security_html = (security_run / 'report.html').read_text()
+    assert 'id="cat-security"' in security_html and 'Security <span>(7)</span>' in security_html
+    assert '<dt>Security</dt><dd class="">partial</dd>' in security_html
+    stable = security_by_title[finding['title']]['id']
+    assert f'id="{stable}"' in security_html and f'href="#{stable}"' in security_html
+    write(security_run, 'reconciled.json', security_merged)
+    run('merge', str(security_run), '--reconciled', str(security_run / 'reconciled.json'))
+    assert {c['title']: c['id'] for c in json.loads((security_run / 'merged.json').read_text())['candidates']} == {c['title']: c['id'] for c in security_merged['candidates']}
+
+    write(security, 'api/config.py', "TOKEN = 'synthetic-sensitive-value'\n")
+    redacted = dict(finding, title='Redacted source remains locatable',
+        trace=[finding['trace'][0], finding['trace'][1],
+               dict(file='api/config.py', line=1, role='consumer', quote="TOKEN = '[REDACTED]'")],
+        before={'language': 'python', 'code': "TOKEN = '[REDACTED]'"})
+    write(security_run, 'access-control.json', dict(lens='access-control', candidates=[redacted],
+        coverage={'status':'complete', 'unavailable_controls':['gateway policy']}))
+    write(security_run, 'input-boundaries.json', dict(lens='input-boundaries', candidates=[], coverage={'status':'complete'}))
+    write(security_run, 'sensitive-data.json', dict(lens='sensitive-data', candidates=[], coverage={'status':'complete'}))
+    run('merge', str(security_run), '--roster', 'access-control,input-boundaries,sensitive-data')
+    run('render', str(security_run))
+    assert json.loads((security_run / 'merged.json').read_text())['candidates'][0]['strength'] == 75
+    for output in ('merged.json', 'report.html'):
+        text = (security_run / output).read_text()
+        assert 'synthetic-sensitive-value' not in text and '[REDACTED]' in text
+        assert 'api/config.py' in text
+    assert '<dt>Security</dt><dd class="">partial</dd>' in (security_run / 'report.html').read_text()
+
+    eval_root = tmp / 'specialist-fixture'
+    shutil.copytree('evals/ultima/security', eval_root)
+    init(eval_root)
+    eval_run = tmp / 'specialist-replay'
+    eval_run.mkdir()
+    write(eval_run, 'profile.json', json.loads(run('orient', '--category', 'security', cwd=eval_root)))
+    for lens in ('access-control', 'sensitive-data'):
+        shutil.copyfile(f'evals/ultima/results/{lens}.json', eval_run / f'{lens}.json')
+    run('merge', str(eval_run), '--roster', 'access-control,sensitive-data')
+    replay = json.loads((eval_run / 'merged.json').read_text())
+    assert len(replay['candidates']) == 2
+    assert all(c['strength'] == 100 and c['evidence_status'] == 'static' and c['action'] == 'plan' for c in replay['candidates'])
+    assert len({c['root_cause'] for c in replay['candidates']}) == 2
+    assert any('scoped /invoice' in note for note in replay['coverage']['access-control']['notes'])
+    run('render', str(eval_run))
+    for path in eval_run.iterdir():
+        assert 'SYNTHETIC-ONLY-SECRET-53' not in path.read_text(), path
+    assert '[REDACTED]' in (eval_run / 'report.html').read_text()
+    assert '<dt>Security</dt><dd class="">partial</dd>' in (eval_run / 'report.html').read_text()
 
     documented = trace('Documented migration', remediation=['Add a durable key.', 'Backfill before enforcing uniqueness.'],
                        compatibility='Accept old requests during rollout.', rollback='Disable the new writer before reverting.')
