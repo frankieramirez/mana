@@ -189,7 +189,9 @@ Under `mode:agent`, none of these run: emit the JSON and stop.
 
 Nothing else happens. State the run artifact path so the findings can be picked up later.
 
-## Apply mode: fix, commit, push
+## Apply mode
+
+Use the authorization resolved at Stage 6. Local fixes and validation can proceed without commit or push permission. `fix` selects fix, commit, and push by default; explicit limits in the user's request still apply. A natural-language request authorizes only the actions it covers. Complete those actions without requiring the token again.
 
 **Scope invariant.** Apply only when the working tree *is* what was reviewed: `local-aligned` or standalone. Under `pr-remote` or `branch-remote` the tree is not the reviewed head, so stop and say so rather than editing the wrong code.
 
@@ -216,9 +218,10 @@ For a large actionable queue, dispatch fixer subagents in parallel, but never tw
 
 **Commit and push.**
 
-- Tree was clean before the review: commit the fixes as one labeled commit, `fix: address review findings`, or the repo's nearest convention. Follow the repo's commit rules (conventional prefixes, scope, changeset requirements).
+- With authorization for local edits only, leave the validated fixes in the working tree and report them. Do not stage, commit, or push. When commits are authorized but pushing is not, commit and report the local SHA.
+- When committing is authorized and the tree was clean before the review, commit the fixes as one labeled commit, `fix: address review findings`, or the repo's nearest convention. Follow the repo's commit rules (conventional prefixes, scope, changeset requirements).
 - Tree was dirty before the review: the fixes are interleaved with in-flight work, so **do not** commit. Report what changed and let the user commit it with their own work.
-- Push to the current branch. Never force-push, never rebase, never amend a pushed commit.
+- When pushing is authorized and the fixes were committed, push to the current branch. Never force-push, never rebase, never amend a pushed commit.
 - Report the pushed SHA. If the push failed or was skipped, say so as the **first line** of the output: fixes that sit unpushed get orphaned when the PR is merged.
 
 **Report back:** a table of `# | severity | file:line | finding | outcome (fixed / skipped + reason / obsolete)`, with `arrived after report` in the outcome cell of anything the last check turned up, then the items that check ruled out at one line each, the verification results, the commit SHA, and the push status. Flag prominently any applied fix touching auth, a cross-service contract, or concurrency, since a passing test does not prove those safe.

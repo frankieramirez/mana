@@ -17,7 +17,7 @@ A ticket blocks another only when the second cannot be built without the first's
 
 ## The round
 
-Present every slice at once, numbered, with its summary and the tickets it waits on. Give a recommended order. Then wait.
+Reuse accepted slices and ordering from the conversation. Present every slice at once, numbered, with its summary and the tickets it waits on. Give a recommended order. Wait only for material decisions the user has neither supplied nor delegated.
 
 ```
 **1. <title>**
@@ -27,6 +27,6 @@ After: <numbers, or none>
 Recommended order: 1, 2, 3 and 4 in parallel, then 5
 ```
 
-`you-pick`, or the user saying "make the decisions" or "you pick", accepts every recommendation. Still show the slices and the order you took, so they can override.
+`you-pick`, or equivalent authority to choose in the conversation, accepts the recommendations. Still show the slices and the order you took, so the user can redirect.
 
-Fold the answers back in. A merged or split slice gets a new brief. Do not file until the round is settled.
+Fold supplied answers back in. A merged or split slice gets a new brief. File within the authorized scope once the material choices are settled; do not ask for confirmation of the same choices again.
