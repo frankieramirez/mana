@@ -219,8 +219,10 @@ The baseline skill payload was saved before editing at commit `aec8fa61e174cc9fa
 | Distinguish capability from authority | The new paragraphs specify independent progress and a concrete fallback for unavailable capability, separately from action authorization. This is source inspection. |
 | Standalone and generated assets | The repository validator checks all 19 standalone packages and shared-asset synchronization. |
 
-The workflow dataset now contains 11 cases and its offline suite has 16 tests. The full repository validator passed. All 23 similarity comparisons were present against upstream revision `414e9d6be166c15d9fb10595204530802ad007ef`; the highest ratio was 0.24, below the 0.30 limit.
+At the initial package implementation, the workflow dataset contained 11 cases and its offline suite had 16 tests. The full repository validator passed. All 23 similarity comparisons were present against upstream revision `414e9d6be166c15d9fb10595204530802ad007ef`; the highest ratio was 0.24, below the 0.30 limit.
 
 The installed Codex CLI is 0.159.2, while the live runner supports only the validated 0.155.1. Live baseline and candidate runs were not attempted. Revalidate containment and event handling before expanding host support. This package supplies reviewable instruction corrections and offline scenarios; it establishes no frontier-model performance advantage or live reliability estimate.
 
 The PR preflight found base commit `a84a35fc8ee6a054d38120915f7a1726a5fc3927`, which added Performance & Delivery audits. That base was merged without rewriting history. Its changes were preserved and this package version was advanced to 0.36.1. Validation was rerun against the combined tree before shipping.
+
+Review remediation on PR #58 advances the package to 0.36.2. It binds reused permission to its covered repository and target, simplifies the repeated read-only request sentence, and closes two offline grader gaps: masked verification status and failed PR-message attempts after a rejected push. The dataset now has 12 cases and its offline suite has 18 tests, including a changed-target scope scenario. Live agent behavior remains unrun under the existing host compatibility limit.

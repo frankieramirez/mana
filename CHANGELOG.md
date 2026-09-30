@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.36.2
+
+- Bind reused authorization to the repository and target it covers, with the same allowed actions. Simplify repeated read-only request guidance. Reject masked local verification results and prohibited PR-message attempts after a rejected repair push in the offline workflow grader. Add regressions and a changed-target scope scenario.
+
 ## 0.36.1
 
 - Honor user instructions and prior authorization consistently across skill workflows. Reuse supplied review actions, slices, and triage decisions without requiring special tokens or repeated confirmation. Keep local review fixes separate from permission to commit or push. On a rejected repair push, preserve the local commit and leave fix threads open for separate history recovery. Add focused workflow scenarios and offline grader coverage.
