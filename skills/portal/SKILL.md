@@ -1,7 +1,7 @@
 ---
 name: portal
-description: "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, or pick up where I left off."
-argument-hint: "[blank for the whole board | issue id | issue URL | map or build number] [go]"
+description: "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, pick up where I left off, portal run, or continue this named map or build effort."
+argument-hint: "[blank for the whole board | issue id | issue URL | map or build number] [go | run <map-or-build-effort>]"
 disable-model-invocation: true
 ---
 
@@ -23,6 +23,8 @@ If a skill rule requires a pause or leaves requested work unfinished, name and l
 
 Portal recommends one next action from the board or a named issue. Discovery is read-only: leave claims and other writes to the authorized handoff. A recommendation-only request ends with the report. Otherwise ask once before handoff, unless `go` or prior conversation already authorizes the selected action. With no actionable route, report the reason and stop without a question.
 
+Optional `run` continues one explicitly named map or build effort serially through Stage Run. Equivalent explicit natural language selects the same path. It never claims the global queue, starts implementation after a map destination, or merges PRs. Build units use distinct owned worktrees and branches. Saved state grants no authority. Bare routing and `go` retain one handoff.
+
 After an authorized handoff, continue the selected task to its requested completion, preserving the user's scope and prior decisions. A missing sibling skill does not end authorized work; use the ordinary-task fallback in Stage 5.
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
@@ -33,6 +35,7 @@ After an authorized handoff, continue the selected task to its requested complet
 |-------|--------|
 | none | Read the whole board and the current branch, then route (Stage 2) |
 | issue id or URL | Route that one issue (Stage 3) |
+| `run <map-or-build-effort>` | Continue authorized units of this named scope through Stage Run |
 | `go` | Skip the Stage 5 question and step through the route at once. Same meaning as the user saying "just do it" or "go" |
 
 An id is whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`). A pull request number counts as an id when the tracker shares a number space with pull requests.
@@ -40,7 +43,7 @@ An id is whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`). A pull request n
 ## Execution spine
 
 1. Resolve the tracker and the label strings (Stage 1).
-2. Blank argument: Stage 2. An id or URL: Stage 3.
+2. Explicit named continuation: Stage Run. Otherwise blank argument: Stage 2. An id or URL: Stage 3.
 3. Write the report (Stage 4).
 4. Finish with the report or perform the authorized handoff (Stage 5).
 
@@ -50,11 +53,15 @@ An id is whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`). A pull request n
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline on every script call. Shell state does not persist between calls.
 
-Portal uses only the read side of `scripts/tickets.sh`: `list`, `view`, `body`, `children`, `find`, `blocked`, and `next` without `--claim`. Map reads use `scripts/map.sh` on GitHub (`frontier`, `children`, `view`, `parent`). On another tracker, the tracker file's "Wayfinding operations" section says what a map and a frontier are there; read them through that connector or API. For `local`, tickets are files: read them directly. For `other`, follow the tracker file's Conventions.
+Outside Stage Run, portal uses only the read side of `scripts/tickets.sh`: `list`, `view`, `body`, `children`, `find`, `blocked`, and `next` without `--claim`. Map reads use `scripts/map.sh` on GitHub (`frontier`, `children`, `view`, `parent`). On another tracker, the tracker file's "Wayfinding operations" section says what a map and a frontier are there; read them through that connector or API. For `local`, tickets are files: read them directly. For `other`, follow the tracker file's Conventions.
 
 Resolve the label strings once. When `docs/agents/triage-labels.md` exists, take the right-hand column for `ready-for-agent`, `needs-triage`, `needs-info`, and `ready-for-human`; otherwise those are the strings. Map labels are `scry:map` and `scry:<type>`, with `wayfinder:map` and `wayfinder:<type>` as legacy spellings that mean the same thing.
 
 ---
+
+## Stage Run: Continue a named effort
+
+Load [references/run.md](references/run.md) only for explicit named continuation. Resolve scope and current authority, lock and reconcile local state, then run its serial live-frontier loop. Its stop report replaces Stages 2 through 5. A single-ticket request keeps Stage 3 and its existing completion boundary.
 
 ## Stage 2: Read the board
 
@@ -117,6 +124,7 @@ A pending question is not authorization. Resume the chosen route after the answe
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
+| `references/run.md` | Stage Run, explicit named continuation | Scoped serial units, workspace isolation, reconciliation and stop report |
 | `references/board.md` | Stage 2, blank target | Board summary and route precedence |
 | `references/issue.md` | Stage 3, named target | State-first issue routing |
 | `references/build.md` | Stage 2 or 3, effort candidate | Available ticket and progress |

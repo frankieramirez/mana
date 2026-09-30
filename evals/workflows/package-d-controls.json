@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "host": "codex-cli 0.159.2",
+  "requested_model": "gpt-6.1-sol",
+  "reasoning": "medium",
+  "delegation": false,
+  "group": {
+    "cases": [
+      "portal-run-independent",
+      "portal-run-map",
+      "portal-run-no-workspace"
+    ],
+    "invocation_limit": 3,
+    "per_invocation_timeout_seconds": 300,
+    "automatic_retries": false
+  },
+  "retention": "Every attempt, including setup/timeout/fixture failures, is retained separately. Any repeat gets a new explicit control group.",
+  "claims": "Focused observed behavior only. No general performance claim, resolved backend identity, distributed exactly-once guarantee or live tracker/managed-workspace coverage.",
+  "follow_up": {
+    "cases": [
+      "portal-run-independent",
+      "portal-run-resume",
+      "portal-single-unit",
+      "portal-go-single-unit"
+    ],
+    "invocation_limit": 4,
+    "per_invocation_timeout_seconds": 300,
+    "automatic_retries": false,
+    "purpose": "After inspection found conflicting unit/repository validation and a permissive grader, repeat corrected build case, exercise verified resume, and observe both default boundaries. Freeze final helper with verified-effect guard and failed-acquisition cleanup."
+  }
+}

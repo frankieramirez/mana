@@ -1,0 +1,673 @@
+{
+  "schema_version": 1,
+  "base": "84a41e7",
+  "controls": "package-d-controls.json",
+  "live_invocations": 7,
+  "resolved_backend_identity": null,
+  "delegation": false,
+  "groups": [
+    {
+      "run": "workflows-5iifkm2t",
+      "loaded_source_hashes": {
+        "run.py": "6dd2c401dd6897bfd87daa69af8009ad56b2fd13b0ee6e024db9286445ed8635",
+        "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+        "portal_fixtures.py": "6edb67d9657c90c41ba6697063f16dc8ae86881078114da646ddca7e5ea163e7"
+      },
+      "regrades": [
+        {
+          "file": "regrade-g2bnhj5i.json",
+          "record": {
+            "grader_sha256": "0240eda2e71325e90c89b01651ff77f55bb27a658651dc85152b360466daf5b1",
+            "agent_executed": false,
+            "reports": [
+              {
+                "case": "portal-run-independent",
+                "passed": false,
+                "failures": [
+                  "unit not verified: 11",
+                  "unit not verified: 12"
+                ],
+                "original_passed": true
+              },
+              {
+                "case": "portal-run-map",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              },
+              {
+                "case": "portal-run-no-workspace",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              }
+            ]
+          }
+        },
+        {
+          "file": "regrade-7f49ajcu.json",
+          "record": {
+            "grader_sha256": "024776d4f83620169334a72c10c4c7d4ffb6f4f716cf1e8e50a64e00d8b28675",
+            "loaded_sources": {
+              "run.py": "024776d4f83620169334a72c10c4c7d4ffb6f4f716cf1e8e50a64e00d8b28675",
+              "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+              "portal_fixtures.py": "1d00c2c39df5f19569352a2cfbd2867bf7af03fa598cc1d246f7478a7d5b895e"
+            },
+            "agent_executed": false,
+            "reports": [
+              {
+                "case": "portal-run-independent",
+                "passed": false,
+                "failures": [
+                  "unit not verified: 11",
+                  "unit not verified: 12"
+                ],
+                "original_passed": true
+              },
+              {
+                "case": "portal-run-map",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              },
+              {
+                "case": "portal-run-no-workspace",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              }
+            ]
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "case": "portal-run-independent",
+          "execution": "completed",
+          "original_passed": true,
+          "original_failures": [],
+          "current_regrade": {
+            "case": "portal-run-independent",
+            "passed": false,
+            "failures": [
+              "unit not verified: 11",
+              "unit not verified: 12"
+            ],
+            "original_passed": true
+          },
+          "seconds": 213.23,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 324765,
+                "cached_input_tokens": 290304,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 3668,
+                "reasoning_output_tokens": 171
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/run.md": 1,
+              "references/build.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 25551,
+            "total_full_read_bytes": 25551,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 54469,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "56d8133b0f34544cfe4697990b545fd9f6d76862f76f9f25f99e4e7ea67548dd",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-5iifkm2t-portal-run-independent.json.gz",
+            "sha256": "3b6c0bced0822944d340e8b79c3fe5c17796315bf6784813e3afb0630ea1ef51",
+            "files": 51,
+            "bytes": 64859
+          },
+          "verified_files": 51
+        },
+        {
+          "case": "portal-run-map",
+          "execution": "completed",
+          "original_passed": true,
+          "original_failures": [],
+          "current_regrade": {
+            "case": "portal-run-map",
+            "passed": true,
+            "failures": [],
+            "original_passed": true
+          },
+          "seconds": 217.03,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 327448,
+                "cached_input_tokens": 293632,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 3730,
+                "reasoning_output_tokens": 42
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/run.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 24197,
+            "total_full_read_bytes": 24197,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 57158,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "56d8133b0f34544cfe4697990b545fd9f6d76862f76f9f25f99e4e7ea67548dd",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-5iifkm2t-portal-run-map.json.gz",
+            "sha256": "73a2e16972c1b1108f704bed30e13fa15129f6ab74ae4b1f273c9275575d0ce7",
+            "files": 35,
+            "bytes": 66531
+          },
+          "verified_files": 35
+        },
+        {
+          "case": "portal-run-no-workspace",
+          "execution": "completed",
+          "original_passed": true,
+          "original_failures": [],
+          "current_regrade": {
+            "case": "portal-run-no-workspace",
+            "passed": true,
+            "failures": [],
+            "original_passed": true
+          },
+          "seconds": 102.65,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 119680,
+                "cached_input_tokens": 97536,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 1651,
+                "reasoning_output_tokens": 86
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/run.md": 1,
+              "references/build.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 25551,
+            "total_full_read_bytes": 25551,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 34870,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "56d8133b0f34544cfe4697990b545fd9f6d76862f76f9f25f99e4e7ea67548dd",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-5iifkm2t-portal-run-no-workspace.json.gz",
+            "sha256": "3f7fc1452f94b9f3799476a360588c39c6a19014c55519a158e1a5d3b66036da",
+            "files": 30,
+            "bytes": 51907
+          },
+          "verified_files": 30
+        }
+      ]
+    },
+    {
+      "run": "workflows-zchyeh03",
+      "loaded_source_hashes": {
+        "run.py": "0240eda2e71325e90c89b01651ff77f55bb27a658651dc85152b360466daf5b1",
+        "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+        "portal_fixtures.py": "81487d05161dddc54252d36b64474536075f91d395c5a9a52bddf3557100320d"
+      },
+      "regrades": [
+        {
+          "file": "regrade-f9v6wvv_.json",
+          "record": {
+            "grader_sha256": "0240eda2e71325e90c89b01651ff77f55bb27a658651dc85152b360466daf5b1",
+            "agent_executed": false,
+            "reports": [
+              {
+                "case": "portal-run-independent",
+                "passed": true,
+                "failures": [],
+                "original_passed": false
+              }
+            ]
+          }
+        },
+        {
+          "file": "regrade-cexl_xr6.json",
+          "record": {
+            "grader_sha256": "024776d4f83620169334a72c10c4c7d4ffb6f4f716cf1e8e50a64e00d8b28675",
+            "loaded_sources": {
+              "run.py": "024776d4f83620169334a72c10c4c7d4ffb6f4f716cf1e8e50a64e00d8b28675",
+              "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+              "portal_fixtures.py": "1d00c2c39df5f19569352a2cfbd2867bf7af03fa598cc1d246f7478a7d5b895e"
+            },
+            "agent_executed": false,
+            "reports": [
+              {
+                "case": "portal-go-single-unit",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              },
+              {
+                "case": "portal-run-independent",
+                "passed": true,
+                "failures": [],
+                "original_passed": false
+              },
+              {
+                "case": "portal-single-unit",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              }
+            ]
+          }
+        },
+        {
+          "file": "regrade-w7aljo11.json",
+          "record": {
+            "grader_sha256": "024776d4f83620169334a72c10c4c7d4ffb6f4f716cf1e8e50a64e00d8b28675",
+            "loaded_sources": {
+              "run.py": "024776d4f83620169334a72c10c4c7d4ffb6f4f716cf1e8e50a64e00d8b28675",
+              "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+              "portal_fixtures.py": "1d00c2c39df5f19569352a2cfbd2867bf7af03fa598cc1d246f7478a7d5b895e"
+            },
+            "agent_executed": false,
+            "reports": [
+              {
+                "case": "portal-go-single-unit",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              },
+              {
+                "case": "portal-run-independent",
+                "passed": true,
+                "failures": [],
+                "original_passed": false
+              },
+              {
+                "case": "portal-run-resume",
+                "passed": true,
+                "failures": [],
+                "original_passed": false
+              },
+              {
+                "case": "portal-single-unit",
+                "passed": true,
+                "failures": [],
+                "original_passed": true
+              }
+            ]
+          }
+        }
+      ],
+      "attempts": [
+        {
+          "case": "portal-go-single-unit",
+          "execution": "completed",
+          "original_passed": true,
+          "original_failures": [],
+          "current_regrade": {
+            "case": "portal-go-single-unit",
+            "passed": true,
+            "failures": [],
+            "original_passed": true
+          },
+          "seconds": 78.2,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 101900,
+                "cached_input_tokens": 84736,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 1012,
+                "reasoning_output_tokens": 69
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/issue.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 14863,
+            "total_full_read_bytes": 14863,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 16164,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "7a073789521fe42512996ff78f8fd5dd22ad8f4814b395ca29660dcafdcd44b4",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-zchyeh03-portal-go-single-unit.json.gz",
+            "sha256": "2e64742ac26e966cdee94352e04ddddcb0fafc66c7a8838287dcf1b64a7f4cfd",
+            "files": 29,
+            "bytes": 40350
+          },
+          "verified_files": 29
+        },
+        {
+          "case": "portal-run-independent",
+          "execution": "completed",
+          "original_passed": false,
+          "original_failures": [
+            "unit verification evidence missing: 11",
+            "unit verification evidence missing: 12"
+          ],
+          "current_regrade": {
+            "case": "portal-run-independent",
+            "passed": true,
+            "failures": [],
+            "original_passed": false
+          },
+          "seconds": 252.78,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 427524,
+                "cached_input_tokens": 389120,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 4330,
+                "reasoning_output_tokens": 176
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/run.md": 1,
+              "references/build.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 25551,
+            "total_full_read_bytes": 25551,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 104883,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "7a073789521fe42512996ff78f8fd5dd22ad8f4814b395ca29660dcafdcd44b4",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-zchyeh03-portal-run-independent.json.gz",
+            "sha256": "b5a34ff5a9c908c87923fac8686fdd45960faa71faeda651978f0d14e408e5d1",
+            "files": 52,
+            "bytes": 92566
+          },
+          "verified_files": 52
+        },
+        {
+          "case": "portal-run-resume",
+          "execution": "completed",
+          "original_passed": false,
+          "original_failures": [
+            "unit verification evidence missing: 12"
+          ],
+          "current_regrade": {
+            "case": "portal-run-resume",
+            "passed": true,
+            "failures": [],
+            "original_passed": false
+          },
+          "seconds": 229.6,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 337802,
+                "cached_input_tokens": 297984,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 4022,
+                "reasoning_output_tokens": 135
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/run.md": 1,
+              "references/pr.md": 1,
+              "references/build.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 28093,
+            "total_full_read_bytes": 28093,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 112838,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "7a073789521fe42512996ff78f8fd5dd22ad8f4814b395ca29660dcafdcd44b4",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-zchyeh03-portal-run-resume.json.gz",
+            "sha256": "50efd2f21f920e7cf845deb39b32b16d3d1e0db4299acc286a39441fcd404374",
+            "files": 54,
+            "bytes": 102022
+          },
+          "verified_files": 54
+        },
+        {
+          "case": "portal-single-unit",
+          "execution": "completed",
+          "original_passed": true,
+          "original_failures": [],
+          "current_regrade": {
+            "case": "portal-single-unit",
+            "passed": true,
+            "failures": [],
+            "original_passed": true
+          },
+          "seconds": 77.6,
+          "host": "codex-cli 0.159.2",
+          "requested_model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "actual_model": null,
+          "usage": [
+            {
+              "type": "turn.completed",
+              "usage": {
+                "input_tokens": 148466,
+                "cached_input_tokens": 119808,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 1125,
+                "reasoning_output_tokens": 46
+              }
+            }
+          ],
+          "context": {
+            "full_reads": {
+              "SKILL.md": 1,
+              "references/issue.md": 1
+            },
+            "entry_bytes": 12068,
+            "unique_full_read_bytes": 14863,
+            "total_full_read_bytes": 14863,
+            "redundant_full_read_bytes": 0,
+            "tool_output_bytes": 74918,
+            "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+          },
+          "isolation": {
+            "outside_read": "denied",
+            "network": "denied",
+            "skill_write": "denied",
+            "workspace_write": "allowed"
+          },
+          "skill_hashes": {
+            "SKILL.md": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+            "scripts/run-state.sh": "7a073789521fe42512996ff78f8fd5dd22ad8f4814b395ca29660dcafdcd44b4",
+            "scripts/tickets.sh": "0b9b22dfd14b215842e196a5a361361bb0288ae86b0cf09b818cd986c65f126d",
+            "scripts/map.sh": "25e4149b3a2526d1dadef3673d2e5810c5a67fcf2040829cdf37cb44d73893d7",
+            "references/run.md": "3f19fd22a297b528a006990a491db25776c2bc81d12dafeb5da0b110525f5b0d",
+            "references/pr.md": "1aaf5bab46f75e6ffb777596244a2049e707700f340affaa3017420b9f834150",
+            "references/issue.md": "991168a01d99f4651717380adec5eadc0bc68c371d1e32fb3657b807153dd951",
+            "references/build.md": "e497305459c3e29fb4f38ad8e6be765d0505b9ec65fc62b9569ecc5bb20f7f7c",
+            "references/board.md": "e94832d07248c013855ad41f8fa7e40611dfbf06cb1d92ee992347a1de148015",
+            "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+          },
+          "archive": {
+            "path": "evals/workflows/evidence/package-d-workflows-zchyeh03-portal-single-unit.json.gz",
+            "sha256": "f9c59f760c60081d49275158a7842483e31298c7d1fa04fc0f6b13b6bfc31b9e",
+            "files": 29,
+            "bytes": 73512
+          },
+          "verified_files": 29
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Synthetic offline tracker and real linked Git fallback only.",
+    "Managed host workspaces, live external tracker/publication and arbitrary interruption timing remain unverified.",
+    "No speed or cost comparison; no cross-host exactly-once guarantee.",
+    "Original on-disk source hashes can reflect mid-group maintainer edits; frozen runner-source copies identify the code loaded for each group. New runner captures hashes at import."
+  ],
+  "validation": {
+    "command": "bash scripts/validate.sh",
+    "checked_state": "84a41e7 plus complete package D release diff, version 0.39.0",
+    "exit_code": 0,
+    "display_output": "evidence/package-d-validation.txt",
+    "raw_output": "evidence/package-d-validation.txt.gz",
+    "raw_sha256": "60273f13a5b9699ee9f3e26e14d68c660deaa98807f8788250065bac016287cc"
+  }
+}

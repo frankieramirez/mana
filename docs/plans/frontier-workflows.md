@@ -1,6 +1,6 @@
 # Frontier workflow improvements
 
-Status: packages A through C merged; B/C delegated review gate met in bounded cases; D remains proposed
+Status: packages A through C merged; B/C delegated review gate met in bounded cases; D implemented and prepared for review
 Date: 2026-09-29
 Updated: 2026-09-30
 Baseline: mana 0.35.0, commit aec8fa6
@@ -383,3 +383,69 @@ Performance is mixed: C has lower entry load in both pairs, higher total observe
 No installed skill payload has changed in this follow-up, so no plugin version bump is needed. Package D has not begun.
 
 Validation: the full repository validator passed, as did all 39 workflow tests. All 350 archived files passed digest verification. The actual command output is retained in `evals/workflows/evidence/validation.txt`. No scan or remedy payload was edited, so the similarity check was not rerun.
+
+
+## Package D implementation record
+
+Package D starts from `84a41e7`, the merge of evaluation PR #62. The full skills baseline was saved before editing under `/tmp/mana-package-d-baseline`; that base commit reproduces it. Version 0.39.0 adds optional named continuation at the existing router. The B/C gate remains limited to its two bounded paired scenarios. Its performance was mixed, backend identity remains unresolved and child token totals remain unavailable.
+
+### Workflow and state ownership
+
+`skills/portal/SKILL.md` retains the default router and one-handoff `go`, with a separate Stage Run for `portal run <map-or-build-effort>` and equivalent explicit natural language. Stage Run alone loads `references/run.md`. Portal owns serial continuation; a routed sibling retains its unit boundary. The standalone package inventory requires the run reference and helper, with deletion tests for both. No public skill or mandatory sibling installation was added.
+
+`run.md` owns trusted scope/action resolution, destination stops, serial frontier and post-claim rereads, isolation, verification and cancellation/resume. It documents supported managed linked workspaces first and a Git worktree fallback with reserved paths and fresh branches. A separate clone cannot share this first version's local lock. Isolation failure stops before implementation. A missing sibling uses the scoped ordinary-task fallback and reports unavailable sibling guarantees. Cast runs inside the selected unit workspace, preserving its branch constraints.
+
+`run-state.sh` supplies only local state and a directory lock in the common Git directory. Schema 1 stores repository/scope, current actions, destination, unit identities, owned workspace/branch, commit/PR, evidence and stop reason. Atomic state replacement preserves the previous snapshot on a failed update. Failed start reconciliation releases only its newly acquired lock. An existing coordinator's lock is never stolen. Verified effects cannot restart as reserved/active, or lose their recorded commit/evidence identities. The helper validates local commit ancestry and distinct owned workspace/branch identities; the agent still owns live tracker, remote and PR reconciliation. State never grants permission or contains copied private transcripts.
+
+A focused fixture exposed `tickets.sh blocked` hiding native dependency-read errors behind a body fallback. The canonical sift helper now distinguishes unavailable APIs (404/410) from refused/failed reads, and requires readable fallback blocker states. Copies were synchronized through `sync-assets.sh`. This supporting guard prevents treating an unknown relation as eligibility; it does not change `next` or claim into a distributed lock.
+
+### Deterministic acceptance evidence
+
+The new fixture suite invokes the installed Bash state helper and real guarded tracker adapter, using an offline transport with changing issue/PR records. Git worktree and disposable origin operations are real. These tests execute no model and do not prove agent instruction adherence.
+
+| Acceptance | Executed fixture or observation |
+|---|---|
+| Two independent ready build units, separate workspaces and evidence | `test_two_independent_units_have_distinct_workspaces_evidence_and_open_prs` creates real worktrees/commits, verifies each unit, and retains both PRs as awaiting review. |
+| Existing single-ticket and go boundary | Independent grader tests reject a second unit or continuation state; focused live cases exercise each default. |
+| Map destination stop | `test_map_frontier_reaches_destination_without_claiming_build` exercises the bundled map frontier/claim/closeout and verifies the owning decision artifact without claiming linked build work. |
+| Live dependencies, ownership and changed remote | Adapter tests exercise a competing claim and a new dependency after claim; membership rereads reflect removal, and a real origin base advances before resume. Failed dependency reads remain unknown. |
+| Unrelated ready work never claimed | The named parent fixture includes ready issue 99 outside membership, plus blocked/held/unready members. The oracle rejects any claim of these units. |
+| Cancellation and verified resume | State tests keep committed work and unfinished edits across stop/start; a seeded cancelled-run fixture includes an actual owned commit, an open PR and narrower current authorization. |
+| Missing sibling/workspace | Only portal is installed for the focused cases; ordinary-task execution must disclose unavailable guarantees. The workspace-stop oracle requires no claim or implementation under the supplied isolation limit. |
+| Open PRs await review | Real-worktree fixture records distinct synthetic open PR identities and rejects premature tracker closure; the resume case must report the prior open PR as awaiting review. |
+| Local overlap and malformed state | Two worktrees cannot acquire the same scope; invalid schema/destination cannot be silently reused. Missing evidence, wrong branch or missing commit cannot establish verified work. |
+
+The initial lock test and record test failed before their helpers existed. The native-read-failure test failed on the previous adapter. The verified-record test exposed an allowed restart of verified work, then passed after the transition guard. These red outcomes are distinct from live evaluation attempts.
+
+### Focused live evaluation and limits
+
+The predeclared groups are in `evals/workflows/package-d-controls.json`. Every invocation repeats the host containment probe, uses Codex CLI 0.159.2 with requested `gpt-6.1-sol`, medium reasoning, delegation disabled and a 300-second process timeout. Group one permits three invocations; its corrected follow-up permits four. There are no automatic retries. Each group freezes the installed payload and runner sources, and retains raw events, structured reports, state and actual attempts separately.
+
+Inspection of the first build invocation found a fixture defect: inherited repository validation required changing `app.txt`, while the ticket required changing its unit file. The agent preserved scope and recorded both units failed, but the initial oracle incorrectly accepted commits/evidence without checking status. The fixture now supplies applicable repository validation. The oracle requires verified/awaiting-review state and observed successful per-unit commands. The original result remains unchanged; a separate offline regrade rejects it. The map and unavailable-workspace observations remain accepted by that regrade. This is a fixture/grader correction, not proof of a passing first build run.
+
+The second group exposed an overly literal evidence-file check: it required a stdout phrase even when the agent recorded actual successful commands, checked commits and exit outcomes. The corrected oracle accepts nonempty durable evidence alongside independently observed successful per-unit commands and verified state. A regression rejects empty evidence and a missing unit check. Separate regrades accept the corrected build and resume observations, while continuing to reject the first failed-state attempt. No live attempt was overwritten.
+
+The raw parent events, structured reports, synthetic artifacts/state and exact loaded runner snapshots are archived per attempt under `evals/workflows/evidence/package-d-*.json.gz`. All 280 files passed digest verification through the existing archive tooling. `package-d-results.json` retains all seven invocations, original judgments, every regrade, payload hashes, loaded-reference metrics and usage. Mid-group maintainer edits could change an on-disk per-attempt source hash after modules were loaded; the frozen `runner-source` snapshots are the authoritative loaded-source pins. The runner now captures source hashes at import, and regrades include every loaded oracle hash.
+
+| Invocation | Outcome after current offline regrade | Seconds | Parent input tokens | Parent output tokens |
+|---|---|---:|---:|---:|
+| Initial independent build | Rejected: conflicting fixture validation; units recorded failed | 213.23 | 324,765 | 3,668 |
+| Map destination | Accepted: decision and owning artifact recorded; downstream build untouched | 217.03 | 327,448 | 3,730 |
+| Workspace unavailable | Accepted: concrete prerequisite, no claims or implementation | 102.65 | 119,680 | 1,651 |
+| Corrected independent build | Accepted: two verified local commits in distinct workspaces; unrelated work untouched | 252.78 | 427,524 | 4,330 |
+| Single-ticket route | Accepted: one local unit, no continuation state | 77.60 | 148,466 | 1,125 |
+| Named ticket with go | Accepted: one local unit, no continuation state | 78.20 | 101,900 | 1,012 |
+| Seeded cancellation/resume | Accepted: prior commit and draft preserved, open PR awaiting review, only remaining independent unit committed, no publishing | 229.60 | 337,802 | 4,022 |
+
+All six final focused outcomes pass their current offline regrades. Manual inspection confirms truthful missing-sibling reports, map/build separation, no redundant permission questions and preservation of the resume draft. The first group observes the original run payload; the second group freezes the hardened state helper. These are single observations of each scenario, with a deliberate repeat of the corrected build case. Parent usage is cumulative host processing; instruction/output byte measures are lower bounds. These serial invocations use no children and provide no information about missing child usage in the earlier B/C evaluation. No measured speed/cost comparison is claimed. Managed host worktree APIs, a live external tracker, live PR publication inside a run, arbitrary interruption timing and cross-host coordination remain unverified. Serial linked Git fallback, scoped sibling absence and synthetic current-state reconciliation are the tested surfaces. Automatic merging, stacked-PR surgery and implicit watchers remain out of scope.
+
+
+### Release checks
+
+The focused package D suite has 13 deterministic tests; the complete workflow suite has 55. Standalone verification checks all 19 packages, including both portal asset deletion cases. Shared-asset check mode is clean. All 31 required similarity comparisons against upstream `414e9d6be166c15d9fb10595204530802ad007ef` are present and below 0.30, with a maximum of 0.24; this was rerun because the canonical adapter synchronization changes scan's bundled copy. The complete repository validator is captured in `evals/workflows/evidence/package-d-validation.txt` for this release tree. The PR proof renders the actual focused test output; it establishes those executed checks, with the above live limits retained.
+
+Comment cleanup removed five added comments, then audited subsequent additions. Its retained-lock reshape concern was resolved by failed-acquisition cleanup; no reshape items remain. The seeded-resume fixture contract docstring is retained. No automatic merge, follow-on effort or watcher is part of this shipment.
+
+### PR 63 review fixes
+
+Version 0.39.1 clears inherited repository-local Git variables before locating portal state and verifying unit workspaces. Two-repository regressions cover misplaced state and locks, config injection, and false acceptance of a foreign workspace. The offline claim parser accepts numeric and fixture issue URL targets and reports malformed or unsupported claims as failures. Unexpected grading exceptions now produce a failed result record. These deterministic checks extend the release evidence; the seven archived live attempts above remain unchanged and were not rerun for these fixes.

@@ -182,11 +182,17 @@ gh_is_blocked() {
 
 gh_blocked() {
   local n="$1"
-  local ids
-  if ids=$(gh_open_blockers_from_api "$n"); then
-    :
+  local ids err
+  err=$(mktemp)
+  if ids=$(gh_open_blockers_from_api "$n" 2>"$err"); then
+    rm -f "$err"
+  elif grep -qiE 'HTTP (404|410)|404 Not Found|410 Gone' "$err"; then
+    rm -f "$err"
+    ids=$(gh_open_blockers_from_body "$n") || die "cannot read blockers for $n"
   else
-    ids=$(gh_open_blockers_from_body "$n")
+    cat "$err" >&2
+    rm -f "$err"
+    die "cannot read native blockers for $n"
   fi
   [ -n "$ids" ] || return 1
   printf '%s\n' "$ids"
@@ -197,7 +203,7 @@ gh_open_blockers_from_api() {
   gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
     (if type == "array" then . else (.blocked_by // []) end)
     | .[] | select(.state == "open" or .state == "OPEN") | .number
-  ' 2>/dev/null | grep -E '^[0-9]+$' || [ "${PIPESTATUS[0]}" -eq 0 ]
+  ' | grep -E '^[0-9]+$' || [ "${PIPESTATUS[0]}" -eq 0 ]
 }
 
 gh_open_blockers_from_body() {
@@ -207,7 +213,8 @@ gh_open_blockers_from_body() {
   ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
   for id in $ids; do
     [ -n "$id" ] || continue
-    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state 2>/dev/null || true)
+    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state) || die "cannot read blocker $id"
+    case "$st" in OPEN|open|CLOSED|closed) ;; *) die "unknown blocker state for $id" ;; esac
     if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
       printf '%s\n' "$id"
     fi
