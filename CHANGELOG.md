@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.35.1
+
+- Honor user instructions and prior authorization consistently across skill workflows. Reuse supplied review actions, slices, and triage decisions without requiring special tokens or repeated confirmation. Keep local review fixes separate from permission to commit or push. On a rejected repair push, preserve the local commit and leave fix threads open for separate history recovery. Add focused workflow scenarios and offline grader coverage.
+
 ## 0.35.0
 
 - Add optional Security audits to `ultima`, with focused access-control, input-boundary and sensitive-data specialists. Profile security surfaces, verify enclosing controls and source traces, preserve qualified static claims, redact sensitive evidence, and show coverage in the offline report. Security findings become planning or decision briefs. Add synthetic boundary fixtures and independent specialist evaluation.

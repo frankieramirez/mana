@@ -27,9 +27,19 @@ The command makes at most three agent invocations, each limited to 120 seconds. 
 
 The agent uses the copied skill and its real bundled helpers. Fixtures cover capture success and failure, unavailable runtime, stale evidence, staged user work, tracker arguments, untrusted report text, and an absent optional sibling. Evidence cases intentionally request only capture, and the handoff case starts at an already resolved route. These are focused workflow scenarios, not complete PR publication or whole-board tests.
 
+Three additional scenarios cover the authority and recovery changes:
+
+| Case | Stage and observable outcome |
+|------|------------------------------|
+| `prior-action-local-fix` | Completed review at Stage 6. Apply the already chosen local fix and verify it, preserving HEAD and the index. |
+| `review-report-only` | Completed review at Stage 6. Report findings while preserving product files, HEAD, and the index. Reject observed publication attempts even when they fail. |
+| `repair-push-rejected` | Repair publication stage. Commit the supplied repair, observe a real non-fast-forward rejection from a disposable local remote, and preserve both the repair commit and concurrent remote commit. |
+
+The loader limits the added review skills to these stages. Reviewer delegation remains disabled; these cases do not test finding quality, reviewer orchestration, or a full feedback cycle. Human review must also check that the agent did not ask again for an action already supplied and that its report accurately explains any recovery. The command-pattern checks detect selected prohibited attempts, not every possible shell encoding. Final repository state supplies the primary scope oracle.
+
 ## Isolation
 
-The trusted host CLI retains authentication for model traffic. Agent command environments are separately scrubbed; fixture HOME and Git configuration contain no user credentials. The named permission profile denies reads outside the workspace and required runtime files, makes the installed skill and tool doubles read-only, and denies command networking. Browser tools, MCP servers, plugins, hooks, and other host integrations are disabled. The run has no Git remote configured for publishing.
+The trusted host CLI retains authentication for model traffic. Agent command environments are separately scrubbed; fixture HOME and Git configuration contain no user credentials. The named permission profile denies reads outside the workspace and required runtime files, makes the installed skill and tool doubles read-only, and denies command networking. Browser tools, MCP servers, plugins, hooks, and other host integrations are disabled. Only the rejected-push fixture has a publishing remote: a disposable bare repository inside its own workspace. No remote service is reachable through it.
 
 Before each invocation, the runner executes an isolation probe through the same host permission profile: fixture writes must work, reading an outside canary and modifying the skill must fail, and network connection must fail. A missing or unsupported sandbox stops execution. These controls use the documented [Codex permission profiles](https://developers.openai.com/codex/permissions), verified with the installed CLI. Model service traffic is separate from command networking.
 

@@ -2,6 +2,45 @@
   "version": 1,
   "cases": [
     {
+      "id": "review-report-only",
+      "skill": "scan",
+      "fixture": "action",
+      "expected_status": "report-only",
+      "request": "Continue at Stage 6. The review is complete and report.md contains the finding. Show me the review result only. Do not edit files, commit, push, post comments, or ask me to choose an action. No reviewer dispatch is needed for this completed review.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "repair-push-rejected",
+      "skill": "remedy",
+      "fixture": "rejected-push",
+      "expected_status": "push-rejected",
+      "request": "Continue at Full mode step 6. The accepted repair to app.txt is already in the working tree. Commit that file and attempt the normal push to the configured local fixture remote. A concurrent commit has advanced that branch. Preserve the local repair if the push is rejected, leave fix threads open, and report the recovery needed. No rebase, merge, force push, or PR messages are authorized. This is a publication-stage scenario; do not fetch or redispatch review work. The supplied gh is an offline fixture.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": true,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "prior-action-local-fix",
+      "skill": "scan",
+      "fixture": "action",
+      "check_exit": 0,
+      "expected_status": "local-fix",
+      "request": "Continue at Stage 6. The review is complete and report.md contains the confirmed finding. I already chose to fix it locally: change app.txt to new followed by a newline and run bash check.sh. Do not commit, push, post comments, or ask me to choose an action again. No reviewer dispatch is needed for this completed review.",
+      "allowed_effects": {
+        "product_files": [
+          "app.txt"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
       "id": "capture-pass",
       "skill": "reveal",
       "fixture": "check",
