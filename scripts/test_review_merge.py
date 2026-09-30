@@ -121,6 +121,15 @@ class MergeFixtures(unittest.TestCase):
             evidence=item['evidence'], reason='Both reviewers agree.')
         self.assertEqual(self.merge(doc)['findings'][0]['confidence'], 50)
 
+    def test_malformed_assessment_basis_cannot_raise_confidence(self):
+        for basis in (None, 'src/api.py:12: return values[0]', {}, [1]):
+            with self.subTest(basis=basis):
+                doc = self.legacy()
+                doc['findings'][0].update(confidence=100,
+                    confidence_assessment=dict(confidence=100, evidence_basis=basis,
+                        evidence=['src/caller.py:8: lookup([])'], reason='Reachable empty input.'))
+                self.assertEqual(self.merge(doc)['findings'][0]['confidence'], 50)
+
     def test_wording_variations_wait_for_semantic_reconciliation(self):
         self.artifact('protection-warrior', [finding(75)])
         self.artifact('subtlety-rogue', [finding(75, title='Empty list raises IndexError')])
@@ -180,6 +189,37 @@ class MergeFixtures(unittest.TestCase):
         self.assertEqual(items[0]['confidence'], 100)
         again = self.merge(result)
         self.assertEqual((again['findings'] + again['soft_candidates'])[0]['confidence'], 100)
+
+    def test_assessment_stays_valid_when_dedup_adds_its_evidence(self):
+        self.artifact('havoc-demon-hunter', [finding(50)])
+        doc = self.merge()
+        assessed = doc['soft_candidates'][0]
+        new_evidence = 'src/caller.py:8: lookup([])'
+        assessed.update(confidence=100, bucket='primary',
+                        confidence_assessment=dict(confidence=100,
+                            evidence=[new_evidence], reason='Reachable empty input.'))
+        duplicate = copy.deepcopy(assessed)
+        duplicate.update(confidence=50, reviewers=['subtlety-rogue'],
+                         contribs=[dict(reviewer='subtlety-rogue', confidence=50)])
+        duplicate.pop('confidence_assessment')
+        duplicate['evidence'].append(new_evidence)
+        for items in ([assessed, duplicate], [duplicate, assessed]):
+            with self.subTest(first_reviewer=items[0]['reviewers'][0]):
+                current = copy.deepcopy(doc)
+                current['soft_candidates'] = copy.deepcopy(items)
+                result = self.merge(current)
+                item = result['findings'][0]
+                self.assertEqual(item['confidence'], 100)
+                self.assertIn(new_evidence, item['evidence'])
+                self.assertEqual(item['confidence_assessment']['evidence_basis'], assessed['evidence'])
+                self.assertNotIn(new_evidence, item['confidence_assessment']['evidence_basis'])
+                self.assertEqual(set(item['reviewers']), {'havoc-demon-hunter', 'subtlety-rogue'})
+                self.assertEqual([c['confidence'] for c in item['contribs']], [50, 50])
+                self.assertFalse(item['promoted'])
+                for _ in range(2):
+                    result = self.merge(result)
+                    self.assertEqual(result['findings'][0]['confidence'], 100)
+                    self.assertEqual(result['findings'][0], item)
 
     def test_model_diversity_is_only_provenance(self):
         self.artifact('havoc-demon-hunter', [finding(50)])

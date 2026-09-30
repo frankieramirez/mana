@@ -503,14 +503,17 @@ def reassess_confidence(f):
         f["requires_evidence_assessment"] = True
         f["confidence_note"] = "Underlying evidence scores unavailable; fresh evidence assessment required."
     assessment = f.get("confidence_assessment")
+    basis = assessment.get("evidence_basis", f["evidence"]) if isinstance(assessment, dict) else []
     valid = (isinstance(assessment, dict) and assessment.get("confidence") in ANCHORS
              and isinstance(assessment.get("reason"), str) and assessment["reason"].strip()
              and isinstance(assessment.get("evidence"), list)
-             and any(isinstance(e, str) and e.strip() and e not in f["evidence"]
+             and isinstance(basis, list) and all(isinstance(e, str) for e in basis)
+             and any(isinstance(e, str) and e.strip() and e not in basis
                      for e in assessment["evidence"]))
     ceiling = assessment["confidence"] if valid else baseline
     f["confidence"] = min(f["confidence"], ceiling)
     if valid:
+        assessment["evidence_basis"] = list(basis)
         f["requires_evidence_assessment"] = False
         f["confidence_note"] = "Evidence reassessed during reconciliation; see confidence_assessment."
 

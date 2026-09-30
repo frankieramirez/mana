@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.37.1
+
+- Preserve each confidence assessment's original evidence basis when merging duplicate findings. Add regression coverage for both duplicate orders and repeated reconciliation so expanded evidence cannot lower a supported score.
+
 ## 0.37.0
 
 - Ground review decisions in inspected evidence. Remove reviewer-count confidence promotion, preserve source attribution, re-evaluate legacy promotions, and keep distinct defects separate. Verify repair concerns while retaining useful small corrections. Add offline fixtures for the real review merge helper.
