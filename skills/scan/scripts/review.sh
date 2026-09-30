@@ -9,12 +9,12 @@
 #   merge RUN_DIR [--reconciled FILE] [--out FILE] [--roster a,b,c]
 #       Pass 1: read every reviewer artifact in RUN_DIR (plus RUN_DIR/returns/*.json for a
 #       reviewer whose artifact is missing) and apply the mechanical gates in order: fast-pass
-#       clamp, suppression at 0 and 25, quote-the-line demotion, exact dedup, cross-reviewer
-#       promotion, the confidence gate, partition, sort, stable numbering. Writes merged.json.
+#       clamp, suppression at 0 and 25, quote-the-line demotion, exact dedup, source attribution,
+#       the confidence gate, partition, sort, stable numbering. Writes merged.json.
 #       Pass 2 (--reconciled): take the model's edited copy of merged.json and restore the
 #       gates, numbering, and counts. --roster lists the reviewers that were dispatched so a
 #       missing artifact is reported. lore-bard and lore-bard-late are the same harvest
-#       reviewer read twice, so together they count as one voice for promotion.
+#       reviewer read twice, so together they count as one provenance source.
 #
 #   peer --cli NAME --run-dir DIR --brief FILE --constraints FILE --host FAMILY
 #        [--timeout SECONDS] [--check] [--named-by-user]
@@ -286,7 +286,6 @@ SEVERITY = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
 ANCHORS = (0, 25, 50, 75, 100)
 CLASS_RANK = {"gated_auto": 0, "manual": 1, "advisory": 2}
 OWNER_RANK = {"downstream-resolver": 0, "release": 1, "human": 2}
-PROMOTE = {50: 75, 75: 100, 100: 100}
 TESTING_BUCKET = {"marksmanship-hunter"}
 RISK_BUCKET = {"balance-druid", "restoration-shaman", "windwalker-monk", "havoc-demon-hunter",
                "augmentation-evoker", "discipline-priest", "havoc-demon-hunter-peer"}
@@ -300,7 +299,9 @@ def warn(msg):
 def fingerprint(f):
     path = os.path.normpath(str(f.get("file", ""))).lower()
     title = " ".join(str(f.get("title", "")).lower().split())
-    return (path, str(f.get("line", "")), title)
+    detail = tuple(" ".join(str(f.get(k) or "").split())
+                   for k in ("why_it_matters", "suggested_fix"))
+    return (path, str(f.get("line", "")), title, detail)
 
 
 def load_json(path):
@@ -351,11 +352,11 @@ def normalize(f, reviewer, hydration):
         "why_it_matters": f.get("why_it_matters"),
         "evidence": [str(e) for e in evidence],
         "requirement": f.get("requirement"),
-        "reviewers": [reviewer],
-        "independent_reviewers": [],
-        "contribs": [{"reviewer": reviewer, "confidence": conf}],
-        "corroborated": False,
-        "promoted": False,
+        "reviewers": list(dict.fromkeys(f.get("reviewers", []) + [reviewer])) if f.get("promoted") else [reviewer],
+        "independent_reviewers": f.get("independent_reviewers", []) if f.get("promoted") else [],
+        "contribs": f.get("contribs", []) if f.get("promoted") else [{"reviewer": reviewer, "confidence": conf}],
+        "corroborated": bool(f.get("corroborated", False)),
+        "promoted": bool(f.get("promoted", False)),
         "gate": "primary",
         "hydration": hydration,
         "soft_candidate": None,
@@ -383,7 +384,7 @@ if reconciled:
     testing_gaps = list(doc.get("testing_gaps", []))
     prior = doc.get("counts", {})
     for k in ("suppressed", "clamped_fast_pass", "demoted_missing_evidence", "dedup_merged", "malformed",
-              "promoted", "dropped_confidence_gate"):
+              "dropped_confidence_gate"):
         if k in prior:
             counts[k] = prior[k]
     counts["reviewers_missing"] = prior.get("reviewers_missing", [])
@@ -415,7 +416,7 @@ if reconciled:
         f["requires_verification"] = bool(f.get("requires_verification", False))
         f.setdefault("reviewers", [])
         f.setdefault("independent_reviewers", [])
-        f.setdefault("contribs", [{"reviewer": r, "confidence": 50} for r in f["reviewers"]])
+        f.setdefault("contribs", [])
         for k in ("corroborated", "promoted"):
             f.setdefault(k, False)
         f.setdefault("gate", "primary")
@@ -491,6 +492,33 @@ else:
         for t in art.get("testing_gaps", []) or []:
             testing_gaps.append({"reviewer": stem, "text": str(t)})
 
+def reassess_confidence(f):
+    scores = [c["confidence"] for c in f["contribs"]
+              if isinstance(c, dict) and c.get("confidence") in ANCHORS]
+    baseline = max(scores) if scores else 50
+    if f.get("promoted"):
+        f["legacy_promoted"] = True
+        f["promoted"] = False
+    if not scores:
+        f["requires_evidence_assessment"] = True
+        f["confidence_note"] = "Underlying evidence scores unavailable; fresh evidence assessment required."
+    assessment = f.get("confidence_assessment")
+    valid = (isinstance(assessment, dict) and assessment.get("confidence") in ANCHORS
+             and isinstance(assessment.get("reason"), str) and assessment["reason"].strip()
+             and isinstance(assessment.get("evidence"), list)
+             and any(isinstance(e, str) and e.strip() and e not in f["evidence"]
+                     for e in assessment["evidence"]))
+    ceiling = assessment["confidence"] if valid else baseline
+    f["confidence"] = min(f["confidence"], ceiling)
+    if valid:
+        f["requires_evidence_assessment"] = False
+        f["confidence_note"] = "Evidence reassessed during reconciliation; see confidence_assessment."
+
+
+for f in work:
+    if reconciled or f.get("promoted"):
+        reassess_confidence(f)
+
 # ---- gate 1: fast-pass clamp
 for f in work:
     if f["reviewers"] == ["fast-pass"] and f["confidence"] > 50:
@@ -549,6 +577,9 @@ for f in work:
         m["severity"] = f["severity"]
     if f["confidence"] > m["confidence"]:
         m["confidence"] = f["confidence"]
+        for k in ("confidence_assessment", "confidence_note", "requires_evidence_assessment"):
+            if k in f:
+                m[k] = f[k]
         if f.get("suggested_fix"):
             m["suggested_fix"] = f["suggested_fix"]
     elif not m.get("suggested_fix") and f.get("suggested_fix"):
@@ -557,6 +588,8 @@ for f in work:
         m["first_evidence"] = f["first_evidence"]
     if not m.get("requirement") and f.get("requirement"):
         m["requirement"] = f["requirement"]
+    if f.get("legacy_promoted"):
+        m["legacy_promoted"] = True
     m["promoted"] = m["promoted"] or f["promoted"]
     m["corroborated"] = m["corroborated"] or f["corroborated"]
     m["bucket"] = m["bucket"] or f["bucket"]
@@ -564,7 +597,6 @@ for f in work:
         m["hydration"] = "artifact"
 work = [merged[k] for k in order]
 
-# ---- gate 5: promotion across independent reviewers
 for f in work:
     indep = list(f.get("independent_reviewers", []))
     for c in f["contribs"]:
@@ -579,10 +611,6 @@ for f in work:
     f["independent_reviewers"] = indep
     if len(indep) >= 2:
         f["corroborated"] = True
-        if not f["promoted"]:
-            f["confidence"] = PROMOTE.get(f["confidence"], f["confidence"])
-            f["promoted"] = True
-            counts["promoted"] += 1
 
 # ---- gate 6: confidence gate at 50, soft-candidate tagging
 kept = []
@@ -602,6 +630,9 @@ for f in work:
         continue
     if f["severity"] == "P0":
         f["gate"] = "p0_escape"
+        kept.append(f)
+    elif f.get("requires_evidence_assessment"):
+        f["soft_candidate"] = "evidence_assessment"
         kept.append(f)
     elif src in TESTING_BUCKET:
         f["soft_candidate"] = "testing_gaps"
@@ -917,7 +948,7 @@ artifact = {
 with open(os.path.join(run_dir, REVIEWER + ".json"), "w") as fh:
     json.dump(artifact, fh, indent=1)
     fh.write("\n")
-print("peer: %s returned %d findings (%d dropped as malformed), model %s, independence %s, %.0fs" % (
+print("peer: %s returned %d findings (%d dropped as malformed), model %s, different model family %s, %.0fs" % (
     cli, len(valid), dropped, model or "unverified", "verified" if artifact["independence_verified"] else "not verified", duration))
 sys.exit(0)
 PY

@@ -23,14 +23,14 @@ Reviewed 9f3c1e2 against 4b8a770, patch-id 51d0e7c.
 #1 Exempt accounts are charged the flat rate. src/tax.ts:31
 Why it matters: an account flagged tax_exempt gets a non-zero tax line on every invoice, because the new computeTax returns rate * subtotal before the exemption check that used to run first. Customers who were exempt yesterday are billed today.
 Response: move the `if (account.taxExempt) return 0` guard above the rate multiply, mirroring src/invoice.ts:58 which checks the flag before any amount.
-Confidence 100, corroborated (Protection Warrior, Marksmanship Hunter).
+Confidence 100: the unconditional return precedes the exemption guard. Sources: Protection Warrior, Marksmanship Hunter.
 
 ### P2: Moderate
 
 #3 No test forces the exempt branch after the move. src/tax.test.ts:1
 Why it matters: the only exemption test asserts on the old lookupTier path, which the diff deleted, so a regression in #1 passes the suite.
 Response: add a case that builds an exempt account and expects computeTax to return 0; src/invoice.test.ts:40 has the fixture to reuse.
-Confidence 100, corroborated (Marksmanship Hunter, and coderabbitai raised it mid-review). Arrived during this review.
+Confidence 75: the inspected tests cover only the deleted lookupTier path. Sources: Marksmanship Hunter, coderabbitai. The bot item arrived during this review.
 
 ### Requirements
 
@@ -46,7 +46,7 @@ Harvested 3 items at the start. 1 became a finding (#1, also reported by coderab
 
 ### Dismissed
 
-- "Rename computeTax to calculateTax" (Balance Druid, P3, confidence 50): confidence gate, naming preference.
+- "Rename computeTax to calculateTax" (Balance Druid, P3, confidence 50): lead judgment, naming preference with no concrete benefit.
 - "Rate constant should live in config" (Protection Warrior, P2): validator, src/config/tax.ts:4 already exports it and computeTax imports from there.
 
 ### Coverage
