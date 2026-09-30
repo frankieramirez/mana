@@ -25,6 +25,11 @@ pairs = [
     ("skills/remedy/references/fixer-prompt.md", "ce-resolve-pr-feedback/references/agents/pr-comment-resolver.md"),
     ("skills/remedy/scripts/pr-threads", "ce-resolve-pr-feedback/scripts/get-pr-comments"),
 ]
+for name in ("scope", "feedback-requirements", "roster", "dispatch"):
+    pairs.append((f"skills/scan/references/{name}.md", "ce-code-review/SKILL.md"))
+for name in ("full-mode", "targeted-mode", "run-artifacts", "publication"):
+    pairs.append((f"skills/remedy/references/{name}.md", "ce-resolve-pr-feedback/references/full-mode.md"))
+
 for ours, theirs in [
     ("protection-warrior", "correctness"), ("subtlety-rogue", "security"),
     ("havoc-demon-hunter", "adversarial"), ("marksmanship-hunter", "testing"),
@@ -38,15 +43,17 @@ for ours, theirs in [
                   f"ce-code-review/references/personas/{theirs}-reviewer.md"))
 
 worst = 0.0
+missing = 0
 for ours, theirs in pairs:
     a, b = os.path.join(root, ours), os.path.join(origin, theirs)
     if not (os.path.exists(a) and os.path.exists(b)):
         print(f"  --   missing  {ours} vs {theirs}")
+        missing += 1
         continue
     A, B = open(a).read(), open(b).read()
     r = difflib.SequenceMatcher(None, A, B).ratio()
     worst = max(worst, r)
     flag = "  " if r < 0.30 else "!!"
     print(f"{flag} {r:.2f}  {len(A.split()):5d}w / {len(B.split()):5d}w  {ours}")
-print(f"\nworst: {worst:.2f}")
-sys.exit(0 if worst < 0.30 else 1)
+print(f"\ncomparisons: {len(pairs) - missing}/{len(pairs)}; worst: {worst:.2f}")
+sys.exit(0 if worst < 0.30 and not missing else 1)

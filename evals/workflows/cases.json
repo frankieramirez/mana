@@ -156,6 +156,56 @@
         "commit": false,
         "evidence_directory": "artifacts/"
       }
+    },
+    {
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      },
+      "id": "targeted-incorrect-suggestion",
+      "skill": "remedy",
+      "fixture": "feedback",
+      "expected_status": "targeted-judgment",
+      "request": "Use remedy on https://github.com/fixture/mana/pull/7#discussion_r101 with dry-run keep-open. Judge only the named thread against current code. Use artifacts/run for the run directory. The supplied gh is an offline fixture. Do not read or fetch unrelated feedback."
+    },
+    {
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      },
+      "id": "full-feedback-judgment",
+      "skill": "remedy",
+      "fixture": "feedback",
+      "expected_status": "full-judgment",
+      "request": "Use remedy on PR 7 with dry-run. Judge all feedback against current code. Use artifacts/run for the run directory. The supplied gh is an offline fixture."
+    },
+    {
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      },
+      "id": "small-risk-roster",
+      "skill": "scan",
+      "fixture": "risk",
+      "expected_status": "risk-roster",
+      "request": "Use scan with base:origin/main ticket:7 report. Run through Stage 3 reviewer selection only, then stop before run setup and dispatch. Report the resolved requirements and each selected reviewer with its reason. Do not conduct a review or claim independent validation. The supplied tracker and gh are offline fixtures."
+    },
+    {
+      "id": "targeted-supported-fix",
+      "skill": "remedy",
+      "fixture": "feedback",
+      "expected_status": "supported-fix",
+      "request": "Use remedy on https://github.com/fixture/mana/pull/7#discussion_r101 with no-push keep-open. Fix and commit this one thread if supported. Use artifacts/run for the run directory. Do not push or resolve threads. The supplied gh is an offline fixture.",
+      "allowed_effects": {
+        "product_files": [
+          "app.py"
+        ],
+        "commit": true,
+        "evidence_directory": "artifacts/"
+      }
     }
   ]
 }

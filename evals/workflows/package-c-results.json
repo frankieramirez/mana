@@ -1,0 +1,2750 @@
+{
+  "version": 1,
+  "baseline_commit": "e1f8417865b778faf0cc61297375f18551fc1c27",
+  "scope": "Focused stages and serial repair fallback, not full delegated review equivalence.",
+  "limits": [
+    "Complete Markdown/JSON matches are a lower bound; total command output and host usage are also recorded.",
+    "Host input tokens are cumulative processing, not unique context. Actual model identity is not supplied.",
+    "Elapsed times are single-run observations with overlapping local runs; no statistical speed or model advantage claim.",
+    "Every attempted run is retained locally under evals/results or its recorded compatibility directory.",
+    "Two superseded targeted comparisons used a permissive fixture; use strict-target-repeat for retrieval comparison.",
+    "Child containment passed in a saved session, but the CLI JSON stream omitted child command events and usage; delegation remains disabled in the runner."
+  ],
+  "compatibility": [
+    {
+      "run": "mana-c-event-fivspe9i",
+      "result": {
+        "execution": "completed",
+        "failures": [],
+        "host": "codex-cli 0.159.2",
+        "isolation": {
+          "outside_read": "denied",
+          "network": "denied",
+          "skill_write": "denied",
+          "workspace_write": "allowed"
+        },
+        "usage": [
+          {
+            "type": "turn.completed",
+            "usage": {
+              "input_tokens": 31270,
+              "cached_input_tokens": 10624,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 228,
+              "reasoning_output_tokens": 18
+            }
+          }
+        ],
+        "seconds": 19.05,
+        "passed": true
+      },
+      "events_sha256": "ed8c5723380224b282fc2ad07ce09272481febfb56fb1747c8650f09c1811bc7",
+      "agent_reports": [
+        "I\u2019ll read the installed skill and completed report, then show the review result without changing any files.\n",
+        "{\"report\":\"Completed review. Scope: standalone on fixture-work.\\n\\nConfirmed finding: `app.txt` contains `old`; the accepted requirement is `new` followed by a newline.\\n\\nNo PR exists. No other findings.\",\"checks\":[{\"command\":\"cat installed/scan/SKILL.md\",\"status\":\"passed\",\"exit_code\":0,\"claim\":\"Read the installed skill and followed Stage 6 report-only instructions.\"},{\"command\":\"cat report.md\",\"status\":\"passed\",\"exit_code\":0,\"claim\":\"Read the completed review result. No additional validation was run.\"}]}"
+      ]
+    },
+    {
+      "run": "mana-c-delegation-tn_w46ur",
+      "result": {
+        "parent_isolation": {
+          "outside_read": "denied",
+          "network": "denied",
+          "skill_write": "denied",
+          "workspace_write": "allowed"
+        },
+        "exit": 0,
+        "child_artifact": null
+      },
+      "events_sha256": "8b85542553b05c28ebf22399a3e0ea2f9949fb1d5bb0b8f1c0bf62f8edfae1e0",
+      "agent_reports": [
+        "I\u2019ll spawn one child agent to run the probe, wait for it, and report the result.",
+        "The child agent could not be spawned: the tool failed to load its model context because no rollout was found for the thread ID. The probe did not run; I did not run it myself."
+      ]
+    },
+    {
+      "run": "mana-c-delegation-9autuqfj",
+      "result": {
+        "parent_isolation": {
+          "outside_read": "denied",
+          "network": "denied",
+          "skill_write": "denied",
+          "workspace_write": "allowed"
+        },
+        "exit": 0,
+        "child_artifact": {
+          "outside_read": "denied",
+          "network": "denied",
+          "skill_write": "denied",
+          "bin_write": "denied",
+          "workspace_write": "allowed"
+        }
+      },
+      "events_sha256": "f534d45e18fe90be5bbf49f1de5181b7cb2ce568c32d64635070d57903b99f47",
+      "agent_reports": [
+        "I\u2019ll spawn one child agent to run the probe, then wait and report its actual result.\n",
+        "The child agent ran `python3 bin/child-probe.py` successfully (exit code 0).\n\nOutput: `child isolation verified`"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "case": "full-feedback-judgment",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 164.13,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 200346,
+            "cached_input_tokens": 167680,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2926,
+            "reasoning_output_tokens": 245
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 48868,
+        "total_full_read_bytes": 48868,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 65546,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "0b320a2114f9a7a590cf903f1ead7ed65768287a3a285e66ef35890b2b28c4bb",
+      "fixture_sha256": null,
+      "run": "workflows-k99i6gz_",
+      "phase": "exploratory",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "889318f1b4afdb66813322b06da3e34eba8f615dcbb0d948a302eb2d6c1fb007",
+      "response": {
+        "report": "Dry-run on PR #7: judged all 3 feedback items against current code.\n\nPlanned fixes (2):\n- app.py:7: Replace `value + 2` with `value * 2`; `double(3)` currently returns 5.\n- app.py:9: Correct `Sucess` to `Success`.\n\nDeclined (1):\n- app.py:2: Keep the negative-value guard. caller.py:4 passes unrestricted public input, which can be negative. Removing the guard would silently accept currently rejected input.\n\nNo code edits, commits, pushes, PR comments, or resolutions. Artifacts saved in `artifacts/run`.\n\nThe baseline validation failed because app.txt contains `old`. The fixture supplied no CI checks and does not support the PR diff; planned fixes and PR-wide sibling sites remain unverified.",
+        "checks": [
+          {
+            "command": "gh repo view; gh pr view 7",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed GitHub fixture repository and PR 7 context."
+          },
+          {
+            "command": "TMPDIR=\"$PWD/artifacts/run\" bash installed/remedy/scripts/pr-threads fetch 7 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Fetched one unresolved thread and two actionable top-level comments."
+          },
+          {
+            "command": "gh pr checks 7 --json name,state,link,bucket",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Returned an empty list; CI health remains unverified."
+          },
+          {
+            "command": "gh pr diff 7",
+            "status": "blocked",
+            "exit_code": 97,
+            "claim": "Offline fixture does not support this operation."
+          },
+          {
+            "command": "python3 -B (read-only current-code probe)",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed double(3)=5, MESSAGE='Sucess', and submit('-1') raises ValueError."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Configured validation fails on the unchanged baseline."
+          },
+          {
+            "command": "git status --short",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Tracked working tree remained unchanged."
+          },
+          {
+            "command": "Validate planned fixes",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Dry-run applied no fixes, so their resulting behavior remains unverified."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g 'CLAUDE.md' -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; git status --short; git rev-parse HEAD; ls -la\"",
+          "exit_code": 0,
+          "output_bytes": 862
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/references/evaluation-rubric.md; cat installed/remedy/scripts/pr-threads'",
+          "exit_code": 0,
+          "output_bytes": 18596
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p artifacts/run\nTMPDIR=\"$PWD/artifacts/run\" bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-k99i6gz_/full-feedback-judgment/workspace/installed/remedy/scripts/pr-threads fetch 7 fixture/mana > artifacts/run/fetch.json\ncat artifacts/run/fetch.json'",
+          "exit_code": 0,
+          "output_bytes": 784
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 1
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "repair-push-rejected",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 101.2,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 161413,
+            "cached_input_tokens": 126848,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1418,
+            "reasoning_output_tokens": 74
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 36872,
+        "total_full_read_bytes": 36872,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 38893,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "33eb106758483b0f54dd13cbdda59172a5321f7d1966215f5afaf864845c7303",
+      "fixture_sha256": null,
+      "run": "workflows-k99i6gz_",
+      "phase": "exploratory",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "6fdbc172c4c0ba1f4550a21820321d90e8d9c5a4b5d87f2e3f96825d05e45595",
+      "response": {
+        "report": "UNPUSHED: Repair preserved in local commit `14bf137a803aa7d03d03d3d4e333142154230760` (only `app.txt`). Normal push was rejected as non-fast-forward; remote `fixture-work` is at `a6e8aa8a12458f7db16cff169bbb301dfb67f138`.\n\nFix threads remain open. Recovery requires separately authorized history reconciliation before retrying the push. No fetch, rebase, merge, force push, review dispatch, or PR messages occurred. Evidence is in `artifacts/remedy-publication/`.",
+        "checks": [
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Configured validation passed."
+          },
+          {
+            "command": "git push",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Remote rejected the push as non-fast-forward."
+          },
+          {
+            "command": "git ls-remote origin refs/heads/fixture-work",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed the advanced remote branch."
+          },
+          {
+            "command": "git diff --exit-code HEAD -- app.txt",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "The repair is preserved in the local commit."
+          },
+          {
+            "command": "CI and review-thread verification",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Left unverified under the publication-only scope; no thread mutations attempted."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/app.txt b/app.txt\nindex 3367afd..3e75765 100644\n--- a/app.txt\n+++ b/app.txt\n@@ -1 +1 @@\n-old\n+new",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc \"git status --short; git branch --show-current; git remote -v; rg --files -g AGENTS.md -g '*check*' -g '*state*' -g '*remedy*' -g 'app.txt' -g '\"'!installed/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 317
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!'\"\\\\.git/**'; git diff -- app.txt; git log -3 --oneline; git config --get branch.fixture-work.remote; git config --get branch.fixture-work.merge\"",
+          "exit_code": 0,
+          "output_bytes": 309
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "small-risk-roster",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 83.09,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 95543,
+            "cached_input_tokens": 52480,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1362,
+            "reasoning_output_tokens": 26
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1
+        },
+        "entry_bytes": 38665,
+        "unique_full_read_bytes": 38665,
+        "total_full_read_bytes": 38665,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 40039,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": null,
+      "run": "workflows-k99i6gz_",
+      "phase": "exploratory",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "102587beac6e6fc97532ff0fb3fad92f797e603dd269ead170d362c15b06e982",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/finish-review.md": "d84880abb4b55133bf6966334e0950120483e34c7e96e6119df61106aab27cfc",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025"
+      },
+      "fixture_tool_sha256": "889318f1b4afdb66813322b06da3e34eba8f615dcbb0d948a302eb2d6c1fb007",
+      "response": {
+        "report": "Completed through Stage 3c reviewer selection; stopped before Stage 3d run setup and dispatch.\n\nScope: current working tree against the merge base of origin/main, c92dfa268138c50452d16d185a6e7c87bffe7e7d. Only auth.py changed: 2 executable changed lines. No untracked files. No PR resolved.\n\nIntent: address deletion permissions for ticket #7, \u201cRestrict deletion.\u201d This is inferred from the explicit ticket and diff; no commit subjects supplied additional context.\n\nResolved requirements (explicit ticket:7, offline GitHub fixture):\nR1. Only admins can delete.\nR2. Anonymous callers are denied.\nOut of scope: changing login.\n\nSelected reviewers:\n- Protection Warrior (correctness): required for every review.\n- Retribution Paladin (project standards): root AGENTS.md applies to auth.py.\n- Marksmanship Hunter (testing): permission behavior changes with no corresponding test changes.\n- Subtlety Rogue (security): the diff changes authorization for deletion.\n- Havoc Demon Hunter (adversarial): authorization changes trigger selection regardless of size.\n\nFull roster selected: classifier lite_eligible=true is insufficient because the diff changes authorization and selects conditional risk reviewers. Standards paths: AGENTS.md.\n\nNo reviewers ran, no review findings were produced, and no independent validation was performed.",
+        "checks": [
+          {
+            "command": "Read installed/scan/SKILL.md, AGENTS.md, and docs/agents/issue-tracker.md",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Loaded the installed workflow, project instructions, and GitHub adapter configuration."
+          },
+          {
+            "command": "git merge-base HEAD origin/main; git status --short; git branch --show-current; git diff --name-only <base>; git diff -U10 <base>; git ls-files --others --exclude-standard; git log --oneline <base>..HEAD",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Resolved scope and collected the diff and intent metadata; these are inspection results, not correctness validation."
+          },
+          {
+            "command": "bash installed/scan/scripts/review.sh signals --base c92dfa268138c50452d16d185a6e7c87bffe7e7d",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Classifier reported one changed file, two executable changed lines, and lite_eligible=true."
+          },
+          {
+            "command": "bash installed/scan/scripts/tickets.sh --repo fixture/mana view 7",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Read ticket #7 from the supplied offline fixture and extracted its requirements."
+          },
+          {
+            "command": "rg --files --hidden --no-ignore -g '!.git/**' -g 'AGENTS.md' -g 'CLAUDE.md'",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Standards discovery found root AGENTS.md, applicable to auth.py."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Project validation left unverified because the requested scope ends at reviewer selection."
+          },
+          {
+            "command": "Stage 3d run setup; Stage 4 dispatch; Stage 5 review synthesis and independent validation",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Not attempted, as explicitly requested."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/auth.py b/auth.py\nindex 72ef5c0..ac57786 100644\n--- a/auth.py\n+++ b/auth.py\n@@ -1,2 +1,2 @@\n def can_delete(user):\n-    return bool(user) and user.role == \"admin\"\n+    return bool(user)",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/scan/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 38665
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-k99i6gz_/small-risk-roster/workspace/installed/scan/scripts/review.sh signals --base c92dfa268138c50452d16d185a6e7c87bffe7e7d'",
+          "exit_code": 0,
+          "output_bytes": 535
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg --files --hidden --no-ignore -g '\"'!.git/**'\"' -g 'AGENTS.md' -g 'CLAUDE.md'; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!'\"\\\\.git/**'\"",
+          "exit_code": 0,
+          "output_bytes": 83
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-k99i6gz_/small-risk-roster/workspace/installed/scan/scripts/tickets.sh --repo fixture/mana view 7'",
+          "exit_code": 0,
+          "output_bytes": 188
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "targeted-incorrect-suggestion",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 144.78,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 191599,
+            "cached_input_tokens": 135040,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2314,
+            "reasoning_output_tokens": 205
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 48868,
+        "total_full_read_bytes": 48868,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 58164,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "33eb106758483b0f54dd13cbdda59172a5321f7d1966215f5afaf864845c7303",
+      "fixture_sha256": null,
+      "run": "workflows-k99i6gz_",
+      "phase": "exploratory",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "889318f1b4afdb66813322b06da3e34eba8f615dcbb0d948a302eb2d6c1fb007",
+      "response": {
+        "report": "Dry-run complete for PR #7, thread discussion_r101 only.\n\nDeclined: removing the guard would accept negative public input. caller.py:4 passes int(raw) directly to magnitude; submit('-1') correctly raises ValueError(\"negative\").\n\nNo code changes or GitHub writes. Thread remains open. Unrelated feedback returned by the offline fixture was excluded from judgment and retained evidence.\n\nArtifacts: artifacts/run/{fetch.json,items.json,summary.md,metadata.json}.",
+        "checks": [
+          {
+            "command": "gh repo view --json url",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed GitHub repository fixture/mana."
+          },
+          {
+            "command": "gh api comment lookup; scoped GraphQL thread query",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Retrieved named thread; fixture also returned unrelated payloads, which were excluded."
+          },
+          {
+            "command": "Python caller behavior assertions",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Positive input returns unchanged; negative public input reaches the guard and raises ValueError."
+          },
+          {
+            "command": "git diff --exit-code",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "No tracked code changes."
+          },
+          {
+            "command": "Parse run JSON artifacts",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Required artifacts exist and JSON parses."
+          },
+          {
+            "command": "Project validation",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped because dry-run made no code changes."
+          },
+          {
+            "command": "PR CI checks",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped in targeted mode."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/references/evaluation-rubric.md; cat installed/remedy/scripts/pr-threads'",
+          "exit_code": 0,
+          "output_bytes": 18596
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!artifacts/**'\"'; git status --short; git rev-parse HEAD; git branch --show-current\"",
+          "exit_code": 0,
+          "output_bytes": 64
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md; rg --files -g '\"'!installed/**'\"' -g '\"'!artifacts/**'\"'; command -v gh; gh repo view --json url\"",
+          "exit_code": 0,
+          "output_bytes": 310
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "full-feedback-judgment",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 166.04,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 169367,
+            "cached_input_tokens": 141312,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2404,
+            "reasoning_output_tokens": 211
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/full-mode.md": 1,
+          "references/publication.md": 1
+        },
+        "entry_bytes": 11134,
+        "unique_full_read_bytes": 49952,
+        "total_full_read_bytes": 49952,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 53144,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "0b320a2114f9a7a590cf903f1ead7ed65768287a3a285e66ef35890b2b28c4bb",
+      "fixture_sha256": null,
+      "run": "workflows-zzw10d5f",
+      "phase": "exploratory",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "8aa920eb4c69c6c38da497fb520e2835ec43ac914cbfc4dcc3a57b53d3b4e18c",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5"
+      },
+      "fixture_tool_sha256": "889318f1b4afdb66813322b06da3e34eba8f615dcbb0d948a302eb2d6c1fb007",
+      "response": {
+        "report": "Dry-run for PR #7: judged all 3 feedback items against current code.\n\nPlanned fixes (2):\n- app.py:7: use `value * 2`; `double(3)` currently returns 5.\n- app.py:9: correct \u201cSucess\u201d to \u201cSuccess.\u201d\n\nDeclined (1):\n- app.py:2: retain the negative-value guard. The public-input caller at caller.py:3\u20134 can pass negative integers; removing the guard would remove existing validation.\n\nNo code changes, commits, pushes, resolutions, or PR comments. Artifacts saved in artifacts/run. Remote diff scope and CI remain unverified because of fixture limitations.",
+        "checks": [
+          {
+            "command": "gh repo view --json url",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed GitHub repository fixture/mana."
+          },
+          {
+            "command": "pr-threads fetch 7 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Fetched one unresolved thread and two actionable top-level comments."
+          },
+          {
+            "command": "gh pr checks 7 --json name,state,link,bucket",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Returned no checks; CI health remains unverified."
+          },
+          {
+            "command": "gh pr diff 7",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Offline fixture does not support this operation; remote diff scope remains unverified."
+          },
+          {
+            "command": "python -B read-only runtime checks",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed negative public input is rejected, double(3) returns 5, and MESSAGE contains the typo."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Project validation was not run because this was a dry-run with no fixes applied."
+          },
+          {
+            "command": "Parse run JSON artifacts; git status --short; git rev-parse HEAD",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Artifacts parse successfully; working tree is clean and HEAD is unchanged."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 11134
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"'; git status --short; cat installed/remedy/references/full-mode.md installed/remedy/references/run-artifacts.md installed/remedy/references/evaluation-rubric.md\"",
+          "exit_code": 0,
+          "output_bytes": 23915
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md; cat installed/remedy/references/publication.md; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; gh repo view --json url; git rev-parse HEAD; git branch --show-current\"",
+          "exit_code": 0,
+          "output_bytes": 15263
+        },
+        {
+          "command": "/usr/bin/bash -lc 'umask 077\nmkdir -p artifacts/run\nset -o pipefail\nbash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-zzw10d5f/full-feedback-judgment/workspace/installed/remedy/scripts/pr-threads fetch 7 fixture/mana | tee artifacts/run/fetch.json\ngh pr checks 7 --json name,state,link,bucket'",
+          "exit_code": 0,
+          "output_bytes": 787
+        },
+        {
+          "command": "/usr/bin/bash -lc \"gh pr view 7 --json url,baseRefName,headRefName,body,files; git log --oneline -5; git remote -v; nl -ba app.py; nl -ba caller.py; nl -ba spec.md; nl -ba notes.txt; cat app.txt; rg --files --hidden -g '\"'!.git/**'\"' -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; git show --stat HEAD; git branch -a\"",
+          "exit_code": 0,
+          "output_bytes": 1165
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 1
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "repair-push-rejected",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 115.38,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 155884,
+            "cached_input_tokens": 131712,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1615,
+            "reasoning_output_tokens": 150
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/full-mode.md": 1,
+          "references/publication.md": 1
+        },
+        "entry_bytes": 10848,
+        "unique_full_read_bytes": 37670,
+        "total_full_read_bytes": 37670,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 39513,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "33eb106758483b0f54dd13cbdda59172a5321f7d1966215f5afaf864845c7303",
+      "fixture_sha256": null,
+      "run": "workflows-zzw10d5f",
+      "phase": "exploratory",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "9e09fe0947f0b8c33b7ad399ccfa1c69c6b1102cfc045b21f700793d79e6c066",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "8aa920eb4c69c6c38da497fb520e2835ec43ac914cbfc4dcc3a57b53d3b4e18c",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5"
+      },
+      "fixture_tool_sha256": "6fdbc172c4c0ba1f4550a21820321d90e8d9c5a4b5d87f2e3f96825d05e45595",
+      "response": {
+        "report": "UNPUSHED: repair preserved in commit c70d28e4c823a094609bb4dfc9a69dda8d760c49. Normal push was rejected because origin/fixture-work advanced to bb997388ab0a9d7df526f2316f9cfea3619bb7d0.\n\nFix threads were left open. Recovery requires separately authorized reconciliation before retrying the push. No fetch, rebase, merge, force push, review dispatch, or PR messages occurred.\n\nEvidence saved in artifacts/remedy-publication/.",
+        "checks": [
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Accepted repair passes project validation."
+          },
+          {
+            "command": "git commit",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Committed only app.txt."
+          },
+          {
+            "command": "git push",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Rejected as non-fast-forward; local commit preserved."
+          },
+          {
+            "command": "git status --short",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Working tree clean after commit."
+          },
+          {
+            "command": "git ls-remote --heads origin refs/heads/fixture-work",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed advanced remote branch without fetching."
+          },
+          {
+            "command": "CI and review-thread verification",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Publication stopped after rejection; thread state was not independently verified."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/app.txt b/app.txt\nindex 3367afd..3e75765 100644\n--- a/app.txt\n+++ b/app.txt\n@@ -1 +1 @@\n-old\n+new",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 10848
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat AGENTS.md; cat installed/remedy/references/publication.md; cat installed/remedy/references/full-mode.md'",
+          "exit_code": 0,
+          "output_bytes": 25288
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!node_modules/**'\"' -g '\"'!.git/**'\"' --hidden; git diff -- app.txt; git branch -vv\"",
+          "exit_code": 0,
+          "output_bytes": 262
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat spec.md notes.txt .gitignore; cat installed/remedy/references/run-artifacts.md; git status --porcelain=v1 --untracked-files=all; git diff --cached --stat; git log -1 --format='%H%n%s'\"",
+          "exit_code": 0,
+          "output_bytes": 1885
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "small-risk-roster",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 89.52,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 104228,
+            "cached_input_tokens": 90880,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1369,
+            "reasoning_output_tokens": 138
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/scope.md": 1,
+          "references/feedback-requirements.md": 1,
+          "references/roster.md": 1
+        },
+        "entry_bytes": 15022,
+        "unique_full_read_bytes": 31962,
+        "total_full_read_bytes": 31962,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 33433,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": null,
+      "run": "workflows-zzw10d5f",
+      "phase": "exploratory",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/finish-review.md": "3aa367711c09f61528b6767532dcfe7948dd2d141f9b2ba0644408a38d2499d8",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "references/scope.md": "b27d16cc5b7f7c2a0314c53a16e61166175f448885056104fff14d6193304e4d",
+        "references/feedback-requirements.md": "ceb91d58563462dcbaa7e21322df07359ce0962bbdb75d95d03835014b167e47",
+        "references/roster.md": "c3245810872522efbb708868d4c7b3f4fe94f623f9dd7e7b0124a3dbb555824d",
+        "references/dispatch.md": "54477e3e15a46cf7d49ca7e66483f4fec7fe94372afee1230027ffb7b6a1ac56",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa"
+      },
+      "fixture_tool_sha256": "889318f1b4afdb66813322b06da3e34eba8f615dcbb0d948a302eb2d6c1fb007",
+      "response": {
+        "report": "Completed scan through Stage 3 only for `base:origin/main ticket:7 report`.\n\nScope: current working tree against merge base `bd036647e42ceee65fa55383796cb4671c2971d4`; only `auth.py` changed, with 2 executable changed lines. No untracked files or intervening commits. No PR was resolved, so PR feedback harvesting does not apply.\n\nRequirements \u2014 #7, \u201cRestrict deletion\u201d (explicit ticket token, offline tracker fixture):\n- R1. Only admins can delete.\n- R2. Anonymous callers are denied.\n- Out of scope: changing login.\n\nIntent: the ticket seeks restricted deletion access; the diff removes the role comparison from `can_delete`. Compliance remains unassessed.\n\nSelected reviewers:\n- Protection Warrior (correctness): always required.\n- Retribution Paladin (project standards): root `AGENTS.md` applies to `auth.py`.\n- Marksmanship Hunter (testing): permission behavior changes without corresponding test changes.\n- Subtlety Rogue (security): the diff changes an authorization check.\n- Havoc Demon Hunter (adversarial): authorization changes require this reviewer regardless of size.\n\nThe classifier reported `lite_eligible: true`, but the content-based authorization risk prevents the lite roster. No additional specialist triggers were identified.\n\nStopped before run setup and dispatch. No review or independent validation was conducted; fixture checks and installed instructions were unchanged.",
+        "checks": [
+          {
+            "command": "git merge-base HEAD origin/main",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Resolved the review base."
+          },
+          {
+            "command": "git diff -U10 bd036647e42ceee65fa55383796cb4671c2971d4; git log --oneline bd036647e42ceee65fa55383796cb4671c2971d4..HEAD",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Inspected scope and commit intent for reviewer selection only."
+          },
+          {
+            "command": "bash installed/scan/scripts/review.sh signals --base bd036647e42ceee65fa55383796cb4671c2971d4",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Collected deterministic fixture signals; this is not validation of correctness."
+          },
+          {
+            "command": "bash installed/scan/scripts/tickets.sh --repo fixture/mana view 7",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Read requirements from the offline tracker fixture."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Project validation check left unverified because the requested scope ends at reviewer selection."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/auth.py b/auth.py\nindex 72ef5c0..ac57786 100644\n--- a/auth.py\n+++ b/auth.py\n@@ -1,2 +1,2 @@\n def can_delete(user):\n-    return bool(user) and user.role == \"admin\"\n+    return bool(user)",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/scan/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 15022
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; cat installed/scan/references/scope.md installed/scan/references/feedback-requirements.md installed/scan/references/roster.md\"",
+          "exit_code": 0,
+          "output_bytes": 17046
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-zzw10d5f/small-risk-roster/workspace/installed/scan/scripts/tickets.sh --repo fixture/mana view 7'",
+          "exit_code": 0,
+          "output_bytes": 188
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-zzw10d5f/small-risk-roster/workspace/installed/scan/scripts/review.sh signals --base bd036647e42ceee65fa55383796cb4671c2971d4'",
+          "exit_code": 0,
+          "output_bytes": 535
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "targeted-incorrect-suggestion",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 146.66,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 187152,
+            "cached_input_tokens": 159360,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2027,
+            "reasoning_output_tokens": 184
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/publication.md": 1,
+          "references/targeted-mode.md": 1
+        },
+        "entry_bytes": 10848,
+        "unique_full_read_bytes": 41687,
+        "total_full_read_bytes": 41687,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 50718,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "0b320a2114f9a7a590cf903f1ead7ed65768287a3a285e66ef35890b2b28c4bb",
+      "fixture_sha256": null,
+      "run": "workflows-zzw10d5f",
+      "phase": "exploratory",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "9e09fe0947f0b8c33b7ad399ccfa1c69c6b1102cfc045b21f700793d79e6c066",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "8aa920eb4c69c6c38da497fb520e2835ec43ac914cbfc4dcc3a57b53d3b4e18c",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5"
+      },
+      "fixture_tool_sha256": "889318f1b4afdb66813322b06da3e34eba8f615dcbb0d948a302eb2d6c1fb007",
+      "response": {
+        "report": "Dry-run complete for discussion_r101: declined. `caller.py:4` passes public input directly to `magnitude`, and negative values are possible. Removing `app.py:2-3` would let them through.\n\nThread remains open. No code changes or GitHub writes. Artifacts saved in `artifacts/run`.",
+        "checks": [
+          {
+            "command": "gh repo view --json url",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed fixture/mana on GitHub."
+          },
+          {
+            "command": "Targeted comment and thread lookups",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Identified THREAD101; unexpected unrelated fixture output was ignored."
+          },
+          {
+            "command": "PYTHONDONTWRITEBYTECODE=1 python caller behavior check",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Positive input succeeds; negative input reaches the guard and raises ValueError."
+          },
+          {
+            "command": "Project validation and CI",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Not run for this dry-run with no code changes."
+          },
+          {
+            "command": "PR patch-id",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "No base remote available."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 10848
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; cat installed/remedy/references/targeted-mode.md installed/remedy/references/run-artifacts.md\"",
+          "exit_code": 0,
+          "output_bytes": 3947
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat AGENTS.md installed/remedy/references/evaluation-rubric.md installed/remedy/references/publication.md; git status --short; git rev-parse HEAD; git branch --show-current; gh repo view --json url'",
+          "exit_code": 0,
+          "output_bytes": 27206
+        },
+        {
+          "command": "/usr/bin/bash -lc \"mkdir -p -m 700 artifacts/run; gh api repos/fixture/mana/pulls/comments/101 --jq '{node_id, path, line, body}' > artifacts/run/comment.json; cat artifacts/run/comment.json; cat installed/remedy/scripts/pr-threads\"",
+          "exit_code": 0,
+          "output_bytes": 6736
+        },
+        {
+          "command": "/usr/bin/bash -lc \"gh api graphql -f query='query { node(id: \\\"COMMENT101\\\") { ... on PullRequestReviewComment { pullRequestReviewThread { id isResolved isOutdated path line } } } }' --jq '.data.node.pullRequestReviewThread' > artifacts/run/thread.json; cat artifacts/run/thread.json; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!artifacts/**'\"'; nl -ba app.py; rg -n 'nonnegative|negative|app|normalize|clamp' --glob '\"'!installed/**'\"' --glob '\"'!bin/**'\"' --glob '\"'!artifacts/**'\"' .\"",
+          "exit_code": 0,
+          "output_bytes": 1316
+        },
+        {
+          "command": "/usr/bin/bash -lc \"bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-zzw10d5f/targeted-incorrect-suggestion/workspace/installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana > artifacts/run/thread.json; cat artifacts/run/thread.json; nl -ba caller.py; git blame -L 1,4 -- app.py; git log -1 --format='%H%n%B'; git remote -v\"",
+          "exit_code": 0,
+          "output_bytes": 598
+        }
+      ],
+      "graphql_observation": {
+        "queries": 2,
+        "queries_requesting_full_feedback_surfaces": 1
+      },
+      "measurement_limit": "Exploratory payload and fixture; retained, not the final comparison."
+    },
+    {
+      "case": "full-feedback-judgment",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 147.21,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 143945,
+            "cached_input_tokens": 113536,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2572,
+            "reasoning_output_tokens": 159
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 48868,
+        "total_full_read_bytes": 48868,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 60434,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-v6wyetp_",
+      "phase": "comparison",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "2813321cf6fed9a534717881dea41033f36d334870ae6325438f8ee72f921cd1",
+      "response": {
+        "report": "Dry-run completed for PR #7; all 3 feedback items judged against current code.\n\nPlanned fixes:\n- app.py:7: Multiply by 2; double(3) currently returns 5.\n- app.py:9: Correct \u201cSucess\u201d to \u201cSuccess\u201d.\n\nDeclined:\n- app.py:2: Keep the negative-value guard. caller.py:4 accepts negative public input, contradicting the reviewer\u2019s premise. Removing the guard would silently accept it.\n\nNo code changes, commits, pushes, resolutions, or PR comments. CI returned no checks. Findings and evidence are saved in artifacts/run, including items.json, summary.md, and metadata.json.",
+        "checks": [
+          {
+            "command": "gh repo view; gh pr view 7",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed GitHub repository and PR context."
+          },
+          {
+            "command": "installed/remedy/scripts/pr-threads fetch 7 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Fetched one review thread and two actionable top-level comments."
+          },
+          {
+            "command": "gh pr checks 7 --json name,state,link,bucket",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Offline fixture returned no CI checks; CI health remains unverified."
+          },
+          {
+            "command": "PYTHONDONTWRITEBYTECODE=1 python behavior probe",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed incorrect doubling, the typo, and negative public input reaching the guard."
+          },
+          {
+            "command": "Validate run artifact JSON and item count",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Artifacts parse successfully and account for all three feedback items."
+          },
+          {
+            "command": "git diff --exit-code",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Tracked files remain unchanged."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Project validation was not run during dry-run; proposed fixes remain unimplemented and untested."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat AGENTS.md; cat installed/remedy/references/evaluation-rubric.md'",
+          "exit_code": 0,
+          "output_bytes": 12106
+        },
+        {
+          "command": "/usr/bin/bash -lc 'git status --short; git log --oneline -5; cat app.py caller.py app.txt notes.txt spec.md; cat installed/remedy/scripts/pr-threads'",
+          "exit_code": 0,
+          "output_bytes": 7031
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set -o pipefail\nTMPDIR=\"$PWD/artifacts/run\" bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-v6wyetp_/full-feedback-judgment/workspace/installed/remedy/scripts/pr-threads fetch 7 fixture/mana | tee artifacts/run/fetch.json'",
+          "exit_code": 0,
+          "output_bytes": 784
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 1
+      }
+    },
+    {
+      "case": "repair-push-rejected",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 113.44,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 142398,
+            "cached_input_tokens": 118144,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1458,
+            "reasoning_output_tokens": 75
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 36872,
+        "total_full_read_bytes": 36872,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 40754,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "686dd1aef37cca94523df895854d5ff135d20d7ceca97b751462fdb39a590907",
+      "run": "workflows-v6wyetp_",
+      "phase": "comparison",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "6fdbc172c4c0ba1f4550a21820321d90e8d9c5a4b5d87f2e3f96825d05e45595",
+      "response": {
+        "report": "UNPUSHED: repair preserved in local commit e8c842db8845570f362bdb7b266954694e57512d. Only app.txt was committed.\n\nNormal push to origin/fixture-work was rejected as non-fast-forward; remote head is 3670459ff78ca549605af752510ad550a88376ec. Fix threads remain open. Recovery requires separately authorized history reconciliation before retrying the push. No fetch, rebase, merge, force push, review redispatch, or PR messages were performed.\n\nEvidence: artifacts/remedy-publication/summary.md and push.log.",
+        "checks": [
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Accepted repair passes repository validation."
+          },
+          {
+            "command": "git commit",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Committed only app.txt."
+          },
+          {
+            "command": "git push",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Rejected as non-fast-forward; local repair preserved."
+          },
+          {
+            "command": "git diff --check HEAD^ HEAD",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Committed diff has no whitespace errors."
+          },
+          {
+            "command": "CI and remote thread verification",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Unverified; publication failed and fetching was not authorized."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/app.txt b/app.txt\nindex 3367afd..3e75765 100644\n--- a/app.txt\n+++ b/app.txt\n@@ -1 +1 @@\n-old\n+new",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc \"git status --short; rg --files -g AGENTS.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 21
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!remote.git/**'\"' -g '\"'!'\"\\\\.git/**'; git diff -- app.txt; git remote -v; git branch -vv\"",
+          "exit_code": 0,
+          "output_bytes": 636
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    },
+    {
+      "case": "small-risk-roster",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 74.38,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 129584,
+            "cached_input_tokens": 92416,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1240,
+            "reasoning_output_tokens": 31
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1
+        },
+        "entry_bytes": 38665,
+        "unique_full_read_bytes": 38665,
+        "total_full_read_bytes": 38665,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 118739,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-v6wyetp_",
+      "phase": "comparison",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "102587beac6e6fc97532ff0fb3fad92f797e603dd269ead170d362c15b06e982",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/finish-review.md": "d84880abb4b55133bf6966334e0950120483e34c7e96e6119df61106aab27cfc",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025"
+      },
+      "fixture_tool_sha256": "2813321cf6fed9a534717881dea41033f36d334870ae6325438f8ee72f921cd1",
+      "response": {
+        "report": "Completed reviewer selection through Stage 3c for `scan base:origin/main ticket:7 report`.\n\nScope: current working tree on `fixture-work`, against merge base `7908ddc82a42f66946ec4f1966fdb79fee3e677b`. Only `auth.py` changed; no untracked files were reported. The classifier counted 2 executable changed lines.\n\nIntent: implement ticket #7\u2019s deletion restrictions while preserving denial for anonymous callers. Login changes are outside scope.\n\nResolved requirements \u2014 explicit ticket #7, \u201cRestrict deletion,\u201d read from the offline GitHub fixture:\n- R1. Only admins can delete.\n- R2. Anonymous callers are denied.\n- Out of scope: changing login.\n\nSelected reviewers:\n- Protection Warrior (correctness): always selected to assess behavior against the requirements.\n- Marksmanship Hunter (testing): deletion permission behavior changed without corresponding test changes.\n- Subtlety Rogue (security): the diff changes an authorization check.\n- Havoc Demon Hunter (adversarial): authorization changes require adversarial scrutiny regardless of size.\n- Retribution Paladin (project standards): root `AGENTS.md` applies to `auth.py`.\n\nThe full risk-driven roster is retained. Although the classifier reported `lite_eligible: true`, the authorization change and conditional reviewers disqualify the lite path. Lore Bard (existing feedback) is omitted because Stage 1 resolved no PR.\n\nStopped before Stage 3d run setup and dispatch. No review, requirement verification, or independent validation was conducted. Fixture checks and installed instructions were unchanged.",
+        "checks": [
+          {
+            "command": "git status --short; git merge-base HEAD origin/main; git diff --name-only origin/main; git diff -U10 origin/main; git log --oneline origin/main..HEAD; git branch --show-current; git ls-files --others --exclude-standard",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Resolved the local scope, diff, branch, commit context, and untracked-file coverage."
+          },
+          {
+            "command": "bash installed/scan/scripts/review.sh signals --base 7908ddc82a42f66946ec4f1966fdb79fee3e677b",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Collected deterministic selection signals; this does not validate correctness."
+          },
+          {
+            "command": "bash installed/scan/scripts/tickets.sh --repo fixture/mana view 7",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Read ticket requirements from the supplied offline fixture."
+          },
+          {
+            "command": "rg --files --hidden -g '! .git' -g 'CLAUDE.md' -g 'AGENTS.md'",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Discovered root AGENTS.md as the applicable standards path."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Repository validation was left unverified because the requested scope ends at reviewer selection."
+          },
+          {
+            "command": "Reviewer dispatch and independent validation",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Not attempted, as explicitly requested."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/auth.py b/auth.py\nindex 72ef5c0..ac57786 100644\n--- a/auth.py\n+++ b/auth.py\n@@ -1,2 +1,2 @@\n def can_delete(user):\n-    return bool(user) and user.role == \"admin\"\n+    return bool(user)",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/scan/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 38665
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '265,370p' installed/scan/SKILL.md\"",
+          "exit_code": 0,
+          "output_bytes": 12631
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '214,265p' installed/scan/SKILL.md; cat installed/scan/scripts/tickets.sh\"",
+          "exit_code": 0,
+          "output_bytes": 63221
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash \"/home/f/.codex/worktrees/2203/mana/evals/results/workflows-v6wyetp_/small-risk-roster/workspace/installed/scan/scripts/review.sh\" signals --base 7908ddc82a42f66946ec4f1966fdb79fee3e677b'",
+          "exit_code": 0,
+          "output_bytes": 535
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash \"/home/f/.codex/worktrees/2203/mana/evals/results/workflows-v6wyetp_/small-risk-roster/workspace/installed/scan/scripts/tickets.sh\" --repo fixture/mana view 7'",
+          "exit_code": 0,
+          "output_bytes": 188
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    },
+    {
+      "case": "targeted-incorrect-suggestion",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 128.86,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 217946,
+            "cached_input_tokens": 188160,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1956,
+            "reasoning_output_tokens": 97
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 48868,
+        "total_full_read_bytes": 48868,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 58338,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-v6wyetp_",
+      "phase": "comparison",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "2813321cf6fed9a534717881dea41033f36d334870ae6325438f8ee72f921cd1",
+      "response": {
+        "report": "Dry-run keep-open completed for discussion_r101 only.\n\nDeclined: removing the guard would accept negative public input. `caller.py:3-4` passes `int(raw)` directly to `magnitude()`, contradicting the reviewer\u2019s claim.\n\nThe thread remains open. No code changes, commits, pushes, or resolutions. Artifacts saved in `artifacts/run`.",
+        "checks": [
+          {
+            "command": "gh repo view --json url",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed GitHub repository."
+          },
+          {
+            "command": "gh api repos/fixture/mana/pulls/comments/101",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Retrieved only the named comment."
+          },
+          {
+            "command": "Targeted GraphQL lookup without --jq",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Offline fixture rejected the query."
+          },
+          {
+            "command": "Targeted GraphQL lookup with --jq",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Retrieved the named thread\u2019s status."
+          },
+          {
+            "command": "python -B focused submit() assertions",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Positive input accepted; negative input rejected."
+          },
+          {
+            "command": "Run artifact JSON validation",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Required artifacts written and JSON parsed successfully."
+          },
+          {
+            "command": "Project validation and CI",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped in targeted dry-run mode."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; git status --short; cat installed/remedy/references/evaluation-rubric.md; cat installed/remedy/scripts/pr-threads\"",
+          "exit_code": 0,
+          "output_bytes": 18714
+        },
+        {
+          "command": "/usr/bin/bash -lc \"gh api graphql -f commentId=COMMENT101 -f query='query(\"'$commentId: ID!) { node(id: $commentId) { ... on PullRequestReviewComment { id body path line originalLine startLine originalStartLine url author { login } pullRequestReviewThread { id isResolved isOutdated path line originalLine startLine originalStartLine comments(first: 100) { nodes { id databaseId body url createdAt author { login } } } } } } }'\"' > artifacts/run/thread.json; cat artifacts/run/thread.json; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!artifacts/**'\"'; nl -ba app.py; rg -n 'app|negative|nonnegative|clamp' --glob '\"'!installed/**'\"' --glob '\"'!bin/**'\"' --glob '\"'!artifacts/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 632
+        }
+      ],
+      "graphql_observation": {
+        "queries": 2,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Superseded for retrieval comparison after the fixture accepted unsupported GraphQL/filter combinations. Retained as an exploratory judgment observation."
+    },
+    {
+      "case": "targeted-supported-fix",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 126.28,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 233166,
+            "cached_input_tokens": 201344,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1950,
+            "reasoning_output_tokens": 47
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/verifier-prompt.md": 1,
+          "references/fixer-prompt.md": 1,
+          "references/evaluation-rubric.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 59134,
+        "total_full_read_bytes": 59134,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 68069,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-v6wyetp_",
+      "phase": "comparison",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "2c656988922d6d486547f71aa5dffc5030ababa8cdd316d2ba7f59ef88b7ca73",
+      "response": {
+        "report": "UNPUSHED: committed supported fix as 7dfa8aa. `double` now multiplies by 2. Thread THREAD101 remains open; no push or PR comments performed. Evidence and report saved in artifacts/run.",
+        "checks": [
+          {
+            "command": "python3 -m unittest test_app.Contract.test_double",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Before the fix, reproduced the defect: 5 != 6."
+          },
+          {
+            "command": "python3 -m unittest test_app.py",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Both existing tests pass after the fix."
+          },
+          {
+            "command": "git diff --check",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "No whitespace errors."
+          },
+          {
+            "command": "pr-threads thread 7 COMMENT101 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed the targeted thread remains unresolved."
+          },
+          {
+            "command": "CI checks",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped in targeted no-push mode."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/app.py b/app.py\nindex 7b04e50..4719915 100644\n--- a/app.py\n+++ b/app.py\n@@ -4,6 +4,6 @@ def magnitude(value):\n     return value\n \n def double(value):\n-    return value + 2\n+    return value * 2\n \n MESSAGE = \"Sucess\"",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g 'CLAUDE.md' -g 'package.json' -g '*test*'; git status --short; git rev-parse HEAD; cat AGENTS.md; cat installed/remedy/references/evaluation-rubric.md; cat installed/remedy/references/fixer-prompt.md; cat installed/remedy/references/verifier-prompt.md\"",
+          "exit_code": 0,
+          "output_bytes": 22486
+        },
+        {
+          "command": "/usr/bin/bash -lc \"mkdir -p artifacts/run; gh repo view --json url; gh api repos/fixture/mana/pulls/comments/101 --jq '{node_id, path, line, body}' > artifacts/run/comment.json; cat artifacts/run/comment.json; cat installed/remedy/scripts/pr-threads; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!artifacts/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 6823
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-v6wyetp_/targeted-supported-fix/workspace/installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana > artifacts/run/thread.json; cat artifacts/run/thread.json; cat app.py caller.py test_app.py spec.md; git branch --show-current; git remote -v'",
+          "exit_code": 0,
+          "output_bytes": 784
+        },
+        {
+          "command": "/usr/bin/bash -lc \"bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-v6wyetp_/targeted-supported-fix/workspace/installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana > artifacts/run/thread-after.json; cat artifacts/run/thread-after.json; git status --short; python3 - <<'PY'\nimport datetime,json,subprocess\nfrom pathlib import Path\nr=Path('artifacts/run')\nhead=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()\nsummary=f'''UNPUSHED: local commit {head[:7]} on fixture-work.\n\nFixed 1 item on PR #7; resolved 0 threads.\n- app.py:7: double now multiplies by 2 rather than adding 2.\n\nVerified: 1 of 1 fixes matched the ask; no unexplained hunks.\nValidation: python3 -m unittest test_app.py passed (2 tests); git diff --check passed.\nBaseline: test_double failed with 5 \"'!= 6 before the fix.\nCI: unverified, skipped in targeted no-push mode.\nThread THREAD101 remains open. No push, resolves, or PR comments performed.\nRun: artifacts/run (summary.md, items.json, metadata.json).\n'\"'''\n(r/'summary.md').write_text(summary)\nmetadata={'run_id':'run','pr':'https://github.com/fixture/mana/pull/7','repo':'fixture/mana','host':'github.com','branch':'fixture-work','mode':'targeted','tokens':['no-push','keep-open'],'head_before':'f6478257b676c3684c1f810612517d4f0fe09070','head_after':head,'patch_id':None,'patch_id_note':'No origin base reference available in the fixture checkout.','counts':{'fixed':1,'fixed-differently':0,'not-addressing':0,'declined':0,'question':0,'needs-human':0},'resolved_thread_ids':[],'left_open_thread_ids':['THREAD101'],'pushed':False,'validation':'python3 -m unittest test_app.py passed (2 tests)','ci':'unverified; skipped in targeted no-push mode','completed_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}\n(r/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\\\\n')\nPY\"",
+          "exit_code": 0,
+          "output_bytes": 91
+        }
+      ],
+      "graphql_observation": {
+        "queries": 2,
+        "queries_requesting_full_feedback_surfaces": 2
+      }
+    },
+    {
+      "case": "full-feedback-judgment",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 141.97,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 169072,
+            "cached_input_tokens": 149120,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2168,
+            "reasoning_output_tokens": 112
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/full-mode.md": 1,
+          "references/publication.md": 1
+        },
+        "entry_bytes": 11134,
+        "unique_full_read_bytes": 49952,
+        "total_full_read_bytes": 49952,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 53460,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-oej_p8wh",
+      "phase": "comparison",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "81f7307b43322c96ee6237c3ccadcf913fed6f9420bbb8c71b0d53384fc8b431",
+        "scripts/pr-threads": "98dc3e7491127cd889bf2d58652763b56153569d66f1947fdf5726c753be9023"
+      },
+      "fixture_tool_sha256": "2813321cf6fed9a534717881dea41033f36d334870ae6325438f8ee72f921cd1",
+      "response": {
+        "report": "Dry-run completed for PR #7. Judged all 3 feedback items against current code.\n\nPlanned fixes (2):\n- `app.py:7`: Multiply by 2; `double(3)` currently returns 5.\n- `app.py:9`: Correct \u201cSucess\u201d to \u201cSuccess\u201d.\n\nDeclined (1):\n- `app.py:2`: Keep the negative guard. `caller.py:4` passes public input without checking its sign, so removing the guard would accept negative values.\n\nNo code edits, commits, pushes, PR comments, or resolutions. Artifacts saved in `artifacts/run`: `fetch.json`, `items.json`, `summary.md`, and `metadata.json`.",
+        "checks": [
+          {
+            "command": "python -B (read-only behavior reproduction)",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed double(3)=5, the misspelled message, and negative public input reaching the guard."
+          },
+          {
+            "command": "gh pr checks 7 --json name,state,link,bucket",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Offline fixture returned no checks; CI remains unverified."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Project validation left unrun in dry-run; proposed fixes remain unimplemented and unverified."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 11134
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g 'CLAUDE.md' -g '\"'!installed/**'\"'; cat installed/remedy/references/full-mode.md installed/remedy/references/run-artifacts.md installed/remedy/references/evaluation-rubric.md\"",
+          "exit_code": 0,
+          "output_bytes": 23915
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md; cat installed/remedy/references/publication.md; git status --short; git rev-parse HEAD; git branch --show-current; gh repo view --json nameWithOwner,url; rg --files -g '\"'!installed/**'\"' -g '\"'!artifacts/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 15269
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p artifacts/run; set -o pipefail; bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-oej_p8wh/full-feedback-judgment/workspace/installed/remedy/scripts/pr-threads fetch 7 | tee artifacts/run/fetch.json; gh pr view 7 --json url,headRefName,baseRefName,body; gh pr checks 7 --json name,state,link,bucket; git log --oneline -5; git remote -v; cat app.py caller.py spec.md notes.txt app.txt'",
+          "exit_code": 0,
+          "output_bytes": 1393
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 1
+      }
+    },
+    {
+      "case": "repair-push-rejected",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 91.31,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 159302,
+            "cached_input_tokens": 118400,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1380,
+            "reasoning_output_tokens": 50
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/publication.md": 1
+        },
+        "entry_bytes": 11134,
+        "unique_full_read_bytes": 26148,
+        "total_full_read_bytes": 26148,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 29229,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-oej_p8wh",
+      "phase": "comparison",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "81f7307b43322c96ee6237c3ccadcf913fed6f9420bbb8c71b0d53384fc8b431",
+        "scripts/pr-threads": "98dc3e7491127cd889bf2d58652763b56153569d66f1947fdf5726c753be9023"
+      },
+      "fixture_tool_sha256": "6fdbc172c4c0ba1f4550a21820321d90e8d9c5a4b5d87f2e3f96825d05e45595",
+      "response": {
+        "report": "UNPUSHED: repair preserved in local commit cdf2de96934f4209d0bf4a4118fb40337e23f78f. Only app.txt was committed; working tree is clean.\n\nNormal push to origin/fixture-work was rejected because the remote branch advanced. Fix threads remain open. Recovery requires separately authorized history reconciliation before retrying the push. No fetch, rebase, merge, force push, or PR messages were performed.\n\nEvidence saved in artifacts/remedy-publication/.",
+        "checks": [
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Accepted repair passes project validation."
+          },
+          {
+            "command": "git commit",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Committed only app.txt."
+          },
+          {
+            "command": "git push",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Rejected as non-fast-forward; local commit preserved."
+          },
+          {
+            "command": "git status --short",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Working tree is clean."
+          },
+          {
+            "command": "CI and remote thread verification",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Push failed; no fetch or GitHub writes performed."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/app.txt b/app.txt\nindex 3367afd..3e75765 100644\n--- a/app.txt\n+++ b/app.txt\n@@ -1 +1 @@\n-old\n+new",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 11134
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; git status --short; rg --files -g AGENTS.md -g '*remedy*' -g '*check*' -g 'app.txt' -g '\"'!installed/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 128
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat AGENTS.md; cat installed/remedy/references/publication.md; git diff -- app.txt; git branch -vv; git remote -v; rg --files artifacts'",
+          "exit_code": 0,
+          "output_bytes": 15911
+        },
+        {
+          "command": "/usr/bin/bash -lc \"ls -la; rg --files --hidden -g '\"'!.git/**'\"' -g '\"'!installed/**'\"' -g '\"'!artifacts/codex-bwrap*/**'\"'; git log -3 --oneline; git diff --cached --stat\"",
+          "exit_code": 0,
+          "output_bytes": 693
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    },
+    {
+      "case": "small-risk-roster",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 96.45,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 140013,
+            "cached_input_tokens": 107136,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1370,
+            "reasoning_output_tokens": 53
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/scope.md": 1,
+          "references/feedback-requirements.md": 1,
+          "references/roster.md": 1
+        },
+        "entry_bytes": 15022,
+        "unique_full_read_bytes": 31962,
+        "total_full_read_bytes": 31962,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 91768,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-oej_p8wh",
+      "phase": "comparison",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/finish-review.md": "96cff3489d512b389d999e56040145fcd0fb434abfe93ba713d6e2aed4ca424e",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "references/scope.md": "b27d16cc5b7f7c2a0314c53a16e61166175f448885056104fff14d6193304e4d",
+        "references/feedback-requirements.md": "ceb91d58563462dcbaa7e21322df07359ce0962bbdb75d95d03835014b167e47",
+        "references/roster.md": "c3245810872522efbb708868d4c7b3f4fe94f623f9dd7e7b0124a3dbb555824d",
+        "references/dispatch.md": "54477e3e15a46cf7d49ca7e66483f4fec7fe94372afee1230027ffb7b6a1ac56",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa"
+      },
+      "fixture_tool_sha256": "2813321cf6fed9a534717881dea41033f36d334870ae6325438f8ee72f921cd1",
+      "response": {
+        "report": "Completed Stage 3 reviewer selection for `scan base:origin/main ticket:7 report`.\n\nScope: current working tree against merge base `f334c5ac1515c388a4c428238d2b0817e06e96cd`. Only `auth.py` changed; two executable changed lines. No PR resolved, so PR feedback harvesting does not apply.\n\nIntent: restrict deletion to admins while denying anonymous callers, based on explicit ticket #7, \u201cRestrict deletion.\u201d No branch commits supplied further intent.\n\nResolved requirements:\n- R1. Only admins can delete.\n- R2. Anonymous callers are denied.\n- Out of scope: changing login.\n\nSelected reviewers:\n- Protection Warrior (correctness): always selected.\n- Retribution Paladin (project standards): root `AGENTS.md` applies to `auth.py`.\n- Marksmanship Hunter (testing): authorization behavior changed without corresponding test changes.\n- Subtlety Rogue (security): the diff changes a permission check.\n- Havoc Demon Hunter (adversarial): authorization changes trigger selection regardless of size.\n\nThe classifier reported `lite_eligible: true`, but the content-based authorization risk and selected specialists prevent the lite roster.\n\nStopped before run setup and dispatch. No reviewers ran, no review was conducted, and requirements compliance was not independently validated. Fixture checks and installed instructions were unchanged.",
+        "checks": [
+          {
+            "command": "git status --short; git merge-base HEAD origin/main; git diff -U10 origin/main; git diff --name-only f334c5ac1515c388a4c428238d2b0817e06e96cd; git log --oneline origin/main..HEAD; git branch --show-current; git ls-files --others --exclude-standard",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Resolved scope, inspected the diff for selection, and gathered intent metadata; no review validation."
+          },
+          {
+            "command": "bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-oej_p8wh/small-risk-roster/workspace/installed/scan/scripts/review.sh signals --base f334c5ac1515c388a4c428238d2b0817e06e96cd",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Collected deterministic selection signals: two executable changed lines and classifier lite eligibility."
+          },
+          {
+            "command": "rg --files --hidden --no-ignore -g '!.git/**' -g AGENTS.md -g CLAUDE.md",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Discovered applicable root AGENTS.md; no saved Persona or Style value."
+          },
+          {
+            "command": "TMPDIR=\"$PWD/artifacts\" bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-oej_p8wh/small-risk-roster/workspace/installed/scan/scripts/tickets.sh --repo fixture/mana view 7",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Read explicit ticket #7 through the supplied offline GitHub fixture."
+          },
+          {
+            "command": "test \"$(cat app.txt)\" = new",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Repository validation remained unverified because the requested scope ends at reviewer selection."
+          },
+          {
+            "command": "Reviewer dispatch and independent validation",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Not attempted, as explicitly requested."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/auth.py b/auth.py\nindex 72ef5c0..ac57786 100644\n--- a/auth.py\n+++ b/auth.py\n@@ -1,2 +1,2 @@\n def can_delete(user):\n-    return bool(user) and user.role == \"admin\"\n+    return bool(user)",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/scan/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 15022
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/scan/references/scope.md installed/scan/references/feedback-requirements.md installed/scan/references/roster.md'",
+          "exit_code": 0,
+          "output_bytes": 16940
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; git status --short; git rev-parse --show-toplevel\"",
+          "exit_code": 0,
+          "output_bytes": 213
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md; rg --files --hidden -g '\"'!.git/**'\"' -g '\"'!installed/**'\"'; git diff -U10 origin/main; git merge-base HEAD origin/main; git log --oneline origin/main..HEAD; git branch --show-current; git ls-files --others --exclude-standard; cat installed/scan/scripts/tickets.sh\"",
+          "exit_code": 0,
+          "output_bytes": 58698
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-oej_p8wh/small-risk-roster/workspace/installed/scan/scripts/review.sh signals --base f334c5ac1515c388a4c428238d2b0817e06e96cd'",
+          "exit_code": 0,
+          "output_bytes": 535
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p artifacts; TMPDIR=\"$PWD/artifacts\" bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-oej_p8wh/small-risk-roster/workspace/installed/scan/scripts/tickets.sh --repo fixture/mana view 7'",
+          "exit_code": 0,
+          "output_bytes": 188
+        }
+      ],
+      "graphql_observation": {
+        "queries": 0,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    },
+    {
+      "case": "targeted-incorrect-suggestion",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 131.53,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 176880,
+            "cached_input_tokens": 151296,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1947,
+            "reasoning_output_tokens": 59
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/publication.md": 1,
+          "references/targeted-mode.md": 1
+        },
+        "entry_bytes": 11134,
+        "unique_full_read_bytes": 42109,
+        "total_full_read_bytes": 42109,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 44262,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-oej_p8wh",
+      "phase": "comparison",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "81f7307b43322c96ee6237c3ccadcf913fed6f9420bbb8c71b0d53384fc8b431",
+        "scripts/pr-threads": "98dc3e7491127cd889bf2d58652763b56153569d66f1947fdf5726c753be9023"
+      },
+      "fixture_tool_sha256": "2813321cf6fed9a534717881dea41033f36d334870ae6325438f8ee72f921cd1",
+      "response": {
+        "report": "Dry-run keep-open: judged only PR #7\u2019s named thread.\n\nDeclined: removing the guard would accept negative public input. `caller.py:4` passes `int(raw)` without restricting its sign; `caller.py:6` confirms input can be negative. A runtime check confirmed negative input reaches the guard and raises `ValueError`.\n\nThread left open. No code changes, commits, pushes, resolves, or PR comments. Reports saved in `artifacts/run/{fetch.json,items.json,summary.md,metadata.json}`.",
+        "checks": [
+          {
+            "command": "gh repo view --json url -q .url",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed GitHub repository."
+          },
+          {
+            "command": "gh api repos/fixture/mana/pulls/comments/101; pr-threads thread 7 COMMENT101 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Fetched only the named comment and mapped its unresolved thread."
+          },
+          {
+            "command": "PYTHONDONTWRITEBYTECODE=1 python (focused caller assertions)",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Positive input accepted; negative public input rejected by the guard."
+          },
+          {
+            "command": "Parse run JSON artifacts; git status --short; git rev-parse HEAD",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Artifacts valid; tracked working tree and HEAD unchanged."
+          },
+          {
+            "command": "Project validation and CI",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped for dry-run with no code changes."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 11134
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; cat installed/remedy/references/targeted-mode.md installed/remedy/references/run-artifacts.md\"",
+          "exit_code": 0,
+          "output_bytes": 4083
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat AGENTS.md installed/remedy/references/evaluation-rubric.md installed/remedy/references/publication.md'",
+          "exit_code": 0,
+          "output_bytes": 27120
+        },
+        {
+          "command": "/usr/bin/bash -lc 'bash \"/home/f/.codex/worktrees/2203/mana/evals/results/workflows-oej_p8wh/targeted-incorrect-suggestion/workspace/installed/remedy/scripts/pr-threads\" thread 7 COMMENT101 fixture/mana > artifacts/run/thread.json; cat artifacts/run/thread.json; rg --files -g \"!installed/**\" -g \"!bin/**\" -g \"!artifacts/**\"; cat app.py CONTEXT.md; git blame app.py'",
+          "exit_code": 0,
+          "output_bytes": 965
+        },
+        {
+          "command": "/usr/bin/bash -lc \"nl -ba caller.py; nl -ba app.py; rg -n 'magnitude|negative' --glob '*.py' --glob '\"'!installed/**'\"' --glob '\"'!bin/**'\"'; git remote -v; git status --short\"",
+          "exit_code": 0,
+          "output_bytes": 570
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 0
+      },
+      "measurement_limit": "Superseded for retrieval comparison after the fixture accepted unsupported GraphQL/filter combinations. Retained as an exploratory judgment observation."
+    },
+    {
+      "case": "targeted-supported-fix",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 141.42,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 244736,
+            "cached_input_tokens": 202240,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2146,
+            "reasoning_output_tokens": 23
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1,
+          "references/fixer-prompt.md": 1,
+          "references/verifier-prompt.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/publication.md": 1,
+          "references/targeted-mode.md": 1
+        },
+        "entry_bytes": 11134,
+        "unique_full_read_bytes": 52375,
+        "total_full_read_bytes": 52375,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 55461,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "165fd4ec0b5f759495164ebb3604cb4d34de048fb84c59738e33b59da347104a",
+      "run": "workflows-oej_p8wh",
+      "phase": "comparison",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "81f7307b43322c96ee6237c3ccadcf913fed6f9420bbb8c71b0d53384fc8b431",
+        "scripts/pr-threads": "98dc3e7491127cd889bf2d58652763b56153569d66f1947fdf5726c753be9023"
+      },
+      "fixture_tool_sha256": "2c656988922d6d486547f71aa5dffc5030ababa8cdd316d2ba7f59ef88b7ca73",
+      "response": {
+        "report": "UNPUSHED: committed supported fix as 6230c9e.\n\napp.py:7 now multiplies by 2. Verified the diff against the single targeted ask; both tests pass. Thread THREAD101 remains open. Nothing pushed, resolved, or posted.\n\nRun artifacts: artifacts/run.",
+        "checks": [
+          {
+            "command": "python3 -m unittest test_app.Contract.test_double (before fix)",
+            "status": "failed",
+            "exit_code": 1,
+            "claim": "Confirmed the reported defect: double(3) returned 5."
+          },
+          {
+            "command": "python3 -m unittest test_app.Contract.test_double",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Fixed behavior passes positive and negative input assertions."
+          },
+          {
+            "command": "python3 -m unittest test_app.py",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Both project tests pass."
+          },
+          {
+            "command": "git diff --check",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "No whitespace errors."
+          },
+          {
+            "command": "bash installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed targeted thread remains unresolved after commit."
+          },
+          {
+            "command": "gh pr checks 7 --watch --fail-fast",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "CI left unverified under no-push."
+          }
+        ]
+      },
+      "final_diff": "diff --git a/app.py b/app.py\nindex 7b04e50..4719915 100644\n--- a/app.py\n+++ b/app.py\n@@ -4,6 +4,6 @@ def magnitude(value):\n     return value\n \n def double(value):\n-    return value + 2\n+    return value * 2\n \n MESSAGE = \"Sucess\"",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 11134
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; git status --short; cat installed/remedy/references/targeted-mode.md installed/remedy/references/run-artifacts.md\"",
+          "exit_code": 0,
+          "output_bytes": 4076
+        },
+        {
+          "command": "/usr/bin/bash -lc \"cat AGENTS.md installed/remedy/references/evaluation-rubric.md installed/remedy/references/publication.md installed/remedy/references/verifier-prompt.md; gh repo view --json url; git log -1 --format='%H'; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'\"",
+          "exit_code": 0,
+          "output_bytes": 31449
+        },
+        {
+          "command": "/usr/bin/bash -lc \"mkdir -p artifacts/run; gh api repos/fixture/mana/pulls/comments/101 --jq '{node_id, path, line, body}' > artifacts/run/comment.json; cat artifacts/run/comment.json; cat app.py caller.py test_app.py spec.md; cat installed/remedy/references/fixer-prompt.md; git branch --show-current; git remote -v\"",
+          "exit_code": 0,
+          "output_bytes": 6844
+        },
+        {
+          "command": "/usr/bin/bash -lc \"bash installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana > artifacts/run/thread.json; cat artifacts/run/thread.json; rg -n 'double' app.py caller.py test_app.py; git show --stat --oneline HEAD; git for-each-ref --format='%(refname)'\"",
+          "exit_code": 0,
+          "output_bytes": 623
+        },
+        {
+          "command": "/usr/bin/bash -lc \"gh api repos/fixture/mana/pulls/comments/101 --jq '{node_id, path, line, body}' > artifacts/run/comment-after.json; bash installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana > artifacts/run/thread-after.json; cat artifacts/run/thread-after.json; git status --short; git rev-parse HEAD; git diff origin/main HEAD | git patch-id --stable\"",
+          "exit_code": 0,
+          "output_bytes": 214
+        }
+      ],
+      "graphql_observation": {
+        "queries": 2,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    },
+    {
+      "case": "targeted-incorrect-suggestion",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 149.28,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 249053,
+            "cached_input_tokens": 218112,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2432,
+            "reasoning_output_tokens": 278
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1
+        },
+        "entry_bytes": 36872,
+        "unique_full_read_bytes": 48868,
+        "total_full_read_bytes": 48868,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 60043,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+      "run": "workflows-p518piut",
+      "phase": "strict-target-repeat",
+      "variant": "baseline",
+      "payload_sha256": {
+        "SKILL.md": "7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd",
+        "scripts/pr-threads": "cb4e38d3305b053971d16774d53e0bcba52604dc4ccab45c47f4d169bc9809a5",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+      },
+      "fixture_tool_sha256": "656ff565fc58510de4f571ab70809a059c4651d0f06f5c34c297c3d39bb755a1",
+      "response": {
+        "report": "Dry-run complete for the named thread on PR #7.\n\nDeclined: removing the negative-value guard would accept invalid public input. `caller.py:4` passes `int(raw)` directly to `magnitude`, so callers can supply negative values. The focused check confirmed that the guard rejects them.\n\nNo code changes, commits, pushes, or resolves. Thread remains open. Artifacts: `artifacts/run`.",
+        "checks": [
+          {
+            "command": "Targeted gh comment and thread lookups",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Retrieved the named comment and matching thread metadata."
+          },
+          {
+            "command": "Initial metadata-only GraphQL lookup",
+            "status": "failed",
+            "exit_code": 97,
+            "claim": "Offline fixture rejected the query; revised lookup succeeded."
+          },
+          {
+            "command": "python3 -B focused caller behavior check",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Positive input returns normally; negative input raises ValueError."
+          },
+          {
+            "command": "Run artifact JSON parsing",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "fetch.json, items.json, and metadata.json parse successfully."
+          },
+          {
+            "command": "git diff --exit-code; git diff --cached --exit-code",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "No tracked or staged changes."
+          },
+          {
+            "command": "Project validation",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "No code changes in dry-run."
+          },
+          {
+            "command": "PR CI checks",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped in targeted mode."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 36872
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/references/evaluation-rubric.md; cat installed/remedy/scripts/pr-threads'",
+          "exit_code": 0,
+          "output_bytes": 18596
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"' -g '\"'!bin/**'\"'; git status --short; git rev-parse HEAD; git branch --show-current\"",
+          "exit_code": 0,
+          "output_bytes": 172
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg --files -g '\"'!installed/**'\"' -g '\"'!artifacts/**'\"'; cat app.py; cat CONTEXT.md; rg --files docs/adr; command -v gh\"",
+          "exit_code": 0,
+          "output_bytes": 455
+        }
+      ],
+      "graphql_observation": {
+        "queries": 2,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    },
+    {
+      "case": "targeted-incorrect-suggestion",
+      "execution": "completed",
+      "passed": true,
+      "failures": [],
+      "seconds": 125.12,
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": null,
+      "reasoning": "medium",
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 190027,
+            "cached_input_tokens": 162304,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1989,
+            "reasoning_output_tokens": 56
+          }
+        }
+      ],
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/evaluation-rubric.md": 1,
+          "references/run-artifacts.md": 1,
+          "references/publication.md": 1,
+          "references/targeted-mode.md": 1
+        },
+        "entry_bytes": 11134,
+        "unique_full_read_bytes": 42109,
+        "total_full_read_bytes": 42109,
+        "redundant_full_read_bytes": 0,
+        "tool_output_bytes": 51126,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "isolation": {
+        "outside_read": "denied",
+        "network": "denied",
+        "skill_write": "denied",
+        "workspace_write": "allowed"
+      },
+      "runner_sha256": "203ba769febca129b48c9c00b8c2dfefa0ada728f214dbff1ef632556afb4cb0",
+      "fixture_sha256": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+      "run": "workflows-rj64kfih",
+      "phase": "strict-target-repeat",
+      "variant": "candidate",
+      "payload_sha256": {
+        "SKILL.md": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/evaluation-rubric.md": "3fdafdecd0e5712fef6729f4920a4ac3e315b5b68bab229e09dd70acbceaf9e6",
+        "references/fixer-prompt.md": "3bff3523e64002a1f75a9bb378e8919481cfd3dd4e3559e8ceba98903ae52e8b",
+        "references/scout-prompt.md": "e7efbe8222bc72a7e8cbf0aeca3e17d34e974b3c018cc59ab99a4f3b0557cb2e",
+        "references/verifier-prompt.md": "d0f794e6469b1c1fe8eaee3e94518fcb28bca3064f1559bc2eea1d5eb86de27e",
+        "references/run-artifacts.md": "33ceeac6f8fd761dc00e1a9c9201f1b816e0e95b37b504a3f2aad9626c17a3d3",
+        "references/full-mode.md": "575d83df8836bf75adc6304d3cb79ed4882b24a20810b07e9f694c5cf2f490f8",
+        "references/publication.md": "84a402e3fe0c502ef2ca43268f28b1f340033557b85b8b166a0d91c973473f74",
+        "references/targeted-mode.md": "81f7307b43322c96ee6237c3ccadcf913fed6f9420bbb8c71b0d53384fc8b431",
+        "scripts/pr-threads": "98dc3e7491127cd889bf2d58652763b56153569d66f1947fdf5726c753be9023"
+      },
+      "fixture_tool_sha256": "656ff565fc58510de4f571ab70809a059c4651d0f06f5c34c297c3d39bb755a1",
+      "response": {
+        "report": "Dry-run, keep-open completed for PR #7\u2019s named thread only.\n\nDeclined: removing the guard would accept negative public input. `caller.py:3\u20134` passes `int(raw)` directly to `magnitude`; runtime verification confirmed negative input reaches the guard.\n\nThe thread remains open. No code changes or GitHub writes occurred. Artifacts saved in `artifacts/run`.",
+        "checks": [
+          {
+            "command": "gh repo view --json url",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Confirmed the GitHub repository."
+          },
+          {
+            "command": "gh api repos/fixture/mana/pulls/comments/101; pr-threads thread 7 COMMENT101 fixture/mana",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Fetched only the named feedback and mapped its open thread."
+          },
+          {
+            "command": "Read app.py and caller.py; inspect blame and PR rationale",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "The caller contradicts the claim that all inputs are nonnegative."
+          },
+          {
+            "command": "PYTHONDONTWRITEBYTECODE=1 python: assert submit('3') == 3 and submit('-3') raises ValueError('negative')",
+            "status": "passed",
+            "exit_code": 0,
+            "claim": "Verified the guard rejects negative public input."
+          },
+          {
+            "command": "Project validation",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Skipped for dry-run with no code changes."
+          },
+          {
+            "command": "GitHub CI checks",
+            "status": "unrun",
+            "exit_code": null,
+            "claim": "Outside the targeted dry-run scope."
+          }
+        ]
+      },
+      "final_diff": "",
+      "read_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'cat installed/remedy/SKILL.md'",
+          "exit_code": 0,
+          "output_bytes": 11134
+        },
+        {
+          "command": "/usr/bin/bash -lc \"pwd; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!installed/**'\"'; cat installed/remedy/references/targeted-mode.md installed/remedy/references/run-artifacts.md installed/remedy/references/evaluation-rubric.md\"",
+          "exit_code": 0,
+          "output_bytes": 16079
+        },
+        {
+          "command": "/usr/bin/bash -lc 'cat AGENTS.md installed/remedy/references/publication.md; git status --short; git rev-parse HEAD; git branch --show-current; command -v gh; gh repo view --json url'",
+          "exit_code": 0,
+          "output_bytes": 15336
+        },
+        {
+          "command": "/usr/bin/bash -lc \"mkdir -p artifacts/run; gh api repos/fixture/mana/pulls/comments/101 --jq '{node_id, path, line, body}' > artifacts/run/comment.json; cat artifacts/run/comment.json; cat installed/remedy/scripts/pr-threads\"",
+          "exit_code": 0,
+          "output_bytes": 6958
+        },
+        {
+          "command": "/usr/bin/bash -lc \"bash /home/f/.codex/worktrees/2203/mana/evals/results/workflows-rj64kfih/targeted-incorrect-suggestion/workspace/installed/remedy/scripts/pr-threads thread 7 COMMENT101 fixture/mana > artifacts/run/thread.json; cat artifacts/run/thread.json; rg --files -g '\"'!installed/**'\"' -g '\"'!bin/**'\"' -g '\"'!artifacts/**'\"'; nl -ba app.py; rg -n 'normalize|negative|app|value' --glob '\"'!installed/**'\"' --glob '\"'!bin/**'\"' --glob '\"'!artifacts/**'\"' .\"",
+          "exit_code": 0,
+          "output_bytes": 842
+        }
+      ],
+      "graphql_observation": {
+        "queries": 1,
+        "queries_requesting_full_feedback_surfaces": 0
+      }
+    }
+  ]
+}
