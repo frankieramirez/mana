@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.38.0
+
+- Load review procedures at named stages. Split full and targeted feedback handling with shared verification and publication, preserving evidence-based judgment. Add paired workflow measurements and revalidate the serial eval host on Codex CLI 0.159.2.
+
 ## 0.37.1
 
 - Preserve each confidence assessment's original evidence basis when merging duplicate findings. Add regression coverage for both duplicate orders and repeated reconciliation so expanded evidence cannot lower a supported score.

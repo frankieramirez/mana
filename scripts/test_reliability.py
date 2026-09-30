@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -126,6 +127,21 @@ class Packages(unittest.TestCase):
         (self.root / "SKILL.md").write_text("Read `references/check.md`. Project input: `docs/agents/issue-tracker.md`.\n")
         (self.root / "references/check.md").write_text("Check the fixture.\n")
         self.contract = {"required": ["SKILL.md", "references/check.md"], "smoke": [], "project_links": {}}
+
+    def test_each_review_stage_is_required_in_isolation(self):
+        contracts = json.loads((ROOT / 'scripts/package-contracts.json').read_text())['skills']
+        stages = {'scan': ('scope', 'feedback-requirements', 'roster', 'dispatch'),
+                  'remedy': ('full-mode', 'targeted-mode', 'run-artifacts', 'publication')}
+        for skill, names in stages.items():
+            for name in names:
+                with self.subTest(skill=skill, reference=name), tempfile.TemporaryDirectory() as temp:
+                    folder = Path(temp) / skill
+                    shutil.copytree(ROOT / 'skills' / skill, folder)
+                    relative = 'references/' + name + '.md'
+                    self.assertIn(relative, contracts[skill]['required'])
+                    (folder / relative).unlink()
+                    with self.assertRaisesRegex(ValueError, 'missing bundled asset'):
+                        verify_packages.inspect_package(folder, contracts[skill])
 
     def test_missing_required_asset_fails_without_a_link(self):
         verify_packages.inspect_package(self.root, self.contract)

@@ -1,6 +1,6 @@
 # Frontier workflow improvements
 
-Status: packages A and B implemented for review; C and D remain proposed
+Status: packages A and B merged; C prepared as a draft with focused measurements; D remains proposed
 Date: 2026-09-29
 Baseline: mana 0.35.0, commit aec8fa6
 
@@ -249,3 +249,74 @@ Validation uses `python3 -B scripts/test_review_merge.py` (17 offline tests), `b
 No installed files were added or moved. The existing package-contract inventories remain complete; standalone verification and shared-asset checks run through the repository validator. No shared canonical asset changed.
 
 The live runner's host compatibility has not been revalidated. These offline fixtures and source changes establish no frontier-model performance advantage or live reliability estimate. Live repair outcomes and live reviewer judgment remain unverified.
+
+## Package C implementation record
+
+Package C starts from `e1f8417865b778faf0cc61297375f18551fc1c27`, the package B merge including its review fixes. Before editing, `git archive HEAD skills` saved the complete baseline under `/tmp/mana-package-c-baseline`. Its entrypoint SHA-256 values are `102587beac6e6fc97532ff0fb3fad92f797e603dd269ead170d362c15b06e982` for scan and `7d4610fe0800e79fab0f15aba124ab5212b5a12d35c6866802d5d2ebf71acfdd` for remedy. The base commit reproduces that payload; evaluation results retain every installed file hash.
+
+Version 0.38.0 prepares stage-loaded workflows. Package D and new review-policy changes remain outside this work. No canonical shared asset changed. The existing confidence anchors, evidence reassessment, legacy artifact treatment, risk roster, and independent validator instructions remain in place.
+
+### Reference ownership
+
+The map was made before selecting boundaries. Scan already owned reviewer instructions in its subagent template, diff-scope rules, schema, persona files, and peer reference. Its finish-review reference already owned merge, reconciliation, validation, output, and action mechanics. Remedy already owned judgments in the evaluation rubric and role instructions in its scout, fixer, and verifier prompts. Those owners remain.
+
+| Skill and stage | Procedure owner | Retained boundary |
+|---|---|---|
+| Scan 1 and 2 | `references/scope.md` | Exact diff, remote-scope restrictions, deterministic signals, intent |
+| Scan 2b and 2c | `references/feedback-requirements.md` | All feedback surfaces and ticket requirements |
+| Scan 3 | `references/roster.md` | Risk-based selection, standards discovery, full/lite gate |
+| Scan 3d and 4 | `references/dispatch.md` | Run setup, fast pass, supported model routing and dispatch, complete collection |
+| Scan 5 and 6 | Existing `references/finish-review.md` | Late feedback, evidence reconciliation, independent validation, output and actions |
+| Remedy Full 1 through 3 | `references/full-mode.md` | Full fetch, CI, triage, central judgment |
+| Remedy Targeted 1 and 2 | `references/targeted-mode.md` | Named-thread lookup and judgment |
+| Remedy either mode, setup | `references/run-artifacts.md` | Scratch directory and artifact inventory |
+| Remedy either mode, 4 through 9 | `references/publication.md` | Fix dispatch and fallback, verification, validation, publication, summary |
+
+Entrypoints retain purpose, arguments, authorization, essential invariants, and stage routing. A resumed publication step routes directly to its owner. The targeted path no longer enters a full-PR verification fetch. Its helper pages only the thread/comment identities and location fields needed for mapping, without unrelated comment bodies, reviews, or conversation comments. Full-mode fetching retains its prior query and output contract.
+
+### Measurement method and acceptance limits
+
+The existing `evals/workflows` runner now accepts a frozen `--skill-root`, a requested model, and a reasoning setting. It records observed complete Markdown/JSON payload reads, repeated retrieval bytes, all command-output bytes, host token usage, and elapsed time beside outcome grading. Complete-content matching is a lower bound: partial and truncated reads are retained in command events but are not reconstructed as full file loads. Input tokens measure cumulative processing, not unique context-window size. No price or frontier-model performance claim follows from these measurements.
+
+Codex CLI 0.159.2 passed a fresh parent containment probe before host acceptance: fixture writes worked, while outside reads, skill writes, and command networking failed. A live report-only compatibility run then produced the expected command events, turn usage, and structured response. Previously accepted 0.155.1 remains accepted. Each live scenario repeats the containment preflight. Requested model and reasoning are pinned to `gpt-6.1-sol` and `medium`; actual resolved model identity is unavailable in the recorded events.
+
+Focused scenarios cover caller-based rejection, full-batch judgments of a real defect and useful correction, a small risky change's roster and explicit ticket requirements, and preservation of a rejected repair push. A held-out targeted repair exercises the no-subagent fallback through real tests and an unpushed commit. Roster selection stops before dispatch and cannot establish finding quality or independent validation. The full multi-reviewer equivalence criterion remains open until delegated containment, child-event observability, and paired review outcomes are established. Package C must remain a draft while that criterion is open.
+
+Exploratory attempts are retained alongside the final comparisons. The first fixture double incorrectly returned a full-fetch response to an unsupported GraphQL query; the corrected double rejects unknown operations, with a regression test. The first publication comparison also exposed unnecessary Full-mode retrieval on resume, which led to the direct stage pointer. Neither exploratory result is silently replaced by a later attempt.
+
+The delegation prerequisite was tested separately with the same permission profile. An ephemeral invocation failed to start its child with its agent reporting no rollout for the thread. A saved-session retry produced a child artifact confirming denied outside reads, denied skill/tool-double writes, denied networking, and allowed fixture writes. The parent JSON stream recorded a wait and the final message, but omitted the child command events and child usage. The runner therefore still disables delegation: child-event collection and grading require a validated adapter before deep-review measurements can be accepted. The successful child sandbox probe is not a passing review-equivalence test.
+
+### Focused results
+
+The retained record is [`evals/workflows/package-c-results.json`](../../evals/workflows/package-c-results.json). It includes all 20 workflow invocations and three compatibility invocations, payload hashes, observed reference reads, repeated-retrieval counts, actual commands that read installed files, usage, reports, and final product diffs. Raw event streams and runner snapshots remain in the ignored `evals/results/workflows-*` directories named by that record. The saved-session compatibility run also observed one completed child; its usage was not exposed. Each comparison invocation had an explicit 240-second timeout and each group an explicit limit of one, four, or five invocations. There were no automatic retries.
+
+The table uses `workflows-v6wyetp_` and `workflows-oej_p8wh`, except the targeted rejection pair, which uses the stricter fixture repeats `workflows-p518piut` and `workflows-rj64kfih`. A second fixture regression test now rejects an unsupported query that merely mimics the helper's filter. Earlier targeted attempts remain in the record with their measurement limit. The final baseline targeted run recovered from an unsupported fixture query with a paginated identity-only query; the candidate used its bundled narrow helper directly. The double models the bundled query shapes, not the entire GitHub API. Alternate query shapes can require fixture recovery, which limits attribution of latency and context differences to the refactor alone.
+
+Values below are baseline -> candidate. All five final focused outcome comparisons passed. Manual inspection of both held-out repair diffs confirmed the sole edit was `value + 2` -> `value * 2`, with the guard and unrelated spelling left intact. Central judgments matched on the false suggestion and both supported corrections. Both roster runs retained correctness, security, adversarial, testing, and standards coverage plus the admin-only and anonymous-denial requirements.
+
+| Scenario | Outcome | Entry bytes | Complete Markdown/JSON bytes, lower bound | All command-output bytes | Seconds | Host input tokens | Host output tokens |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Targeted rejection | Same caller-grounded decline, no product writes | 36,872 -> 11,134 | 48,868 -> 42,109 | 60,043 -> 51,126 | 149.28 -> 125.12 | 249,053 -> 190,027 | 2,432 -> 1,989 |
+| Full-batch judgment | Same decline and two accepted corrections, dry run | 36,872 -> 11,134 | 48,868 -> 49,952 | 60,434 -> 53,460 | 147.21 -> 141.97 | 143,945 -> 169,072 | 2,572 -> 2,168 |
+| Small risky change | Relevant specialists and both requirements retained | 38,665 -> 15,022 | 38,665 -> 31,962 | 118,739 -> 91,768 | 74.38 -> 96.45 | 129,584 -> 140,013 | 1,240 -> 1,370 |
+| Rejected repair push | Local commit and advanced remote preserved | 36,872 -> 11,134 | 36,872 -> 26,148 | 40,754 -> 29,229 | 113.44 -> 91.31 | 142,398 -> 159,302 | 1,458 -> 1,380 |
+| Held-out targeted repair | Scoped tested repair committed, not pushed | 36,872 -> 11,134 | 59,134 -> 52,375 | 68,069 -> 55,461 | 126.28 -> 141.42 | 233,166 -> 244,736 | 1,950 -> 2,146 |
+
+No repeated complete Markdown/JSON retrieval was observed in these ten final invocations. This does not exclude repeated partial reads; the record preserves the commands. Candidate targeted runs loaded the targeted path, artifact setup, judgment rubric, and shared publication reference, with fixer/verifier prompts only in the repair case. They did not load `full-mode.md`. The resumed publication candidate loaded only the entrypoint and publication reference. The roster candidate loaded scope, feedback/requirements, and roster references, stopping before dispatch. Exact per-run inventories are in the JSON record.
+
+Entry load fell in every focused scenario. Total complete instruction bytes rose slightly for full-batch judgment, and cumulative input tokens rose in four scenarios. Latency was mixed. Runs overlapped on the same host, and these samples establish no statistically reliable cost or speed advantage. The held-out baseline issued two queries requesting full feedback surfaces through its legacy lookup/verification path; the candidate issued two identity-only queries. The final targeted rejection pair requested no full feedback surfaces.
+
+### Acceptance and release gate
+
+| Criterion | Evidence | State |
+|---|---|---|
+| Targeted requests avoid unrelated workflow retrieval | Observed reference inventories and GraphQL request logs; real-helper regression rejects unrelated body/review fields | Met in focused cases |
+| Preserve findings and requirement coverage | Paired central judgments and risk/requirements selection pass; all 19 package B merge fixtures pass | Partial: complete delegated reviewer findings and independent validation remain unmeasured |
+| Named stages and isolated completeness | Package inventory includes every new reference; deletion tests fail for each of the eight stage assets; all 19 packages verify | Met |
+| No new runtime sibling/repository dependency | Isolated package inspection and smoke tests; new Python measurement code stays in maintainer tooling | Met |
+| Lower entry load with total context and latency reported | Observed bytes, retrievals, token usage, and elapsed times above, with context limits stated | Met for focused cases |
+| Resolve measured quality regressions | Final focused outcomes match; fixture defects were repaired and affected cases repeated with all attempts retained | No measured focused regression; full review remains an open gate |
+
+Validation includes the workflow fixture/grader suite (23 offline tests), the real merge suite (19 tests), reliability/package deletion checks (13 tests), shared-asset check mode, the complete repository validator, and all 31 similarity comparisons against upstream `414e9d6be166c15d9fb10595204530802ad007ef`. The largest similarity ratio is 0.24. New comparisons include the moved procedures; missing comparison files now fail the command. The initial measurement-function, narrow-query, and permissive-double tests each failed on the relevant old behavior before their fixes.
+
+The PR is prepared as a draft, with the full delegated-equivalence gate visibly unmet. This follows the user's instruction to ship reviewable package C work while clearly reporting unmet acceptance criteria. It does not promote package C as behaviorally equivalent across the complete review workflow. Package B's behavior remains preserved by source and deterministic checks; package D has not begun.

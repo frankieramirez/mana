@@ -58,9 +58,6 @@ locate_repo() {
   [ -n "$OWNER" ] && [ -n "$REPO" ] || die "malformed owner/repo: '$spec'"
 }
 
-# One query serves both read subcommands. Threads are paged through $endCursor;
-# the conversation comments and review submissions ride along on every page and
-# are taken from the first page only.
 QUERY='
 query($owner: String!, $repo: String!, $pr: Int!, $endCursor: String) {
   viewer { login }
@@ -82,6 +79,21 @@ query($owner: String!, $repo: String!, $pr: Int!, $endCursor: String) {
   }
 }'
 
+THREAD_QUERY='
+query($owner: String!, $repo: String!, $pr: Int!, $endCursor: String) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100, after: $endCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id isResolved isOutdated path line
+          comments(first: 100) { nodes { id } }
+        }
+      }
+    }
+  }
+}'
+
 # Each page filter prints the next cursor (or an empty line) first, then one
 # compact JSON value per line via tojson. Callers split on line position.
 NEXT_CURSOR='(.data.repository.pullRequest.reviewThreads.pageInfo
@@ -92,7 +104,7 @@ query_page() {
   local -a cursor=()
   [ -n "$2" ] && cursor=(-f endCursor="$2")
   gh api graphql -f owner="$OWNER" -f repo="$REPO" -F pr="$1" ${cursor[@]+"${cursor[@]}"} \
-    -f query="$QUERY" --jq "$3"
+    -f query="${4:-$QUERY}" --jq "$3"
 }
 
 cmd_fetch() {
@@ -144,7 +156,7 @@ cmd_thread() {
     page=$(query_page "$pr" "$cursor" "$NEXT_CURSOR"',
       (.data.repository.pullRequest.reviewThreads.nodes[]
        | select(any(.comments.nodes[]; .id == "'"$cid"'"))
-       | { id, isResolved, isOutdated, path, line } | tojson)')
+       | { id, isResolved, isOutdated, path, line } | tojson)' "$THREAD_QUERY")
     hit=$(sed -n 2p <<<"$page")
     if [ -n "$hit" ]; then
       printf '%s\n' "$hit"

@@ -30,8 +30,92 @@ class WorkflowTests(unittest.TestCase):
     def response(self, status, code):
         return {'report': 'Fixture report.', 'checks': [{'command': 'bash check.sh', 'status': status, 'exit_code': code, 'claim': 'Fixture assertion'}]}
 
+    def test_observed_payload_reads_exclude_mentions_and_track_retrieval(self):
+        case, work, before = self.fixture('review-report-only')
+        skill = work / 'installed/scan'
+        entry = (skill / 'SKILL.md').read_text()
+        ref = (skill / 'references/roster.md').read_text()
+        events = [event('cat ' + str(skill / 'SKILL.md'), entry),
+                  event('cat ' + str(skill / 'references/roster.md'), ref),
+                  event('cat ' + str(skill / 'references/roster.md'), ref),
+                  event('echo references/validator.md', 'references/validator.md')]
+        metrics = run.context_metrics(events, skill)
+        self.assertEqual(metrics['full_reads']['SKILL.md'], 1)
+        self.assertEqual(metrics['full_reads']['references/roster.md'], 2)
+        self.assertNotIn('references/validator.md', metrics['full_reads'])
+        self.assertEqual(metrics['redundant_full_read_bytes'], len(ref.encode()))
+        self.assertEqual(metrics['tool_output_bytes'], sum(len(e['item']['aggregated_output'].encode()) for e in events))
+
+    def test_feedback_grades_rejection_and_both_supported_corrections(self):
+        case, work, before = self.fixture('full-feedback-judgment')
+        output = work / 'artifacts/run'
+        output.mkdir()
+        items = [{'id': 'THREAD101', 'verdict': 'declined', 'evidence': 'caller.py:4 submit passes raw integers'},
+                 {'id': 'comment-102', 'verdict': 'fixed'}, {'id': 'comment-103', 'verdict': 'fixed'}]
+        for name in ('summary.md', 'metadata.json'):
+            (output / name).write_text('{}')
+        response = {'report': 'Dry run', 'checks': []}
+        (output / 'items.json').write_text(json.dumps(items))
+        self.assertEqual(run.grade(case, work, before, response, [event("cat app.py caller.py")]), [])
+        items[0]['verdict'] = 'fixed'
+        (output / 'items.json').write_text(json.dumps(items))
+        self.assertIn('incorrect suggestion not rejected', run.grade(case, work, before, response, [event("cat app.py caller.py")]))
+        items[0]['verdict'] = 'declined'
+        items.pop()
+        (output / 'items.json').write_text(json.dumps(items))
+        self.assertIn('supported correction missing: 103', run.grade(case, work, before, response, [event("cat app.py caller.py")]))
+
+    def test_targeted_grader_rejects_whole_pr_fetch_even_if_failed(self):
+        case, work, before = self.fixture('targeted-incorrect-suggestion')
+        output = work / 'artifacts/run'
+        output.mkdir()
+        (output / 'items.json').write_text(json.dumps([{'id': 'THREAD101', 'verdict': 'declined', 'evidence': 'caller.py:4'}]))
+        for name in ('summary.md', 'metadata.json'):
+            (output / name).write_text('{}')
+        response = {'report': 'Dry run', 'checks': []}
+        self.assertEqual(run.grade(case, work, before, response, [event("cat app.py caller.py")]), [])
+        self.assertIn('targeted whole-PR retrieval', run.grade(case, work, before, response, [event('bash installed/remedy/scripts/pr-threads fetch 7 fixture/mana', code=97)]))
+
+    def test_feedback_double_matches_real_helper_and_rejects_unknown_queries(self):
+        case, work, before = self.fixture('targeted-incorrect-suggestion')
+        env = run.clean_env(work / 'home')
+        env['PATH'] = str(work / 'bin') + ':/usr/bin:/bin'
+        env['TMPDIR'] = str(work / 'artifacts')
+        helper = work / 'installed/remedy/scripts/pr-threads'
+        result = run.subprocess.run(['bash', str(helper), 'thread', '7', 'COMMENT101', 'fixture/mana'], cwd=work, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['id'], 'THREAD101')
+        calls = [json.loads(line) for line in (work / 'artifacts/gh-events.jsonl').read_text().splitlines()]
+        query = next(arg[6:] for arg in calls[-1] if arg.startswith('query='))
+        self.assertNotIn('body', query)
+        self.assertNotIn('reviews(', query)
+        self.assertNotIn('viewer', query)
+        result = run.subprocess.run(['gh', 'api', 'graphql', '-f', 'query=unknown'], cwd=work, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 97)
+        self.assertNotIn('THREAD101', result.stdout)
+        result = run.subprocess.run(['gh', 'api', 'graphql', '-f', 'query=query { node(id: "COMMENT101") { id } }', '--jq', 'select(any(.id; . != null))'], cwd=work, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 97)
+
+    def test_supported_fix_requires_real_repair_commit_and_verification(self):
+        case, work, before = self.fixture('targeted-supported-fix')
+        output = work / 'artifacts/run'
+        output.mkdir()
+        (output / 'items.json').write_text(json.dumps([{'id': 'THREAD101', 'verdict': 'fixed'}]))
+        (output / 'verify.json').write_text('{}')
+        response = {'report': 'Unpushed repair', 'checks': []}
+        events = [event('python3 -m unittest test_app.py')]
+        failures = run.grade(case, work, before, response, events)
+        self.assertIn('supported repair fails contract', failures)
+        self.assertIn('requested repair commit missing', failures)
+        path = work / 'app.py'
+        path.write_text(path.read_text().replace('return value + 2', 'return value * 2'))
+        run.git(work, 'add', 'app.py')
+        run.git(work, 'commit', '-qm', 'Fix doubling')
+        self.assertEqual(run.grade(case, work, before, response, events), [])
+        self.assertIn('repair verification not observed', run.grade(case, work, before, response, [event('cat app.py')]))
+
     def test_case_definitions(self):
-        self.assertEqual(len(self.cases), 12)
+        self.assertEqual(len(self.cases), 16)
 
     def test_prior_authorization_completes_only_the_local_fix(self):
         case, work, before = self.fixture('prior-action-local-fix')

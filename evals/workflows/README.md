@@ -15,7 +15,7 @@ These validate fixtures and graders. They do not execute an agent. Each syntheti
 
 ## Actual agent runs
 
-The initial adapter supports Linux and Codex CLI 0.155.1, with an existing host login. Other versions and hosts are unvalidated and fail closed. Revalidate isolation and the event contract before changing the supported version. Python's standard library is sufficient for the harness itself.
+The adapter supports Linux and Codex CLI 0.155.1 or 0.159.2, with an existing host login. Version 0.159.2 passed a fresh containment probe and a live command-event, usage, and structured-response check during package C. Other versions and hosts are unvalidated and fail closed. Revalidate isolation and the event contract before changing the supported version. Python's standard library is sufficient for the harness itself.
 
 ```bash
 python3 -B evals/workflows/run.py --live \
@@ -23,7 +23,7 @@ python3 -B evals/workflows/run.py --live \
   --limit 3 --timeout 120
 ```
 
-The command makes at most three agent invocations, each limited to 120 seconds. There are no automatic retries. The CLI chooses its default model with user configuration disabled; the runner does not change the user's saved model. Runs consume existing account usage. The timeout and invocation limit are bounds, not a dollar budget.
+The command makes at most three agent invocations, each limited to 120 seconds. There are no automatic retries. The CLI chooses its default model with user configuration disabled unless `--model` is supplied. `--reasoning` defaults to `medium`. The runner records both settings without changing the user's saved configuration. Runs consume existing account usage. The timeout and invocation limit are bounds, not a dollar budget.
 
 The agent uses the copied skill and its real bundled helpers. Fixtures cover capture success and failure, unavailable runtime, stale evidence, staged user work, tracker arguments, untrusted report text, and an absent optional sibling. Evidence cases intentionally request only capture, and the handoff case starts at an already resolved route. These are focused workflow scenarios, not complete PR publication or whole-board tests.
 
@@ -63,3 +63,22 @@ python3 -B evals/workflows/run.py --regrade evals/results/workflows-RUN
 Each regrade gets a unique JSON file with the grader hash and previous pass state. It invokes no agent and leaves the original result untouched. Keep cases from one underlying scenario together when building future held-out evaluation sets. Repeat live runs deliberately when measuring variability; retain every attempt.
 
 See `findings.md` for measured pilot outcomes and limits.
+
+## Package C focused comparisons
+
+Use `--skill-root /absolute/baseline/skills` to install a saved baseline payload; omit it for the candidate. Each run records the installed file hashes and retains the runner sources beside the results. Keep baseline and candidate requests, model, reasoning, and tool configuration identical. Example:
+
+```bash
+python3 -B evals/workflows/run.py --live \
+  --case targeted-incorrect-suggestion --case full-feedback-judgment \
+  --case small-risk-roster --case repair-push-rejected \
+  --case targeted-supported-fix --limit 5 --timeout 240 \
+  --model gpt-6.1-sol --reasoning medium \
+  --skill-root /absolute/baseline/skills
+```
+
+The feedback fixtures exercise the real bundled helper against an offline `gh` double. Unknown GraphQL operations fail rather than returning unrelated synthetic data. `targeted-incorrect-suggestion` rejects a suggestion contradicted by a caller. `full-feedback-judgment` must also accept a demonstrated arithmetic defect and a useful spelling correction. Both are dry runs. `targeted-supported-fix` is a held-out one-thread repair through the supported no-subagent fallback: it must fix the arithmetic defect, preserve the negative-input guard, verify, and commit without pushing. `small-risk-roster` ends at Stage 3 and checks security/adversarial coverage plus both ticket requirements. It does not measure reviewer findings or independent validation.
+
+`context.full_reads` counts complete Markdown/JSON file contents observed in command output, including repeat retrievals. Counts exclude mere filename mentions. `total_full_read_bytes` includes duplicates; `redundant_full_read_bytes` measures the repeated portion. `tool_output_bytes` is all observed command output. Partial or truncated reads are not reconstructed as full file reads. Inspect saved command events for those reads before interpreting a zero. These are observable context measures, not an exact reconstruction of the model's context window. Host input tokens are cumulative processing, including repeated conversation context. Actual model identity remains null when the host does not expose it.
+
+Delegation remains disabled and unvalidated in this runner. These focused stages and the repair fallback do not establish full multi-reviewer equivalence. Do not use a passing roster case to claim independent finding validation. The package C record in `docs/plans/frontier-workflows.md` distinguishes these limits from measured outcomes. The event-based approach follows [OpenAI's skill evaluation guidance](https://developers.openai.com/blog/eval-skills); host acceptance still requires an executed local containment and event check.
