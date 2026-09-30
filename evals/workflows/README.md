@@ -95,3 +95,25 @@ Portable synthetic evidence archives include raw parent events, persisted family
 ```bash
 python3 -B evals/workflows/archive_delegated.py evals/workflows/evidence/RUN.json.gz
 ```
+
+
+## Package D named continuation
+
+`portal_fixtures.py` extends the same runner with changing offline tracker/PR state and a real disposable Git remote. The build fixture has two independent ready members, an open dependent member, another owner, an unready member and unrelated ready work. The map fixture links a downstream build but authorizes only its decision destination. Only portal is installed, exercising the ordinary-task fallback. The workspace-stop case imposes a host isolation limit. Single-ticket and `go` cases retain one handoff. A resume fixture seeds a cancelled run with an actual unit commit, synthetic open PR and unfinished user edit; saved wider actions do not authorize current publication.
+
+Run the deterministic suite without any model invocation:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_portal_run.py
+```
+
+Live invocations require the explicit controls in `package-d-controls.json`. Keep every attempt and any separate offline regrade. Package D's plan record distinguishes the initial conflicting-validation fixture and permissive-grader result from the corrected observations. The grader requires observed successful unit checks and verified state; a commit alone cannot establish a completed unit. Tracker transport queries model the bundled helper shapes and reject unsupported operations, so these are bounded synthetic outcomes. Managed workspace APIs and real tracker/publication behavior remain unmeasured.
+
+
+The portable package D record is [package-d-results.json](package-d-results.json). Its per-attempt archives retain raw events, synthetic workspaces/state, frozen runner sources and separate regrades. Verify an archive without invoking a model:
+
+```bash
+python3 -B evals/workflows/archive_delegated.py evals/workflows/evidence/package-d-RUN-CASE.json.gz
+```
+
+That existing archive tool supports these serial records as well as delegated evidence. Installed payload hashes identify each snapshot. The final validator output is in `evidence/package-d-validation.txt`.

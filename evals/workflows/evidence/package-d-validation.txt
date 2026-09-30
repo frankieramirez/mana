@@ -1,0 +1,122 @@
+Command: bash scripts/validate.sh
+Checked state: 84a41e7 plus the complete package D release diff (version 0.39.0).
+Outcome: exit 0. Trailing whitespace removed for display; raw bytes are in package-d-validation.txt.gz.
+
+persona synchronization fixtures: ok
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.061s
+
+OK
+standalone packages: 19 checked (static references and offline smoke only)
+workflow definitions: 22 valid; no agent executed
+.......................................................
+----------------------------------------------------------------------
+Ran 55 tests in 4.188s
+
+OK
+ward watcher fixture tests: ok
+ok assigned child refuses close
+ok blocked child refuses close
+ok all closed closes parent
+ok legacy map label closes parent
+ok native 404 fallback closes parent
+ok mixed native fallback refuses open child
+ok native unknown error refuses close
+ok child read error refuses close
+ok fallback read failure refuses close
+ok map read failure refuses close
+ok unknown child state refuses close
+ok missing child response refuses close
+ok task-list child refuses close
+ok no-child map can close
+ok already closed is idempotent
+ok non-map refuses close
+ok children returns all native children
+ok children returns mixed fallback children
+ok update-body accepts unchanged snapshot
+ok update-body rejects stale snapshot
+ok update-body rejects missing snapshot
+ok update-body rejects body read error
+ok update-body keeps old usage
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.144s
+
+OK
+build ticket adapter fixtures: ok
+warning: You appear to have cloned an empty repository.
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	clean
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+action	edit
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	clean
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	clean
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	unknown
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	conflicting
+base	main
+base_sha	df89a63dd01a8f47fb6ae4e83037ed4a6ebe0c52
+head_sha	bd0608661854740876c59341f65ddd2429908965
+preflight	conflicting
+
+open-pr integration fixtures: ok
+...................
+----------------------------------------------------------------------
+Ran 19 tests in 1.277s
+
+OK
+ultima fixture tests: ok
+ultima project fixture tests: ok
+leyline conformance fixtures: ok
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.009s
+
+OK
+ok

@@ -206,6 +206,84 @@
         "commit": true,
         "evidence_directory": "artifacts/"
       }
+    },
+    {
+      "id": "portal-run-independent",
+      "skill": "portal",
+      "fixture": "continuation",
+      "expected_status": "effort-prepared",
+      "request": "Use portal run 10. Continue the two independent ready members of this named build effort. Implement, verify and commit each locally, no-pr; do not push, create PRs or close build tickets. Destination: Prepare the two independent ready units. Stop when the requested local results are prepared or remaining work is blocked/held/unready. Both linked Git worktrees and a disposable local origin are available; use artifacts/workspaces/ for separate units. The cast sibling is absent, so use the truthful plain-task fallback. Do not claim the global queue.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "portal-run-map",
+      "skill": "portal",
+      "fixture": "continuation",
+      "expected_status": "map-destination",
+      "request": "Continue the named map 20 through its decision destination with portal. The user chooses Use stable ids. You may write the destination document, claim/resolve the decision, update the map and close it after verifying the destination. No commit, push, implementation, slicing or PR. The scry sibling is absent; use the plain-task fallback. Stop at the decision destination even though build 10 is linked. The supplied gh is an offline tracker.",
+      "allowed_effects": {
+        "product_files": [
+          "decision.md"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "portal-run-no-workspace",
+      "skill": "portal",
+      "fixture": "continuation",
+      "expected_status": "workspace-stop",
+      "request": "Use portal run 10 to prepare this named build effort. Workspace isolation is unavailable in this host: managed workspaces and git worktree creation are prohibited for this invocation. Do not claim or implement a build unit until linked workspace isolation is available. Report the concrete prerequisite and stop.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "portal-single-unit",
+      "skill": "portal",
+      "fixture": "continuation",
+      "expected_status": "single-unit",
+      "request": "Use portal on issue 11. Implement only this ticket as a local edit; no commit, push or PR. The cast sibling is absent. Use the plain-task fallback. This authorizes the one handoff, not continued work on its parent effort. Do not rediscover the board.",
+      "allowed_effects": {
+        "product_files": [
+          "unit11.txt"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "portal-go-single-unit",
+      "skill": "portal",
+      "fixture": "continuation",
+      "expected_status": "single-unit",
+      "request": "Use portal 11 go. Implement only this ticket as a local edit; no commit, push or PR. The cast sibling is absent. Use the plain-task fallback. This authorizes the one handoff, not continued work on its parent effort. Do not rediscover the board.",
+      "allowed_effects": {
+        "product_files": [
+          "unit11.txt"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "portal-run-resume",
+      "skill": "portal",
+      "fixture": "continuation",
+      "expected_status": "effort-prepared",
+      "request": "Resume portal run 10 after the recorded cancellation. Destination: Prepare the two independent ready units. Current authorization: reconcile prior unit 11 and its open PR without edits, then implement, verify and commit ready independent unit 12 locally, no-pr. No push, new PR, tracker closure or feedback repair. Preserve all owned workspace edits. The prior state records wider publishing actions; those do not grant current permission. The cast sibling is absent; report unavailable guarantees. Use artifacts/workspaces/ for the remaining linked worktree. Stop when these requested results are prepared.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
     }
   ]
 }

@@ -143,6 +143,17 @@ class Packages(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, 'missing bundled asset'):
                         verify_packages.inspect_package(folder, contracts[skill])
 
+    def test_portal_run_assets_are_required_in_isolation(self):
+        contract = json.loads((ROOT / 'scripts/package-contracts.json').read_text())['skills']['portal']
+        for relative in ('references/run.md', 'scripts/run-state.sh'):
+            with self.subTest(asset=relative), tempfile.TemporaryDirectory() as temp:
+                folder = Path(temp) / 'portal'
+                shutil.copytree(ROOT / 'skills/portal', folder)
+                self.assertIn(relative, contract['required'])
+                (folder / relative).unlink()
+                with self.assertRaisesRegex(ValueError, 'missing bundled asset'):
+                    verify_packages.inspect_package(folder, contract)
+
     def test_missing_required_asset_fails_without_a_link(self):
         verify_packages.inspect_package(self.root, self.contract)
         (self.root / "SKILL.md").write_text("No links.\n")

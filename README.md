@@ -589,9 +589,14 @@ Reads the tracker and the current branch, names the one skill to run next and th
 # Which skill does this ticket want?
 /mana:portal 26
 
-# Skip the question and step through
+# Skip the question and step through one route
 /mana:portal go
+
+# Continue ready members of this named effort
+/mana:portal run 26
 ```
+
+An explicit `portal run <map-or-build-effort>` or equivalent request to continue that named effort selects a serial run. Map runs stop at their decision destination. Build runs use separate owned worktrees and branches, claim only ready members of that effort, and report prepared PRs as awaiting review. Local continuation state is reconciled before resume and grants no fresh permission. Bare routing and `go` still hand off once.
 
 <details>
 <summary>Route order and what it reads</summary>

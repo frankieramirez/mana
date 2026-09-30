@@ -171,7 +171,9 @@
         "references/build.md",
         "references/issue.md",
         "references/pr.md",
+        "references/run.md",
         "scripts/map.sh",
+        "scripts/run-state.sh",
         "scripts/tickets.sh"
       ],
       "smoke": [
@@ -184,6 +186,13 @@
         },
         {
           "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/run-state.sh",
           "args": [
             "--help"
           ],

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.39.0
+
+- Add optional portal runs through one named map or build effort, with serial live-frontier checks, isolated build worktrees and local resumable state. Preserve single-handoff defaults and report open PRs as awaiting review. Keep failed dependency reads unknown.
+
 ## 0.38.0
 
 - Load review procedures at named stages. Split full and targeted feedback handling with shared verification and publication, preserving evidence-based judgment. Add paired workflow measurements and revalidate the serial eval host on Codex CLI 0.159.2.

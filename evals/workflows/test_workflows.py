@@ -115,7 +115,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn('repair verification not observed', run.grade(case, work, before, response, [event('cat app.py')]))
 
     def test_case_definitions(self):
-        self.assertEqual(len(self.cases), 16)
+        self.assertEqual(len(self.cases), 22)
 
     def test_prior_authorization_completes_only_the_local_fix(self):
         case, work, before = self.fixture('prior-action-local-fix')
