@@ -499,6 +499,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="validate cases without invoking an agent")
     parser.add_argument("--case", action="append", default=[])
+    parser.add_argument("--delegated", action="store_true", help="bounded full-review evaluation with child history collection")
     parser.add_argument("--live", action="store_true", help="explicitly invoke the configured Codex host")
     parser.add_argument("--regrade", type=Path, help="grade saved runs without invoking an agent; preserve original judgments")
     parser.add_argument("--skill-root", type=Path, help="frozen baseline or candidate skills directory")
@@ -517,8 +518,23 @@ def main():
         return 0
     if not args.live or not args.case:
         parser.error("select --case and --live; use --check for offline validation")
-    if not 1 <= args.timeout <= 300 or not 1 <= args.limit <= 8:
-        parser.error("timeout must be 1..300 seconds and limit 1..8 invocations")
+    if not 1 <= args.timeout <= (900 if args.delegated else 300) or not 1 <= args.limit <= 8:
+        parser.error("timeout must be 1..300 seconds (900 with --delegated) and limit 1..8 invocations")
+    if args.delegated:
+        if args.case not in (['delegated-full-review'], ['delegated-heldout-review']) or args.limit != 1 or not args.skill_root or not args.model:
+            parser.error('delegated runs require one supported delegated case, limit 1, frozen skill root and model')
+        import delegated_review
+        destination = ROOT / 'evals/results'
+        destination.mkdir(exist_ok=True)
+        out = Path(tempfile.mkdtemp(prefix='delegated-review-', dir=destination))
+        source = out / 'runner-source'
+        source.mkdir()
+        for name in ('run.py', 'review_fixtures.py', 'cases.json', 'child_events.py', 'delegated_review.py', 'delegated-grading.json'):
+            shutil.copy2(HERE / name, source / name)
+        result = delegated_review.execute(out, args.skill_root, args.timeout, args.model, args.reasoning, args.case == ['delegated-heldout-review'])
+        print(out)
+        print(json.dumps({k: result[k] for k in ('execution', 'accepted_execution', 'failures', 'seconds')}))
+        return 0 if result['accepted_execution'] else 1
     known = {c["id"] for c in cases}
     if set(args.case) - known:
         parser.error("unknown case id")

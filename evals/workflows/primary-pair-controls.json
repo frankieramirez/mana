@@ -1,0 +1,9 @@
+{
+  "fixture_product_hashes_equal": true,
+  "normalized_requests_equal": true,
+  "normalized_host_commands_equal": true,
+  "baseline_run": "delegated-review-mkabp0vn",
+  "candidate_run": "delegated-review-9l9bflwg",
+  "tool_configuration": "Same CLI binary, permission rules, disabled integrations, requested model/reasoning and active-thread limit. Dynamic workspace paths and the live probe listener port differ.",
+  "reviewer_workload_limit": "Baseline selected five reviewers; candidate selected the same five plus Lore Bard for local feedback. Cost/context differences cannot be attributed solely to stage loading."
+}

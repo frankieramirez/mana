@@ -1,0 +1,130 @@
+$ bash scripts/validate.sh
+persona synchronization fixtures: ok
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 0.059s
+
+OK
+standalone packages: 19 checked (static references and offline smoke only)
+workflow definitions: 16 valid; no agent executed
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 0.878s
+
+OK
+ward watcher fixture tests: ok
+ok assigned child refuses close
+ok blocked child refuses close
+ok all closed closes parent
+ok legacy map label closes parent
+ok native 404 fallback closes parent
+ok mixed native fallback refuses open child
+ok native unknown error refuses close
+ok child read error refuses close
+ok fallback read failure refuses close
+ok map read failure refuses close
+ok unknown child state refuses close
+ok missing child response refuses close
+ok task-list child refuses close
+ok no-child map can close
+ok already closed is idempotent
+ok non-map refuses close
+ok children returns all native children
+ok children returns mixed fallback children
+ok update-body accepts unchanged snapshot
+ok update-body rejects stale snapshot
+ok update-body rejects missing snapshot
+ok update-body rejects body read error
+ok update-body keeps old usage
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.134s
+
+OK
+build ticket adapter fixtures: ok
+warning: You appear to have cloned an empty repository.
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	clean
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+action	edit
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	clean
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	clean
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	unknown
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+action	create
+url	https://github.com/acme/widgets/pull/7
+number	7
+attach	yes
+reason
+mergeability	conflicting
+base	main
+base_sha	43127ee986f471d36d3705fc7457cb41cf21792c
+head_sha	07e85f447e68bc344f401a68bae5cf86302e6fb5
+preflight	conflicting
+
+open-pr integration fixtures: ok
+...................
+----------------------------------------------------------------------
+Ran 19 tests in 1.234s
+
+OK
+ultima fixture tests: ok
+ultima project fixture tests: ok
+leyline conformance fixtures: ok
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.009s
+
+OK
+ok
+
+Exit: 0
+
+$ python3 -B -m unittest discover -s evals/workflows -p test_*.py
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 0.883s
+
+OK
+
+Exit: 0

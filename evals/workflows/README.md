@@ -38,7 +38,7 @@ Four additional scenarios cover the authority and recovery changes:
 
 Live evaluation of the changed-target scenario has not run. Its offline scope checks establish fixture and grader behavior only.
 
-The loader limits the added review skills to these stages. Reviewer delegation remains disabled; these cases do not test finding quality, reviewer orchestration, or a full feedback cycle. Human review must also check that the agent did not ask again for an action already supplied and that its report accurately explains any recovery. The command-pattern checks detect selected prohibited attempts, not every possible shell encoding. Final repository state supplies the primary scope oracle.
+The focused-case loader limits the added review skills to these stages. Delegation stays disabled for focused cases; these cases do not test finding quality, reviewer orchestration, or a full feedback cycle. Human review must also check that the agent did not ask again for an action already supplied and that its report accurately explains any recovery. The command-pattern checks detect selected prohibited attempts, not every possible shell encoding. Final repository state supplies the primary scope oracle.
 
 ## Isolation
 
@@ -81,4 +81,17 @@ The feedback fixtures exercise the real bundled helper against an offline `gh` d
 
 `context.full_reads` counts complete Markdown/JSON file contents observed in command output, including repeat retrievals. Counts exclude mere filename mentions. `total_full_read_bytes` includes duplicates; `redundant_full_read_bytes` measures the repeated portion. `tool_output_bytes` is all observed command output. Partial or truncated reads are not reconstructed as full file reads. Inspect saved command events for those reads before interpreting a zero. These are observable context measures, not an exact reconstruction of the model's context window. Host input tokens are cumulative processing, including repeated conversation context. Actual model identity remains null when the host does not expose it.
 
-Delegation remains disabled and unvalidated in this runner. These focused stages and the repair fallback do not establish full multi-reviewer equivalence. Do not use a passing roster case to claim independent finding validation. The package C record in `docs/plans/frontier-workflows.md` distinguishes these limits from measured outcomes. The event-based approach follows [OpenAI's skill evaluation guidance](https://developers.openai.com/blog/eval-skills); host acceptance still requires an executed local containment and event check.
+The focused path continues to disable delegation. The opt-in `--delegated` extension is documented in [delegated-evaluation.md](delegated-evaluation.md), including child-history coverage and containment requirements. These focused stages and the repair fallback do not establish full multi-reviewer equivalence. Do not use a passing roster case to claim independent finding validation. The package C record in `docs/plans/frontier-workflows.md` distinguishes these limits from measured outcomes. The event-based approach follows [OpenAI's skill evaluation guidance](https://developers.openai.com/blog/eval-skills); host acceptance still requires an executed local containment and event check.
+
+
+For delegated execution, use the separate offline inspection command. It preserves the original result and does not execute a model:
+
+```bash
+python3 -B evals/workflows/audit_delegated.py evals/results/delegated-review-RUN
+```
+
+Portable synthetic evidence archives include raw parent events, persisted family history, runner snapshots and review artifacts. Host HOME, Git internals and installed payload copies are excluded; payload hashes and source revisions identify the frozen inputs. Verify every archived file digest with:
+
+```bash
+python3 -B evals/workflows/archive_delegated.py evals/workflows/evidence/RUN.json.gz
+```
