@@ -145,9 +145,22 @@ Containment protocol: before any review commands, run python3 bin/probe.py paren
                     result['exit_code']=p.returncode
                 except subprocess.TimeoutExpired:
                     os.killpg(p.pid,signal.SIGKILL);p.communicate();result['execution']='timeout'
-        events=[json.loads(l) for l in (out/'events.jsonl').read_text().splitlines()]
+        events=[]
+        for number,line in enumerate((out/'events.jsonl').read_text().splitlines(),1):
+            try:
+                event=json.loads(line)
+            except json.JSONDecodeError:
+                result['failures'].append('unparseable event at line '+str(number))
+                continue
+            if not isinstance(event,dict) or not isinstance(event.get('type'),str):
+                result['failures'].append('invalid event at line '+str(number))
+                continue
+            events.append(event)
         result['usage']=[e for e in events if e.get('type')=='turn.completed']
-        parent=next(e['thread_id'] for e in events if e['type']=='thread.started')
+        parent=next((e.get('thread_id') for e in events if e.get('type')=='thread.started'
+                     and isinstance(e.get('thread_id'),str) and e['thread_id']),None)
+        if parent is None:
+            raise ValueError('missing parent thread identity; descendant collection unavailable')
         reader=Reader(exe,out/'rpc.jsonl')
         try: threads=collect(reader,parent)
         finally: reader.close()

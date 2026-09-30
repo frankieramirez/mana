@@ -1,7 +1,9 @@
 from pathlib import Path
+import json
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch, MagicMock
 import delegated_review as d
 import run
 
@@ -60,6 +62,70 @@ class Heldout(unittest.TestCase):
             self.assertIn('Retry and delivery', (work/'spec.md').read_text())
             output=subprocess.check_output([str(work/'bin/gh'),'issue','view','7'],text=True)
             self.assertIn('propagates the last OSError',output)
+
+
+class InterruptedEvents(unittest.TestCase):
+    def execute_fixture(self, raw, timeout=False):
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        out=Path(temporary.name)
+        prepared=d.prepare(out,run.ROOT/'skills')
+        work=prepared[1]
+        (work/'artifacts/run').mkdir()
+        (work/'artifacts/run/review.json').write_text('{}')
+        process=MagicMock()
+        process.__enter__.return_value=process
+        process.returncode=0
+        def communicate(*args, **kwargs):
+            if 'timeout' in kwargs:
+                (out/'events.jsonl').write_text(raw)
+                if timeout:raise subprocess.TimeoutExpired('fixture',1)
+        process.communicate.side_effect=communicate
+        threads={'parent':{'model':'pinned','reasoningEffort':'medium'},
+                 'child':{'parentThreadId':'parent','model':'pinned','reasoningEffort':'medium'}}
+        with patch.object(d.shutil,'which',return_value='/fixture/codex'), \
+             patch.object(d.subprocess,'check_output',return_value=run.SUPPORTED_HOST), \
+             patch.object(d,'prepare',return_value=prepared), \
+             patch.object(run,'permission_config',return_value=[]), \
+             patch.object(run,'preflight',return_value={}), \
+             patch.object(d.subprocess,'Popen',return_value=process), \
+             patch.object(d.os,'killpg'), \
+             patch.object(d,'Reader') as reader, \
+             patch.object(d,'collect',return_value=threads) as collector, \
+             patch.object(d,'inspect',return_value=([],[])), \
+             patch.object(run,'grade',return_value=[]):
+            result=d.execute(out,run.ROOT/'skills',1,'pinned','medium')
+            collected=collector.call_args
+            closed=reader.return_value.close.called
+        self.assertEqual(raw,(out/'events.jsonl').read_text())
+        self.assertEqual(result,json.loads((out/'result.json').read_text()))
+        return result,out,collected,closed
+
+    def test_timeout_with_truncated_event_still_collects_child_history(self):
+        raw='{"type":"thread.started","thread_id":"parent"}\n{"type":"item.completed"'
+        result,out,collected,closed=self.execute_fixture(raw,timeout=True)
+        self.assertEqual('timeout',result['execution'])
+        self.assertIn('unparseable event at line 2',result['failures'])
+        self.assertEqual('parent',collected.args[1])
+        self.assertTrue(closed)
+        self.assertTrue((out/'threads.json').is_file())
+        self.assertTrue((out/'attributed-events.jsonl').is_file())
+        self.assertFalse(result['accepted_execution'])
+
+    def test_invalid_event_shapes_preserve_usage_and_collection_but_reject_run(self):
+        raw='{}\nnull\n{"type":"thread.started","thread_id":"parent"}\n{"type":"turn.completed","usage":{}}\n'
+        result,out,collected,_=self.execute_fixture(raw)
+        self.assertEqual(['invalid event at line 1','invalid event at line 2'],result['failures'])
+        self.assertEqual('parent',collected.args[1])
+        self.assertEqual(1,len(result['usage']))
+        self.assertTrue((out/'threads.json').is_file())
+        self.assertFalse(result['accepted_execution'])
+
+    def test_missing_parent_is_explicit_and_preserves_raw_evidence(self):
+        result,out,collected,_=self.execute_fixture('{}\n')
+        self.assertIsNone(collected)
+        self.assertIn('ValueError: missing parent thread identity; descendant collection unavailable',result['failures'])
+        self.assertFalse(result['accepted_execution'])
 
 
 if __name__ == "__main__":
