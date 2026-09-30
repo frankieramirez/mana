@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.39.1
+
+- Keep portal run state and workspace checks in the current repository when Git environment variables are inherited. Parse numeric and URL claim targets in workflow fixtures, reject malformed claims, and record unexpected grading errors as failures.
+
 ## 0.39.0
 
 - Add optional portal runs through one named map or build effort, with serial live-frontier checks, isolated build worktrees and local resumable state. Preserve single-handoff defaults and report open PRs as awaiting review. Keep failed dependency reads unknown.

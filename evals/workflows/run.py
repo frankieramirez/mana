@@ -462,8 +462,12 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium")
         if result["execution"] == "completed" and not result["usage"]:
             result["failures"].append("missing turn usage events")
         if result["execution"] == "completed":
-            response = json.loads((out / "response.json").read_text())
-            result["failures"] += grade(case, work, baseline, response, events)
+            try:
+                response = json.loads((out / "response.json").read_text())
+                result["failures"] += grade(case, work, baseline, response, events)
+            except Exception as exc:
+                result["execution"] = "grading_failed"
+                result["failures"].append(f"grader error ({type(exc).__name__}): {exc}")
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         result["failures"].append(str(exc))
         if result["execution"] == "completed":

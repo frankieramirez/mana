@@ -4,6 +4,31 @@ from pathlib import Path
 import re
 import subprocess
 
+
+def issue_target(args):
+    options = {'--repo', '-R', '--add-assignee', '--remove-assignee', '--body', '-b',
+               '--body-file', '-F', '--json', '--jq'}
+    targets = []
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token in options:
+            if i + 1 == len(args):
+                raise ValueError('missing option value: ' + token)
+            i += 2
+            continue
+        if token.startswith('-'):
+            raise ValueError('unsupported issue option: ' + token)
+        targets.append(token)
+        i += 1
+    if len(targets) != 1:
+        raise ValueError('expected one issue target')
+    match = re.fullmatch(r'(?:https://github\.com/fixture/mana/issues/)?([1-9][0-9]*)', targets[0])
+    if not match:
+        raise ValueError('unsupported issue target: ' + targets[0])
+    return match.group(1)
+
+
 TRANSPORT = r'''#!/usr/bin/env python3
 import json, re, sys
 from pathlib import Path
@@ -17,6 +42,33 @@ def opt(key, default=''):
     return a[a.index(key)+1] if key in a else default
 def fail(message):
     print('offline tracker: ' + message, file=sys.stderr); sys.exit(97)
+def issue_target(args):
+    options = {'--repo', '-R', '--add-assignee', '--remove-assignee', '--body', '-b',
+               '--body-file', '-F', '--json', '--jq'}
+    targets = []
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token in options:
+            if i + 1 == len(args):
+                raise ValueError('missing option value: ' + token)
+            i += 2
+            continue
+        if token.startswith('-'):
+            raise ValueError('unsupported issue option: ' + token)
+        targets.append(token)
+        i += 1
+    if len(targets) != 1:
+        raise ValueError('expected one issue target')
+    match = re.fullmatch(r'(?:https://github\.com/fixture/mana/issues/)?([1-9][0-9]*)', targets[0])
+    if not match:
+        raise ValueError('unsupported issue target: ' + targets[0])
+    return match.group(1)
+def target():
+    try:
+        return issue_target(a[2:])
+    except ValueError as exc:
+        fail(str(exc))
 def issue(n):
     if n in state.get('read_fail', []): fail('issue read failed ' + n)
     if n not in state['issues']: fail('unknown issue ' + n)
@@ -34,7 +86,7 @@ if a[:2] == ['repo', 'view']:
     elif field == 'url': print('https://github.com/fixture/mana')
     else: fail('unsupported repo query')
 elif a[:2] == ['issue', 'view']:
-    n = next((x for x in a[2:] if x.isdigit()), '')
+    n = target()
     d = issue(n)
     if q in ('.body', '.state', '.title', '.url'): print(d[q[1:]])
     elif q == '.assignees | length': print(len(d['assignees']))
@@ -53,7 +105,7 @@ elif a[:2] == ['issue', 'view']:
         if 'comments' in opt('--json'): print('comments\n' + '\n'.join(d.get('comments', [])))
     else: fail('unsupported issue query ' + q)
 elif a[:2] == ['issue', 'edit']:
-    n = next(x for x in a[2:] if x.isdigit())
+    n = target()
     d = issue(n)
     if '--add-assignee' in a:
         if opt('--add-assignee') not in d['assignees']: d['assignees'].append(opt('--add-assignee'))
@@ -65,11 +117,11 @@ elif a[:2] == ['issue', 'edit']:
     else: fail('unsupported issue edit')
     save()
 elif a[:2] == ['issue', 'comment']:
-    n = next(x for x in a[2:] if x.isdigit())
+    n = target()
     issue(n).setdefault('comments', []).append(opt('--body'))
     save()
 elif a[:2] == ['issue', 'close']:
-    n = next(x for x in a[2:] if x.isdigit())
+    n = target()
     issue(n)['state'] = 'CLOSED'; save()
 elif a[:2] == ['pr', 'view']:
     n = next((x for x in a[2:] if x.isdigit()), '')
@@ -158,7 +210,18 @@ def grade_portal_fixture(case, work, baseline, response, commands):
     tracker = json.loads((work / 'artifacts/tracker.json').read_text())
     calls_path = work / 'artifacts/gh-events.jsonl'
     calls = [json.loads(line) for line in calls_path.read_text().splitlines()] if calls_path.exists() else []
-    claimed = {next(x for x in a[2:] if x.isdigit()) for a in calls if a[:2] == ['issue', 'edit'] and '--add-assignee' in a}
+    claimed = set()
+    for a in calls:
+        if a[:2] != ['issue', 'edit'] or '--add-assignee' not in a:
+            continue
+        try:
+            n = issue_target(a[2:])
+        except ValueError as exc:
+            failures.append('invalid claim target: ' + str(exc))
+            continue
+        if n not in tracker['issues']:
+            failures.append('unsupported claim target: ' + n)
+        claimed.add(n)
     report = response['report'].lower()
     if '99' in claimed or any(tracker['issues'][n]['assignees'] != ([] if n != '14' else ['other']) for n in ('13', '14', '15', '99')):
         failures.append('claimed unrelated, blocked, held or unready work')

@@ -28,9 +28,9 @@ class Continuation(unittest.TestCase):
         fixture.git(self.repo, 'commit', '-qm', 'Baseline')
         self.scope = 'github:github.com/fixture/mana#10'
 
-    def helper(self, *args, ok=True, cwd=None):
+    def helper(self, *args, ok=True, cwd=None, env=None):
         result = subprocess.run(['bash', str(HELPER), *args], cwd=cwd or self.repo,
-                                text=True, capture_output=True)
+                                env=env, text=True, capture_output=True)
         if ok:
             self.assertEqual(result.returncode, 0, result.stderr)
         else:
@@ -100,6 +100,76 @@ class Continuation(unittest.TestCase):
         self.helper('stop',self.scope,'run-b','cancelled')
         fixture.git(self.repo,'config','--file',str(path),'run.version','9')
         self.helper('show',self.scope,ok=False)
+
+    def test_inherited_git_environment_keeps_state_and_lock_in_current_repository(self):
+        foreign = self.repo.parent / 'foreign'
+        foreign.mkdir()
+        fixture.git(foreign, 'init', '-q', '-b', 'main')
+        foreign_git = foreign / '.git'
+        config = self.repo.parent / 'foreign.config'
+        config.write_text('[core]\n\tworktree = "' + str(foreign) + '"\n')
+        environments = {
+            'GIT_DIR': {'GIT_DIR': str(foreign_git)},
+            'GIT_COMMON_DIR': {'GIT_COMMON_DIR': str(foreign_git)},
+            'GIT_WORK_TREE': {'GIT_WORK_TREE': str(foreign)},
+            'GIT_INDEX_FILE': {'GIT_INDEX_FILE': str(foreign_git / 'index')},
+            'GIT_OBJECT_DIRECTORY': {'GIT_OBJECT_DIRECTORY': str(foreign_git / 'objects')},
+            'GIT_ALTERNATE_OBJECT_DIRECTORIES': {'GIT_ALTERNATE_OBJECT_DIRECTORIES': str(foreign_git / 'objects')},
+            'GIT_CONFIG': {'GIT_CONFIG': str(config)},
+            'GIT_CONFIG_PARAMETERS': {'GIT_CONFIG_PARAMETERS': "'core.worktree=" + str(foreign) + "'"},
+            'GIT_CONFIG_COUNT': {'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'core.worktree',
+                                 'GIT_CONFIG_VALUE_0': str(foreign)},
+        }
+        for name, inherited in environments.items():
+            with self.subTest(variable=name):
+                scope = self.scope + ':' + name
+                env = dict(os.environ, **inherited)
+                path = Path(self.helper('start', scope, 'run-a', 'build', 'implement',
+                                        'Prepare named effort', env=env).stdout.strip())
+                self.assertEqual(path.parent.parent, self.repo / '.git/mana-portal')
+                self.assertEqual((path.parent / 'lock/owner').read_text().strip(), 'run-a')
+                snapshot = self.helper('show', scope, env=env).stdout
+                self.assertIn('run.original=' + str(self.repo), snapshot)
+                self.assertIn('run.repository=' + str(self.repo / '.git'), snapshot)
+                self.helper('stop', scope, 'run-a', 'cancelled', env=env)
+                self.assertFalse((path.parent / 'lock').exists())
+                self.assertFalse((foreign_git / 'mana-portal').exists())
+
+    def test_workspace_verification_ignores_inherited_repository_context(self):
+        self.start()
+        foreign = self.repo.parent / 'foreign'
+        foreign.mkdir()
+        fixture.git(foreign, 'init', '-q', '-b', 'main')
+        evidence = foreign / 'check.txt'
+        evidence.write_text('unit verification exit 0\n')
+        head = fixture.git(self.repo, 'rev-parse', 'HEAD')
+        env = dict(os.environ, GIT_DIR=str(self.repo / '.git'), GIT_WORK_TREE=str(self.repo))
+        rejected = self.helper('record', self.scope, 'run-a', '11', 'verified', str(foreign),
+                               'main', head, '-', str(evidence), env=env, ok=False)
+        self.assertIn('workspace belongs to another repository', rejected.stderr)
+        unit = self.repo.parent / 'unit-11'
+        branch = 'codex/unit-11'
+        fixture.git(self.repo, 'worktree', 'add', '-qb', branch, str(unit), 'HEAD')
+        env = dict(os.environ, GIT_DIR=str(foreign / '.git'),
+                   GIT_COMMON_DIR=str(foreign / '.git'), GIT_WORK_TREE=str(foreign),
+                   GIT_INDEX_FILE=str(foreign / '.git/index'),
+                   GIT_OBJECT_DIRECTORY=str(foreign / '.git/objects'))
+        self.helper('record', self.scope, 'run-a', '11', 'verified', str(unit),
+                    branch, head, '-', str(evidence), env=env)
+        self.assertIn('unit.11.status=verified', self.helper('show', self.scope, env=env).stdout)
+
+    def test_git_environment_discovery_fails_closed_and_help_needs_no_git(self):
+        bin_path = self.repo.parent / 'bin'
+        bin_path.mkdir()
+        git = bin_path / 'git'
+        git.write_text('#!/usr/bin/env bash\nexit 97\n')
+        git.chmod(0o755)
+        env = dict(os.environ, PATH=str(bin_path) + ':' + os.environ['PATH'])
+        self.assertIn('Local portal continuation state', self.helper('--help', env=env).stdout)
+        result = self.helper('start', self.scope, 'run-a', 'build', 'implement',
+                             'Prepare named effort', env=env, ok=False)
+        self.assertIn('cannot identify repository-local Git environment', result.stderr)
+        self.assertFalse((self.repo / '.git/mana-portal').exists())
 
 
 class TrackerFrontier(unittest.TestCase):

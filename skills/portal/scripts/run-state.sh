@@ -20,6 +20,10 @@ case "${1:-}" in -h|--help) usage; exit 0;; esac
 command=$1 scope=$2
 shift 2
 [ -n "$scope" ] && [[ "$scope" != *$'\n'* ]] || die 'scope must be a nonempty single line'
+local_env=$(git rev-parse --local-env-vars) || die 'cannot identify repository-local Git environment'
+while IFS= read -r variable; do
+  unset "$variable"
+done <<< "$local_env"
 common=$(git rev-parse --path-format=absolute --git-common-dir) || die 'a Git repository is required'
 key=$(printf '%s' "$scope" | git hash-object --stdin)
 directory="$common/mana-portal/$key"
