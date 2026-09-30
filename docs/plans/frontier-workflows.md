@@ -1,6 +1,6 @@
 # Frontier workflow improvements
 
-Status: package A implemented for review; B through D remain proposed
+Status: packages A and B implemented for review; C and D remain proposed
 Date: 2026-09-29
 Baseline: mana 0.35.0, commit aec8fa6
 
@@ -226,3 +226,26 @@ The installed Codex CLI is 0.159.2, while the live runner supports only the vali
 The PR preflight found base commit `a84a35fc8ee6a054d38120915f7a1726a5fc3927`, which added Performance & Delivery audits. That base was merged without rewriting history. Its changes were preserved and this package version was advanced to 0.36.1. Validation was rerun against the combined tree before shipping.
 
 Review remediation on PR #58 advances the package to 0.36.2. It binds reused permission to its covered repository and target, simplifies the repeated read-only request sentence, and closes two offline grader gaps: masked verification status and failed PR-message attempts after a rejected push. The dataset now has 12 cases and its offline suite has 18 tests, including a changed-target scope scenario. Live agent behavior remains unrun under the existing host compatibility limit.
+
+
+## Package B implementation record
+
+Package B starts from `9918065266c24e01549e3f53e76a168f7735a0ad`, the package A merge with review fixes. The baseline skills were archived before editing, and that commit remains the reproducible baseline. Version 0.37.0 changes evidence judgment and deterministic merge behavior. Packages C and D remain outside this release.
+
+The merge helper retains source contributions without a reviewer-count bonus. Its conservative exact dedup key includes the consequence and proposed fix; wording variants await semantic reconciliation. Legacy promotions recover contribution scores where present, or retain attribution with an explicit fresh-assessment requirement where those scores are missing. Confidence reassessment records added evidence separately and survives subsequent merge passes. The helper checks the record shape; the lead and validator must inspect whether that evidence actually supports the claim.
+
+| Acceptance | Evidence and limit |
+|---|---|
+| Repeated weak claims stay weak | Real Bash merge fixtures check repeated confidence-50 claims, repeated unsupported claims, and cross-model provenance without promotion. |
+| Single-source and low-impact defects remain eligible | A decisive P3 finding survives unchanged at confidence 100. Rubrics distinguish verified benefit from preference. |
+| Distinct defects at one location remain separate | Fixtures use the same title and location with different consequences and fix paths. Wording variants remain separate until explicit semantic reconciliation. |
+| Existing feedback stays accounted for | Source inspection preserves early and late harvest accounting, including top-level comments, and changes their attribution language. No live PR-feedback agent run was attempted. |
+| Incorrect suggestion is declined; real corrections proceed | The repair rubric requires caller evidence before acceptance and provides worked judgments for a contradicted bot suggestion, a demonstrated defect, and a useful spelling correction. These are instruction examples, not observed live repairs. |
+| Legacy artifacts retain attribution without invented evidence | Fixtures cover recoverable scores, unavailable scores, historical reviewer artifacts, fresh assessment, and repeated reconciliation. |
+| Requirements and findings still get independent validation | Source inspection preserves the roster, full-review selection, requirement checks, and validator selection contracts. The validator prompt now receives reassessment evidence and uncertainty. |
+
+Validation uses `python3 -B scripts/test_review_merge.py` (17 offline tests), `bash scripts/validate.sh`, and the complete 23-pair similarity comparison against upstream revision `414e9d6be166c15d9fb10595204530802ad007ef`. The maximum similarity ratio is 0.24, below 0.30. The initial repeated-claim fixture failed on the old vote-promotion behavior, and legacy/dedup fixtures exposed failures before their implementation. Final results and actual output are recorded in the PR evidence.
+
+No installed files were added or moved. The existing package-contract inventories remain complete; standalone verification and shared-asset checks run through the repository validator. No shared canonical asset changed.
+
+The live runner's host compatibility has not been revalidated. These offline fixtures and source changes establish no frontier-model performance advantage or live reliability estimate. Live repair outcomes and live reviewer judgment remain unverified.

@@ -11,13 +11,13 @@ Each item ends up with one verdict and lands on one of two lists:
 
 Nothing in this file produces text for the PR. Each explanation goes into the final summary for the user to use or ignore.
 
-## Start from yes
+## Start from evidence
 
-Assume the reviewer is right. Most comments, including nitpicks and P2s, describe a real improvement, and the cheapest path is to make it. `fixed` is the default verdict; `fixed-differently` when you will make the change through a better route than the one suggested.
+Verify the concern and the proposed change separately. A demonstrated defect earns a fix. A useful improvement earns a fix when you can name its concrete benefit and check that it preserves the relevant behavior. Small corrections remain eligible; low impact does not make a supported defect a preference. Choose `fixed` for a verified change, or `fixed-differently` when another route addresses the concern better.
 
 Who wrote the comment and where it appeared carry no weight. A bot's table row and a lead engineer's inline note get the same test: does the code bear it out?
 
-The checks in this file are tripwires. Run down the list, and when none fires, mark the item to fix and move on. A feeling of unease is not a reason; "I opened the three callers and this breaks the second one" is a reason.
+Record what establishes the concern and why the change helps before adding it to the fix-list. A plausible suggestion with no supporting evidence earns no automatic acceptance. A caller that contradicts the premise settles the verdict: cite that caller and explain the mismatch. Unresolved product choices remain `needs-human`.
 
 ## How much to read
 
@@ -25,7 +25,7 @@ Read until you can defend the verdict, then stop.
 
 | Item looks like | Read |
 |-----------------|------|
-| Typo, naming, a bug visible in the diff, a guard the comment points at | The comment and the diff hunk. Mark to fix. |
+| Typo, naming, a bug visible in the diff, a guard the comment points at | The comment and the diff hunk. Verify the defect or concrete benefit, then mark to fix. Read callers too when the proposed guard could change a contract. |
 | A claim the code appears to contradict, a change to an invariant, a pattern the rest of the file does not follow | The file, its callers, and any test that would prove the reviewer wrong. This is where a confident but mistaken reviewer gets caught, because the reviewer rarely saw the callers. |
 | Code that reads as a deliberate choice | Recover the reason before overriding it: `git blame` on the lines plus the PR description. |
 
@@ -37,7 +37,7 @@ You hold every item at once. Three things follow from that:
 
 **Group by premise.** When one reviewer (usually a bot) makes the same kind of claim in several places and it is wrong in one, distrust the rest until you have checked each. A bad premise produces a run of findings that all look plausible.
 
-**Agreement is a signal.** Two independent reviewers asking for the same change is close to proof. Diverting there needs strong evidence.
+**Agreement is provenance.** Several reviewers can repeat one mistaken premise. Check the underlying evidence once and retain each source attribution. Reviewer count and model diversity never prove the claim or shift the burden onto rejecting it.
 
 **Fix the pattern this PR introduced.** A reviewer flags one occurrence. Once you accept the finding, look for sibling sites this PR added or touched that share the same invariant and take the same fix without any per-site thinking. Bundle those into one class item so the fixer edits them together and the unflagged twins do not come back next round. Keep the boundary tight:
 
@@ -51,9 +51,15 @@ A review bot often posts one top-level comment holding a table of locations and 
 
 A link to a fuller report may help you understand the row. It does not substitute for verifying the row in the file.
 
+## Worked judgments
+
+A bot asks to replace `return null` with an exception for a missing lookup. The caller at `src/load.ts:18` checks for null and renders the documented empty state. Decline the proposed exception with that caller as evidence: it would break the supported empty state. Repetition of the suggestion in a top-level comment changes no verdict; account for both sources.
+
+A reviewer flags a reversed comparison that the boundary test demonstrates. Accept the defect and send the concrete correction to a scoped fixer. A nearby misspelling in the user-facing empty-state text also earns a fix when the rendered text verifies it. The spelling correction's low impact does not weaken its evidence. Neither example is an executed check of a consuming project.
+
 ## Reasons to divert
 
-Leave the default only on a concrete signal. Each divert names its evidence.
+Choose the verdict from the evidence. Each reason below names the support it needs.
 
 | Signal | Verdict | You must be able to say |
 |--------|---------|-------------------------|
@@ -94,11 +100,11 @@ On a large batch the orchestrator sends read-only scouts to collect facts per fi
 | `callers`, `asserting_test` | The risk row: a caller the fix breaks or a test that asserts the current behavior is the evidence `needs-human` owes, or the reason the change note tells the fixer to update that test |
 | `sibling_sites` | Class-fix candidates. The three boundary rules under "Fix the pattern" still apply to each one. |
 
-A scout's evidence settles a verdict only when it quotes the line. A field with a claim and no `file:line` is an unread file: open it yourself. The three cross-item passes (group by premise, agreement, fix the pattern) run over scout returns exactly as they would over your own reads, since every return is in front of you at once.
+A scout's evidence can support a verdict only when it quotes the line and establishes the relevant caller or invariant. A field with a claim and no `file:line` is an unread file: open it yourself. The three cross-item passes (group by premise, agreement, fix the pattern) run over scout returns exactly as they would over your own reads, since every return is in front of you at once.
 
 ## Escalate rarely
 
-Beyond the risk and product-question cases: changes that reach into other systems, security-sensitive choices, business logic you cannot pin down, reviewers who contradict each other. These are uncommon. Nearly everything else gets fixed.
+Beyond the risk and product-question cases: changes that reach into other systems, security-sensitive choices, business logic you cannot pin down, reviewers who contradict each other. These are uncommon. Verified defects and useful improvements proceed to scoped fixers.
 
 Finish the investigation before you escalate. "This is complicated" is a punt. The user should read your `decision_context` and decide in under half a minute.
 

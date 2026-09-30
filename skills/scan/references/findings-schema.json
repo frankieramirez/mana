@@ -14,7 +14,7 @@
       "type": "string"
     },
     "independence_verified": {
-      "description": "Set only by the cross-model peer: true when the serving model belongs to a different family than the host session. Only a true value lets peer agreement raise another reviewer's confidence.",
+      "description": "Set only by the cross-model peer: true when the serving model belongs to a different family than the host session. Historical provenance only: model diversity does not certify statistical independence or correctness and never raises confidence.",
       "type": "boolean"
     },
     "findings": {
@@ -66,7 +66,7 @@
             "type": ["string", "null"]
           },
           "confidence": {
-            "description": "One of five anchors, each tied to work you did. 0: does not hold up, or not introduced by this diff. 25: possibly real, unverified. Neither of those is emitted. 50: verified, but a nit, a narrow edge, or low impact; style lives here. 75: checked the diff and surrounding code and can name the observable consequence in normal use. 100: provable from the code alone (compile or type error, definitive logic bug, quotable standards violation).",
+            "description": "Ordinal evidence categories, not calibrated probabilities. Independent of severity and reviewer count. 0: does not hold up, or not introduced by this diff. 25: possibly real, unverified. Neither of those is emitted. 50: code-grounded support with a necessary trigger, caller, or invariant still unverified. 75: checked the diff and surrounding code and can name the observable consequence on a verified reachable path, including narrow edge cases. 100: provable from the code alone (compile or type error, definitive logic bug, quotable standards violation).",
             "type": "integer",
             "enum": [0, 25, 50, 75, 100]
           },

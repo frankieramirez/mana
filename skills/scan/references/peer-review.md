@@ -13,7 +13,7 @@ The token wins over the block. No token and no line means no peer, and nothing i
 
 ## The family rule
 
-The host session belongs to a model family: `anthropic` under Claude Code, `openai` under Codex, `google` under Gemini CLI, `xai` under Grok, `unknown` under Cursor and opencode (they route to several vendors). A peer earns `independence_verified: true` only when the model it reports belongs to a known family different from the host's. That flag is what lets peer agreement raise another reviewer's confidence in merge; a peer from the same family still contributes findings, they simply never corroborate.
+The host session belongs to a model family: `anthropic` under Claude Code, `openai` under Codex, `google` under Gemini CLI, `xai` under Grok, `unknown` under Cursor and opencode (they route to several vendors). The historical field `independence_verified: true` means only that the reported serving model belongs to a known family different from the host's. This records model diversity, not statistical independence or correctness. A peer from any family can contribute supported findings; agreement never raises confidence.
 
 A CLI of the host's own family (`claude` under Claude Code) runs only when the user named it in the `peer:` token, since a repo line cannot know which host will read it. `review.sh peer --check` enforces both rules and exits 2 with a reason when they fail.
 
@@ -76,4 +76,4 @@ The peer runs through the same capacity-aware collection path as reviewer spawns
 
 ## After fold-in
 
-Once merge has read `havoc-demon-hunter-peer.json`, remove the job files: `rm -f "$RUN_DIR"/peer-*`. The peer artifact itself stays with the other reviewer artifacts. The report names the peer by its CLI and reported model ("Havoc Demon Hunter via codex, gpt-5") and says whether independence was verified. Never claim more about the peer than its output attests: a CLI that did not report a model is "model unverified".
+Once merge has read `havoc-demon-hunter-peer.json`, remove the job files: `rm -f "$RUN_DIR"/peer-*`. The peer artifact itself stays with the other reviewer artifacts. The report names the peer by its CLI and reported model ("Havoc Demon Hunter via codex, gpt-5") and reports model-family diversity using the historical `independence_verified` field, without claiming statistical independence. Never claim more about the peer than its output attests: a CLI that did not report a model is "model unverified".

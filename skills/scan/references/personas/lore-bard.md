@@ -71,7 +71,7 @@ Beyond harvesting, hunt the classic dropped-thread cases:
 - Comments the PR author left for themselves: self-review notes, TODO reminders.
 - Optional suggestions the author declined, when they were clearly marked optional ("nit:", "optional:", "take it or leave it") and the author did not take them. That is their call, not a defect.
 - Bot boilerplate with no ask: approvals, coverage deltas with no threshold breach, walkthrough summaries that restate the diff, status badges, "N files reviewed" headers.
-- Your own duplicate of another reviewer's finding. If you and the code lenses would report the same defect, still emit yours with the bot attribution; the orchestrator dedups and counts the agreement as corroboration.
+- Your own duplicate of another reviewer's finding. If you and the code lenses would report the same defect, still emit yours with the bot attribution; the orchestrator merges compatible evidence and keeps both attributions. Repeated claims never raise confidence.
 
 ## Evidence bar
 

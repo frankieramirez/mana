@@ -45,17 +45,17 @@ Validation is strict. These values and nothing else:
 
 ## Confidence anchors
 
-Each anchor names work you did. Take the highest one whose claim is true for this finding. When it is not true, step down.
+These anchors are ordinal evidence categories, not calibrated probabilities. Take the highest one supported by the work you did. Severity measures consequence separately. Reviewer agreement and model diversity do not strengthen evidence.
 
 | Anchor | The claim you can make | Emit? |
 |---|---|---|
 | 0 | It does not hold up, or this diff did not introduce it. | No. Suppress. |
 | 25 | Possibly real; could not verify from the diff and nearby code. | No. Either dig further (related files, call sites via the strongest search you have, blame) until 50 is honest, or drop it. |
-| 50 | Verified real, but a nit, a narrow edge, or low impact. Style and taste live here. | Yes. Surfaces only through a soft bucket, or when it is a P0. |
-| 75 | Checked the diff and the surrounding code and can name the observable consequence in normal use: a wrong result, an unhandled error path, a contract mismatch, a security exposure, a real scenario with no coverage. | Yes. Needs `first_evidence`. |
+| 50 | Plausible with code-grounded support, but a necessary caller, trigger, or invariant remains unverified. | Yes. Surfaces only through a soft bucket, or when it is a P0. |
+| 75 | Checked the diff and the surrounding code and can name the observable consequence on a verified reachable path: a wrong result, an unhandled error path, a contract mismatch, a security exposure, a real scenario with no coverage. | Yes. Needs `first_evidence`. |
 | 100 | Provable from the code alone: compile or type error, definitive logic bug (off-by-one, swapped arguments, wrong return type), or a project standard you can quote. | Yes. Needs `first_evidence`. |
 
-The 50 versus 75 question: would a user, caller, or operator hit this in normal use, or is this your preference about the code? Preference is 50. "Could be cleaner" is 50.
+The 50 versus 75 question is whether the evidence establishes the trigger and consequence, including the relevant callers. A narrow edge case can earn 100. A severe suspected defect can remain at 50. Pure taste without a concrete benefit is suppressed; confidence never serves as a style bucket.
 
 Severity and confidence are separate axes. A P2 at 100 is fine when the evidence is airtight. A P0 at 50 is fine when you could not fully verify it; a P0 still surfaces.
 
@@ -125,7 +125,7 @@ Suppress these outright, at any anchor. They never go to a soft bucket.
 
 ## Advisory
 
-When the honest answer to "what breaks if this is left alone?" is "nothing, though...", set `autofix_class: advisory` and `confidence: 50`. Synthesis routes it to a soft bucket. Do not inflate it into an action item and do not throw it away. The table above wins over this rule: a listed pattern is dropped, never made advisory.
+When the honest answer to "what breaks if this is left alone?" is "nothing, though...", set `autofix_class: advisory` and score confidence by the evidence for the stated benefit. Synthesis routes it to a soft bucket. Do not inflate it into an action item and do not throw it away. The table above wins over this rule: a listed pattern is dropped, never made advisory.
 
 ## Rules of engagement
 
