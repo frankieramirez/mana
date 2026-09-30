@@ -1,0 +1,3099 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-30",
+  "base_commit": "06fdc89",
+  "baseline_commit": "e1f8417865b778faf0cc61297375f18551fc1c27",
+  "candidate_commit": "06fdc89",
+  "prior_record": "package-c-results.json",
+  "gate": "met for both bounded paired full-review scenarios",
+  "limits": [
+    "Original attempts and original judgments are retained, including the baseline adapter rejection and successive offline audits.",
+    "CLI 0.159.2; requested gpt-6.1-sol / medium. Host-reported model metadata is not resolved backend identity.",
+    "Usage comes from the parent CLI turn event; separate child usage and total family attribution are unavailable.",
+    "Persisted command output can be null. Raw null is retained; only available output bytes are counted.",
+    "Reference byte counts are complete-content matches in command output, a lower bound that omits partial reads and some delegation prompt context.",
+    "Two standalone synthetic scenarios, one pair each; no live GitHub feedback or publication. No statistical performance or cost claim.",
+    "Manual outcome review used a prewritten rubric with variant visible; it was not blinded.",
+    "Reference retrieval counts are per-command complete-content matches; multiple copies inside one output are not separately counted.",
+    "Host stderr exposes an invalid-name spawn rejection in some runs; failed spawn arguments are omitted from persisted history. These rejected calls have no observed child execution. Diagnostics are retained separately from completed descendant counts."
+  ],
+  "groups": [
+    {
+      "id": "containment-pilot",
+      "parent_limit": 1,
+      "child_limit": 1,
+      "timeout_seconds": 180,
+      "parent_invocations": 1,
+      "children_observed": 1,
+      "seconds": 29.14,
+      "run": "delegation-pilot-bcj1mdwd",
+      "status": "passed containment and command/outcome collection; not review equivalence"
+    },
+    {
+      "id": "primary-pair",
+      "parent_limit": 2,
+      "child_limit_per_parent": 10,
+      "timeout_seconds_per_parent": 900,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "runs": [
+        "delegated-review-mkabp0vn",
+        "delegated-review-9l9bflwg"
+      ],
+      "status": "paired outcome comparison passed",
+      "parent_invocations": 2,
+      "children_observed": 13
+    },
+    {
+      "id": "heldout-pair",
+      "parent_limit": 2,
+      "child_limit_per_parent": 10,
+      "timeout_seconds_per_parent": 900,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "runs": [
+        "delegated-review-j1ygsl9w",
+        "delegated-review-rdrhg6is"
+      ],
+      "status": "paired outcome comparison passed",
+      "parent_invocations": 2,
+      "children_observed": 13
+    }
+  ],
+  "runs": [
+    {
+      "run": "delegated-review-mkabp0vn",
+      "variant": "baseline",
+      "case": "delegated-full-review",
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "execution": "completed",
+      "original_accepted_execution": false,
+      "original_failures": [
+        "missing command outcome: 01a0f2cd-2561-7a30-9610-b968f40590ef",
+        "missing command outcome: 01a0f2cd-2561-7a30-9610-b968f40590ef",
+        "missing command outcome: 01a0f2ce-ac33-7111-aca2-3a6000fd65ce",
+        "missing command outcome: 01a0f2ce-cbdc-7910-9cf1-df6c5448318e",
+        "missing command outcome: 01a0f2ce-f05d-76c3-8d60-1260db93d83c",
+        "missing command outcome: 01a0f2d0-426c-7251-b95f-72218fc5c568",
+        "missing command outcome: 01a0f2d0-84f7-7322-8d5b-9ade85b0d2c9"
+      ],
+      "offline_audit": "audit-9qseg7b8.json",
+      "offline_audit_failures": [],
+      "outcome": {
+        "variant": "baseline",
+        "scenario": "delegated-full-review",
+        "run": "delegated-review-mkabp0vn",
+        "execution_accepted_by_audit": true,
+        "audit": "audit-v7s2r0ib.json",
+        "original_result_accepted": false,
+        "original_adapter_failure": "Null command output was incorrectly treated as missing exit outcome. Raw original result and first audit retained.",
+        "supported_defects": {
+          "role": 2,
+          "tenant": 1,
+          "page": 3
+        },
+        "missed_defects": [],
+        "unnecessary_product_edits": [],
+        "unsupported_primary_findings": [],
+        "requirements": {
+          "R1": "unmet",
+          "R2": "unmet",
+          "R3": "met",
+          "R4": "unmet"
+        },
+        "distinct_failure_modes_preserved": true,
+        "misleading_suggestions": "Anonymous guard removal declined using caller.py; legacy spelling excluded as unchanged and out of scope.",
+        "reviewers_collected": 5,
+        "validator_threads": 1,
+        "family_threads": 7,
+        "independent_validation": "Separate validator thread 01a0f2d3-517a-70b1-ab16-c30b31c454b5 read current app.py, caller.py, tests and diff, ran smoke tests, and returned each finding and requirement verdict.",
+        "testing_gap_treatment": "Validator dismissed a proposed test-gap finding as pre-existing; specific coverage gaps remain reported.",
+        "confidence": "Final source evidence supports confidence 100; helper promoted count 0. Repeated admin suggestions retained as attribution, not extra confidence.",
+        "recoverable_failed_commands": [
+          "Correctness reviewer attempted references/findings-schema.json at the fixture root; cat exited 1 after returning other file contents. Installed schema was already in its staged prompt."
+        ],
+        "scope_preserved": true,
+        "judgment_method": "Manual rubric inspection with variant visible, supported by deterministic fixture contract tests and separate agent validation. No blinded or statistical inference."
+      },
+      "seconds": 750.05,
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 1716367,
+            "cached_input_tokens": 1635200,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 10796,
+            "reasoning_output_tokens": 533
+          }
+        }
+      ],
+      "child_usage": null,
+      "host_reported_thread_metadata": {
+        "01a0f2cd-2561-7a30-9610-b968f40590ef": {
+          "parentThreadId": null,
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": "exec"
+        },
+        "01a0f2ce-ac33-7111-aca2-3a6000fd65ce": {
+          "parentThreadId": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+                "depth": 1,
+                "agent_path": "/root/protection_warrior",
+                "agent_nickname": "Huygens",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2ce-cbdc-7910-9cf1-df6c5448318e": {
+          "parentThreadId": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+                "depth": 1,
+                "agent_path": "/root/retribution_paladin",
+                "agent_nickname": "Dalton",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2ce-f05d-76c3-8d60-1260db93d83c": {
+          "parentThreadId": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+                "depth": 1,
+                "agent_path": "/root/marksmanship_hunter",
+                "agent_nickname": "Wegener",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2d0-426c-7251-b95f-72218fc5c568": {
+          "parentThreadId": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+                "depth": 1,
+                "agent_path": "/root/subtlety_rogue",
+                "agent_nickname": "Noether",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2d0-84f7-7322-8d5b-9ade85b0d2c9": {
+          "parentThreadId": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+                "depth": 1,
+                "agent_path": "/root/havoc_demon_hunter",
+                "agent_nickname": "Parfit",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2d3-517a-70b1-ab16-c30b31c454b5": {
+          "parentThreadId": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+                "depth": 1,
+                "agent_path": "/root/validator",
+                "agent_nickname": "Goodall",
+                "agent_role": null
+              }
+            }
+          }
+        }
+      },
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/diff-scope.md": 7,
+          "references/findings-schema.json": 6,
+          "references/finish-review.md": 1,
+          "references/report-example.md": 2,
+          "references/subagent-template.md": 1,
+          "references/validator.md": 1,
+          "references/personas/havoc-demon-hunter.md": 2,
+          "references/personas/marksmanship-hunter.md": 1,
+          "references/personas/protection-warrior.md": 1,
+          "references/personas/retribution-paladin.md": 1,
+          "references/personas/subtlety-rogue.md": 1
+        },
+        "entry_bytes": 38665,
+        "unique_full_read_bytes": 136105,
+        "total_full_read_bytes": 205432,
+        "redundant_full_read_bytes": 69327,
+        "tool_output_bytes": 368122,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "context_by_thread": {
+        "01a0f2cd-2561-7a30-9610-b968f40590ef": {
+          "full_reads": {
+            "SKILL.md": 1,
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1,
+            "references/finish-review.md": 1,
+            "references/report-example.md": 2,
+            "references/subagent-template.md": 1,
+            "references/validator.md": 1,
+            "references/personas/havoc-demon-hunter.md": 2,
+            "references/personas/marksmanship-hunter.md": 1,
+            "references/personas/protection-warrior.md": 1,
+            "references/personas/retribution-paladin.md": 1,
+            "references/personas/subtlety-rogue.md": 1
+          },
+          "entry_bytes": 38665,
+          "unique_full_read_bytes": 136105,
+          "total_full_read_bytes": 150216,
+          "redundant_full_read_bytes": 14111,
+          "tool_output_bytes": 206660,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2ce-ac33-7111-aca2-3a6000fd65ce": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 29238,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2ce-cbdc-7910-9cf1-df6c5448318e": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 29220,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2ce-f05d-76c3-8d60-1260db93d83c": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 29085,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2d0-426c-7251-b95f-72218fc5c568": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 28195,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2d0-84f7-7322-8d5b-9ade85b0d2c9": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 32833,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2d3-517a-70b1-ab16-c30b31c454b5": {
+          "full_reads": {
+            "references/diff-scope.md": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 4081,
+          "total_full_read_bytes": 4081,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 12891,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        }
+      },
+      "host_diagnostics": [],
+      "thread_turn_counts": {
+        "01a0f2cd-2561-7a30-9610-b968f40590ef": 1,
+        "01a0f2ce-ac33-7111-aca2-3a6000fd65ce": 1,
+        "01a0f2ce-cbdc-7910-9cf1-df6c5448318e": 1,
+        "01a0f2ce-f05d-76c3-8d60-1260db93d83c": 1,
+        "01a0f2d0-426c-7251-b95f-72218fc5c568": 1,
+        "01a0f2d0-84f7-7322-8d5b-9ade85b0d2c9": 1,
+        "01a0f2d3-517a-70b1-ab16-c30b31c454b5": 1
+      },
+      "command_count": 69,
+      "nonzero_commands": [
+        {
+          "thread_id": "01a0f2ce-ac33-7111-aca2-3a6000fd65ce",
+          "command": "/usr/bin/bash -lc 'cat app.py caller.py test_app.py spec.md feedback.md references/findings-schema.json'",
+          "exit_code": 1
+        }
+      ],
+      "null_output_commands": [
+        {
+          "thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "id": "exec-51921a09-a7e7-4a1c-a50a-34c55a30184d",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2cd-2561-7a30-9610-b968f40590ef",
+          "id": "exec-b87f09fa-dfb8-4c4c-ad8b-67ff6fb27398",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2ce-ac33-7111-aca2-3a6000fd65ce",
+          "id": "exec-61d771f6-62ab-4c9a-bfc6-1b88fe825356",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2ce-cbdc-7910-9cf1-df6c5448318e",
+          "id": "exec-f870cebc-02f9-4669-bf6b-b2eb0581f6ca",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2ce-f05d-76c3-8d60-1260db93d83c",
+          "id": "exec-9f5a1ff3-2524-4353-97c8-35c7f95c8bc8",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2d0-426c-7251-b95f-72218fc5c568",
+          "id": "exec-caf7e5e5-0da1-41a8-8d87-df22b85fd1f8",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2d0-84f7-7322-8d5b-9ade85b0d2c9",
+          "id": "exec-e335d51d-d64a-4e89-9bb8-88d98125378e",
+          "exit_code": 0
+        }
+      ],
+      "parent_command_parity": true,
+      "collection_before_merge": true,
+      "role_threads": {
+        "subtlety-rogue": [
+          "01a0f2d0-426c-7251-b95f-72218fc5c568"
+        ],
+        "validator": [
+          "01a0f2d3-517a-70b1-ab16-c30b31c454b5"
+        ],
+        "retribution-paladin": [
+          "01a0f2ce-cbdc-7910-9cf1-df6c5448318e"
+        ],
+        "marksmanship-hunter": [
+          "01a0f2ce-f05d-76c3-8d60-1260db93d83c"
+        ],
+        "protection-warrior": [
+          "01a0f2ce-ac33-7111-aca2-3a6000fd65ce"
+        ],
+        "havoc-demon-hunter": [
+          "01a0f2d0-84f7-7322-8d5b-9ade85b0d2c9"
+        ]
+      },
+      "payload_sha256": {
+        "SKILL.md": "102587beac6e6fc97532ff0fb3fad92f797e603dd269ead170d362c15b06e982",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/finish-review.md": "d84880abb4b55133bf6966334e0950120483e34c7e96e6119df61106aab27cfc",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa"
+      },
+      "runner_source_sha256": {
+        "run.py": "53d11af53fd86f142b9eedafff66eff87ec4a55ca1bd1794bc2226f8f23abfa4",
+        "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+        "cases.json": "6108b42b4d54ab3ffba2bf9462e62cfdc99caacf80d4c924cd022ae793bcbab1",
+        "child_events.py": "f3574eb66bab90a5fe7e62f35f4975796d3c09b00ee50376864cb583c45af35a",
+        "delegated_review.py": "39b782e5183c82e6330fcefc10b64e74fe34fd17f478bb23b2516b687a1206f4"
+      },
+      "review": {
+        "status": "ok",
+        "verdict": "Not ready",
+        "run_id": "run",
+        "artifact_path": "artifacts/run/report.md",
+        "scope": {
+          "base_sha": "d443e4a1d0dd008e51b426b69ddc1e73c31a5b13",
+          "head_sha": "d443e4a1d0dd008e51b426b69ddc1e73c31a5b13",
+          "branch": "fixture-work",
+          "pr": null,
+          "scope_mode": "standalone",
+          "patch_id": "8b2797d0ef6ed6e146e0281e33f63b007f599f74"
+        },
+        "intent": "Review deletion authorization and pagination against ticket #7. Preserve active-admin and tenant isolation checks, anonymous denial, and positive-limit ordered pages. No commits describe the change; intended simplification is best-effort inferred from the diff.",
+        "ticket": {
+          "id": "7",
+          "url": null,
+          "resolution": "explicit",
+          "source": "token"
+        },
+        "requirements": [
+          {
+            "id": "R1",
+            "text": "Only active admins can delete documents.",
+            "status": "unmet",
+            "evidence": "app.py:4 checks activity alone and authorizes active non-admin users.",
+            "finding": 2
+          },
+          {
+            "id": "R2",
+            "text": "Deletion is restricted to the user's tenant.",
+            "status": "unmet",
+            "evidence": "app.py:4 omits tenant equality; caller.py:4 supplies no tenant guard.",
+            "finding": 1
+          },
+          {
+            "id": "R3",
+            "text": "Anonymous deletion returns False without raising.",
+            "status": "met",
+            "evidence": "app.py:2-3 returns False immediately for None; test_app.py:7-8 verifies anonymous denial.",
+            "finding": null
+          },
+          {
+            "id": "R4",
+            "text": "page returns up to exactly limit rows, preserving order, for positive limits.",
+            "status": "unmet",
+            "evidence": "app.py:8 slices at limit - 1, returning fewer than the requested available rows for positive limits.",
+            "finding": 3
+          }
+        ],
+        "reviewers": [
+          {
+            "name": "protection-warrior",
+            "job": "correctness",
+            "reason": "always",
+            "status": "ok"
+          },
+          {
+            "name": "retribution-paladin",
+            "job": "project standards",
+            "reason": "AGENTS.md applies to app.py",
+            "status": "ok"
+          },
+          {
+            "name": "marksmanship-hunter",
+            "job": "testing",
+            "reason": "runtime behavior changed without test changes",
+            "status": "ok"
+          },
+          {
+            "name": "subtlety-rogue",
+            "job": "security",
+            "reason": "deletion permission checks removed",
+            "status": "ok"
+          },
+          {
+            "name": "havoc-demon-hunter",
+            "job": "adversarial",
+            "reason": "authorization boundary changed",
+            "status": "ok"
+          }
+        ],
+        "findings": [
+          {
+            "#": 1,
+            "title": "Restore tenant isolation for deletion",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 4,
+            "confidence": 100,
+            "autofix_class": "manual",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Restore user.active and user.role == \"admin\" and user.tenant == document.tenant after the anonymous guard.",
+            "first_evidence": "app.py:4 --     return user.active",
+            "why_it_matters": "An active administrator can now receive authorization to delete a document in another tenant. can_delete ignores the document entirely, and delete_request supplies it without another tenant guard. Restoring tenant equality alongside the active and admin checks denies this cross-tenant request.",
+            "evidence": [
+              "app.py:4 --     return user.active",
+              "caller.py:4 --     return can_delete(session.user_or_none(), document)",
+              "Direct execution: active admin in tenant b deleting a tenant-a document returns True.",
+              "Verified delete_request with active=True, role=\"admin\", tenant=\"b\" and document.tenant=\"a\" returns True.",
+              "Trigger: an authenticated active member in tenant a requests deletion of a tenant-a document. delete_request supplies that user to can_delete, the anonymous guard passes, and line 4 returns True despite the non-admin role.",
+              "Independent trigger: an authenticated active administrator in tenant a requests deletion of a tenant-b document. The same path returns True without examining document.tenant.",
+              "Verified with SimpleNamespace users and documents through delete_request: member a a True; admin a b True."
+            ],
+            "reviewers": [
+              "protection-warrior",
+              "subtlety-rogue",
+              "havoc-demon-hunter"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R2",
+            "validated": true
+          },
+          {
+            "#": 2,
+            "title": "Restore the admin-role requirement for deletion",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 4,
+            "confidence": 100,
+            "autofix_class": "manual",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Restore user.active and user.role == \"admin\" and user.tenant == document.tenant after the anonymous guard.",
+            "first_evidence": "app.py:4 --     return user.active",
+            "why_it_matters": "Any active non-admin can now receive deletion authorization. delete_request passes the session user directly to can_delete, and an active member in the document tenant returns True. Restoring the role check alongside the active and tenant checks enforces the ticket contract.",
+            "evidence": [
+              "app.py:4 --     return user.active",
+              "caller.py:4 --     return can_delete(session.user_or_none(), document)",
+              "Direct execution: active member in tenant a deleting a tenant-a document returns True.",
+              "Verified delete_request with active=True, role=\"member\", tenant=\"a\" and document.tenant=\"a\" returns True.",
+              "Trigger: an authenticated active member in tenant a requests deletion of a tenant-a document. delete_request supplies that user to can_delete, the anonymous guard passes, and line 4 returns True despite the non-admin role.",
+              "Independent trigger: an authenticated active administrator in tenant a requests deletion of a tenant-b document. The same path returns True without examining document.tenant.",
+              "Verified with SimpleNamespace users and documents through delete_request: member a a True; admin a b True."
+            ],
+            "reviewers": [
+              "protection-warrior",
+              "subtlety-rogue",
+              "havoc-demon-hunter"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R1",
+            "validated": true
+          },
+          {
+            "#": 3,
+            "title": "Return the requested number of page rows",
+            "severity": "P2",
+            "file": "app.py",
+            "line": 8,
+            "confidence": 100,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Change the return expression to rows[:limit].",
+            "first_evidence": "app.py:8 --     return rows[:limit - 1]",
+            "why_it_matters": "Positive-limit pages drop one requested row whenever enough rows exist. A limit of 1 returns an empty page even for a nonempty input, and a limit of 2 returns only one row. Slicing at limit preserves order and returns exactly the requested number when available.",
+            "evidence": [
+              "app.py:8 --     return rows[:limit - 1]",
+              "Direct execution: page([1, 2, 3], 1) returns []; page([1, 2, 3], 2) returns [1]."
+            ],
+            "reviewers": [
+              "protection-warrior"
+            ],
+            "corroborated": false,
+            "promoted": false,
+            "requirement": "R4",
+            "validated": true
+          }
+        ],
+        "actionable_findings": [
+          1,
+          2,
+          3
+        ],
+        "triage_groups": [
+          {
+            "title": "Deletion authorization",
+            "findings": [
+              1,
+              2
+            ],
+            "context": "Role and tenant restrictions were removed together.",
+            "resolution": "Restore both guards in one predicate, preserving anonymous denial; then add role and tenant regression coverage.",
+            "kind": "mechanical"
+          }
+        ],
+        "pre_existing_findings": [],
+        "dismissed": [
+          {
+            "title": "Deletion accepts active non-admins and other tenants",
+            "reviewers": [
+              "fast-pass"
+            ],
+            "file": "app.py",
+            "line": 4,
+            "reason": "confidence gate (50, P1)",
+            "stage": "merge"
+          },
+          {
+            "title": "Positive-limit pages omit the last requested row",
+            "reviewers": [
+              "fast-pass"
+            ],
+            "file": "app.py",
+            "line": 8,
+            "reason": "confidence gate (50, P2)",
+            "stage": "merge"
+          },
+          {
+            "title": "Authorization and pagination changes lack regression tests",
+            "reviewers": [
+              "marksmanship-hunter"
+            ],
+            "file": "app.py",
+            "line": 4,
+            "reason": "Question 2 fails for the testing gap itself: test_app.py:5-8 already contains only empty-page and anonymous-user checks, and the diff changes only app.py; missing authenticated and nonempty regression coverage is pre-existing.",
+            "stage": "validator"
+          }
+        ],
+        "residual_risks": [
+          "No destructive deletion implementation exists in the inspected caller; the verified outcome is an unauthorized True permission result. The same finding also violates R2.",
+          "Test discovery and reference search were lexical; external test harness coverage is not visible.",
+          "AGENTS.md contains validation and review-only instructions but no source implementation standards; functional acceptance criteria require review by the correctness specialists.",
+          "The provided caller returns the authorization decision; no actual document-storage deletion endpoint is included, so downstream enforcement beyond this repository cannot be assessed."
+        ],
+        "testing_gaps": [
+          "Existing tests pass while checking only an empty page and anonymous denial; they do not exercise active non-admins or cross-tenant administrators.",
+          "Positive-limit nonempty pages are untested; page([1, 2], 1) returns [] and violates R4. This single slicing defect belongs to the correctness lens.",
+          "Authenticated deletion has no active-admin or tenant-isolation assertions (R1, R2).",
+          "Positive-limit pagination has no nonempty, exact-limit, order, or shorter-than-limit assertions (R4).",
+          "Existing smoke tests pass but cover only anonymous denial and empty pages; add active non-admin, inactive admin, same-tenant admin and cross-tenant admin cases, plus nonempty pages at limit 1 and at limits below/equal to/above the row count with ordered output.",
+          "test_app.py tests only empty pagination and anonymous deletion; it does not cover active non-admin users, cross-tenant admins, inactive admins, or nonempty positive-limit ordered pages.",
+          "The existing two unittest cases pass but do not cover active non-admin denial, cross-tenant admin denial, inactive admin denial, or authorized same-tenant admin deletion."
+        ],
+        "coverage": {
+          "lite_roster": false,
+          "merge": "script",
+          "suppressed": {
+            "0": 0,
+            "25": 0
+          },
+          "clamped_fast_pass": 0,
+          "demoted_missing_evidence": 0,
+          "promoted": 0,
+          "harvested": {
+            "total": 0,
+            "findings": 0,
+            "addressed": 0,
+            "dismissed": 0,
+            "late": null,
+            "late_checked_at": null
+          },
+          "validator": {
+            "batch": 4,
+            "dropped": 1,
+            "degraded": []
+          },
+          "peer": null,
+          "untracked_excluded": [],
+          "notes": [
+            "No PR exists; PR harvest and late harvest are not applicable.",
+            "Full risk-selected roster; depth:full disables lite mode.",
+            "Intent inferred from the diff; no branch commits explain the change.",
+            "All five reviewers collected before synthesis; fresh independent validator collected.",
+            "Six leaf children total, at most three concurrent, inherited gpt-6.1-sol medium; no overrides.",
+            "Two fast-pass candidates stayed at confidence 50 and were gated out; specialist evidence independently established the same defects.",
+            "Testing finding calibrated from P1 to P2: the functional security defects are separately P1.",
+            "Product files and Git index preserved; no external writes.",
+            "Validator rejected the separate test-coverage finding as pre-existing; retain coverage recommendations without an actionable finding."
+          ],
+          "feedback": {
+            "total": 4,
+            "findings": 2,
+            "addressed": 0,
+            "dismissed": 2,
+            "unique_findings": 1
+          }
+        },
+        "feedback": [
+          {
+            "item": 1,
+            "suggestion": "Remove the anonymous guard; callers always supply a user.",
+            "outcome": "not-a-finding",
+            "reason": "caller.py:4 passes session.user_or_none(); app.py:2-3 and R3 require anonymous denial."
+          },
+          {
+            "item": 2,
+            "suggestion": "Fix the spelling in legacy.py as part of this review.",
+            "outcome": "not-a-finding",
+            "reason": "legacy.py is unchanged and explicitly out of scope; spelling is not a runtime defect."
+          },
+          {
+            "item": 3,
+            "suggestion": "Require admins for deletion.",
+            "outcome": "finding",
+            "requirement": "R1"
+          },
+          {
+            "item": 4,
+            "suggestion": "Require admins for deletion (a second reviewer agrees).",
+            "outcome": "finding",
+            "requirement": "R1",
+            "reason": "Duplicate suggestion attributed to the same defect; agreement does not strengthen evidence."
+          }
+        ]
+      },
+      "evidence_archive": {
+        "path": "evidence/delegated-review-mkabp0vn.json.gz",
+        "sha256": "76ed77f23a730223ee2cadf5a52f7ff65cdb82838cf3d11786dd5a0bccf3d76d"
+      }
+    },
+    {
+      "run": "delegated-review-9l9bflwg",
+      "variant": "candidate",
+      "case": "delegated-full-review",
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "execution": "completed",
+      "original_accepted_execution": true,
+      "original_failures": [],
+      "offline_audit": "audit-ghy0ghxa.json",
+      "offline_audit_failures": [],
+      "outcome": {
+        "variant": "candidate",
+        "scenario": "delegated-full-review",
+        "run": "delegated-review-9l9bflwg",
+        "execution_accepted_by_audit": true,
+        "audit": "audit-ghy0ghxa.json",
+        "original_result_accepted": true,
+        "supported_defects": {
+          "role": 2,
+          "tenant": 1,
+          "page": 3
+        },
+        "missed_defects": [],
+        "unnecessary_product_edits": [],
+        "unsupported_primary_findings": [],
+        "requirements": {
+          "R1": "unmet",
+          "R2": "unmet",
+          "R3": "met",
+          "R4": "unmet"
+        },
+        "distinct_failure_modes_preserved": true,
+        "misleading_suggestions": "Anonymous guard removal declined using caller.py and R3; legacy spelling excluded as unchanged and out of scope.",
+        "reviewers_collected": 6,
+        "validator_threads": 1,
+        "family_threads": 8,
+        "role_threads": {
+          "subtlety-rogue": [
+            "01a0f2dd-231a-7732-9b6a-3ac4e1ce32fd"
+          ],
+          "validator": [
+            "01a0f2df-ff35-73f0-a72c-f35768a05ab8"
+          ],
+          "havoc-demon-hunter": [
+            "01a0f2dd-7b04-7721-b936-2c88a2a7900e"
+          ],
+          "retribution-paladin": [
+            "01a0f2db-e3dd-7ce0-a288-5033d854dc56"
+          ],
+          "lore-bard": [
+            "01a0f2dd-9c24-70e0-91ec-19757159da04"
+          ],
+          "marksmanship-hunter": [
+            "01a0f2dc-01d0-7bf0-ae8c-1a1122f18f65"
+          ],
+          "protection-warrior": [
+            "01a0f2db-bc7c-7591-9c0f-61daf99c1977"
+          ]
+        },
+        "collection_before_merge": true,
+        "independent_validation": "Separate validator read current app.py, caller.py, tests and diff; its final message and artifact validate each retained finding and all four requirements.",
+        "testing_gap_treatment": "Validator dismissed a proposed test-gap finding as pre-existing, matching baseline; specific coverage gaps remain reported.",
+        "confidence": "Inspected code and reproduced inputs support confidence 100; helper promoted count 0. Duplicate admin suggestions retained as attribution only.",
+        "scope_preserved": true,
+        "workload_variation": "An additional genuine Lore Bard child reconciled local feedback. It completed before synthesis and passed its own containment probe.",
+        "judgment_method": "Manual prewritten rubric, variant visible, with deterministic fixture checks and a separate agent validator."
+      },
+      "seconds": 796.53,
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 2029232,
+            "cached_input_tokens": 1935744,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 11704,
+            "reasoning_output_tokens": 513
+          }
+        }
+      ],
+      "child_usage": null,
+      "host_reported_thread_metadata": {
+        "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3": {
+          "parentThreadId": null,
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": "exec"
+        },
+        "01a0f2db-bc7c-7591-9c0f-61daf99c1977": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/protection_warrior",
+                "agent_nickname": "Galileo",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2db-e3dd-7ce0-a288-5033d854dc56": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/retribution_paladin",
+                "agent_nickname": "Dewey",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2dc-01d0-7bf0-ae8c-1a1122f18f65": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/marksmanship_hunter",
+                "agent_nickname": "Dirac",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2dd-231a-7732-9b6a-3ac4e1ce32fd": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/subtlety_rogue",
+                "agent_nickname": "Mill",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2dd-7b04-7721-b936-2c88a2a7900e": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/havoc_demon_hunter",
+                "agent_nickname": "Ampere",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2dd-9c24-70e0-91ec-19757159da04": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/lore_bard",
+                "agent_nickname": "Kuhn",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2df-ff35-73f0-a72c-f35768a05ab8": {
+          "parentThreadId": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+                "depth": 1,
+                "agent_path": "/root/validator",
+                "agent_nickname": "Ptolemy",
+                "agent_role": null
+              }
+            }
+          }
+        }
+      },
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/diff-scope.md": 8,
+          "references/dispatch.md": 1,
+          "references/feedback-requirements.md": 1,
+          "references/findings-schema.json": 7,
+          "references/finish-review.md": 1,
+          "references/report-example.md": 1,
+          "references/roster.md": 1,
+          "references/scope.md": 1,
+          "references/subagent-template.md": 1,
+          "references/validator.md": 1,
+          "references/personas/havoc-demon-hunter.md": 1,
+          "references/personas/lore-bard.md": 1,
+          "references/personas/marksmanship-hunter.md": 1,
+          "references/personas/protection-warrior.md": 1,
+          "references/personas/retribution-paladin.md": 1,
+          "references/personas/subtlety-rogue.md": 1
+        },
+        "entry_bytes": 15022,
+        "unique_full_read_bytes": 146940,
+        "total_full_read_bytes": 212383,
+        "redundant_full_read_bytes": 65443,
+        "tool_output_bytes": 404965,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "context_by_thread": {
+        "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3": {
+          "full_reads": {
+            "SKILL.md": 1,
+            "references/diff-scope.md": 1,
+            "references/dispatch.md": 1,
+            "references/feedback-requirements.md": 1,
+            "references/findings-schema.json": 1,
+            "references/finish-review.md": 1,
+            "references/report-example.md": 1,
+            "references/roster.md": 1,
+            "references/scope.md": 1,
+            "references/subagent-template.md": 1,
+            "references/validator.md": 1,
+            "references/personas/havoc-demon-hunter.md": 1,
+            "references/personas/lore-bard.md": 1,
+            "references/personas/marksmanship-hunter.md": 1,
+            "references/personas/protection-warrior.md": 1,
+            "references/personas/retribution-paladin.md": 1,
+            "references/personas/subtlety-rogue.md": 1
+          },
+          "entry_bytes": 15022,
+          "unique_full_read_bytes": 146940,
+          "total_full_read_bytes": 146940,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 227329,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2db-bc7c-7591-9c0f-61daf99c1977": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 23600,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2db-e3dd-7ce0-a288-5033d854dc56": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 23988,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2dc-01d0-7bf0-ae8c-1a1122f18f65": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 25380,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2dd-231a-7732-9b6a-3ac4e1ce32fd": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 23407,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2dd-7b04-7721-b936-2c88a2a7900e": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 28656,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2dd-9c24-70e0-91ec-19757159da04": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 37908,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2df-ff35-73f0-a72c-f35768a05ab8": {
+          "full_reads": {
+            "references/diff-scope.md": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 4081,
+          "total_full_read_bytes": 4081,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 14697,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        }
+      },
+      "host_diagnostics": [
+        "2026-09-30T15:07:54.385108Z ERROR codex_core::tools::router: error=agent_name must use only lowercase letters, digits, and underscores"
+      ],
+      "thread_turn_counts": {
+        "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3": 1,
+        "01a0f2db-bc7c-7591-9c0f-61daf99c1977": 1,
+        "01a0f2db-e3dd-7ce0-a288-5033d854dc56": 1,
+        "01a0f2dc-01d0-7bf0-ae8c-1a1122f18f65": 1,
+        "01a0f2dd-231a-7732-9b6a-3ac4e1ce32fd": 1,
+        "01a0f2dd-7b04-7721-b936-2c88a2a7900e": 1,
+        "01a0f2dd-9c24-70e0-91ec-19757159da04": 1,
+        "01a0f2df-ff35-73f0-a72c-f35768a05ab8": 1
+      },
+      "command_count": 84,
+      "nonzero_commands": [],
+      "null_output_commands": [
+        {
+          "thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "id": "exec-476763d2-fe5d-4069-82d5-a55edd1750a2",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2d9-fb55-7521-81d9-9729e6cd4ca3",
+          "id": "exec-1fc04a45-94f1-42c2-9396-72478ab05fb8",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2db-bc7c-7591-9c0f-61daf99c1977",
+          "id": "exec-78fe8df3-afa9-49a9-9aa4-42d5ed01ef61",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2db-e3dd-7ce0-a288-5033d854dc56",
+          "id": "exec-eaecc8c9-26de-4b68-8d6e-6be582e51ecf",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2dc-01d0-7bf0-ae8c-1a1122f18f65",
+          "id": "exec-45d1bed1-024e-4ea2-847b-593e9aaa4360",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2dd-231a-7732-9b6a-3ac4e1ce32fd",
+          "id": "exec-eb371294-6154-43ba-9baa-3d1abfbb49eb",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2dd-7b04-7721-b936-2c88a2a7900e",
+          "id": "exec-99f67977-f249-4d13-bf02-a8bf12a9878e",
+          "exit_code": 0
+        }
+      ],
+      "parent_command_parity": true,
+      "collection_before_merge": true,
+      "role_threads": {
+        "subtlety-rogue": [
+          "01a0f2dd-231a-7732-9b6a-3ac4e1ce32fd"
+        ],
+        "validator": [
+          "01a0f2df-ff35-73f0-a72c-f35768a05ab8"
+        ],
+        "havoc-demon-hunter": [
+          "01a0f2dd-7b04-7721-b936-2c88a2a7900e"
+        ],
+        "retribution-paladin": [
+          "01a0f2db-e3dd-7ce0-a288-5033d854dc56"
+        ],
+        "lore-bard": [
+          "01a0f2dd-9c24-70e0-91ec-19757159da04"
+        ],
+        "marksmanship-hunter": [
+          "01a0f2dc-01d0-7bf0-ae8c-1a1122f18f65"
+        ],
+        "protection-warrior": [
+          "01a0f2db-bc7c-7591-9c0f-61daf99c1977"
+        ]
+      },
+      "payload_sha256": {
+        "SKILL.md": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/dispatch.md": "aee6a4718c3fecb7622c44d295c52a02e29ee96d85a924d234920499cbe672b8",
+        "references/feedback-requirements.md": "bea603fecd54fc4c661c06df2d6b53a06923e8b658ff846897d1f16f7b29ecc2",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/finish-review.md": "96cff3489d512b389d999e56040145fcd0fb434abfe93ba713d6e2aed4ca424e",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/roster.md": "eb4827f370bf45baa78aecded36c775f8e102f95a8cb11184793eb65313fa1e3",
+        "references/scope.md": "8d9990ca45899f3353aae63e31279fee1f932a9bc88d43b39fb35d1b1be311d5",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa"
+      },
+      "runner_source_sha256": {
+        "run.py": "c04094cc0645498947bf153b90a28c19521a20612561f077a8a5aeae4373b6e6",
+        "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+        "cases.json": "6108b42b4d54ab3ffba2bf9462e62cfdc99caacf80d4c924cd022ae793bcbab1",
+        "child_events.py": "6ade977ec4ab2de4c262d3b066eb8e1e1868997854b26b482d1724892366bae9",
+        "delegated_review.py": "36acb8f3ddef33d6a51643d0fb67c66a81a949735744a65e337bab06cfb0e3ee"
+      },
+      "review": {
+        "status": "ok",
+        "verdict": "Not ready",
+        "run_id": "run",
+        "artifact_path": "artifacts/run/report.md",
+        "scope": {
+          "base_sha": "221964530bf470c57a8e9e7a99262a8aae3e0424",
+          "head_sha": "221964530bf470c57a8e9e7a99262a8aae3e0424",
+          "branch": "fixture-work",
+          "pr": null,
+          "scope_mode": "standalone",
+          "patch_id": "8b2797d0ef6ed6e146e0281e33f63b007f599f74"
+        },
+        "intent": "Review deletion authorization and pagination against ticket 7; retain admin, tenant, anonymous safety, and positive-limit ordering contracts.",
+        "ticket": {
+          "id": "7",
+          "url": null,
+          "resolution": "explicit",
+          "source": "token"
+        },
+        "requirements": [
+          {
+            "id": "R1",
+            "status": "unmet",
+            "evidence": "app.py:4 authorizes any active user, including non-admins; caller.py:4 forwards the user without checking the role.",
+            "text": "Only active admins can delete documents.",
+            "finding": 2
+          },
+          {
+            "id": "R2",
+            "status": "unmet",
+            "evidence": "app.py:4 ignores document.tenant and user.tenant, permitting an active admin to delete across tenants through caller.py:4.",
+            "text": "Deletion is restricted to the user's tenant.",
+            "finding": 1
+          },
+          {
+            "id": "R3",
+            "status": "met",
+            "evidence": "app.py:2-3 checks user is None and returns False before accessing user.active; test_app.py:7-8 passes.",
+            "text": "Anonymous deletion returns False without raising.",
+            "finding": null
+          },
+          {
+            "id": "R4",
+            "status": "unmet",
+            "evidence": "app.py:8 slices at limit - 1, returning zero rows for positive limit=1 even when rows are available, and too few rows whenever at least limit rows exist.",
+            "text": "page returns up to exactly limit rows, preserving order, for positive limits.",
+            "finding": 3
+          }
+        ],
+        "reviewers": [
+          {
+            "name": "protection-warrior",
+            "job": "correctness",
+            "reason": "always",
+            "status": "ok"
+          },
+          {
+            "name": "retribution-paladin",
+            "job": "project standards",
+            "reason": "AGENTS.md applies",
+            "status": "ok"
+          },
+          {
+            "name": "marksmanship-hunter",
+            "job": "testing",
+            "reason": "permission and pagination behavior changed without tests",
+            "status": "ok"
+          },
+          {
+            "name": "subtlety-rogue",
+            "job": "security",
+            "reason": "role and tenant checks removed",
+            "status": "ok"
+          },
+          {
+            "name": "havoc-demon-hunter",
+            "job": "adversarial",
+            "reason": "authorization boundary changed",
+            "status": "ok"
+          },
+          {
+            "name": "lore-bard",
+            "job": "existing feedback",
+            "reason": "reconcile all four local feedback suggestions",
+            "status": "ok"
+          }
+        ],
+        "findings": [
+          {
+            "#": 1,
+            "title": "CWE-639: Cross-tenant document deletion becomes authorized",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 4,
+            "confidence": 100,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Restore return user.active and user.role == \"admin\" and user.tenant == document.tenant after the existing anonymous guard.",
+            "first_evidence": "app.py:4:     return user.active",
+            "why_it_matters": "An active admin from one tenant now receives authorization to delete a document belonging to another tenant. The request caller forwards the document to can_delete, but the changed predicate never compares tenant ownership, violating R2. Restoring tenant equality closes this cross-tenant authorization path.",
+            "evidence": [
+              "app.py:4:     return user.active",
+              "caller.py:4:     return can_delete(session.user_or_none(), document)",
+              "Reproduced: delete_request with an active admin in tenant=\"b\" and a document in tenant=\"a\" returns True. The supplied diff removes user.tenant == document.tenant from this authorization predicate.",
+              "spec.md:4: - Deletion is restricted to the user's tenant.",
+              "A concrete call with active=True, role=\"admin\", tenant=\"a\" and a document in tenant \"b\" returns True. caller.py:4 routes deletion requests into can_delete."
+            ],
+            "reviewers": [
+              "subtlety-rogue",
+              "protection-warrior"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R2",
+            "validated": true
+          },
+          {
+            "#": 2,
+            "title": "CWE-862: Active non-admins gain document deletion permission",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 4,
+            "confidence": 100,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Restore return user.active and user.role == \"admin\" and user.tenant == document.tenant after the existing anonymous guard.",
+            "first_evidence": "app.py:4:     return user.active",
+            "why_it_matters": "Any active ordinary user now receives deletion authorization for a document. delete_request passes the session user directly to can_delete, and the changed return drops the admin role check, violating R1. Restoring the role check prevents this privilege escalation.",
+            "evidence": [
+              "app.py:4:     return user.active",
+              "caller.py:4:     return can_delete(session.user_or_none(), document)",
+              "Reproduced: delete_request with an active role=\"member\" user and a same-tenant document returns True. The supplied diff removes user.role == \"admin\" from this authorization predicate.",
+              "spec.md:3: - Only active admins can delete documents.",
+              "A concrete call with active=True, role=\"member\", tenant=\"a\" and a document in tenant \"a\" returns True. caller.py:4 routes deletion requests into can_delete.",
+              "reported by unattributed external reviewer (local feedback.md): \"Require admins for deletion.\"",
+              "reported by second unattributed external reviewer (local feedback.md): \"Require admins for deletion (a second reviewer agrees).\""
+            ],
+            "reviewers": [
+              "subtlety-rogue",
+              "protection-warrior",
+              "lore-bard"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R1",
+            "validated": true
+          },
+          {
+            "#": 3,
+            "title": "Pages omit the requested final row",
+            "severity": "P2",
+            "file": "app.py",
+            "line": 8,
+            "confidence": 100,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Change the return to rows[:limit].",
+            "first_evidence": "app.py:8:     return rows[:limit - 1]",
+            "why_it_matters": "A page with at least limit rows now returns only limit minus one rows. For limit=1 it always returns an empty page, hiding the available first row; restoring the slice endpoint preserves the required row count and order.",
+            "evidence": [
+              "app.py:8:     return rows[:limit - 1]",
+              "spec.md:6: - page returns up to exactly limit rows, preserving order, for positive limits.",
+              "Concrete calls: page([1, 2, 3], 2) returns [1]; page([1], 1) returns []."
+            ],
+            "reviewers": [
+              "protection-warrior"
+            ],
+            "corroborated": false,
+            "promoted": false,
+            "requirement": "R4",
+            "validated": true
+          }
+        ],
+        "actionable_findings": [
+          1,
+          2,
+          3
+        ],
+        "triage_groups": [
+          {
+            "title": "Deletion authorization",
+            "findings": [
+              1,
+              2
+            ],
+            "context": "Two distinct permission boundaries removed from one predicate.",
+            "resolution": "Restore admin and tenant guards together, then verify allowed and denied users.",
+            "kind": "mechanical"
+          },
+          {
+            "title": "Pagination",
+            "findings": [
+              3
+            ],
+            "context": "Positive limits lose one row.",
+            "resolution": "Restore rows[:limit], then verify nonempty positive limits.",
+            "kind": "mechanical"
+          }
+        ],
+        "pre_existing_findings": [],
+        "dismissed": [
+          {
+            "title": "Deletion loses admin and tenant restrictions",
+            "reviewers": [
+              "fast-pass"
+            ],
+            "file": "app.py",
+            "line": 4,
+            "reason": "confidence gate (50, P1)",
+            "stage": "merge"
+          },
+          {
+            "title": "Pagination returns one fewer row than requested",
+            "reviewers": [
+              "fast-pass"
+            ],
+            "file": "app.py",
+            "line": 8,
+            "reason": "confidence gate (50, P2)",
+            "stage": "merge"
+          },
+          {
+            "title": "Changed contracts have no regression coverage",
+            "reviewers": [
+              "marksmanship-hunter"
+            ],
+            "file": "app.py",
+            "line": 4,
+            "reason": "Question 2 fails: the absence of authenticated deletion and nonempty pagination tests already exists in unchanged test_app.py:5-8, and the diff neither changes nor newly reaches those tests. The smoke suite passing is confirmed, but missing coverage itself is pre-existing and no requirement mandates new tests.",
+            "stage": "validator"
+          }
+        ],
+        "residual_risks": [
+          "Reference and test search was lexical; external consumers and external harnesses were not inspected.",
+          "Authorization findings prove incorrect Boolean permission results; this fixture contains no destructive deletion sink."
+        ],
+        "testing_gaps": [
+          "Existing tests cover only anonymous denial and empty pages; authenticated activity/role/tenant combinations and nonempty positive-limit pagination remain untested. The validator classified this coverage gap as pre-existing."
+        ],
+        "coverage": {
+          "lite_roster": false,
+          "merge": "script",
+          "suppressed": {
+            "0": 0,
+            "25": 0
+          },
+          "clamped_fast_pass": 0,
+          "demoted_missing_evidence": 0,
+          "promoted": 0,
+          "harvested": {
+            "total": 0,
+            "findings": 0,
+            "addressed": 0,
+            "dismissed": 0,
+            "late": null,
+            "late_checked_at": null
+          },
+          "local_feedback": {
+            "total": 4,
+            "findings": 2,
+            "unique_findings": 1,
+            "addressed": 0,
+            "dismissed": 2
+          },
+          "validator": {
+            "batch": 4,
+            "validated": 3,
+            "dropped": 1,
+            "degraded": []
+          },
+          "peer": null,
+          "untracked_excluded": [],
+          "notes": [
+            "Six reviewers collected before synthesis; one fresh validator collected. Seven children total, at most three concurrent; no nested children. All inherited gpt-6.1-sol medium without overrides.",
+            "No PR exists; initial and late PR feedback harvests inapplicable.",
+            "Ticket 7 read using offline gh fixture via tickets.sh --repo fixture/mana.",
+            "Full depth; four executable changed lines in app.py.",
+            "Fast-pass candidates at anchor 50 were dropped by the confidence gate; corresponding independently sourced defects survived. No preliminary findings were displayed in mode:agent.",
+            "Semantic dedup consolidated seven primary candidates to four; validator rejected the pre-existing test-gap claim.",
+            "Security reviewer assigned P0; lead calibrated to P1 because the evidenced fixture path returns authorization Booleans without a destructive sink. Test gap calibrated from P1 to P2 before validation.",
+            "python3 -m unittest test_app.py: two tests passed; targeted read-only reproduction confirms role, tenant, and page failures.",
+            "Product diff and Git index preserved; only artifacts/ written."
+          ]
+        }
+      },
+      "evidence_archive": {
+        "path": "evidence/delegated-review-9l9bflwg.json.gz",
+        "sha256": "510c19865cf550e7aad8587e5585534e26a0e079e28f538b0ca04cdfa2539858"
+      }
+    },
+    {
+      "run": "delegated-review-j1ygsl9w",
+      "variant": "candidate",
+      "case": "delegated-heldout-review",
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "execution": "completed",
+      "original_accepted_execution": true,
+      "original_failures": [],
+      "offline_audit": "audit-r1kdpcrz.json",
+      "offline_audit_failures": [],
+      "outcome": {
+        "variant": "candidate",
+        "scenario": "delegated-heldout-review",
+        "run": "delegated-review-j1ygsl9w",
+        "execution_accepted_by_audit": true,
+        "audit": "audit-r1kdpcrz.json",
+        "original_result_accepted": true,
+        "supported_defects": {
+          "retry": 1,
+          "exhaustion": 1,
+          "queue": 2
+        },
+        "missed_defects": [],
+        "seeded_code_findings": 2,
+        "additional_supported_findings": {
+          "3": "Concrete failure-path regression tests; the existing success-only suite passes all seeded defects."
+        },
+        "unnecessary_product_edits": [],
+        "unsupported_primary_findings": [],
+        "requirements": {
+          "R1": "unmet",
+          "R2": "unmet",
+          "R3": "unmet",
+          "R4": "met"
+        },
+        "distinct_failure_modes_preserved": true,
+        "grouping": "Retry termination and swallowed exhaustion share finding 1 because the same early return causes both. Its text preserves both triggers, and its repair explicitly continues earlier attempts and reraises on the final attempt. R1 and R2 independently map to finding 1; neither failure mode is dropped. Queue loss remains finding 2. The rubric counts covered failure modes, not an artificial one-row-per-requirement rule.",
+        "misleading_suggestions": "Catch-all exception retry, unconditional delay and unrelated legacy cleanup are declined. The supported queue-preservation suggestion joins finding 2.",
+        "reviewers_collected": 6,
+        "validator_threads": 1,
+        "family_threads": 8,
+        "role_threads": {
+          "validator": [
+            "01a0f2ed-15d9-7210-a78b-c571e648cf9d"
+          ],
+          "marksmanship-hunter": [
+            "01a0f2e8-944a-7332-bbcc-980cb8b46aa5"
+          ],
+          "restoration-shaman": [
+            "01a0f2e9-9f4a-7821-a95d-acd422205082"
+          ],
+          "demonology-warlock": [
+            "01a0f2ea-4bb4-7f80-b629-70a000193c8d"
+          ],
+          "retribution-paladin": [
+            "01a0f2e8-794c-7cd3-907d-09d4f71f18c2"
+          ],
+          "protection-warrior": [
+            "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2"
+          ],
+          "havoc-demon-hunter": [
+            "01a0f2ea-2694-74a1-ba8f-66ae873f5cfb"
+          ]
+        },
+        "collection_before_merge": true,
+        "independent_validation": "The separate validator read the changed code and caller, reproduced error paths, and returned each finding and requirement verdict. All three findings were validated, including the concrete regression-test gap.",
+        "scope_preserved": true,
+        "confidence": "No confidence promotion by reviewer count; direct code and reproduced inputs support the retained claims.",
+        "judgment_method": "Manual prewritten rubric, variant visible; both triggers and both repair conditions inspected for the grouped fetch finding. No skill tuning occurred."
+      },
+      "seconds": 786.36,
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 1780287,
+            "cached_input_tokens": 1691904,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 10181,
+            "reasoning_output_tokens": 296
+          }
+        }
+      ],
+      "child_usage": null,
+      "host_reported_thread_metadata": {
+        "01a0f2e6-c468-79d3-bd40-d73f2ce2e261": {
+          "parentThreadId": null,
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": "exec"
+        },
+        "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/protection_warrior",
+                "agent_nickname": "Kepler",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2e8-794c-7cd3-907d-09d4f71f18c2": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/retribution_paladin",
+                "agent_nickname": "Ohm",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2e8-944a-7332-bbcc-980cb8b46aa5": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/marksmanship_hunter",
+                "agent_nickname": "Confucius",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2e9-9f4a-7821-a95d-acd422205082": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/restoration_shaman",
+                "agent_nickname": "Helmholtz",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2ea-2694-74a1-ba8f-66ae873f5cfb": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/havoc_demon_hunter",
+                "agent_nickname": "Boyle",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2ea-4bb4-7f80-b629-70a000193c8d": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/demonology_warlock",
+                "agent_nickname": "Dewey",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2ed-15d9-7210-a78b-c571e648cf9d": {
+          "parentThreadId": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+                "depth": 1,
+                "agent_path": "/root/validator",
+                "agent_nickname": "Einstein",
+                "agent_role": null
+              }
+            }
+          }
+        }
+      },
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/diff-scope.md": 8,
+          "references/dispatch.md": 1,
+          "references/feedback-requirements.md": 1,
+          "references/findings-schema.json": 7,
+          "references/finish-review.md": 1,
+          "references/report-example.md": 1,
+          "references/roster.md": 1,
+          "references/scope.md": 1,
+          "references/subagent-template.md": 1,
+          "references/validator.md": 1,
+          "references/personas/demonology-warlock.md": 2,
+          "references/personas/havoc-demon-hunter.md": 2,
+          "references/personas/marksmanship-hunter.md": 1,
+          "references/personas/protection-warrior.md": 1,
+          "references/personas/restoration-shaman.md": 1,
+          "references/personas/retribution-paladin.md": 1
+        },
+        "entry_bytes": 15022,
+        "unique_full_read_bytes": 141307,
+        "total_full_read_bytes": 218701,
+        "redundant_full_read_bytes": 77394,
+        "tool_output_bytes": 426224,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "context_by_thread": {
+        "01a0f2e6-c468-79d3-bd40-d73f2ce2e261": {
+          "full_reads": {
+            "SKILL.md": 1,
+            "references/diff-scope.md": 1,
+            "references/dispatch.md": 1,
+            "references/feedback-requirements.md": 1,
+            "references/findings-schema.json": 1,
+            "references/finish-review.md": 1,
+            "references/report-example.md": 1,
+            "references/roster.md": 1,
+            "references/scope.md": 1,
+            "references/subagent-template.md": 1,
+            "references/validator.md": 1,
+            "references/personas/demonology-warlock.md": 2,
+            "references/personas/havoc-demon-hunter.md": 2,
+            "references/personas/marksmanship-hunter.md": 1,
+            "references/personas/protection-warrior.md": 1,
+            "references/personas/restoration-shaman.md": 1,
+            "references/personas/retribution-paladin.md": 1
+          },
+          "entry_bytes": 15022,
+          "unique_full_read_bytes": 141307,
+          "total_full_read_bytes": 153258,
+          "redundant_full_read_bytes": 11951,
+          "tool_output_bytes": 261536,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 24922,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2e8-794c-7cd3-907d-09d4f71f18c2": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 24466,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2e8-944a-7332-bbcc-980cb8b46aa5": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 25466,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2e9-9f4a-7821-a95d-acd422205082": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 23015,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2ea-2694-74a1-ba8f-66ae873f5cfb": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 28386,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2ea-4bb4-7f80-b629-70a000193c8d": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 23539,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2ed-15d9-7210-a78b-c571e648cf9d": {
+          "full_reads": {
+            "references/diff-scope.md": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 4081,
+          "total_full_read_bytes": 4081,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 14894,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        }
+      },
+      "host_diagnostics": [],
+      "thread_turn_counts": {
+        "01a0f2e6-c468-79d3-bd40-d73f2ce2e261": 1,
+        "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2": 1,
+        "01a0f2e8-794c-7cd3-907d-09d4f71f18c2": 1,
+        "01a0f2e8-944a-7332-bbcc-980cb8b46aa5": 1,
+        "01a0f2e9-9f4a-7821-a95d-acd422205082": 1,
+        "01a0f2ea-2694-74a1-ba8f-66ae873f5cfb": 1,
+        "01a0f2ea-4bb4-7f80-b629-70a000193c8d": 1,
+        "01a0f2ed-15d9-7210-a78b-c571e648cf9d": 1
+      },
+      "command_count": 82,
+      "nonzero_commands": [
+        {
+          "thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "command": "/usr/bin/bash -lc 'mkdir -p artifacts/run/returns; git merge-base HEAD origin/main; git status --short; git diff origin/main; git log --oneline origin/main..HEAD; cat feedback.md; command -v gh; cat installed/scan/references/{subagent-template,diff-scope,findings-schema.json}.md 2>/dev/null'",
+          "exit_code": 1
+        },
+        {
+          "thread_id": "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2",
+          "command": "/usr/bin/bash -lc 'rg --files artifacts references'",
+          "exit_code": 2
+        }
+      ],
+      "null_output_commands": [
+        {
+          "thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "id": "exec-27944663-f9b7-4411-a796-1d423773575e",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "id": "exec-580a9197-d976-4cef-9dc5-ab0d5fb9068e",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "id": "exec-0bcf5472-09e0-4751-a1fd-57f926fe40e3",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "id": "exec-45d24eeb-5d3b-41c7-aac0-3e4ebaad47cc",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e6-c468-79d3-bd40-d73f2ce2e261",
+          "id": "exec-6ece3689-80be-41e9-adfd-410a9c2a8dbb",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2",
+          "id": "exec-8c49a220-185b-46d5-b2c6-0e11b3ad5eec",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e8-794c-7cd3-907d-09d4f71f18c2",
+          "id": "exec-8e738cbf-61fb-432c-a9c4-90be33b0ce7c",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e8-944a-7332-bbcc-980cb8b46aa5",
+          "id": "exec-459e635d-0e36-4376-9bc4-1312fc10cf3e",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2e9-9f4a-7821-a95d-acd422205082",
+          "id": "exec-7d081211-4583-4c05-90be-eb07068ca6c8",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2ea-2694-74a1-ba8f-66ae873f5cfb",
+          "id": "exec-8b59b2f6-d8a5-4eb4-8a33-40094388d10b",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2ea-4bb4-7f80-b629-70a000193c8d",
+          "id": "exec-2563e372-c751-46fa-a020-8cd7350b091c",
+          "exit_code": 0
+        }
+      ],
+      "parent_command_parity": true,
+      "collection_before_merge": true,
+      "role_threads": {
+        "validator": [
+          "01a0f2ed-15d9-7210-a78b-c571e648cf9d"
+        ],
+        "marksmanship-hunter": [
+          "01a0f2e8-944a-7332-bbcc-980cb8b46aa5"
+        ],
+        "restoration-shaman": [
+          "01a0f2e9-9f4a-7821-a95d-acd422205082"
+        ],
+        "demonology-warlock": [
+          "01a0f2ea-4bb4-7f80-b629-70a000193c8d"
+        ],
+        "retribution-paladin": [
+          "01a0f2e8-794c-7cd3-907d-09d4f71f18c2"
+        ],
+        "protection-warrior": [
+          "01a0f2e8-59e9-75a1-8daf-c3ca70e2e4f2"
+        ],
+        "havoc-demon-hunter": [
+          "01a0f2ea-2694-74a1-ba8f-66ae873f5cfb"
+        ]
+      },
+      "payload_sha256": {
+        "SKILL.md": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/dispatch.md": "aee6a4718c3fecb7622c44d295c52a02e29ee96d85a924d234920499cbe672b8",
+        "references/feedback-requirements.md": "bea603fecd54fc4c661c06df2d6b53a06923e8b658ff846897d1f16f7b29ecc2",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/finish-review.md": "96cff3489d512b389d999e56040145fcd0fb434abfe93ba713d6e2aed4ca424e",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/roster.md": "eb4827f370bf45baa78aecded36c775f8e102f95a8cb11184793eb65313fa1e3",
+        "references/scope.md": "8d9990ca45899f3353aae63e31279fee1f932a9bc88d43b39fb35d1b1be311d5",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa"
+      },
+      "runner_source_sha256": {
+        "run.py": "319cc3e99e14ef23db3f1bb853c0ec382ba5d28da17dcac5f66a3ab3b5e313ac",
+        "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+        "cases.json": "6108b42b4d54ab3ffba2bf9462e62cfdc99caacf80d4c924cd022ae793bcbab1",
+        "child_events.py": "6ade977ec4ab2de4c262d3b066eb8e1e1868997854b26b482d1724892366bae9",
+        "delegated_review.py": "01eedc505216ed2b8f653d2c65eca9ab13436a7de951805cae8d0945a7c065dd",
+        "delegated-grading.json": "b01f5f17b3ac5027c80eba43e0c5e2bb659ab02fdb0a1e9f87a6c6c5bc768efe"
+      },
+      "review": {
+        "status": "ok",
+        "verdict": "Not ready",
+        "run_id": "run",
+        "artifact_path": "artifacts/run/report.md",
+        "scope": {
+          "base_sha": "644374ee9ad6bab4d8eb7edb52e4350483911114",
+          "head_sha": "644374ee9ad6bab4d8eb7edb52e4350483911114",
+          "branch": "fixture-work",
+          "pr": null,
+          "scope_mode": "standalone",
+          "patch_id": "de4c0605ff0f8d8a47bf1ef0059c7af0c8b00cd0"
+        },
+        "intent": "Preserve the retry and delivery contract in ticket 7 while changing fetch error handling and delivery queue mutation. Retry transient OSError, propagate exhausted failures, and retain queued items on failed sends.",
+        "ticket": {
+          "id": "7",
+          "url": null,
+          "resolution": "explicit",
+          "source": "token"
+        },
+        "requirements": [
+          {
+            "id": "R1",
+            "status": "unmet",
+            "evidence": "app.py:6 returns None on the first OSError, preventing further attempts; app.py:4 still returns immediate success.",
+            "text": "fetch retries OSError up to attempts total calls, returning the first success.",
+            "finding": 1
+          },
+          {
+            "id": "R2",
+            "status": "unmet",
+            "evidence": "app.py:5-6 suppresses OSError instead of propagating the last error on exhaustion, including with positive attempts.",
+            "text": "fetch propagates the last OSError on exhaustion; attempts is always positive.",
+            "finding": 1
+          },
+          {
+            "id": "R3",
+            "status": "unmet",
+            "evidence": "app.py:10 removes the first queued item before app.py:11 calls send, so an exception loses that item.",
+            "text": "deliver preserves the first queued item when send raises.",
+            "finding": 2
+          },
+          {
+            "id": "R4",
+            "status": "met",
+            "evidence": "app.py:10-11 pops exactly the first item and sends it; successful delivery leaves the remaining list in FIFO order, also asserted at test_app.py:8-9.",
+            "text": "Successful delivery removes exactly the first item and preserves FIFO order.",
+            "finding": null
+          }
+        ],
+        "reviewers": [
+          {
+            "name": "protection-warrior",
+            "job": "correctness",
+            "reason": "always",
+            "status": "ok"
+          },
+          {
+            "name": "retribution-paladin",
+            "job": "project standards",
+            "reason": "Root AGENTS.md applies to app.py.",
+            "status": "ok"
+          },
+          {
+            "name": "marksmanship-hunter",
+            "job": "testing",
+            "reason": "Failure behavior changed without corresponding tests.",
+            "status": "ok"
+          },
+          {
+            "name": "restoration-shaman",
+            "job": "reliability",
+            "reason": "Retry and failed-send recovery changed.",
+            "status": "ok"
+          },
+          {
+            "name": "havoc-demon-hunter",
+            "job": "adversarial",
+            "reason": "Retry semantics require failure-sequence checks.",
+            "status": "ok"
+          },
+          {
+            "name": "demonology-warlock",
+            "job": "API contract",
+            "reason": "caller.load consumes the changed fetch contract.",
+            "status": "ok"
+          }
+        ],
+        "findings": [
+          {
+            "#": 1,
+            "title": "Fetch stops retrying and suppresses exhausted errors",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 6,
+            "confidence": 100,
+            "autofix_class": "manual",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Replace return None in the OSError handler with if index == attempts - 1: raise, allowing earlier failures to continue the loop.",
+            "first_evidence": "app.py:6:             return None",
+            "why_it_matters": "Existing callers requesting multiple attempts now receive None after the first OSError, even when a subsequent call would succeed. Exhausted failures also stop propagating, changing the public failure contract into an indistinguishable success-shaped sentinel. Restoring retry continuation and re-raising on the final attempt preserves both established behaviors.",
+            "evidence": [
+              "app.py:6:             return None",
+              "caller.py:4:     return fetch(source, 3)",
+              "spec.md:3: - fetch retries OSError up to attempts total calls, returning the first success.",
+              "spec.md:4: - fetch propagates the last OSError on exhaustion; attempts is always positive.",
+              "Reproduction: load with a first-call OSError and subsequent success returned None after one source call; load with an always-failing source returned None instead of raising.",
+              "The diff replaces the final-attempt raise with an unconditional return from the first OSError handler.",
+              "Executed a source that raises once then returns 4 with attempts=3: fetch returned None after one call. With attempts=1 and a source that raises OSError, fetch returned None instead of raising.",
+              "app.py:2:     for index in range(attempts):",
+              "Ticket 7 R1 requires retries up to attempts total calls; R2 requires propagating the last OSError on exhaustion.",
+              "Reproduction: a source raising once then returning 4 produced None after one call with attempts=3; an always-failing source with attempts=1 returned None.",
+              "Trigger: caller.py:4 requests return fetch(source, 3); supply a source that raises OSError on its first call and returns 4 on its second.",
+              "Path: the first source call enters the handler and returns from fetch, so load receives None and the second source call is never reached.",
+              "Outcome verified by executing caller.load with that source: result None, source calls 1. The same handler swallows the last OSError on exhaustion, violating R2 as well."
+            ],
+            "reviewers": [
+              "demonology-warlock",
+              "protection-warrior",
+              "restoration-shaman",
+              "havoc-demon-hunter"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R1",
+            "validated": true
+          },
+          {
+            "#": 2,
+            "title": "Failed delivery removes the queued item",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 10,
+            "confidence": 100,
+            "autofix_class": "manual",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Restore item = queue[0], call send(item), then call queue.pop(0) after send returns successfully.",
+            "first_evidence": "app.py:10:     item = queue.pop(0)",
+            "why_it_matters": "A sender that raises now leaves callers with the first queued item permanently removed, breaking the documented failure contract. Callers cannot retry that item from the queue after handling the exception. Reading the first item before sending and removing it only after success restores the required queue state.",
+            "evidence": [
+              "app.py:10:     item = queue.pop(0)",
+              "app.py:11:     send(item)",
+              "spec.md:5: - deliver preserves the first queued item when send raises.",
+              "Reproduction: delivering queue [1, 2] with a sender raising OSError propagated the exception but left queue [2].",
+              "Executed deliver with queue=[1, 2] and a send function raising OSError: the exception propagated but the queue was [2].",
+              "Trigger: start with queue [1, 2] and a send callback that raises OSError before delivery succeeds.",
+              "Path: pop(0) removes 1 before app.py:11 calls send(item); the exception escapes without restoring the item.",
+              "Outcome verified by executing deliver with that callback: queue becomes [2]. Calling deliver again sends 2, leaving failed item 1 unavailable for retry.",
+              "Ticket 7 R3 requires preserving the first queued item when send raises.",
+              "Reproduction: deliver([1, 2], failed_send) raised OSError and left the queue as [2]."
+            ],
+            "reviewers": [
+              "demonology-warlock",
+              "protection-warrior",
+              "havoc-demon-hunter",
+              "restoration-shaman"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R3",
+            "validated": true
+          },
+          {
+            "#": 3,
+            "title": "Changed failure contracts have no regression tests",
+            "severity": "P2",
+            "file": "app.py",
+            "line": 6,
+            "confidence": 75,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Add tests where source raises OSError then succeeds, where all attempts raise and the last OSError must propagate with exactly attempts calls, and where send raises and the entire queue must remain unchanged.",
+            "first_evidence": "app.py:6:             return None",
+            "why_it_matters": "The suite passes even though a transient OSError now stops retries and failed delivery removes the queued item. The diff changes both failure contracts without changing tests; the only tests exercise immediate fetch success and successful delivery. Explicit failure-path assertions would expose violations of ticket 7 before merge.",
+            "evidence": [
+              "app.py:6:             return None",
+              "app.py:10:     item = queue.pop(0)",
+              "test_app.py:6:         self.assertEqual(fetch(lambda: 4, 3), 4)",
+              "test_app.py:8:         queue=[1,2]; deliver(queue, lambda item: None)",
+              "Searched the complete product tree for fetch, deliver, OSError, unittest and pytest: test_app.py contains the only tests; neither test forces an exception. caller.py:4 calls fetch(source, 3), making retry failures reachable through load.",
+              "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_app.py: both tests pass against the reviewed working-tree changes."
+            ],
+            "reviewers": [
+              "marksmanship-hunter"
+            ],
+            "corroborated": false,
+            "promoted": false,
+            "requirement": null,
+            "validated": true
+          }
+        ],
+        "actionable_findings": [
+          1,
+          2,
+          3
+        ],
+        "triage_groups": [],
+        "pre_existing_findings": [],
+        "dismissed": [],
+        "residual_risks": [
+          "Test and caller searches were lexical; tests or consumers outside this repository were not inspected."
+        ],
+        "testing_gaps": [
+          "Add transient OSError followed by success, exhausted attempts asserting call count and final exception identity, and failed send asserting the full queue remains unchanged."
+        ],
+        "feedback_reconciliation": [
+          {
+            "suggestion": "Catch all Exception values in fetch to make programming errors retriable.",
+            "outcome": "dismissed",
+            "reason": "R1 limits retry handling to OSError. Retrying programming errors would broaden the contract and mask defects."
+          },
+          {
+            "suggestion": "Add a one-second sleep after every source call, including success.",
+            "outcome": "dismissed",
+            "reason": "Delay policy is explicitly out of scope; unconditional success delay has no demonstrated benefit."
+          },
+          {
+            "suggestion": "Preserve the queued item if delivery fails.",
+            "outcome": "finding",
+            "finding": 2,
+            "reason": "Matches R3 and the queue mutation defect at app.py:10."
+          },
+          {
+            "suggestion": "Fix the spelling in legacy.py while here.",
+            "outcome": "dismissed",
+            "reason": "legacy.py is explicitly out of scope and untouched by the diff."
+          }
+        ],
+        "coverage": {
+          "lite_roster": false,
+          "merge": "script",
+          "suppressed": {
+            "0": 0,
+            "25": 0
+          },
+          "clamped_fast_pass": 0,
+          "demoted_missing_evidence": 0,
+          "promoted": 0,
+          "harvested": {
+            "total": 0,
+            "findings": 0,
+            "addressed": 0,
+            "dismissed": 0,
+            "late": null,
+            "late_checked_at": null
+          },
+          "validator": {
+            "batch": 3,
+            "validated": 3,
+            "dropped": 0,
+            "degraded": []
+          },
+          "peer": null,
+          "untracked_excluded": [],
+          "feedback_file": {
+            "total": 4,
+            "findings": 1,
+            "addressed": 0,
+            "dismissed": 3
+          },
+          "notes": [
+            "No PR exists; PR harvest and late harvest do not apply.",
+            "Full risk-selected roster; six reviewers and one validator collected, no nested children, maximum three concurrent children.",
+            "All children inherited the session model and reasoning without overrides.",
+            "Two smoke tests passed; targeted reproductions exposed the contract defects.",
+            "Six semantic duplicate findings merged; confidence unchanged by agreement.",
+            "AGENTS.md specifies review boundaries and validation but no additional source conventions.",
+            "Intent inferred from ticket 7; no implementation intent was supplied in commit subjects.",
+            "Product files and Git index preserved."
+          ]
+        }
+      },
+      "evidence_archive": {
+        "path": "evidence/delegated-review-j1ygsl9w.json.gz",
+        "sha256": "4c32d7f61c26fe4401f44297d2508449ea676fb717955d2e99a559745d3bbb52"
+      }
+    },
+    {
+      "run": "delegated-review-rdrhg6is",
+      "variant": "baseline",
+      "case": "delegated-heldout-review",
+      "host": "codex-cli 0.159.2",
+      "requested_model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "execution": "completed",
+      "original_accepted_execution": true,
+      "original_failures": [],
+      "offline_audit": "audit-jrmg2c74.json",
+      "offline_audit_failures": [],
+      "outcome": {
+        "variant": "baseline",
+        "scenario": "delegated-heldout-review",
+        "run": "delegated-review-rdrhg6is",
+        "execution_accepted_by_audit": true,
+        "audit": "audit-jrmg2c74.json",
+        "original_result_accepted": true,
+        "supported_defects": {
+          "retry": 1,
+          "exhaustion": 1,
+          "queue": 2
+        },
+        "missed_defects": [],
+        "seeded_code_findings": 2,
+        "additional_supported_findings": {
+          "3": "Concrete failure-path regression tests; the existing success-only suite passes all seeded defects."
+        },
+        "unnecessary_product_edits": [],
+        "unsupported_primary_findings": [],
+        "requirements": {
+          "R1": "unmet",
+          "R2": "unmet",
+          "R3": "unmet",
+          "R4": "met"
+        },
+        "distinct_failure_modes_preserved": true,
+        "grouping": "Retry termination and swallowed exhaustion share finding 1 because the same early return causes both. Its text preserves both triggers, and its repair explicitly continues earlier attempts and reraises on the final attempt. R1 and R2 independently map to finding 1; neither failure mode is dropped. Queue loss remains finding 2. The rubric counts covered failure modes, not an artificial one-row-per-requirement rule.",
+        "misleading_suggestions": "Catch-all exception retry, unconditional delay and unrelated legacy cleanup are declined. The supported queue-preservation suggestion joins finding 2.",
+        "reviewers_collected": 5,
+        "validator_threads": 1,
+        "family_threads": 7,
+        "role_threads": {
+          "validator": [
+            "01a0f2f9-dec9-7f81-800f-52056f596f57"
+          ],
+          "restoration-shaman": [
+            "01a0f2f6-a08e-7433-a591-5189c5a224b1"
+          ],
+          "protection-warrior": [
+            "01a0f2f5-6998-7452-864e-2313dd346388"
+          ],
+          "marksmanship-hunter": [
+            "01a0f2f5-b363-74d3-9a44-960f733450d2"
+          ],
+          "retribution-paladin": [
+            "01a0f2f5-8b53-79d3-b0ff-14d84b5ee2eb"
+          ],
+          "havoc-demon-hunter": [
+            "01a0f2f7-1db4-74e1-a857-1db6fe63247c"
+          ]
+        },
+        "collection_before_merge": true,
+        "independent_validation": "The separate validator read the changed code and caller, reproduced error paths, and returned each finding and requirement verdict. All three findings were validated, including the concrete regression-test gap.",
+        "scope_preserved": true,
+        "confidence": "No confidence promotion by reviewer count; direct code and reproduced inputs support the retained claims.",
+        "judgment_method": "Manual prewritten rubric, variant visible; both triggers and both repair conditions inspected for the grouped fetch finding. No skill tuning occurred."
+      },
+      "seconds": 778.91,
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 2070767,
+            "cached_input_tokens": 1980288,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 11231,
+            "reasoning_output_tokens": 437
+          }
+        }
+      ],
+      "child_usage": null,
+      "host_reported_thread_metadata": {
+        "01a0f2f3-63bb-7313-8f32-9924f65a6dc6": {
+          "parentThreadId": null,
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": "exec"
+        },
+        "01a0f2f5-6998-7452-864e-2313dd346388": {
+          "parentThreadId": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+                "depth": 1,
+                "agent_path": "/root/protection_warrior",
+                "agent_nickname": "Hubble",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2f5-8b53-79d3-b0ff-14d84b5ee2eb": {
+          "parentThreadId": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+                "depth": 1,
+                "agent_path": "/root/retribution_paladin",
+                "agent_nickname": "Newton",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2f5-b363-74d3-9a44-960f733450d2": {
+          "parentThreadId": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+                "depth": 1,
+                "agent_path": "/root/marksmanship_hunter",
+                "agent_nickname": "Dalton",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2f6-a08e-7433-a591-5189c5a224b1": {
+          "parentThreadId": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+                "depth": 1,
+                "agent_path": "/root/restoration_shaman",
+                "agent_nickname": "Herschel",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2f7-1db4-74e1-a857-1db6fe63247c": {
+          "parentThreadId": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+                "depth": 1,
+                "agent_path": "/root/havoc_demon_hunter",
+                "agent_nickname": "Pasteur",
+                "agent_role": null
+              }
+            }
+          }
+        },
+        "01a0f2f9-dec9-7f81-800f-52056f596f57": {
+          "parentThreadId": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "model": "gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "cliVersion": "0.159.2",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "parent_thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+                "depth": 1,
+                "agent_path": "/root/validator",
+                "agent_nickname": "Galileo",
+                "agent_role": null
+              }
+            }
+          }
+        }
+      },
+      "context": {
+        "full_reads": {
+          "SKILL.md": 1,
+          "references/diff-scope.md": 7,
+          "references/findings-schema.json": 6,
+          "references/finish-review.md": 3,
+          "references/report-example.md": 2,
+          "references/subagent-template.md": 2,
+          "references/validator.md": 2,
+          "references/personas/havoc-demon-hunter.md": 2,
+          "references/personas/marksmanship-hunter.md": 1,
+          "references/personas/protection-warrior.md": 1,
+          "references/personas/restoration-shaman.md": 1,
+          "references/personas/retribution-paladin.md": 1
+        },
+        "entry_bytes": 38665,
+        "unique_full_read_bytes": 135575,
+        "total_full_read_bytes": 295225,
+        "redundant_full_read_bytes": 159650,
+        "tool_output_bytes": 431378,
+        "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+      },
+      "context_by_thread": {
+        "01a0f2f3-63bb-7313-8f32-9924f65a6dc6": {
+          "full_reads": {
+            "SKILL.md": 1,
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1,
+            "references/finish-review.md": 3,
+            "references/report-example.md": 2,
+            "references/subagent-template.md": 2,
+            "references/validator.md": 2,
+            "references/personas/havoc-demon-hunter.md": 2,
+            "references/personas/marksmanship-hunter.md": 1,
+            "references/personas/protection-warrior.md": 1,
+            "references/personas/restoration-shaman.md": 1,
+            "references/personas/retribution-paladin.md": 1
+          },
+          "entry_bytes": 38665,
+          "unique_full_read_bytes": 135575,
+          "total_full_read_bytes": 240009,
+          "redundant_full_read_bytes": 104434,
+          "tool_output_bytes": 288224,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2f5-6998-7452-864e-2313dd346388": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 24683,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2f5-8b53-79d3-b0ff-14d84b5ee2eb": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 27310,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2f5-b363-74d3-9a44-960f733450d2": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 24743,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2f6-a08e-7433-a591-5189c5a224b1": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 22738,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2f7-1db4-74e1-a857-1db6fe63247c": {
+          "full_reads": {
+            "references/diff-scope.md": 1,
+            "references/findings-schema.json": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 10227,
+          "total_full_read_bytes": 10227,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 28236,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        },
+        "01a0f2f9-dec9-7f81-800f-52056f596f57": {
+          "full_reads": {
+            "references/diff-scope.md": 1
+          },
+          "entry_bytes": 0,
+          "unique_full_read_bytes": 4081,
+          "total_full_read_bytes": 4081,
+          "redundant_full_read_bytes": 0,
+          "tool_output_bytes": 15444,
+          "limits": "Exact complete content matches only; partial/truncated reads and hidden host context are not reconstructed. Usage input_tokens is cumulative processing, not unique context size."
+        }
+      },
+      "host_diagnostics": [
+        "2026-09-30T15:35:49.168256Z ERROR codex_core::tools::router: error=agent_name must use only lowercase letters, digits, and underscores"
+      ],
+      "thread_turn_counts": {
+        "01a0f2f3-63bb-7313-8f32-9924f65a6dc6": 1,
+        "01a0f2f5-6998-7452-864e-2313dd346388": 1,
+        "01a0f2f5-8b53-79d3-b0ff-14d84b5ee2eb": 1,
+        "01a0f2f5-b363-74d3-9a44-960f733450d2": 1,
+        "01a0f2f6-a08e-7433-a591-5189c5a224b1": 1,
+        "01a0f2f7-1db4-74e1-a857-1db6fe63247c": 1,
+        "01a0f2f9-dec9-7f81-800f-52056f596f57": 1
+      },
+      "command_count": 74,
+      "nonzero_commands": [],
+      "null_output_commands": [
+        {
+          "thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "id": "exec-3f6e32f7-7949-4d6f-b1f7-fa1c63419a43",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "id": "exec-219c8be3-7f58-4334-aa12-08aa214e5718",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "id": "exec-4b3c1357-7c81-4cf1-8a1d-2a25e64a5063",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "id": "exec-3c4c6bf2-8f75-4e8c-abb5-4960c896f604",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "id": "exec-f0206993-0035-4ed0-8632-dbcb7d1c7131",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f3-63bb-7313-8f32-9924f65a6dc6",
+          "id": "exec-dfa01d2e-08d4-4787-963e-97036423c81c",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f5-8b53-79d3-b0ff-14d84b5ee2eb",
+          "id": "exec-684fb783-74d7-4389-946f-e7ff38e2ce50",
+          "exit_code": 0
+        },
+        {
+          "thread_id": "01a0f2f7-1db4-74e1-a857-1db6fe63247c",
+          "id": "exec-64cb4e6b-db2d-41da-8c10-9d3172370e26",
+          "exit_code": 0
+        }
+      ],
+      "parent_command_parity": true,
+      "collection_before_merge": true,
+      "role_threads": {
+        "validator": [
+          "01a0f2f9-dec9-7f81-800f-52056f596f57"
+        ],
+        "restoration-shaman": [
+          "01a0f2f6-a08e-7433-a591-5189c5a224b1"
+        ],
+        "protection-warrior": [
+          "01a0f2f5-6998-7452-864e-2313dd346388"
+        ],
+        "marksmanship-hunter": [
+          "01a0f2f5-b363-74d3-9a44-960f733450d2"
+        ],
+        "retribution-paladin": [
+          "01a0f2f5-8b53-79d3-b0ff-14d84b5ee2eb"
+        ],
+        "havoc-demon-hunter": [
+          "01a0f2f7-1db4-74e1-a857-1db6fe63247c"
+        ]
+      },
+      "payload_sha256": {
+        "SKILL.md": "102587beac6e6fc97532ff0fb3fad92f797e603dd269ead170d362c15b06e982",
+        "references/archmage.md": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6",
+        "references/diff-scope.md": "0400ba92a9668da553e5dec26aaa4d26f71ec79baa5f948d55e8afdf49210372",
+        "references/findings-schema.json": "f8441050bb161b95b8c306e89d562b31aed6e438c406f43d5203ef4beeff40cf",
+        "references/finish-review.md": "d84880abb4b55133bf6966334e0950120483e34c7e96e6119df61106aab27cfc",
+        "references/peer-review.md": "04116a80a108273796a2535026ea4b5afed908054c5d82ebc0d1b0277295f890",
+        "references/report-example.md": "60b44f301f801cae0fcb76c972e925ea9c71ac8c8fe9764078575313ccb1e5be",
+        "references/subagent-template.md": "2ec95d2eb5077854eeb2c6d76ab6f334bd7972e4486514e966745d248964ee5b",
+        "references/validator.md": "cc633ccbcbd33118d27ebf354ef21424a67d6a2e3edd27f4b33d55196db86a01",
+        "references/voice.md": "5cf5e19a12638e1e45f1d52ea737a61d7f4af4c5110f193f05b2fa3358e3ac72",
+        "scripts/review.sh": "a736ab83de9bd4301e1ef1db900f76fddbc7f31b46773c0e1b8ba9d0ca600804",
+        "scripts/tickets.sh": "ace53b3fe24f795ba5927b935495be7e9e445b2a2dd206717a3ab90dd89296da",
+        "references/personas/augmentation-evoker.md": "d450e01ac1179045b4962aafe9a19a133f7fc999c9628fe8173bd1024a1ab025",
+        "references/personas/balance-druid.md": "2b7c32b076b2a7e448b07df383e2df944e4b8a6bb85b7e25e20ab0ba8e8112fe",
+        "references/personas/demonology-warlock.md": "ce0f2c34edb01d62c8dc59eacd949002b2899f3af67009c07c9e074c6b1f19b7",
+        "references/personas/discipline-priest.md": "3a36c9aa89ebecf7b47d50ae4b7d16ea28aba9c7e321de121dbc3ce761c60b8d",
+        "references/personas/fire-mage.md": "ea8dedd47cc28e836524962cedeacd0858d7c53864d47bd99279969f15aafad5",
+        "references/personas/havoc-demon-hunter.md": "98825fd00f802b3216576ebe736b04729492c94ee7aa431a01a461f6f29c8e3f",
+        "references/personas/lore-bard.md": "400b5a462e89790e52e1f825d0319d2b1f940e2a6ee65f389efc7c066d234651",
+        "references/personas/marksmanship-hunter.md": "9f3235b8c54f045793fa1f1e4992f7e4915d5143ff23e3534c51ccc33c05f459",
+        "references/personas/protection-warrior.md": "e504f1db40113979fea12bdf00ac12ff01883a4049781f7319ea9f3380bd3c00",
+        "references/personas/restoration-shaman.md": "70fe12a79ee3ebf2ed157e1dfc9a2ebc59de0b16c07270766a25ad2c2abbc578",
+        "references/personas/retribution-paladin.md": "c5a818482c41c86f95d8804f72439d31ae0525f5cc8b297c423fd1edd5bb931f",
+        "references/personas/subtlety-rogue.md": "a0227ce4e0b7fb5b9a5957dd433d3333d5cc404f1903a300f690dda83423262a",
+        "references/personas/unholy-death-knight.md": "28b3caa59606df0bda901d034f4163728c78e56ed79e524d96391395c5628c14",
+        "references/personas/windwalker-monk.md": "4a233b92ef7df96705535bfc6a64a306399b1809e46b3da4dc703b60d4f949fa"
+      },
+      "runner_source_sha256": {
+        "run.py": "319cc3e99e14ef23db3f1bb853c0ec382ba5d28da17dcac5f66a3ab3b5e313ac",
+        "review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+        "cases.json": "6108b42b4d54ab3ffba2bf9462e62cfdc99caacf80d4c924cd022ae793bcbab1",
+        "child_events.py": "6ade977ec4ab2de4c262d3b066eb8e1e1868997854b26b482d1724892366bae9",
+        "delegated_review.py": "01eedc505216ed2b8f653d2c65eca9ab13436a7de951805cae8d0945a7c065dd",
+        "delegated-grading.json": "b01f5f17b3ac5027c80eba43e0c5e2bb659ab02fdb0a1e9f87a6c6c5bc768efe"
+      },
+      "review": {
+        "status": "ok",
+        "verdict": "Not ready",
+        "run_id": "run",
+        "artifact_path": "artifacts/run/report.md",
+        "scope": {
+          "base_sha": "efd6960c61c4b3e1d15173d69951dd0f177ec24d",
+          "head_sha": "efd6960c61c4b3e1d15173d69951dd0f177ec24d",
+          "branch": "fixture-work",
+          "pr": null,
+          "scope_mode": "standalone",
+          "patch_id": "de4c0605ff0f8d8a47bf1ef0059c7af0c8b00cd0"
+        },
+        "intent": "Review the retry and delivery behavior against ticket #7. Preserve bounded OSError retries and failure propagation, and remove the first queued item only after successful delivery.",
+        "ticket": {
+          "id": "7",
+          "url": null,
+          "resolution": "explicit",
+          "source": "token"
+        },
+        "requirements": [
+          {
+            "id": "R1",
+            "text": "fetch retries OSError up to attempts total calls, returning the first success.",
+            "status": "unmet",
+            "evidence": "app.py:6 returns None after the first OSError, preventing bounded retries and a later success; caller.py:4 requests three attempts and adds no retry.",
+            "finding": 1
+          },
+          {
+            "id": "R2",
+            "text": "fetch propagates the last OSError on exhaustion; attempts is always positive.",
+            "status": "unmet",
+            "evidence": "app.py:5-6 catches and suppresses the first OSError, so exhaustion never propagates the last error even with positive attempts=3.",
+            "finding": 1
+          },
+          {
+            "id": "R3",
+            "text": "deliver preserves the first queued item when send raises.",
+            "status": "unmet",
+            "evidence": "app.py:10 pops the first item before app.py:11 calls send; a raised exception leaves that item removed.",
+            "finding": 2
+          },
+          {
+            "id": "R4",
+            "text": "Successful delivery removes exactly the first item and preserves FIFO order.",
+            "status": "met",
+            "evidence": "app.py:10-11 removes index 0 exactly once and sends that item. Successful delivery of [1, 2, 3] sends 1 and leaves [2, 3], preserving FIFO order; test_app.py:7-9 also verifies the successful queue state.",
+            "finding": null
+          }
+        ],
+        "reviewers": [
+          {
+            "name": "protection-warrior",
+            "job": "correctness",
+            "reason": "always",
+            "status": "ok"
+          },
+          {
+            "name": "retribution-paladin",
+            "job": "project standards",
+            "reason": "AGENTS.md governs app.py",
+            "status": "ok"
+          },
+          {
+            "name": "marksmanship-hunter",
+            "job": "testing",
+            "reason": "runtime behavior changed without test changes",
+            "status": "ok"
+          },
+          {
+            "name": "restoration-shaman",
+            "job": "reliability",
+            "reason": "retry and failure handling changed",
+            "status": "ok"
+          },
+          {
+            "name": "havoc-demon-hunter",
+            "job": "adversarial",
+            "reason": "retry semantics and queue recovery changed",
+            "status": "ok"
+          }
+        ],
+        "findings": [
+          {
+            "#": 1,
+            "title": "First OSError bypasses retries and failure propagation",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 6,
+            "confidence": 100,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Replace return None in the OSError handler with if index == attempts - 1: raise; allow earlier failures to continue the loop.",
+            "first_evidence": "app.py:6:             return None",
+            "why_it_matters": "A transient source failure returns None after one call, so load(source) never reaches a successful retry despite requesting three attempts. Persistent failures likewise return None instead of propagating the last OSError, hiding the failure from callers. Restoring the final-attempt raise preserves both bounded retries and failure propagation.",
+            "evidence": [
+              "app.py:6:             return None",
+              "caller.py:4:     return fetch(source, 3)",
+              "Executed fetch with a source that fails once then returns 4 and attempts=3: returned None after one call. An always-failing source also returned None rather than raising.",
+              "app.py:2:     for index in range(attempts):",
+              "Executed transient source with attempts=3: returned None after one call instead of succeeding on call two; always-failing source returned None after one call instead of raising on call three."
+            ],
+            "reviewers": [
+              "protection-warrior",
+              "restoration-shaman"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R1",
+            "validated": true
+          },
+          {
+            "#": 2,
+            "title": "Failed delivery discards the first queued item",
+            "severity": "P1",
+            "file": "app.py",
+            "line": 10,
+            "confidence": 100,
+            "autofix_class": "manual",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Use item = queue[0], call send(item), then call queue.pop(0) only after send returns successfully.",
+            "first_evidence": "app.py:10:     item = queue.pop(0)",
+            "why_it_matters": "When send raises, the first queued item has already been removed and cannot be retried. For queue [1, 2], a failed send of 1 leaves [2], violating the required failure behavior. Reading the first item before sending and removing it only after success preserves the queue on failure.",
+            "evidence": [
+              "app.py:10:     item = queue.pop(0)",
+              "app.py:11:     send(item)",
+              "Executed deliver([1, 2], send) with send raising OSError: the exception propagated but the queue became [2].",
+              "Executed deliver([1, 2], failed_send) where failed_send raises OSError: exception propagated but queue became [2].",
+              "Trigger: queue is ['first', 'second'] and send raises OSError before delivery. app.py:10 removes 'first' before app.py:11 calls send(item).",
+              "Path: OSError propagates from send; there is no restoration of the removed item, leaving ['second']. A caller that retries deliver(queue, send) now selects 'second'.",
+              "Outcome: an inline reproduction produced queue_after_failure: ['second'], retry_sent: ['second'], remaining_queue: []; the first item was never delivered. This violates R3 and makes retry delivery skip FIFO work."
+            ],
+            "reviewers": [
+              "protection-warrior",
+              "restoration-shaman",
+              "havoc-demon-hunter"
+            ],
+            "corroborated": true,
+            "promoted": false,
+            "requirement": "R3",
+            "validated": true
+          },
+          {
+            "#": 3,
+            "title": "Failure behavior changed without regression tests",
+            "severity": "P2",
+            "file": "app.py",
+            "line": 6,
+            "confidence": 75,
+            "autofix_class": "gated_auto",
+            "owner": "downstream-resolver",
+            "requires_verification": true,
+            "pre_existing": false,
+            "suggested_fix": "Add tests where source raises OSError before succeeding and assert result plus total calls; where every source call raises, assert attempts calls and propagation of the last exception; and where send raises, assert the exception propagates and the full original queue is preserved.",
+            "first_evidence": "app.py:6:             return None",
+            "why_it_matters": "The existing suite passes even though fetch now abandons retries and suppresses OSError, and deliver removes the queued item before a failing send. The diff changes both failure contracts without modifying tests; the only tests exercise immediate success. Tests forcing transient and exhausted OSError and a failed send would expose these regressions.",
+            "evidence": [
+              "app.py:6:             return None",
+              "app.py:10:     item = queue.pop(0)",
+              "test_app.py:6:         self.assertEqual(fetch(lambda: 4, 3), 4)",
+              "test_app.py:8:         queue=[1,2]; deliver(queue, lambda item: None)",
+              "Searched test files for fetch, deliver, OSError, queue, and attempts: test_app.py is the only matching test file and covers success only. Supplied diff changes app.py only.",
+              "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_app.py: 2 tests passed with both failure-contract regressions present."
+            ],
+            "reviewers": [
+              "marksmanship-hunter"
+            ],
+            "corroborated": false,
+            "promoted": false,
+            "requirement": null,
+            "validated": true
+          }
+        ],
+        "actionable_findings": [
+          1,
+          2,
+          3
+        ],
+        "triage_groups": [
+          {
+            "title": "Failure handling and recovery",
+            "findings": [
+              1,
+              2,
+              3
+            ],
+            "context": "Retry failure and queue loss are distinct runtime defects with missing failure tests.",
+            "resolution": "Restore queue preservation (#2), restore bounded retries and exhaustion (#1), then add the regression tests (#3).",
+            "kind": "mechanical"
+          }
+        ],
+        "pre_existing_findings": [],
+        "dismissed": [
+          {
+            "title": "OSError exits before retries and hides exhaustion",
+            "reviewers": [
+              "fast-pass"
+            ],
+            "file": "app.py",
+            "line": 6,
+            "reason": "confidence gate (50, P1)",
+            "stage": "merge"
+          },
+          {
+            "title": "Failed delivery discards the queued item",
+            "reviewers": [
+              "fast-pass"
+            ],
+            "file": "app.py",
+            "line": 10,
+            "reason": "confidence gate (50, P1)",
+            "stage": "merge"
+          }
+        ],
+        "residual_risks": [
+          "Test discovery completeness is based on repository file listing and lexical search; external tests were not available."
+        ],
+        "testing_gaps": [
+          "fetch: transient OSError then success, with exact call count.",
+          "fetch: exhaustion calls source exactly attempts times and raises the last OSError.",
+          "deliver: failed send preserves the original queue; retry sends the same first item."
+        ],
+        "coverage": {
+          "lite_roster": false,
+          "merge": "script",
+          "suppressed": {
+            "0": 0,
+            "25": 0
+          },
+          "clamped_fast_pass": 0,
+          "demoted_missing_evidence": 0,
+          "promoted": 0,
+          "harvested": {
+            "total": 0,
+            "findings": 0,
+            "addressed": 0,
+            "dismissed": 0,
+            "late": null,
+            "late_checked_at": null
+          },
+          "validator": {
+            "batch": 3,
+            "dropped": 0,
+            "degraded": []
+          },
+          "peer": null,
+          "untracked_excluded": [],
+          "notes": [
+            "Full depth forced; all five reviewers collected before synthesis.",
+            "Independent validator collected; six generic leaf children total, at most three concurrently, inherited gpt-6.1-sol medium with no overrides.",
+            "Ticket #7 read through tickets.sh using the offline gh fixture.",
+            "No PR exists: initial and late PR harvest not applicable.",
+            "Feedback: four untrusted suggestions accounted for; one supports #2, three rejected with reasons.",
+            "Two smoke tests pass; targeted runtime reproductions expose #1 and #2.",
+            "Two fast-pass candidates gated at confidence 50; the same defects survive from specialist evidence without any confidence promotion.",
+            "Three semantic duplicates merged; the test coverage finding calibrated from P1 to P2.",
+            "No initial untracked files; generated review artifacts are excluded from product scope.",
+            "Product working-tree diff and Git index preserved.",
+            "No prior run with a matching patch-id found."
+          ]
+        },
+        "feedback": [
+          {
+            "suggestion": "Catch all Exception values in fetch to make programming errors retriable.",
+            "outcome": "not-a-finding",
+            "reason": "Ticket limits retries to OSError. Retrying programming errors would broaden the contract and mask defects."
+          },
+          {
+            "suggestion": "Add a one-second sleep after every source call, including success.",
+            "outcome": "not-a-finding",
+            "reason": "No delay requirement; delay policy is explicitly out of scope. Unconditional sleeps add success-path latency."
+          },
+          {
+            "suggestion": "Preserve the queued item if delivery fails.",
+            "outcome": "finding",
+            "file": "app.py",
+            "line": 10,
+            "reason": "Pop precedes send; a send exception leaves the first item removed. Violates R3.",
+            "finding": 2
+          },
+          {
+            "suggestion": "Fix the spelling in legacy.py while here.",
+            "outcome": "not-a-finding",
+            "reason": "legacy.py is unchanged and explicitly out of scope; no interaction with this diff."
+          }
+        ]
+      },
+      "evidence_archive": {
+        "path": "evidence/delegated-review-rdrhg6is.json.gz",
+        "sha256": "3e73fbae50e1e974a76f3f433da1087acc2f90313f4be52636f7dc6070ce9eea"
+      }
+    }
+  ],
+  "primary_pair_controls": {
+    "fixture_product_hashes_equal": true,
+    "normalized_requests_equal": true,
+    "normalized_host_commands_equal": true,
+    "baseline_run": "delegated-review-mkabp0vn",
+    "candidate_run": "delegated-review-9l9bflwg",
+    "tool_configuration": "Same CLI binary, permission rules, disabled integrations, requested model/reasoning and active-thread limit. Dynamic workspace paths and the live probe listener port differ.",
+    "reviewer_workload_limit": "Baseline selected five reviewers; candidate selected the same five plus Lore Bard for local feedback. Cost/context differences cannot be attributed solely to stage loading."
+  },
+  "actual_resolved_model_identity": null,
+  "heldout_pair_controls": {
+    "fixture_product_hashes_equal": true,
+    "normalized_requests_equal": true,
+    "normalized_host_commands_equal": true,
+    "baseline_run": "delegated-review-rdrhg6is",
+    "candidate_run": "delegated-review-j1ygsl9w",
+    "reviewer_workload_limit": "Both cover the same five core roles; C adds an API-contract reviewer. Performance differences cannot be attributed solely to stage loading."
+  },
+  "summary": {
+    "paired_scenarios_passed": 2,
+    "full_review_runs": 4,
+    "parent_invocations_including_pilot": 5,
+    "children_observed_including_pilot": 27,
+    "probe_bearing_threads_including_pilot": 32,
+    "product_edits": 0,
+    "installed_skill_changes": 0,
+    "package_d_started": false
+  },
+  "validation": {
+    "repository_validator": "passed, exit 0",
+    "workflow_tests": 39,
+    "archive_files_verified": 350,
+    "log": "evidence/validation.txt",
+    "similarity": "not rerun: no scan or remedy payload edits",
+    "plugin_version": "unchanged: maintainer tooling and evidence only"
+  }
+}

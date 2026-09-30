@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "written_before_outcome_inspection": true,
+  "execution_gates": [
+    "Every referenced descendant has completed full persisted turn history and a final outcome.",
+    "Parent and every child have their own successful immutable containment-probe command and output.",
+    "Product files, existing index and HEAD are unchanged; no publication attempt is observed.",
+    "Every selected reviewer and a separate validator have usable artifacts and inspect current fixture code.",
+    "Known model and reasoning metadata match the requested pins; absent metadata is disclosed."
+  ],
+  "delegated-full-review": {
+    "supported_defects": [
+      {"id": "role", "requirement": "R1", "file": "app.py", "line": 4, "consequence": "An active non-admin may delete a same-tenant document.", "fix": "Restore the admin role condition."},
+      {"id": "tenant", "requirement": "R2", "file": "app.py", "line": 4, "consequence": "An active admin may delete another tenant's document.", "fix": "Restore tenant equality independently of the role condition."},
+      {"id": "page", "requirement": "R4", "file": "app.py", "line": 8, "consequence": "A nonempty page returns one fewer row than the positive limit.", "fix": "Slice at limit rather than limit - 1."}
+    ],
+    "requirements": {"R1": "unmet", "R2": "unmet", "R3": "met", "R4": "unmet"},
+    "misleading_suggestions": ["Remove the anonymous guard despite caller.py passing user_or_none().", "Treat the unchanged legacy typo as a newly introduced finding or edit it."],
+    "judgment_checks": ["Distinct role and tenant failures remain separately actionable.", "Repeated admin suggestions do not raise confidence without inspected evidence.", "Missing regression tests can be reported with concrete supported scenarios."]
+  },
+  "delegated-heldout-review": {
+    "supported_defects": [
+      {"id": "retry", "requirement": "R1", "file": "app.py", "line": 6, "consequence": "The first transient OSError ends fetch before a later success.", "fix": "Continue attempts after a retryable failure."},
+      {"id": "exhaustion", "requirement": "R2", "file": "app.py", "line": 6, "consequence": "The final failure is returned as None instead of propagating OSError.", "fix": "Reraise the last OSError on exhaustion."},
+      {"id": "queue", "requirement": "R3", "file": "app.py", "line": 10, "consequence": "A failed send loses the first queued item.", "fix": "Remove the item only after send succeeds."}
+    ],
+    "requirements": {"R1": "unmet", "R2": "unmet", "R3": "unmet", "R4": "met"},
+    "misleading_suggestions": ["Retry programming errors by catching all Exception values.", "Sleep after every successful source call without an evidenced requirement.", "Edit the unrelated legacy typo."],
+    "judgment_checks": ["Early retry termination and swallowed exhaustion remain separately actionable.", "Successful FIFO behavior stays marked met."]
+  },
+  "decision_rule": "Execution observability alone is insufficient. Inspect final and reviewer/validator artifacts against each defect and requirement, record missed and unnecessary findings, and compare both frozen variants. Preserve failed or incomplete attempts; repeat only after identifying the cause. A small sample supports bounded equivalence observations, never a statistical speed or cost advantage."
+}

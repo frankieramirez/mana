@@ -1,7 +1,8 @@
 # Frontier workflow improvements
 
-Status: packages A and B merged; C prepared as a draft with focused measurements; D remains proposed
+Status: packages A through C merged; B/C delegated review gate met in bounded cases; D remains proposed
 Date: 2026-09-29
+Updated: 2026-09-30
 Baseline: mana 0.35.0, commit aec8fa6
 
 ## Outcome
@@ -320,3 +321,65 @@ Entry load fell in every focused scenario. Total complete instruction bytes rose
 Validation includes the workflow fixture/grader suite (23 offline tests), the real merge suite (19 tests), reliability/package deletion checks (13 tests), shared-asset check mode, the complete repository validator, and all 31 similarity comparisons against upstream `414e9d6be166c15d9fb10595204530802ad007ef`. The largest similarity ratio is 0.24. New comparisons include the moved procedures; missing comparison files now fail the command. The initial measurement-function, narrow-query, and permissive-double tests each failed on the relevant old behavior before their fixes.
 
 The PR is prepared as a draft, with the full delegated-equivalence gate visibly unmet. This follows the user's instruction to ship reviewable package C work while clearly reporting unmet acceptance criteria. It does not promote package C as behaviorally equivalent across the complete review workflow. Package B's behavior remains preserved by source and deterministic checks; package D has not begun.
+
+
+## B/C delegated evaluation follow-up
+
+The earlier implementation records describe the evidence available at shipment. Package B merged in PR #59 and package C merged in PR #61. This follow-up starts at `06fdc89` and evaluates frozen B (`e1f8417865b778faf0cc61297375f18551fc1c27`) and C (`06fdc89`) payloads. Package D has not begun.
+
+The maintained record is [`package-bc-results.json`](../../evals/workflows/package-bc-results.json), with the adapter and reproduction procedure in [`delegated-evaluation.md`](../../evals/workflows/delegated-evaluation.md). The original focused record and all its attempts remain unchanged. Portable archives retain the new raw parent events and full persisted family histories, with reviewer artifacts and exact runner snapshots. Per-file digests can be verified offline.
+
+### Adapter and containment evidence
+
+A saved CLI invocation plus the documented app-server descendant and paginated-history interfaces is sufficient for this host. The collector reads history without starting or resuming model turns. It attributes commands and exit outcomes to each parent or child, retains final messages, and rejects incomplete histories. The offline audit also checks parent-stream parity, distinct reviewer and validator threads, and reviewer completion before the first merge.
+
+The initial pilot used one parent and one child with a 180-second timeout. Both ran the immutable probe: outside reads and command networking were denied; installed instruction and tool-double writes were denied; fixture artifact writes succeeded. Every parent and child repeats that probe in the review runs. The host permission profile, model and reasoning settings match across each pair.
+
+The first full baseline completed but was initially rejected because the collector treated nullable command output as a missing exit outcome. Its parent CLI stream established that silent commands can become null output in stored history. The adapter now preserves output availability explicitly while requiring exit outcomes; no missing text is invented. The original rejection and each offline audit remain recorded. All substantive probe and inspection outputs are available, as are the final artifacts. This was an adapter interpretation correction, not a skill behavior fix.
+
+Host-reported model and reasoning metadata are retained. They do not establish resolved backend identity. Separate child token usage is unavailable; the parent CLI turn usage must not be called complete family usage. Complete-content reference matches and command-output bytes are lower bounds, excluding missing output, partial retrieval and some delegation prompt context. No price estimate or statistically reliable performance claim follows.
+
+### Paired observations
+
+The first group permits two parent invocations, each with a 900-second process timeout and an instruction limit of ten children. The host caps active threads at four including the parent. It ran baseline then candidate without automatic retries. A second group, defined before execution, permits the same bounds and reverses variant order for the held-out retry/queue case. The grading rubric was written before outcome inspection. Manual assessment has the variant visible.
+
+The primary pair has identical starting product hashes, normalized requests and normalized host commands. Both report the role-check failure and tenant-isolation failure separately, plus the page off-by-one. Both preserve the anonymous contract, account for all four requirements, reject the misleading suggestions and make no product edits. Every selected reviewer completed before synthesis; a separate validator inspected the code and judged each finding and requirement. The candidate adds a genuine Lore Bard child for local feedback, which limits attribution of cost differences to stage loading alone.
+
+| Scenario | B / C reviewers plus validator | Accepted seeded defects | Requirements | Scope | State |
+|---|---|---|---|---|---|
+| Authorization and pagination | 5 + 1 / 6 + 1 | 3 / 3, distinct role and tenant findings | Same four judgments | Preserved / preserved | Paired outcome passed |
+| Held-out retry and queue | 5 + 1 / 6 + 1 | 3 / 3 failure modes, plus supported test-gap finding | Same four judgments | Preserved / preserved | Paired outcome passed |
+
+| Primary metric | B | C |
+|---|---:|---:|
+| Entry bytes observed | 38,665 | 15,022 |
+| Complete Markdown/JSON bytes, lower bound | 205,432 | 212,383 |
+| Repeated complete retrieval bytes | 69,327 | 65,443 |
+| Observed command-output bytes, all collected threads | 368,122 | 404,965 |
+| Seconds, including setup and collection | 750.05 | 796.53 |
+| Parent CLI input tokens | 1,716,367 | 2,029,232 |
+| Parent CLI output tokens | 10,796 | 11,704 |
+
+Entry load fell. Total observed instruction bytes, output bytes and parent-turn usage rose in this pair; latency also rose. The roster difference and single sample prevent attributing those changes solely to the refactor. Exact reference inventories, repeats, thread metadata and usage records are retained per invocation.
+
+The held-out pair also has identical product hashes, normalized requests and host commands. Both preserve retry termination and swallowed exhaustion as distinct failure modes within one finding, with separate requirement mappings and both repair conditions. Both retain queue loss as a separate finding and validate the missing failure-path tests. Both reject catch-all exception handling, unconditional delay and unrelated cleanup. C adds an API-contract reviewer to the shared five core roles.
+
+| Held-out metric | B | C |
+|---|---:|---:|
+| Entry bytes observed | 38,665 | 15,022 |
+| Complete Markdown/JSON bytes, lower bound | 295,225 | 218,701 |
+| Repeated complete retrieval bytes | 159,650 | 77,394 |
+| Observed command-output bytes, all collected threads | 431,378 | 426,224 |
+| Seconds, including setup and collection | 778.91 | 786.36 |
+| Parent CLI input tokens | 2,070,767 | 1,780,287 |
+| Parent CLI output tokens | 11,231 | 10,181 |
+
+### Current gate
+
+The B/C delegated full-review gate is met for these two bounded paired scenarios. All four reviews preserve the seeded failure modes, requirement judgments and product scope. Every selected reviewer is collected before synthesis, and each run has an independent validator. All 32 observed threads, including the pilot family, have their own successful containment probe. Original attempts and adapter rejections remain retained.
+
+Performance is mixed: C has lower entry load in both pairs, higher total observed instruction bytes in the primary pair and lower bytes in the held-out pair. C takes slightly longer in both and selects an extra reviewer in both. Child token totals remain unavailable. These samples support no general speed or cost advantage.
+
+No installed skill payload has changed in this follow-up, so no plugin version bump is needed. Package D has not begun.
+
+Validation: the full repository validator passed, as did all 39 workflow tests. All 350 archived files passed digest verification. The actual command output is retained in `evals/workflows/evidence/validation.txt`. No scan or remedy payload was edited, so the similarity check was not rerun.

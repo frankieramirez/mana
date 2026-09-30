@@ -1,0 +1,8 @@
+{
+  "fixture_product_hashes_equal": true,
+  "normalized_requests_equal": true,
+  "normalized_host_commands_equal": true,
+  "baseline_run": "delegated-review-rdrhg6is",
+  "candidate_run": "delegated-review-j1ygsl9w",
+  "reviewer_workload_limit": "Both cover the same five core roles; C adds an API-contract reviewer. Performance differences cannot be attributed solely to stage loading."
+}
