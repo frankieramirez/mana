@@ -38,7 +38,7 @@ Saved artifacts contain copied skill hashes, raw tool events, responses, startin
 
 ## Authority and recovery extension
 
-Added on 2026-09-29 for the 0.35.1 changes. The three new scenarios have offline fixture and grader coverage only. Synthetic tests exercise an actual local repair commit and rejected push, detect a forced change to the concurrent remote, and check local-only and report-only scope. The suite now has 16 passing tests. These tests execute no agent.
+Added on 2026-09-29 for the 0.36.1 changes. The three new scenarios have offline fixture and grader coverage only. Synthetic tests exercise an actual local repair commit and rejected push, detect a forced change to the concurrent remote, and check local-only and report-only scope. The suite now has 16 passing tests. These tests execute no agent.
 
 The installed CLI is 0.159.2; the live runner accepts only the previously validated 0.155.1. No new live runs or model comparison were performed. Revalidate containment and the event contract before extending that host support, then run matched baseline and candidate scenarios. Reuse of supplied slices and triage choices is currently supported by source inspection; it has no live scenario result in this extension.
 

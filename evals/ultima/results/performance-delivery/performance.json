@@ -1,0 +1,172 @@
+{
+  "lens": "performance",
+  "candidates": [
+    {
+      "title": "Replace per-order export reads with batched item loading",
+      "problem": "Exports issue one item query for every selected order. Source proves repeated database work contrary to the export contract; its latency and production frequency are unknown.",
+      "fix": "Load export items in batches and assemble the existing order response.",
+      "effort": "M",
+      "strength": 100,
+      "instances": [
+        {
+          "file": "api/orders.py",
+          "line": 12,
+          "quote": "    response.write(list_orders(db))"
+        },
+        {
+          "file": "api/orders.py",
+          "line": 2,
+          "quote": "    orders = db.query('SELECT id FROM orders')"
+        },
+        {
+          "file": "api/orders.py",
+          "line": 3,
+          "quote": "    return [{'id': order.id, 'items': db.query('SELECT * FROM items WHERE order_id = ?', order.id)} for order in orders]"
+        }
+      ],
+      "category": "performance-delivery",
+      "evidence_kind": "trace",
+      "impact": "medium",
+      "reach": "local",
+      "root_cause": "list_orders queries items inside the order comprehension",
+      "affected_boundary": "export_orders -> list_orders -> database item reads",
+      "verification": "Proposed: use 0, 1 and 25 orders with mixed item counts; assert equivalent response contents and batched item-query count instead of one query per order. No check ran here.",
+      "decision_status": "violated",
+      "prior_decision": "docs/contracts.md:3",
+      "evidence_status": "static",
+      "action": "plan",
+      "invariant": "Order exports must batch item reads rather than query once per exported order.",
+      "invariant_source": "docs/contracts.md:3",
+      "scenario": "For an export returning N orders, list_orders performs N item reads after the initial order query, with no limit or batch in the enclosing function.",
+      "trace": [
+        {
+          "file": "api/orders.py",
+          "line": 12,
+          "quote": "    response.write(list_orders(db))",
+          "role": "source"
+        },
+        {
+          "file": "api/orders.py",
+          "line": 2,
+          "quote": "    orders = db.query('SELECT id FROM orders')",
+          "role": "boundary"
+        },
+        {
+          "file": "api/orders.py",
+          "line": 3,
+          "quote": "    return [{'id': order.id, 'items': db.query('SELECT * FROM items WHERE order_id = ?', order.id)} for order in orders]",
+          "role": "consumer"
+        }
+      ],
+      "flow": "export_orders passes list_orders(db) to response.write; list_orders selects all order ids then consumes each id through a separate item query. The separate preview function has a LIMIT 5 and does not enclose this export path.",
+      "remediation": [
+        "Choose a bounded batch size compatible with database parameter limits.",
+        "Fetch items for each batch and preserve each order and its items in the existing response shape.",
+        "Verify equivalent results and operation counts on the bounded proposed cases."
+      ],
+      "compatibility": "Preserve order ids, empty item lists and response ordering; leave the accepted preview behavior intact.",
+      "rollback": "Restore the previous list_orders implementation if response compatibility fails; no schema change is needed.",
+      "cost_assessment": "source-hypothesis"
+    },
+    {
+      "title": "Page catalog reads before materializing all products",
+      "problem": "The catalog reads and filters every product to display 20. Supplied synthetic executed evidence attributes 82% of sampled request CPU to materialization and filtering for its single workload; this does not establish production impact.",
+      "fix": "Fetch a bounded public-product page at the store boundary.",
+      "effort": "M",
+      "strength": 100,
+      "instances": [
+        {
+          "file": "api/catalog.py",
+          "line": 1,
+          "quote": "def catalog_page(store, render):"
+        },
+        {
+          "file": "api/catalog.py",
+          "line": 2,
+          "quote": "    products = store.all_products()"
+        },
+        {
+          "file": "api/catalog.py",
+          "line": 4,
+          "quote": "    return render(visible[:20])"
+        }
+      ],
+      "category": "performance-delivery",
+      "evidence_kind": "trace",
+      "impact": "medium",
+      "reach": "local",
+      "root_cause": "catalog_page materializes all products before public filtering and slicing",
+      "affected_boundary": "catalog_page -> store.all_products -> render",
+      "verification": "Proposed: compare current and paged outputs on 0, 19, 20 and 25 public products mixed with private products; assert no private products escape and at most the requested page is returned from the store. A separately authorized replay of the supplied workload should verify bounded materialization; no speedup target or executed result is asserted.",
+      "decision_status": "violated",
+      "prior_decision": "docs/contracts.md:5",
+      "evidence_status": "runtime",
+      "action": "plan",
+      "invariant": "The public catalog page should fetch only the visible page rather than materialize the entire catalog.",
+      "invariant_source": "docs/contracts.md:5",
+      "scenario": "The supplied 100000-product synthetic workload materializes all records and filters public products before the visible first page reaches render.",
+      "trace": [
+        {
+          "file": "api/catalog.py",
+          "line": 1,
+          "quote": "def catalog_page(store, render):",
+          "role": "source"
+        },
+        {
+          "file": "api/catalog.py",
+          "line": 2,
+          "quote": "    products = store.all_products()",
+          "role": "boundary"
+        },
+        {
+          "file": "api/catalog.py",
+          "line": 4,
+          "quote": "    return render(visible[:20])",
+          "role": "consumer"
+        }
+      ],
+      "flow": "catalog_page invokes store.all_products, filters the returned products for public visibility on line 3, then renders the first 20. The supplied profile names these same materialization and filtering steps.",
+      "remediation": [
+        "Define a store page API that filters public products before applying the page limit.",
+        "Switch catalog_page to the bounded API while preserving current ordering and rendering inputs.",
+        "Verify visibility and output equivalence on bounded fixtures before any separately authorized measurement."
+      ],
+      "compatibility": "Store implementation is unavailable; confirm ordering and filtering semantics before choosing its pagination API.",
+      "rollback": "Keep the old store API during rollout and restore catalog_page to it if compatibility checks fail.",
+      "cost_assessment": "measured-bottleneck",
+      "runtime_evidence": "results/catalog-profile.txt:1-7 is synthetic pre-existing executed evidence supplied as fixture data; no benchmark ran during this audit.",
+      "measurement": {
+        "file": "results/catalog-profile.txt",
+        "line": 6,
+        "quote": "result: store.all_products materialized 100000 records; profiler attributed 82% of sampled request CPU to materialization and public filtering in catalog_page",
+        "command": "python bench_catalog.py --rows 100000 --page-size 20",
+        "revision": "fixture-catalog-v1 (api/catalog.py matches the measured source snapshot)",
+        "environment": "isolated local synthetic store, single caller, warm process",
+        "workload": "100000 products, 50000 public, first page of 20",
+        "result": "store.all_products materialized 100000 records; profiler attributed 82% of sampled request CPU to materialization and public filtering in catalog_page",
+        "attribution": "The supplied synthetic record explicitly attributes CPU samples to materialization and public filtering in catalog_page and states the source snapshot matches api/catalog.py; raw profiler data and benchmark implementation are unavailable."
+      }
+    }
+  ],
+  "residual_risks": [
+    "Store and database implementations, actual callers beyond the fixture, production workloads, and raw profile evidence are unavailable. The supplied measurement is synthetic fixture data, not independently reproduced."
+  ],
+  "coverage": {
+    "status": "partial",
+    "files_read": 5,
+    "dirs_skipped": [
+      "ci"
+    ],
+    "notes": [
+      "Read README.md, docs/contracts.md, api/orders.py, api/catalog.py and results/catalog-profile.txt.",
+      "Inspected complete export/list_orders and catalog_page function bodies for bounds, batching and caches; none encloses the export item reads in supplied source.",
+      "Negative case: preview uses LIMIT 5 at api/orders.py:7 and its up-to-six-query tradeoff is accepted at docs/contracts.md:4, so no preview candidate.",
+      "Static inspection only in this session; catalog runtime classification refers exclusively to supplied synthetic pre-existing executed evidence."
+    ],
+    "absent_scope": [],
+    "unavailable_scope": [
+      "Database and store implementations",
+      "Production measurements and raw benchmark implementation/results"
+    ]
+  }
+}

@@ -376,7 +376,9 @@
         "references/lenses/design-system.md",
         "references/lenses/interaction-states.md",
         "scripts/tickets.sh",
-        "scripts/ultima.sh"
+        "scripts/ultima.sh",
+        "references/lenses/delivery.md",
+        "references/lenses/performance.md"
       ],
       "smoke": [
         {

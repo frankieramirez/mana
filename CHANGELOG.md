@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.35.1
+## 0.36.1
 
 - Honor user instructions and prior authorization consistently across skill workflows. Reuse supplied review actions, slices, and triage decisions without requiring special tokens or repeated confirmation. Keep local review fixes separate from permission to commit or push. On a rejected repair push, preserve the local commit and leave fix threads open for separate history recovery. Add focused workflow scenarios and offline grader coverage.
+
+## 0.36.0
+
+- Add optional Performance & Delivery audits with separate performance and build/deployment specialists. Discover execution and release boundaries without running project commands, distinguish source cost hypotheses from attributable existing measurements, and preserve examined-scope gaps in the offline report. Add synthetic cost and release fixtures with independent specialist evaluation.
 
 ## 0.35.0
 

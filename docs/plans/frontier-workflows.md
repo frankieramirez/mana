@@ -206,7 +206,7 @@ The original proposal was checked against the source, shared-asset ownership, pa
 
 ## Package A implementation record
 
-The user invoked the implementation workflow on 2026-09-29. This first package changes 15 authority paragraphs, resolves review actions from ordinary requests, reuses supplied slicing and triage decisions, and removes the contradictory repair rebase fallback. Version 0.35.1 records the behavior change. Packages B through D are outside this change.
+The user invoked the implementation workflow on 2026-09-29. This first package changes 15 authority paragraphs, resolves review actions from ordinary requests, reuses supplied slicing and triage decisions, and removes the contradictory repair rebase fallback. Version 0.36.1 records the behavior change. Packages B through D are outside this change.
 
 The baseline skill payload was saved before editing at commit `aec8fa61e174cc9fa4a1faccbbd0caa3c854b369`. No shared script or generated asset was changed. Existing package contracts still describe the same installed files, so no inventory change was needed.
 
@@ -222,3 +222,5 @@ The baseline skill payload was saved before editing at commit `aec8fa61e174cc9fa
 The workflow dataset now contains 11 cases and its offline suite has 16 tests. The full repository validator passed. All 23 similarity comparisons were present against upstream revision `414e9d6be166c15d9fb10595204530802ad007ef`; the highest ratio was 0.24, below the 0.30 limit.
 
 The installed Codex CLI is 0.159.2, while the live runner supports only the validated 0.155.1. Live baseline and candidate runs were not attempted. Revalidate containment and event handling before expanding host support. This package supplies reviewable instruction corrections and offline scenarios; it establishes no frontier-model performance advantage or live reliability estimate.
+
+The PR preflight found base commit `a84a35fc8ee6a054d38120915f7a1726a5fc3927`, which added Performance & Delivery audits. That base was merged without rewriting history. Its changes were preserved and this package version was advanced to 0.36.1. Validation was rerun against the combined tree before shipping.
