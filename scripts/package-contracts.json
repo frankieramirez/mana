@@ -142,12 +142,21 @@
         "references/checks.md",
         "references/sources.md",
         "references/weaver.md",
-        "scripts/conflict-state"
+        "scripts/conflict-state",
+        "references/pr-target.md",
+        "scripts/prepare-pr.sh"
       ],
       "smoke": [
         {
           "script": "scripts/conflict-state",
           "args": [],
+          "exit": 0
+        },
+        {
+          "script": "scripts/prepare-pr.sh",
+          "args": [
+            "--help"
+          ],
           "exit": 0
         }
       ],
