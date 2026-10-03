@@ -86,40 +86,33 @@ Read `git status` as a second look. A target is the only reason to start a merge
 
 ### Starting from a target
 
-Every check here is a stop, reported in one line, with the tree untouched.
+A failed check stops the run. Failures before a switch preserve the starting checkout. Failures after a switch report the actual current branch or detached HEAD and the starting checkout; the checkout can already have moved. Never roll it back automatically.
 
-1. `git status --porcelain` prints anything: stop. Git refuses to merge into a dirty tree, and so does this skill.
+PR metadata and user targets are data. Pass them as separate arguments, or read them into variables and use quoted variable expansions. Never interpolate raw values into executable shell text, use `eval`, or source helper output. Double quotes around a substituted literal still allow command substitution; quoted variable expansions keep the value as data.
+
+1. `git status --porcelain` prints anything: stop.
 2. Resolve the base ref.
-   - PR number or URL: `gh pr view <n> --json state,baseRefName,headRefName,isCrossRepository,url`. A PR that is not `OPEN` is a stop. So is `isCrossRepository: true`, because the head lives on a fork and this skill pushes only to `origin`. So is a `url` whose `OWNER/REPO` is not the repository `git remote get-url origin` points at: name both, because every fetch and push below goes to `origin`. So is a `headRefName` or `baseRefName` with any character outside `A-Za-z0-9._/-`: name the branch, because both names go into shell commands below. The base is `baseRefName`. When `headRefName` is not `git branch --show-current`, move to it (below) before step 3.
-   - `base:<ref>`: use the ref as given. No fetch.
-   - Branch name: that branch. Fetch it.
-3. `git fetch --no-tags origin <base>` for a PR or branch target. The ref to merge is `origin/<base>`.
-4. `git merge --no-edit <ref>`.
+   - PR number or URL: load `references/pr-target.md` at this stage. Run the bundled preparation helper with the target in `mend_target`:
+
+     ```bash
+     mend_prepared=$(bash "<SKILL_DIR>/scripts/prepare-pr.sh" "$mend_target")
+     ```
+
+     A non-zero exit is a stop. Read its output as data using the reference's parser. It validates the PR against origin's fetch and push repositories, selects the head, and fetches the base. Keep `mend_push_ref` for every PR target, including when the head was already current. Continue at step 4.
+   - `base:<ref>`: resolve the user's ref to a commit with `git rev-parse --verify --end-of-options "${mend_target#base:}^{commit}"` and keep the result as `mend_base_ref`. No fetch.
+   - Branch name: validate with `git check-ref-format "refs/heads/$mend_target"`, then fetch it in step 3.
+3. For a branch target, run `git fetch --no-tags origin "+refs/heads/$mend_target:refs/remotes/origin/$mend_target"`. A failure is a stop. Set `mend_base_ref` to `refs/remotes/origin/$mend_target` as data.
+4. `git merge --no-edit "$mend_base_ref"`.
 
 ### Moving to the PR's branch
 
-This runs only for a PR target whose head is another branch, after step 1 found a clean tree. Record where the checkout started (`git branch --show-current`, or the short HEAD sha when detached) for the report. Then fetch the head:
+The preparation helper owns this transition. It fetches the head into its full remote-tracking ref even when origin has a restricted fetch mapping. Before moving, it stops for a local head with unpushed commits, using full branch refs so a same-named tag cannot hide them.
 
-```bash
-git fetch --no-tags origin +refs/heads/<head>:refs/remotes/origin/<head>
-```
+When another worktree holds the head, the helper requires that worktree to be clean, records its path and branch tip, and detaches here at the fetched head. An existing free local branch is switched to and advanced with a fast-forward. A missing branch is created from the fetched head without relying on the remote's tracking configuration. The helper never forces a switch.
 
-The explicit destination writes `origin/<head>` even when the remote's fetch config maps only other branches, as in a single-branch clone, and every row below reads that ref.
+The checkout stays on the selected head when the run ends. Its recorded `push_ref` is the PR head's full branch ref, detached or not. Load `references/pr-target.md` for the output fields and the failure report.
 
-Take the first row that matches the local branch named `<head>`:
-
-| Local `<head>` | Move |
-|----------------|------|
-| Exists and `git rev-list --count origin/<head>..<head>` is not 0 | Stop. Name the branch, the count, and the worktree that holds it, if any. A merge on the remote branch alone would split the PR from those unpushed commits. |
-| Checked out in another worktree (`git worktree list --porcelain` lists `branch refs/heads/<head>` under another path) | `git switch --detach origin/<head>`. Git will not check out one branch in two worktrees. Record that path. |
-| Exists | `git switch <head>`, then `git merge --ff-only origin/<head>` |
-| Missing | `git switch -c <head> origin/<head>` |
-
-A failed switch or fast-forward is a stop. Never pass `--force`, `--discard-changes`, or `-C`.
-
-Whichever row ran, the branch being mended is now `<head>` and its push destination is `origin/<head>` (Stage 6). The checkout stays there when the run ends.
-
-Exit 0 means the merge was clean: load `references/checks.md` and run the project's checks, then go to Stage 6. Report the resulting HEAD under `Commit` and `Resolved: 0 files`. There may be no new commit if the branch was already up to date. Fix only failures caused by this merge, within the merged files and their direct fallout, and commit those fixes before Stage 6. Record pre-existing failures without repairing them.
+When the merge exits 0, it was clean: load `references/checks.md` and run the project's checks, then go to Stage 6. Report the resulting HEAD under `Commit` and `Resolved: 0 files`. There may be no new commit if the branch was already up to date. Fix only failures caused by this merge, within the merged files and their direct fallout, and commit those fixes before Stage 6. Record pre-existing failures without repairing them.
 
 A non-zero exit with unmerged paths is the conflict this skill exists for. Run the script again and continue with Stage 2.
 
@@ -192,9 +185,15 @@ For a direct user invocation, push the completed branch by default after the che
 
 Confirm the operation has ended and the working tree is clean. Failed or unavailable checks hold the push; explain the result and ask whether to push anyway or hold, unless the user explicitly authorized pushing despite those check results. The default push policy does not waive checks. An incomplete operation stays local.
 
-For a PR target, the destination is `origin/<head>` whether or not Stage 1 moved the checkout and whatever upstream is set. Other targets use the current branch's configured upstream, or the remote and branch already selected in the conversation. Confirm that the destination is the branch being mended; a PR's base is not its push destination. Push only this branch with an explicit refspec, such as `git push <remote> HEAD:refs/heads/<branch>`. For a target without a PR head recorded in Stage 1, if HEAD is detached, the destination is missing, or the upstream points to a different branch without an explicit instruction to use it, ask the user for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
+For a PR prepared in Stage 1, use `origin` and its recorded `mend_push_ref` regardless of whether the checkout moved. Immediately before pushing a detached result, run the peer check when `mend_peer_worktree` is non-empty:
 
-After a detached move, run `git rev-list --count origin/<head>..<head>` again just before pushing. A count above 0 means the worktree recorded in Stage 1 committed to `<head>` during the run: hold the push and name that worktree.
+```bash
+bash "<SKILL_DIR>/scripts/prepare-pr.sh" --check-peer "$mend_head" "$mend_peer_worktree" "$mend_peer_tip"
+```
+
+A changed branch tip, dirty peer worktree, or changed peer checkout holds the push. Report the change and reconcile it with that worktree's owner. The check does not reserve the peer branch: concurrent edits during the push can still cause divergence. Never promise that the peer is synchronized or reset it to make a pull succeed.
+
+Push a prepared PR with `git push origin "HEAD:$mend_push_ref"`. For other operations, use the current branch's configured upstream or the destination already authorized in the conversation. Confirm it names the branch being mended and pass an explicit, safely quoted refspec: `git push "$mend_remote" "HEAD:$mend_push_ref"`. A PR's base is never its push destination. If a detached HEAD has no prepared PR destination, the destination is missing, or the upstream points to another branch without authorization, ask for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
 
 If a completed rebase needs a history rewrite, ask before forcing unless that rewrite is already authorized. Use `--force-with-lease` with the expected remote commit verified before the rewrite; if that commit is unavailable, inspect the remote changes and obtain a decision before replacing them. Never use plain `--force`. A rejected push or lease failure is a stop: report the reason and ask how to proceed, without retrying with weaker protection.
 
@@ -204,7 +203,7 @@ Verify that the destination ref matches local HEAD after pushing. Report a faile
 
 ```
 Mend: <operation>  Goal: <one line>
-Branch: <branch mended> [moved from <start>] [detached; <head> is checked out at <path>, which needs `git pull --ff-only origin <head>`]
+Branch: <branch mended> [moved from <start>] [detached; <head> is checked out at <path>; when still on that branch and clean, sync with `git pull --ff-only origin <shell-escaped-head>`; report divergence without resetting]
 Resolved: <n> files
 Continues: <n>  Skips: <n>
 
@@ -221,6 +220,8 @@ Open: <anything left conflicted, or none>
 
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
+| `references/pr-target.md` | Stage 1 and Stage 6 | Prepare a PR target and preserve its push destination |
+| `scripts/prepare-pr.sh` | Stage 1 and Stage 6 | Validate origin, select the head, and check the peer before push |
 | `references/sources.md` | Stage 2 | Recover intent from git and GitHub |
 | `references/weaver.md` | Stage 3 | The agent that resolves hunks |
 | `references/checks.md` | Stage 4 | Find and run the project's checks |

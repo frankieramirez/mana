@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.40.1
+
+- Validate a PR against origin before preparing its head. A bundled Git and gh helper keeps branch values as data and refreshes full remote-tracking refs. Its unpushed-commit check uses branch refs even when a tag shares the name. Retained fixtures cover branch movement and the explicit worktree handoff. Failed preparation reports the actual checkout; detached publication checks the peer for changes.
+
 ## 0.40.0
 
 - `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, a branch name with characters outside `A-Za-z0-9._/-`, or a local head with unpushed commits.
