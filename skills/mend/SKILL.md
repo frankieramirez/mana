@@ -1,6 +1,6 @@
 ---
 name: mend
-description: "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into the current branch and resolve what conflicts. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts."
+description: "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into that pull request's branch and resolve what conflicts, from any checkout. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts."
 argument-hint: "[blank for the in-progress operation | PR number | PR URL | branch | base:<ref>]"
 ---
 
@@ -20,12 +20,12 @@ Honor the user's explicit instructions and decisions already made in this conver
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-Finish the merge, rebase, cherry-pick, or revert that is already in progress. With a pull request, branch, or `base:` target, start the merge on the current branch first. Read both sides of every conflict, keep both intents where they fit, and complete the git operation. Never abort.
+Finish the merge, rebase, cherry-pick, or revert that is already in progress. With a target, start the merge first. A pull request's merge happens on that pull request's branch, and this checkout moves there when it sits on another one. A branch or `base:` target merges into the current branch. Read both sides of every conflict, keep both intents where they fit, and complete the git operation. Never abort.
 
 ## Operating principles
 
-- **Already in progress, or named.** With no argument this skill finishes a conflicted operation and never starts one: no merge state means stop. A target is the one thing that lets it start a merge, and only into the branch that is checked out.
-- **This branch only.** `git checkout`, `git switch`, and `gh pr checkout` are out. A PR whose head is another branch is a stop that names both branches.
+- **Already in progress, or named.** With no argument this skill finishes a conflicted operation and never starts one: no merge state means stop. A target is the one thing that lets it start a merge. A pull request's merge goes into the PR's head branch. Every other target merges into the branch that is checked out.
+- **One switch, to the PR's branch.** A PR whose head is another branch moves this checkout to that head from a clean tree, before the merge (Stage 1, Moving to the PR's branch). Nothing else changes branches. `gh pr checkout`, `git checkout <branch>`, and any forced switch are out.
 - **Always resolve. Never abort.** `git merge --abort`, `git rebase --abort`, `git cherry-pick --abort`, and `git revert --abort` are out.
 - **Both intents stay.** A hunk is two changes talking. Keep both when they commute. When they cannot, keep the change that matches the operation's goal and record the trade-off.
 - **Invent nothing.** The resolved file contains only behavior that already lived on one side or both. No new feature, no drive-by cleanup.
@@ -38,7 +38,7 @@ The argument is the target. It only matters when Stage 1 finds no operation in p
 | Input | Target |
 |-------|--------|
 | none | The in-progress operation |
-| number or PR URL | That pull request's base, if the PR's head is this branch |
+| number or PR URL | That pull request's base, merged into the PR's head branch |
 | `base:<ref>` | That ref, on the current checkout, with no `gh` call |
 | branch name | That branch, fetched from `origin` |
 
@@ -90,11 +90,32 @@ Every check here is a stop, reported in one line, with the tree untouched.
 
 1. `git status --porcelain` prints anything: stop. Git refuses to merge into a dirty tree, and so does this skill.
 2. Resolve the base ref.
-   - PR number or URL: `gh pr view <n> --json baseRefName,headRefName`. `headRefName` must equal `git branch --show-current`; otherwise stop and name both branches. The base is `baseRefName`.
+   - PR number or URL: `gh pr view <n> --json state,baseRefName,headRefName,isCrossRepository`. A PR that is not `OPEN` is a stop. So is `isCrossRepository: true`, because the head lives on a fork and this skill pushes only to `origin`. The base is `baseRefName`. When `headRefName` is not `git branch --show-current`, move to it (below) before step 3.
    - `base:<ref>`: use the ref as given. No fetch.
    - Branch name: that branch. Fetch it.
 3. `git fetch --no-tags origin <base>` for a PR or branch target. The ref to merge is `origin/<base>`.
 4. `git merge --no-edit <ref>`.
+
+### Moving to the PR's branch
+
+This runs only for a PR target whose head is another branch, after step 1 found a clean tree. Record where the checkout started (`git branch --show-current`, or the short HEAD sha when detached) for the report. Then fetch the head:
+
+```bash
+git fetch --no-tags origin <head>
+```
+
+Take the first row that matches the local branch named `<head>`:
+
+| Local `<head>` | Move |
+|----------------|------|
+| Exists and `git rev-list --count origin/<head>..<head>` is not 0 | Stop. Name the branch, the count, and the worktree that holds it, if any. A merge on the remote branch alone would split the PR from those unpushed commits. |
+| Checked out in another worktree (`git worktree list --porcelain` lists `branch refs/heads/<head>` under another path) | `git switch --detach origin/<head>`. Git will not check out one branch in two worktrees. Record that path. |
+| Exists | `git switch <head>`, then `git merge --ff-only origin/<head>` |
+| Missing | `git switch --track origin/<head>` |
+
+A failed switch or fast-forward is a stop. Never pass `--force`, `--discard-changes`, or `-C`.
+
+Whichever row ran, the branch being mended is now `<head>` and its push destination is `origin/<head>` (Stage 6). The checkout stays there when the run ends.
 
 Exit 0 means the merge was clean: load `references/checks.md` and run the project's checks, then go to Stage 6. Report the resulting HEAD under `Commit` and `Resolved: 0 files`. There may be no new commit if the branch was already up to date. Fix only failures caused by this merge, within the merged files and their direct fallout, and commit those fixes before Stage 6. Record pre-existing failures without repairing them.
 
@@ -169,7 +190,7 @@ For a direct user invocation, push the completed branch by default after the che
 
 Confirm the operation has ended and the working tree is clean. Failed or unavailable checks hold the push; explain the result and ask whether to push anyway or hold, unless the user explicitly authorized pushing despite those check results. The default push policy does not waive checks. An incomplete operation stays local.
 
-Use the current branch's configured upstream, or the remote and branch already selected in the conversation. Confirm that the destination is the branch being mended; a PR's base is not its push destination. Push only this branch with an explicit refspec, such as `git push <remote> HEAD:refs/heads/<branch>`. If HEAD is detached, the destination is missing, or the upstream points to a different branch without an explicit instruction to use it, ask the user for the destination or whether to hold. Do not guess or change branches.
+Use the current branch's configured upstream, or the remote and branch already selected in the conversation. After a move to the PR's branch, the destination is `origin/<head>`, detached or not. Confirm that the destination is the branch being mended; a PR's base is not its push destination. Push only this branch with an explicit refspec, such as `git push <remote> HEAD:refs/heads/<branch>`. If HEAD is detached without a PR head recorded in Stage 1, the destination is missing, or the upstream points to a different branch without an explicit instruction to use it, ask the user for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
 
 If a completed rebase needs a history rewrite, ask before forcing unless that rewrite is already authorized. Use `--force-with-lease` with the expected remote commit verified before the rewrite; if that commit is unavailable, inspect the remote changes and obtain a decision before replacing them. Never use plain `--force`. A rejected push or lease failure is a stop: report the reason and ask how to proceed, without retrying with weaker protection.
 
@@ -179,6 +200,7 @@ Verify that the destination ref matches local HEAD after pushing. Report a faile
 
 ```
 Mend: <operation>  Goal: <one line>
+Branch: <branch mended> [moved from <start>] [detached; <head> is checked out at <path>, which needs `git pull --ff-only`]
 Resolved: <n> files
 Continues: <n>  Skips: <n>
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.40.0
+
+- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. Fork PRs, closed PRs, and a local head with unpushed commits stay a stop.
+
 ## 0.39.1
 
 - Keep portal run state and workspace checks in the current repository when Git environment variables are inherited. Parse numeric and URL claim targets in workflow fixtures, reject malformed claims, and record unexpected grading errors as failures.
