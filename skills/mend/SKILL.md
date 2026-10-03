@@ -90,7 +90,7 @@ Every check here is a stop, reported in one line, with the tree untouched.
 
 1. `git status --porcelain` prints anything: stop. Git refuses to merge into a dirty tree, and so does this skill.
 2. Resolve the base ref.
-   - PR number or URL: `gh pr view <n> --json state,baseRefName,headRefName,isCrossRepository`. A PR that is not `OPEN` is a stop. So is `isCrossRepository: true`, because the head lives on a fork and this skill pushes only to `origin`. The base is `baseRefName`. When `headRefName` is not `git branch --show-current`, move to it (below) before step 3.
+   - PR number or URL: `gh pr view <n> --json state,baseRefName,headRefName,isCrossRepository,url`. A PR that is not `OPEN` is a stop. So is `isCrossRepository: true`, because the head lives on a fork and this skill pushes only to `origin`. So is a `url` whose `OWNER/REPO` is not the repository `git remote get-url origin` points at: name both, because every fetch and push below goes to `origin`. So is a `headRefName` or `baseRefName` with any character outside `A-Za-z0-9._/-`: name the branch, because both names go into shell commands below. The base is `baseRefName`. When `headRefName` is not `git branch --show-current`, move to it (below) before step 3.
    - `base:<ref>`: use the ref as given. No fetch.
    - Branch name: that branch. Fetch it.
 3. `git fetch --no-tags origin <base>` for a PR or branch target. The ref to merge is `origin/<base>`.
@@ -101,8 +101,10 @@ Every check here is a stop, reported in one line, with the tree untouched.
 This runs only for a PR target whose head is another branch, after step 1 found a clean tree. Record where the checkout started (`git branch --show-current`, or the short HEAD sha when detached) for the report. Then fetch the head:
 
 ```bash
-git fetch --no-tags origin <head>
+git fetch --no-tags origin +refs/heads/<head>:refs/remotes/origin/<head>
 ```
+
+The explicit destination writes `origin/<head>` even when the remote's fetch config maps only other branches, as in a single-branch clone, and every row below reads that ref.
 
 Take the first row that matches the local branch named `<head>`:
 
@@ -111,7 +113,7 @@ Take the first row that matches the local branch named `<head>`:
 | Exists and `git rev-list --count origin/<head>..<head>` is not 0 | Stop. Name the branch, the count, and the worktree that holds it, if any. A merge on the remote branch alone would split the PR from those unpushed commits. |
 | Checked out in another worktree (`git worktree list --porcelain` lists `branch refs/heads/<head>` under another path) | `git switch --detach origin/<head>`. Git will not check out one branch in two worktrees. Record that path. |
 | Exists | `git switch <head>`, then `git merge --ff-only origin/<head>` |
-| Missing | `git switch --track origin/<head>` |
+| Missing | `git switch -c <head> origin/<head>` |
 
 A failed switch or fast-forward is a stop. Never pass `--force`, `--discard-changes`, or `-C`.
 
@@ -190,7 +192,9 @@ For a direct user invocation, push the completed branch by default after the che
 
 Confirm the operation has ended and the working tree is clean. Failed or unavailable checks hold the push; explain the result and ask whether to push anyway or hold, unless the user explicitly authorized pushing despite those check results. The default push policy does not waive checks. An incomplete operation stays local.
 
-Use the current branch's configured upstream, or the remote and branch already selected in the conversation. After a move to the PR's branch, the destination is `origin/<head>`, detached or not. Confirm that the destination is the branch being mended; a PR's base is not its push destination. Push only this branch with an explicit refspec, such as `git push <remote> HEAD:refs/heads/<branch>`. If HEAD is detached without a PR head recorded in Stage 1, the destination is missing, or the upstream points to a different branch without an explicit instruction to use it, ask the user for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
+For a PR target, the destination is `origin/<head>` whether or not Stage 1 moved the checkout and whatever upstream is set. Other targets use the current branch's configured upstream, or the remote and branch already selected in the conversation. Confirm that the destination is the branch being mended; a PR's base is not its push destination. Push only this branch with an explicit refspec, such as `git push <remote> HEAD:refs/heads/<branch>`. For a target without a PR head recorded in Stage 1, if HEAD is detached, the destination is missing, or the upstream points to a different branch without an explicit instruction to use it, ask the user for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
+
+After a detached move, run `git rev-list --count origin/<head>..<head>` again just before pushing. A count above 0 means the worktree recorded in Stage 1 committed to `<head>` during the run: hold the push and name that worktree.
 
 If a completed rebase needs a history rewrite, ask before forcing unless that rewrite is already authorized. Use `--force-with-lease` with the expected remote commit verified before the rewrite; if that commit is unavailable, inspect the remote changes and obtain a decision before replacing them. Never use plain `--force`. A rejected push or lease failure is a stop: report the reason and ask how to proceed, without retrying with weaker protection.
 
@@ -200,7 +204,7 @@ Verify that the destination ref matches local HEAD after pushing. Report a faile
 
 ```
 Mend: <operation>  Goal: <one line>
-Branch: <branch mended> [moved from <start>] [detached; <head> is checked out at <path>, which needs `git pull --ff-only`]
+Branch: <branch mended> [moved from <start>] [detached; <head> is checked out at <path>, which needs `git pull --ff-only origin <head>`]
 Resolved: <n> files
 Continues: <n>  Skips: <n>
 

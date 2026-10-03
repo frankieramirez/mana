@@ -2,7 +2,7 @@
 
 ## 0.40.0
 
-- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. Fork PRs, closed PRs, and a local head with unpushed commits stay a stop.
+- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, a branch name with characters outside `A-Za-z0-9._/-`, or a local head with unpushed commits.
 
 ## 0.39.1
 
