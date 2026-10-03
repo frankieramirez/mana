@@ -2,7 +2,7 @@
 
 ## 0.40.2
 
-- Mend's PR helper records its fields in the checkout's git directory, and later steps read them with `--field`, since shell variables do not survive between tool calls. `--push` publishes a prepared PR after rechecking the checkout and the peer worktree, then verifies the remote ref. Non-PR pushes take the destination from the upstream again. The helper runs on macOS bash 3.2, keeps a branch name ending in `=` intact, and resolves SSH host aliases through `ssh -G`. New fixtures cover the unfinished-operation, invalid-name, extra push URL, alias, and push guards.
+- Mend's PR helper records its fields in the checkout's git directory, and later steps read them with `--field`, since shell variables do not survive between tool calls. `--push` publishes a prepared PR after rechecking the checkout and the peer worktree, then verifies the remote ref. An already-current head fast-forwards to origin before the merge and stops when the two have diverged. Non-PR pushes take the destination from the upstream again. The helper runs on macOS bash 3.2, keeps a branch name ending in `=` intact, and resolves SSH host aliases through `ssh -G`. New fixtures cover the unfinished-operation, invalid-name, extra push URL, alias, and push guards.
 
 ## 0.40.1
 
@@ -10,7 +10,7 @@
 
 ## 0.40.0
 
-- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, or a local head with unpushed commits.
+- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, or a local copy of the head with unpushed commits when it has to move there.
 
 ## 0.39.1
 

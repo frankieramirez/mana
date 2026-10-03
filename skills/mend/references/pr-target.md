@@ -34,7 +34,7 @@ A report that shows a literal command must shell-escape each value, including em
 
 The head fetch explicitly updates `refs/remotes/origin/<head>` and the base fetch explicitly updates `refs/remotes/origin/<base>`. A leading plus in these fetch refspecs refreshes remote-tracking refs after a remote rewrite; it does not force a local branch or a push.
 
-Before moving, the helper counts unpushed commits with full refs. A tag sharing the head's name cannot substitute for the local branch. Another worktree's branch is left in place; this checkout detaches at the fetched head after recording that peer's tip. An existing free branch fast-forwards. A missing branch is created without `--track`, since a narrowed fetch mapping can prevent Git from configuring tracking even when the fetched ref exists. The PR push destination is recorded explicitly instead.
+Before moving, the helper counts unpushed commits with full refs. A tag sharing the head's name cannot substitute for the local branch. Another worktree's branch is left in place; this checkout detaches at the fetched head after recording that peer's tip. An existing free branch fast-forwards. An already-current head fast-forwards too, keeps any unpushed commits of its own for the push, and stops when it has diverged from origin. A missing branch is created without `--track`, since a narrowed fetch mapping can prevent Git from configuring tracking even when the fetched ref exists. The PR push destination is recorded explicitly instead.
 
 A failed switch or later fetch stops and reports both the starting and actual current checkout. Earlier fetches may already have refreshed remote-tracking refs. Never describe such a stop as leaving all Git state untouched.
 

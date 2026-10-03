@@ -134,6 +134,8 @@ command -v git >/dev/null || fail 'git is unavailable'
 command -v gh >/dev/null || fail 'gh is unavailable'
 start=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) || start=$(git rev-parse --short HEAD)
 require_idle
+# A record left from an earlier PR must not authorize a push if this run stops.
+rm -f "$(record_path)" || fail 'cannot clear previous prepared PR'
 metadata=$(gh pr view "$1" --json state,baseRefName,headRefName,isCrossRepository,url \
   --jq '[.state, .baseRefName, .headRefName, .isCrossRepository, .url] | @tsv') || fail 'cannot read PR'
 IFS=$'\t' read -r state base head fork url <<< "$metadata"
@@ -186,6 +188,9 @@ if [[ $(git symbolic-ref --quiet HEAD || true) != "$local_head" ]]; then
     git switch --no-track -c "$head" "$remote_head" || fail 'new branch switch failed'
     mode=created
   fi
+else
+  # Local commits on the current head are the user's work and ride along with the merge.
+  git merge --ff-only "$remote_head" >&2 || fail 'head fast-forward failed; local and origin have diverged'
 fi
 git fetch --no-tags origin "+refs/heads/$base:$remote_base" || fail 'base fetch failed'
 prepared=$(printf 'start=%s\nhead=%s\nbase_ref=%s\npush_ref=%s\nmode=%s\npeer_worktree=%s\npeer_tip=%s\n' \

@@ -269,6 +269,40 @@ expect_value start pr; expect_value mode current; expect_value push_ref refs/hea
 [[ $("$real_git" -C "$work" branch --show-current) == pr ]] || die 'already-current head moved'
 say 'already-current PR with no upstream'
 
+for drift in behind ahead diverged; do
+  setup "current_$drift"
+  "$real_git" -C "$work" switch -q pr
+  if [[ $drift != ahead ]]; then
+    "$real_git" -C "$case_dir/seed" switch -q pr
+    printf 'remote\n' >> "$case_dir/seed/pr.txt"
+    "$real_git" -C "$case_dir/seed" commit -qam remote
+    "$real_git" -C "$case_dir/seed" push -q origin pr
+  fi
+  if [[ $drift != behind ]]; then
+    printf 'local\n' >> "$work/local.txt"
+    "$real_git" -C "$work" add local.txt
+    "$real_git" -C "$work" commit -qm local
+  fi
+  before=$("$real_git" -C "$work" rev-parse HEAD)
+  run prepare
+  case $drift in
+    behind)
+      ok; expect_value mode current
+      [[ $("$real_git" -C "$work" rev-parse HEAD) == $(head_sha pr) ]] || die 'behind current head did not fast-forward'
+      ;;
+    ahead)
+      ok; expect_value mode current
+      [[ $("$real_git" -C "$work" rev-parse HEAD) == "$before" ]] || die 'ahead current head lost its local commit'
+      ;;
+    diverged)
+      stops; has "$err" 'local and origin have diverged'
+      [[ $("$real_git" -C "$work" rev-parse HEAD) == "$before" ]] || die 'diverged current head moved'
+      ;;
+  esac
+  [[ $("$real_git" -C "$work" branch --show-current) == pr ]] || die "$drift current head switched branch"
+  say "already-current PR head, $drift against origin"
+done
+
 setup pushguards
 run helper_in_work --push; stops; has "$err" 'no prepared PR'
 run prepare; ok; expect_value mode created
@@ -288,6 +322,16 @@ printf 'local\n' >> "$work/local.txt"
 run helper_in_work --push; stops; has "$err" 'push rejected'
 [[ -e $(record_file) ]] || die 'rejected push dropped the record'
 say 'push holds without a record, after a move, on a dirty tree, and when origin moved'
+
+setup stalerecord
+run prepare; ok
+[[ -e $(record_file) ]] || die 'prepare did not record'
+export INJECT_BASE_FETCH_FAIL=1
+run prepare; stops; has "$err" 'base fetch failed'
+[[ ! -e $(record_file) ]] || die 'failed prepare kept the previous record'
+run helper_in_work --push; stops; has "$err" 'no prepared PR'
+run helper_in_work --field head; stops; has "$err" 'no prepared PR'
+say 'failed prepare clears the previous record before push'
 
 setup peerpush
 "$real_git" -C "$work" fetch -q origin pr
