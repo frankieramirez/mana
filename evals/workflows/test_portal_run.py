@@ -186,10 +186,10 @@ class TrackerFrontier(unittest.TestCase):
         self.env['PATH'] = str(self.repo / 'bin') + ':/usr/bin:/bin'
         self.env['TMPDIR'] = str(self.repo / 'artifacts')
 
-    def adapter(self, *args, ok=True):
+    def adapter(self, *args, ok=True, body=''):
         result = subprocess.run(['bash', str(self.repo / 'installed/portal/scripts/tickets.sh'),
                                  '--repo', 'fixture/mana', *args], cwd=self.repo, env=self.env,
-                                capture_output=True, text=True)
+                                input=body, capture_output=True, text=True)
         if ok:
             self.assertEqual(result.returncode, 0, result.stderr)
         return result
@@ -299,7 +299,8 @@ class TrackerFrontier(unittest.TestCase):
         self.assertEqual(map_call('frontier','20').split('\t')[0],'21')
         map_call('claim','21')
         (self.repo/'decision.md').write_text('Use stable ids.\n')
-        self.adapter('comment','21')
+        self.adapter('comment','21',body='Use stable ids.\n')
+        self.assertEqual(self.tracker()['issues']['21']['comments'],['Use stable ids.'])
         map_call('close','21')
         data = self.tracker();data['issues']['20']['body']='## Destination\nRecord the stable-id decision in decision.md.\n\n## Decisions so far\nUse stable ids.\n\n## Not yet specified\nNone.\n\n## Completion\nDestination verified in decision.md.\n'
         self.tracker(**data)
