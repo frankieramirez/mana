@@ -32,7 +32,7 @@ Follow these boundaries in order. References supply detail but never change the 
 2. Verify the system map and write the shared context and prior decisions (Stage 2).
 3. Record metadata and announce the roster (Stage 3).
 4. Read `references/lens-template.md`, `references/candidates-schema.json`, and the selected lens files, then dispatch every lens and collect every one before merging (Stage 4).
-5. Read `references/finish-audit.md` and follow it to merge, reconcile, render, and summarize (Stage 5). Never synthesize directly from raw lens artifacts.
+5. Read `references/finish-audit.md` and follow it to merge, reconcile, render, publish, and summarize (Stage 5). Never synthesize directly from raw lens artifacts.
 6. Ask what to do with the candidates, then do it (Stage 6). This is the one blocking question this skill asks.
 
 ## Operating principles
@@ -43,7 +43,7 @@ Follow these boundaries in order. References supply detail but never change the 
 - **Evidence fits the claim.** Repeated patterns need quoted instances. A single architecture flaw can qualify through a sourced invariant and a connected trace.
 - **The report is rendered by the script.** It embeds quoted repo code, and the script escapes it. Never hand-write the HTML.
 - **Report outcomes, not machinery.** Say what was audited, which lenses ran, and what they found. Always deliver the report link; keep intermediate artifact paths, script calls, and JSON shapes quiet unless something failed.
-- **Local artifacts.** The report is a local file. Audit mode does not publish findings or write to a tracker.
+- **Local report, private copy.** The report is a local file. Where the host can publish a Claude Artifact, Stage 5 also publishes it there, private to the user. Audit mode never shares that copy, publishes findings anywhere else, or writes to a tracker.
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script.
 
@@ -123,13 +123,13 @@ Collect **every** spawned lens before Stage 5; a merge on a partial roster is a 
 
 ## Stage 5: Merge, reconcile, render
 
-Read `references/finish-audit.md` in full and follow it: merge pass 1, your reconcile of `merged.json`, merge pass 2, the render, and the terminal summary. Do not improvise a shorter path, and do not write the report by hand.
+Read `references/finish-audit.md` in full and follow it: merge pass 1, your reconcile of `merged.json`, merge pass 2, the render, the private Artifact publish, and the terminal summary. Do not improvise a shorter path, and do not write the report by hand.
 
 ## Stage 6: Choose what happens next
 
 After Stage 5 delivers the report as a clickable link in a user-visible message, ask **one** question, unless `report`, `tickets`, or `fix` already answered it. Shell output and a path inside a code block do not deliver the report. Never defer the link until the user chooses **Report only**. Action tokens skip the question, but still receive the report link before the action starts.
 
-Begin the question with "Review the [project audit report](<absolute report path>), then choose what happens next." Substitute the actual path and retain the link in the preceding message even if the question tool cannot render links. The user must be able to open the report while the choice is pending.
+Begin the question with "Review the [project audit report](<absolute report path>), then choose what happens next." Substitute the actual path and retain the link in the preceding message even if the question tool cannot render links. When Stage 5 recorded an `artifact_url`, add "or the [private Artifact](<artifact url>)" after the report link. The user must be able to open the report while the choice is pending.
 
 Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded) with these three options:
 
@@ -152,6 +152,6 @@ The report is already delivered at this point, so the question is about action, 
 | `references/lens-template.md` | Stage 4 | Dispatch shape, strength anchors, the quote-the-instance gate, the not-a-candidate table |
 | `references/candidates-schema.json` | Stage 4 | JSON output contract passed to each lens |
 | `references/lenses/*.md` | Stage 4 | One file per selected lens |
-| `references/finish-audit.md` | Stage 5, 6 | Merge, reconcile, render, the summary, and the tickets action |
+| `references/finish-audit.md` | Stage 5, 6 | Merge, reconcile, render, the private Artifact publish, the summary, and the tickets action |
 | `references/fix-one.md` | Stage 6, fix | The five checks, the edit rules, the commit rules |
 | `references/agent-brief.md` | Stage 6, tickets | The brief a build session reads |
