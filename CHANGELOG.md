@@ -1,12 +1,16 @@
 # Changelog
 
+## 0.40.2
+
+- Mend's PR helper records its fields in the checkout's git directory, and later steps read them with `--field`, since shell variables do not survive between tool calls. `--push` publishes a prepared PR after rechecking the checkout and the peer worktree, then verifies the remote ref. Non-PR pushes take the destination from the upstream again. The helper runs on macOS bash 3.2, keeps a branch name ending in `=` intact, and resolves SSH host aliases through `ssh -G`. New fixtures cover the unfinished-operation, invalid-name, extra push URL, alias, and push guards.
+
 ## 0.40.1
 
 - Validate a PR against origin before preparing its head. A bundled Git and gh helper keeps branch values as data and refreshes full remote-tracking refs. Its unpushed-commit check uses branch refs even when a tag shares the name. Retained fixtures cover branch movement and the explicit worktree handoff. Failed preparation reports the actual checkout; detached publication checks the peer for changes.
 
 ## 0.40.0
 
-- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, a branch name with characters outside `A-Za-z0-9._/-`, or a local head with unpushed commits.
+- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, or a local head with unpushed commits.
 
 ## 0.39.1
 

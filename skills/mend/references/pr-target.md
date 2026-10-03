@@ -1,30 +1,22 @@
 # Prepare a PR target
 
-Load at Stage 1 for a PR target, and retain its values through Stage 6. The bundled `scripts/prepare-pr.sh` selects the head and fetches the base; it never merges or pushes. Invoke it by its literal skill path as shown in SKILL.md.
+Load at Stage 1 for a PR target, and keep using it through Stage 6. The bundled `scripts/prepare-pr.sh` selects the head, fetches the base, and records both for this checkout; it never merges, and it pushes only through `--push`. Invoke it by its literal skill path as shown in SKILL.md.
 
 ## Input and repository boundary
 
-Keep the user's target in `mend_target` as data through argument passing or a safe input read. The helper uses `gh pr view` to get state, head, base, and the canonical PR URL. That URL identifies the base repository. It resolves origin's fetch URL and every push URL through `gh repo view` and compares their canonical repository URLs with the PR's repository, including the host. An unreadable identity or mismatch stops before any fetch or branch switch. SSH and HTTPS remotes are resolved by gh; no assumption about the configured default repository is used.
+Keep the user's target in `mend_target` as data through argument passing or a safe input read. The helper uses `gh pr view` to get state, head, base, and the canonical PR URL. That URL identifies the base repository. It resolves origin's fetch URL and every push URL through `gh repo view` and compares their canonical repository URLs with the PR's repository, including the host. When gh cannot reach an SSH host alias such as `git@work:owner/repo.git`, the helper maps the alias to its real host with `ssh -G` and resolves that instead. An unreadable identity or mismatch stops before any fetch or branch switch. No assumption about the configured default repository is used.
 
 Closed PRs and fork PRs stop. An unfinished Git operation or dirty starting checkout also stops. These checks do not override an explicit user instruction to prepare only or hold publication.
 
-## Output as data
+## The record
 
-Capture the helper's successful stdout in `mend_prepared`; check its exit status before parsing. Read the fields without evaluating them:
+Shell variables do not survive between an agent's tool calls, and Weaver, the audit, and the checks all run between Stage 1 and the push. So the helper writes its fields to a private file in this checkout's git directory, and every later step reads them back:
 
 ```bash
-while IFS='=' read -r key value; do
-  case "$key" in
-    start) mend_start=$value ;;
-    head) mend_head=$value ;;
-    base_ref) mend_base_ref=$value ;;
-    push_ref) mend_push_ref=$value ;;
-    mode) mend_mode=$value ;;
-    peer_worktree) mend_peer_worktree=$value ;;
-    peer_tip) mend_peer_tip=$value ;;
-  esac
-done <<< "$mend_prepared"
+bash "<SKILL_DIR>/scripts/prepare-pr.sh" --field base_ref
 ```
+
+Use the read inside the command that needs it, as a quoted command substitution such as `"$(bash "<SKILL_DIR>/scripts/prepare-pr.sh" --field base_ref)"`. Never retype a field's value into shell text. The reader splits each line on its first `=`, so a branch name containing or ending in `=` survives. The helper's stdout carries the same fields for the report; never source or evaluate it.
 
 | Field | Meaning |
 |-------|---------|
@@ -36,7 +28,7 @@ done <<< "$mend_prepared"
 | `peer_worktree` | Other checkout holding the head, or empty |
 | `peer_tip` | That local branch's recorded commit, or empty |
 
-Use quoted variable expansions for subsequent Git calls. Do not rebuild shell source from these values. A report containing a literal command must shell-escape each value, including embedded single quotes; inserting a value inside double quotes is insufficient. If a peer path contains a line break, the helper stops because this output format cannot represent it.
+A report that shows a literal command must shell-escape each value, including embedded single quotes; inserting a value inside double quotes is insufficient. If a peer path contains a line break, the helper stops because the record cannot represent it.
 
 ## Movement and failures
 
@@ -46,8 +38,8 @@ Before moving, the helper counts unpushed commits with full refs. A tag sharing 
 
 A failed switch or later fetch stops and reports both the starting and actual current checkout. Earlier fetches may already have refreshed remote-tracking refs. Never describe such a stop as leaving all Git state untouched.
 
-## Peer handoff
+## Publishing and the peer
 
-Run the Stage 6 peer check immediately before publishing a detached result. A changed peer tip or checkout holds publication, as does a dirty peer worktree. This is a check rather than an ownership lock. Changes during a push can still leave the peer divergent; report that limit and preserve its commits.
+`--push` is the only way this skill publishes a prepared PR. It refuses a dirty tree, an unfinished operation, and a checkout that moved since preparation. When a peer worktree holds the head, it reruns the peer check: a changed peer tip or checkout holds publication, as does a dirty peer worktree. This is a check, and it does not lock the peer. Changes during a push can still leave the peer divergent; report that limit and preserve its commits. The push never forces, and the helper verifies that origin's ref matches `HEAD` afterwards. The record stays in place so the report can read it.
 
-After a successful push, the other checkout can catch up with `git pull --ff-only origin "$mend_head"` when it is clean and still holds the named head. The explicit remote and head avoid relying on an absent or different upstream. Inspect its current state before recommending the command. A failed fast-forward is a stop to reconcile, never permission to reset, discard changes, or force a push.
+After a successful push, the other checkout can catch up with `git pull --ff-only origin <shell-escaped-head>` when it is clean and still holds the named head. The explicit remote and head avoid relying on an absent or different upstream. Inspect its current state before recommending the command. A failed fast-forward is a stop to reconcile, never permission to reset, discard changes, or force a push.

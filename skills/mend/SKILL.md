@@ -95,14 +95,20 @@ PR metadata and user targets are data. Pass them as separate arguments, or read 
    - PR number or URL: load `references/pr-target.md` at this stage. Run the bundled preparation helper with the target in `mend_target`:
 
      ```bash
-     mend_prepared=$(bash "<SKILL_DIR>/scripts/prepare-pr.sh" "$mend_target")
+     bash "<SKILL_DIR>/scripts/prepare-pr.sh" "$mend_target"
      ```
 
-     A non-zero exit is a stop. Read its output as data using the reference's parser. It validates the PR against origin's fetch and push repositories, selects the head, and fetches the base. Keep `mend_push_ref` for every PR target, including when the head was already current. Continue at step 4.
+     A non-zero exit is a stop. The helper validates the PR against origin's fetch and push repositories, selects the head, and fetches the base. Its stdout is for the report. It also records the same fields for this checkout, and later steps read them back with `--field`, because shell variables do not survive between an agent's tool calls. Continue at step 4.
    - `base:<ref>`: resolve the user's ref to a commit with `git rev-parse --verify --end-of-options "${mend_target#base:}^{commit}"` and keep the result as `mend_base_ref`. No fetch.
    - Branch name: validate with `git check-ref-format "refs/heads/$mend_target"`, then fetch it in step 3.
 3. For a branch target, run `git fetch --no-tags origin "+refs/heads/$mend_target:refs/remotes/origin/$mend_target"`. A failure is a stop. Set `mend_base_ref` to `refs/remotes/origin/$mend_target` as data.
-4. `git merge --no-edit "$mend_base_ref"`.
+4. Merge. For a PR target, read the base back from the record:
+
+   ```bash
+   git merge --no-edit "$(bash "<SKILL_DIR>/scripts/prepare-pr.sh" --field base_ref)"
+   ```
+
+   For a `base:` or branch target, run `git merge --no-edit "$mend_base_ref"` in the same shell call that set `mend_base_ref`.
 
 ### Moving to the PR's branch
 
@@ -110,7 +116,7 @@ The preparation helper owns this transition. It fetches the head into its full r
 
 When another worktree holds the head, the helper requires that worktree to be clean, records its path and branch tip, and detaches here at the fetched head. An existing free local branch is switched to and advanced with a fast-forward. A missing branch is created from the fetched head without relying on the remote's tracking configuration. The helper never forces a switch.
 
-The checkout stays on the selected head when the run ends. Its recorded `push_ref` is the PR head's full branch ref, detached or not. Load `references/pr-target.md` for the output fields and the failure report.
+The checkout stays on the selected head when the run ends. The record's `push_ref` is the PR head's full branch ref, detached or not. Load `references/pr-target.md` for the fields and the failure report.
 
 When the merge exits 0, it was clean: load `references/checks.md` and run the project's checks, then go to Stage 6. Report the resulting HEAD under `Commit` and `Resolved: 0 files`. There may be no new commit if the branch was already up to date. Fix only failures caused by this merge, within the merged files and their direct fallout, and commit those fixes before Stage 6. Record pre-existing failures without repairing them.
 
@@ -185,15 +191,15 @@ For a direct user invocation, push the completed branch by default after the che
 
 Confirm the operation has ended and the working tree is clean. Failed or unavailable checks hold the push; explain the result and ask whether to push anyway or hold, unless the user explicitly authorized pushing despite those check results. The default push policy does not waive checks. An incomplete operation stays local.
 
-For a PR prepared in Stage 1, use `origin` and its recorded `mend_push_ref` regardless of whether the checkout moved. Immediately before pushing a detached result, run the peer check when `mend_peer_worktree` is non-empty:
+For a PR prepared in Stage 1, publish through the helper whether or not the checkout moved:
 
 ```bash
-bash "<SKILL_DIR>/scripts/prepare-pr.sh" --check-peer "$mend_head" "$mend_peer_worktree" "$mend_peer_tip"
+bash "<SKILL_DIR>/scripts/prepare-pr.sh" --push
 ```
 
-A changed branch tip, dirty peer worktree, or changed peer checkout holds the push. Report the change and reconcile it with that worktree's owner. The check does not reserve the peer branch: concurrent edits during the push can still cause divergence. Never promise that the peer is synchronized or reset it to make a pull succeed.
+It reads the record and holds when the tree is dirty, an operation is unfinished, or the checkout moved since Stage 1. When another worktree holds the head, it reruns the peer check first. Then it pushes `HEAD` to the recorded branch on `origin` without force and verifies the remote ref. A non-zero exit holds the push: report its message. A changed branch tip, dirty peer worktree, or changed peer checkout means that worktree's owner moved during the run, so reconcile with them. The check does not reserve the peer branch: concurrent edits during the push can still cause divergence. Never promise that the peer is synchronized or reset it to make a pull succeed.
 
-Push a prepared PR with `git push origin "HEAD:$mend_push_ref"`. For other operations, use the current branch's configured upstream or the destination already authorized in the conversation. Confirm it names the branch being mended and pass an explicit, safely quoted refspec: `git push "$mend_remote" "HEAD:$mend_push_ref"`. A PR's base is never its push destination. If a detached HEAD has no prepared PR destination, the destination is missing, or the upstream points to another branch without authorization, ask for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
+For other operations, take the remote and branch from the current branch's upstream (`git rev-parse --abbrev-ref --symbolic-full-name '@{u}'`) or from the destination already authorized in the conversation. Confirm it names the branch being mended and push with an explicit refspec, `git push <remote> HEAD:refs/heads/<branch>`, passing each value as its own quoted argument. A PR's base is never its push destination. If a detached HEAD has no prepared PR, the destination is missing, or the upstream points to another branch without authorization, ask for the destination or whether to hold. Do not guess, and change no branch outside Stage 1.
 
 If a completed rebase needs a history rewrite, ask before forcing unless that rewrite is already authorized. Use `--force-with-lease` with the expected remote commit verified before the rewrite; if that commit is unavailable, inspect the remote changes and obtain a decision before replacing them. Never use plain `--force`. A rejected push or lease failure is a stop: report the reason and ask how to proceed, without retrying with weaker protection.
 
@@ -204,6 +210,7 @@ Verify that the destination ref matches local HEAD after pushing. Report a faile
 ```
 Mend: <operation>  Goal: <one line>
 Branch: <branch mended> [moved from <start>] [detached; <head> is checked out at <path>; when still on that branch and clean, sync with `git pull --ff-only origin <shell-escaped-head>`; report divergence without resetting]
+        (for a PR, read <start>, <head>, and <path> with `--field`)
 Resolved: <n> files
 Continues: <n>  Skips: <n>
 
@@ -221,7 +228,7 @@ Open: <anything left conflicted, or none>
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
 | `references/pr-target.md` | Stage 1 and Stage 6 | Prepare a PR target and preserve its push destination |
-| `scripts/prepare-pr.sh` | Stage 1 and Stage 6 | Validate origin, select the head, and check the peer before push |
+| `scripts/prepare-pr.sh` | Stage 1 and Stage 6 | Validate origin, select and record the head, then check the peer and push |
 | `references/sources.md` | Stage 2 | Recover intent from git and GitHub |
 | `references/weaver.md` | Stage 3 | The agent that resolves hunks |
 | `references/checks.md` | Stage 4 | Find and run the project's checks |

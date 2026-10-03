@@ -21,11 +21,11 @@ set -euo pipefail
 if [[ $1 == pr && $2 == view ]]; then
   printf '%s\t%s\t%s\t%s\t%s\n' "${PR_STATE:-OPEN}" "${PR_BASE:-main}" "${PR_HEAD:-pr}" "${PR_FORK:-false}" "${PR_URL:-https://github.com/example/repo/pull/1}"
 elif [[ $1 == repo && $2 == view ]]; then
-  if [[ $3 == "$FIX_ORIGIN" ]]; then
-    printf '%s\n' 'https://github.com/example/repo'
-  else
-    printf '%s\n' 'https://github.com/other/repo'
-  fi
+  case $3 in
+    "$FIX_ORIGIN"|https://github.com/example/repo) printf '%s\n' 'https://github.com/example/repo' ;;
+    *alias*) printf 'error connecting to %s\n' "$3" >&2; exit 1 ;;
+    *) printf '%s\n' 'https://github.com/other/repo' ;;
+  esac
 else
   exit 2
 fi
@@ -49,7 +49,16 @@ if [[ ${INJECT_BASE_FETCH_FAIL:-0} == 1 && $1 == fetch && " $* " == *" +refs/hea
 fi
 exec "$REAL_GIT" "$@"
 GIT
-chmod +x "$root/bin/gh" "$root/bin/git"
+# ssh -G resolves a host alias the way ~/.ssh/config would.
+cat > "$root/bin/ssh" <<'SSH'
+#!/usr/bin/env bash
+[[ $1 == -G ]] || exit 2
+case $2 in
+  work-alias) printf 'hostname github.com\n' ;;
+  *) printf 'hostname %s\n' "$2" ;;
+esac
+SSH
+chmod +x "$root/bin/gh" "$root/bin/git" "$root/bin/ssh"
 
 die() { printf 'FAIL: %s\nstdout: %s\nstderr: %s\n' "$*" "${out:-}" "${err:-}" >&2; exit 1; }
 has() { [[ $1 == *"$2"* ]] || die "expected [$2] in [$1]"; }
@@ -90,6 +99,8 @@ setup() {
   out= err= status=0
 }
 prepare() { (cd "$work" && "$helper" 1); }
+helper_in_work() { (cd "$work" && "$helper" "$@"); }
+record_file() { "$real_git" -C "$work" rev-parse --path-format=absolute --git-path mend-pr-target; }
 head_sha() { "$real_git" --git-dir="$FIX_ORIGIN" rev-parse "refs/heads/$1"; }
 complete_merge_push() {
   (cd "$work" && "$real_git" merge --no-edit "$(value base_ref)" >/dev/null && "$real_git" push -q origin "HEAD:$(value push_ref)")
@@ -104,6 +115,9 @@ run prepare; ok
 expect_value start main; expect_value head pr; expect_value mode created
 expect_value base_ref refs/remotes/origin/main; expect_value push_ref refs/heads/pr
 [[ $("$real_git" -C "$work" branch --show-current) == pr ]] || die 'missing branch was not created'
+run helper_in_work --field push_ref; ok; [[ $out == refs/heads/pr ]] || die 'field did not read the record'
+run helper_in_work --field base_ref; ok; [[ $out == refs/remotes/origin/main ]] || die 'field did not read base_ref'
+run helper_in_work --field nope; stops; [[ $status == 2 ]] || die 'unknown field did not return usage status'
 printf 'main update\n' >> "$case_dir/seed/base.txt"
 "$real_git" -C "$case_dir/seed" switch -q main
 "$real_git" -C "$case_dir/seed" commit -qam main-update
@@ -150,7 +164,11 @@ for peer_upstream in absent wrong; do
   [[ $(value peer_tip) == "$old_pr" ]] || die 'peer tip was not recorded'
   [[ -z $("$real_git" -C "$work" branch --show-current) ]] || die 'peer path did not detach'
   [[ $("$real_git" -C "$work" rev-parse HEAD) == "$old_pr" ]] || die 'detached at wrong head'
-  complete_merge_push
+  # A later shell call: merge from the record, then publish through the helper.
+  (cd "$work" && "$real_git" merge --no-edit "$("$helper" --field base_ref)" >/dev/null)
+  run helper_in_work --push; ok
+  has "$out" "pushed=$("$real_git" -C "$work" rev-parse HEAD)"
+  run helper_in_work --field peer_worktree; ok; [[ $out == "$case_dir/peer" ]] || die 'record unreadable for the report after push'
   [[ $(head_sha pr) == $("$real_git" -C "$work" rev-parse HEAD) ]] || die 'detached push missed PR head'
   [[ $(head_sha pr) != "$old_pr" ]] || die 'base merge did not advance PR head'
   # The peer branch must catch up by explicit ref, independent of its upstream.
@@ -178,7 +196,7 @@ printf 'dirty\n' >> "$work/base.txt"
 run prepare; stops; has "$err" 'dirty checkout'
 say 'dirty checkout stop'
 
-for kind in closed merged fork wrongpr wrongpush; do
+for kind in closed merged fork wrongpr wrongpush extrapush invalidhead invalidbase badalias wrongalias; do
   setup "$kind"
   case $kind in
     closed) export PR_STATE=CLOSED ;;
@@ -186,6 +204,14 @@ for kind in closed merged fork wrongpr wrongpush; do
     fork) export PR_FORK=true ;;
     wrongpr) export PR_URL=https://github.com/other/repo/pull/1 ;;
     wrongpush) "$real_git" -C "$work" remote set-url --push origin "$case_dir/foreign.git" ;;
+    extrapush)
+      "$real_git" -C "$work" remote set-url --push origin "$FIX_ORIGIN"
+      "$real_git" -C "$work" remote set-url --add --push origin "$case_dir/foreign.git"
+      ;;
+    invalidhead) export PR_HEAD=-x ;;
+    invalidbase) export PR_BASE=bad..name ;;
+    badalias) "$real_git" -C "$work" remote set-url --push origin git@unknown-alias:example/repo.git ;;
+    wrongalias) "$real_git" -C "$work" remote set-url --push origin git@work-alias:other/repo.git ;;
   esac
   export FETCH_LOG=$case_dir/fetch.log
   run prepare; stops
@@ -194,9 +220,33 @@ for kind in closed merged fork wrongpr wrongpush; do
   say "$kind stops before fetch or switch"
 done
 
+setup alias
+# A multi-account origin: gh cannot reach the alias host, ssh maps it to github.com.
+"$real_git" -C "$work" remote set-url --push origin git@work-alias:example/repo.git
+run prepare; ok; expect_value mode created
+"$real_git" -C "$work" remote set-url --push origin ssh://git@work-alias/example/repo.git
+"$real_git" -C "$work" switch -q main
+run prepare; ok
+say 'SSH host alias push URLs resolve through ssh config'
+
+for marker in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply; do
+  setup "marker_$marker"
+  marker_path=$("$real_git" -C "$work" rev-parse --path-format=absolute --git-path "$marker")
+  case $marker in
+    rebase-*) mkdir -p "$marker_path" ;;
+    *) "$real_git" -C "$work" rev-parse HEAD > "$marker_path" ;;
+  esac
+  [[ -z $("$real_git" -C "$work" status --porcelain) ]] || die "$marker setup left a dirty index"
+  export FETCH_LOG=$case_dir/fetch.log
+  run prepare; stops; has "$err" 'operation is already in progress'
+  [[ ! -e $FETCH_LOG ]] || die "$marker fetched before stopping"
+  [[ $("$real_git" -C "$work" branch --show-current) == main ]] || die "$marker switched branch"
+done
+say 'unfinished merge, cherry-pick, revert, and rebase stop with a clean index'
+
 # These are valid refnames. Pass them as data through the real helper.
 special_index=0
-for branch in 'semi;colon' "apost'rophe" 'sub$(touch${IFS}marker)' 'double"quote'; do
+for branch in 'semi;colon' "apost'rophe" 'sub$(touch${IFS}marker)' 'double"quote' 'ends=' 'a=b='; do
   special_index=$((special_index + 1))
   setup "special$special_index"
   "$real_git" -C "$case_dir/seed" branch "$branch" pr
@@ -205,6 +255,8 @@ for branch in 'semi;colon' "apost'rophe" 'sub$(touch${IFS}marker)' 'double"quote
   run prepare; ok
   expect_value head "$branch"; expect_value push_ref "refs/heads/$branch"
   [[ ! -e "$work/marker" && ! -e "$case_dir/marker" ]] || die 'branch name executed as shell code'
+  run helper_in_work --field head; ok; [[ $out == "$branch" ]] || die "record lost [$branch], got [$out]"
+  run helper_in_work --field push_ref; ok; [[ $out == "refs/heads/$branch" ]] || die "record push_ref lost [$branch]"
   say "shell-significant branch: $branch"
 done
 
@@ -216,6 +268,47 @@ run prepare; ok
 expect_value start pr; expect_value mode current; expect_value push_ref refs/heads/pr
 [[ $("$real_git" -C "$work" branch --show-current) == pr ]] || die 'already-current head moved'
 say 'already-current PR with no upstream'
+
+setup pushguards
+run helper_in_work --push; stops; has "$err" 'no prepared PR'
+run prepare; ok; expect_value mode created
+"$real_git" -C "$work" switch -q main
+run helper_in_work --push; stops; has "$err" 'checkout moved'
+"$real_git" -C "$work" switch -q pr
+printf 'uncommitted\n' >> "$work/pr.txt"
+run helper_in_work --push; stops; has "$err" 'dirty checkout'
+"$real_git" -C "$work" checkout -q -- pr.txt
+"$real_git" -C "$case_dir/seed" switch -q pr
+printf 'remote moved\n' >> "$case_dir/seed/pr.txt"
+"$real_git" -C "$case_dir/seed" commit -qam remote-moved
+"$real_git" -C "$case_dir/seed" push -q origin pr
+printf 'local\n' >> "$work/local.txt"
+"$real_git" -C "$work" add local.txt
+"$real_git" -C "$work" commit -qm local
+run helper_in_work --push; stops; has "$err" 'push rejected'
+[[ -e $(record_file) ]] || die 'rejected push dropped the record'
+say 'push holds without a record, after a move, on a dirty tree, and when origin moved'
+
+setup peerpush
+"$real_git" -C "$work" fetch -q origin pr
+"$real_git" -C "$work" worktree add -q -b pr "$case_dir/peer" origin/pr
+run prepare; ok; expect_value mode detached
+printf 'peer\n' >> "$case_dir/peer/pr.txt"
+"$real_git" -C "$case_dir/peer" commit -qam peer-during-run
+before=$(head_sha pr)
+run helper_in_work --push; stops; has "$err" 'peer branch changed'
+[[ $(head_sha pr) == "$before" ]] || die 'push ran despite a changed peer'
+say 'detached push holds when the peer committed during the run'
+
+setup newline_peer
+"$real_git" -C "$work" fetch -q origin pr
+if "$real_git" -C "$work" worktree add -q -b pr "$case_dir/peer"$'\n'"line" origin/pr 2>/dev/null; then
+  run prepare; stops; has "$err" 'line break'
+  [[ $("$real_git" -C "$work" branch --show-current) == main ]] || die 'newline peer detached checkout'
+  say 'peer path with a line break stops'
+fi
+
+run "$helper" --check-peer -x "$case_dir/peer" deadbeef; stops; has "$err" 'invalid head branch'
 
 setup switchfail
 export INJECT_SWITCH_FAIL=1
