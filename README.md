@@ -532,15 +532,15 @@ It works on GitHub, Linear, Jira, or local files according to the tracker file. 
 
 ### mend
 
-Finishes a conflicted merge, rebase, cherry-pick, or revert while preserving both sides' intent where possible. Given a pull request, it merges the PR's base into the current branch first and resolves what conflicts.
+Finishes a conflicted merge, rebase, cherry-pick, or revert while preserving both sides' intent where possible. Given a pull request, it merges the PR's base into the PR's branch, resolves what conflicts, and pushes. Run it from any clean checkout: it switches to the PR's branch first, or detaches at the remote branch when another worktree has it checked out.
 
-Weaver resolves the hunks; the skill audits the result, regenerates lockfiles, and runs the project's checks before continuing the git operation. It never aborts the operation, and it never switches branches: a PR whose head is another branch is a stop.
+Weaver resolves the hunks; the skill audits the result, regenerates lockfiles, and runs the project's checks before continuing the git operation. It never aborts the operation. A bundled helper validates the PR against origin and keeps branch values as shell arguments. It stops before moving for a dirty checkout, a dirty peer worktree, a fork or closed PR, a repository mismatch, or unpushed local commits. After a switch, any failure reports the actual checkout. Detached publication checks for changes in the other worktree and names origin and the PR head in its catch-up command.
 
 ```text
 # Finish the conflicted operation
 /mana:mend
 
-# Merge PR 823's base into this branch, then resolve the conflicts
+# Merge PR 823's base into PR 823's branch, from any checkout, then resolve and push
 /mana:mend 823
 
 # Same, without a gh call

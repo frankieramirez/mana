@@ -1,8 +1,20 @@
 # Changelog
 
-## 0.40.0
+## 0.41.0
 
 - Publish the ultima audit report as a private Claude Artifact when the host can, and link it beside the local report. Keep the local file as the fallback for Codex, other agents, and sessions without Artifacts, never change sharing, and skip the publish when the user asks to keep the report local.
+
+## 0.40.2
+
+- Mend's PR helper records its fields in the checkout's git directory, and later steps read them with `--field`, since shell variables do not survive between tool calls. `--push` publishes a prepared PR after rechecking the checkout and the peer worktree, then verifies the remote ref. An already-current head fast-forwards to origin before the merge and stops when the two have diverged. Non-PR pushes take the destination from the upstream again. The helper runs on macOS bash 3.2, keeps a branch name ending in `=` intact, and resolves SSH host aliases through `ssh -G`. New fixtures cover the unfinished-operation, invalid-name, extra push URL, alias, and push guards.
+
+## 0.40.1
+
+- Validate a PR against origin before preparing its head. A bundled Git and gh helper keeps branch values as data and refreshes full remote-tracking refs. Its unpushed-commit check uses branch refs even when a tag shares the name. Retained fixtures cover branch movement and the explicit worktree handoff. Failed preparation reports the actual checkout; detached publication checks the peer for changes.
+
+## 0.40.0
+
+- `/mend <PR>` works from any clean checkout. When the PR's head is another branch, mend switches to it, or detaches at `origin/<head>` when another worktree has it checked out. Then it merges the base, resolves, and pushes to the PR's branch. It still stops on a fork PR, a closed PR, a PR whose repository is not `origin`, or a local copy of the head with unpushed commits when it has to move there.
 
 ## 0.39.1
 
