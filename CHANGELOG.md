@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.40.0
+
+- Publish the ultima audit report as a private Claude Artifact when the host can, and link it beside the local report. Keep the local file as the fallback for Codex, other agents, and sessions without Artifacts, never change sharing, and skip the publish when the user asks to keep the report local.
+
 ## 0.39.1
 
 - Keep portal run state and workspace checks in the current repository when Git environment variables are inherited. Parse numeric and URL claim targets in workflow fixtures, reject malformed claims, and record unexpected grading errors as failures.

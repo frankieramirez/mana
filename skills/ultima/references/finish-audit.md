@@ -1,6 +1,6 @@
 # Finish the audit
 
-Every lens has returned. This file runs the merge, the reconcile, the render, the terminal summary, and the two action modes. Follow it in order.
+Every lens has returned. This file runs the merge, the reconcile, the render, the publish, the terminal summary, and the two action modes. Follow it in order.
 
 ## Merge, pass 1
 
@@ -51,15 +51,26 @@ The script writes `$RUN_DIR/report.html` from `merged.json`, `profile.json`, and
 
 Update `metadata.json` with `report` set to that path.
 
+## Publish
+
+Publish the rendered report as a private Claude Artifact when the host has a tool for it: the `Artifact` tool in a signed-in Claude Code session. The local file stays the report of record; the Artifact is a private copy the user can open on claude.ai.
+
+Skip this section when the user asked to keep the report local or called the project or audit sensitive. Say in one line that the report stayed local and that they can ask to publish it.
+
+Read the whole `report.html` first, since the host publishes only files the session has read. Publish it as rendered, with `icon` set to `audit` and a one-sentence description naming the repository and short sha. Never edit the HTML for the viewer. It already uses inline CSS and in-page links only, which the viewer's content policy allows. Never change who can see it. A new Artifact is private to its owner, and sharing stays with the user through the page's Share menu. Publish once per run; a later run gets its own Artifact.
+
+On success, set `artifact_url` in `metadata.json` to the returned URL. When the tool is absent, record nothing and leave it out of the summary. That covers Codex, other agents, and Claude Code sessions without Artifacts. When the publish is refused or fails, record nothing, keep the local report, and add one line with the reason to the terminal summary. Either way the audit is complete. Do not retry.
+
 ## Terminal summary
 
-Before entering Stage 6, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. Deliver this summary on every run, including explicit `report`, `tickets`, or `fix[:n]` modes that skip the question tool and runs with no candidates. Use the actual absolute path, for example `[Open project audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing or executing an action.
+Before entering Stage 6, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. When `artifact_url` is recorded, put `[Open private Artifact](<artifact url>)` on the line after the report link. Deliver this summary on every run, including explicit `report`, `tickets`, or `fix[:n]` modes that skip the question tool and runs with no candidates. Use the actual absolute path, for example `[Open project audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing or executing an action.
 
 Use this shape as prose, not a fenced code block:
 
 ```
 Project audit: <repo> at <short sha>, scope <path>
 [Open project audit report](<absolute report path>)
+[Open private Artifact](<artifact url>)   (only when published)
 
 Top candidates
   1. <title>  [<id>, <category>, confidence <n>, impact <level>, action <action>]
