@@ -21,6 +21,8 @@ No.
 
 Anyone who is not a member of the workspace.
 
+This narrows pull request discovery only. Issues are triaged whoever opened them.
+
 ## Wayfinding operations
 
 The map is an issue on this team labelled `scry:map`. Tickets are its sub-issues (`parentId`), labelled `scry:<type>`. Blocking is a `blocks` relation from the blocker to the ticket. The frontier is every open sub-issue with no assignee and no open blocker, oldest first. Claim is assignment. Resolve is a comment, a move to the completed state, and one gist line appended to the map's description under Decisions so far.

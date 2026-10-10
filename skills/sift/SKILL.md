@@ -85,7 +85,9 @@ Query the tracker (`list --unlabeled`, then `list` for each state string) and pr
 2. `needs-triage`
 3. `needs-info` where the reporter has spoken since the last triage notes
 
-When PRs are in scope, include external PRs and tag each line `[PR]` or `[issue]`. Discovery keeps only external authors (the tracker file defines who counts). An explicitly named PR is always sifted, author aside.
+Every issue in these buckets gets sifted, whoever opened it. An issue the maintainer, a teammate, or an agent filed is triaged like any other.
+
+When PRs are in scope, add PRs from external authors and tag each line `[PR]` or `[issue]`. The tracker file's `## External authors` section defines who counts, and that filter applies to PRs only. An explicitly named PR is always sifted, author aside.
 
 Show counts and a one-line summary per item. Let the maintainer pick. Under `you-pick`, run Stage 2 on each item in that order instead, and stop after 10.
 
