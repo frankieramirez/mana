@@ -18,6 +18,8 @@ No.
 
 <who counts>
 
+This narrows pull request discovery only. Issues are triaged whoever opened them.
+
 ## Wayfinding operations
 
 <How a map and its tickets are represented, how blocking is recorded, what claiming means, and what resolving writes where. Leave this as "not supported" if the user does not want maps here; the map-walking skill then keeps its maps under .scratch/.>

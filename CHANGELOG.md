@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.41.1
+
+- Sift triages every unlabeled or `needs-triage` issue whoever opened it. The external-author filter was meant for pull requests only, but its wording read as applying to all discovery, so some models skipped issues a maintainer or an agent had filed. The tracker templates now say the `## External authors` section narrows pull request discovery only.
+
 ## 0.41.0
 
 - Publish the ultima audit report as a private Claude Artifact when the host can, and link it beside the local report. Keep the local file as the fallback for Codex, other agents, and sessions without Artifacts, never change sharing, and skip the publish when the user asks to keep the report local.

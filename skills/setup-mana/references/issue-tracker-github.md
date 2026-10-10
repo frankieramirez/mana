@@ -19,6 +19,8 @@ No. Set to `yes` when external pull requests should enter triage as requests wit
 
 Anyone whose `authorAssociation` is `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE`.
 
+This narrows pull request discovery only. Issues are triaged whoever opened them.
+
 ## Wayfinding operations
 
 Default. The map is an issue labelled `scry:map`; tickets are its sub-issues, labelled `scry:<type>`, with `Part of #<map>` as the fallback link. Blocking uses GitHub's issue dependencies, with a `Blocked by: #n` line as the fallback. Claim is assignment. Resolve is a comment, a close, and one gist line on the map. The bundled `map.sh` does all of this.

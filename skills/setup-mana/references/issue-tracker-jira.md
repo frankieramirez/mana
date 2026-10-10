@@ -21,6 +21,8 @@ No.
 
 Anyone without a Jira account on this site.
 
+This narrows pull request discovery only. Issues are triaged whoever opened them.
+
 ## Wayfinding operations
 
 The map is an issue in this project labelled `scry:map`, of a type that can have children (an Epic, or a Task under a project with sub-tasks). Tickets are its children, labelled `scry:<type>`. Blocking is a `Blocks` issue link from the blocker to the ticket. The frontier is every child not in a Done status, with no assignee and no open blocker, oldest first. Claim is assignment. Resolve is a comment, a transition to Done, and one gist line appended to the map's description under Decisions so far.
