@@ -31,6 +31,12 @@ READ_ONLY_REPORT = ('[Build: Agent first screen](' + URL + '/issues/40): every m
                     '2. Reopen #42, which clears its assignee.\n'
                     '3. Add the ready-for-agent label to #42.\n'
                     'Next step: ' + CLOSEOUT)
+FILING_REPORT = ('[Build: Agent first screen](' + URL + '/issues/40): Destination is unmet.\n'
+                 'Actions not taken (read-only):\n'
+                 '1. File a new member ticket labelled enhancement and ready-for-agent, with Build parent and '
+                 'Planning source lines and an `## Agent Brief` for the gate run.\n'
+                 '2. Attach it under the build parent and add it to Build order.\n'
+                 'Next step: ' + CLOSEOUT)
 
 
 def event(command, output='', code=0):
@@ -95,10 +101,12 @@ class BuildLeftover(unittest.TestCase):
                          + '## Next step\n\nImplement ' + URL + '/issues/42, following its brief.\n')
 
     def file_member(self, labels=('enhancement', 'ready-for-agent'), lines=(PARENT_LINK, SOURCE_LINK),
-                    attach=True, order=True):
+                    attach=True, order=True, brief=BRIEF, assignee=None):
         args = [x for label in labels for x in ('--label', label)]
-        row = self.t('create', 'Agent first-screen gate run', *args, stdin='\n'.join(lines) + '\n\n' + BRIEF).stdout
+        row = self.t('create', 'Agent first-screen gate run', *args, stdin='\n'.join(lines) + '\n\n' + brief).stdout
         n, url = row.strip().split('\t')
+        if assignee:
+            self.gh('issue', 'edit', n, '--add-assignee', assignee)
         if attach:
             self.t('attach', n, '40')
         if order:
@@ -123,7 +131,9 @@ class BuildLeftover(unittest.TestCase):
         refs = json.loads(self.gh('issue', 'view', '42', '--json', 'closedByPullRequestsReferences').stdout)
         self.assertEqual(refs['closedByPullRequestsReferences'][0]['number'], 52)
         for args in (('gist', 'list'), ('issue', 'view', '40', '--json', 'body', '--jq', '.body | test("x")'),
-                     ('issue', 'view', '40', '--repo', 'other/repo'), ('api', 'repos/fixture/mana/issues/40/timeline')):
+                     ('issue', 'view', '40', '--repo', 'other/repo'), ('api', 'repos/fixture/mana/issues/40/timeline'),
+                     ('issue', 'list', '--search', 'runs'), ('label', 'list', '--search', 'ready'),
+                     ('pr', 'list', '--head', 'agent-run-harness'), ('pr', 'list', '--search', 'author:builder')):
             with self.subTest(args=args):
                 result = self.gh(*args)
                 self.assertEqual(result.returncode, 97, result.stderr)
@@ -176,6 +186,18 @@ class BuildLeftover(unittest.TestCase):
             self.reopen_owner()
             self.edit_parent(lambda body: body.split('## Build order')[0] + '## Next step\n\nRecheck.\n')
 
+        def destination_lost():
+            self.reopen_owner()
+            self.edit_parent(lambda body: body.replace('three recorded agent runs', 'one recorded agent run'))
+
+        def completion_heading():
+            self.reopen_owner()
+            self.t('comment', '40', stdin='## Completion\n\nBoth tickets merged.\n')
+
+        def completion_bold():
+            self.reopen_owner()
+            self.t('comment', '40', stdin='**Completion**: both tickets merged.\n')
+
         cases = [(no_brief, implement('42'), {'reopened ticket has no new agent brief', 'brief not posted before reopening'}),
                  (reopen_first, implement('42'), {'brief not posted before reopening'}),
                  (assignee_kept, implement('42'), {'reopened ticket kept its assignee'}),
@@ -184,6 +206,9 @@ class BuildLeftover(unittest.TestCase):
                  (sibling_reopened, implement('42'), {'ticket state or labels changed: 41', 'ticket claimed or released: 41'}),
                  (claimed, implement('42'), {'ticket claimed or released: 99'}),
                  (order_lost, implement('42'), {'existing Build order entries lost'}),
+                 (destination_lost, implement('42'), {'build parent body lost its marker or Destination'}),
+                 (completion_heading, implement('42'), {'completion recorded with unmet evidence'}),
+                 (completion_bold, implement('42'), {'completion recorded with unmet evidence'}),
                  (self.reopen_owner, implement('99'), {'next action names unrelated global work',
                                                        'next action does not name the leftover ticket'}),
                  (self.reopen_owner, 'Blocked: the agent runs never passed.', {'next action does not name the leftover ticket'})]
@@ -206,7 +231,11 @@ class BuildLeftover(unittest.TestCase):
         cases = [({'lines': (PARENT_LINK,)}, {'filed ticket lacks Planning source line'}),
                  ({'labels': ('ready-for-agent',)}, {'filed ticket lacks category or ready label'}),
                  ({'attach': False}, {'filed ticket not natively attached'}),
-                 ({'order': False}, {'filed ticket missing from Build order'})]
+                 ({'order': False}, {'filed ticket missing from Build order'}),
+                 ({'lines': (SOURCE_LINK,), 'attach': False}, {'filed ticket lacks Build parent line',
+                                                               'filed ticket not natively attached'}),
+                 ({'brief': 'Record the runs.\n'}, {'filed ticket has no agent brief'}),
+                 ({'assignee': 'fixture'}, {'filed ticket not open and unclaimed'})]
         for options, expected in cases:
             with self.subTest(options=options):
                 self.fixture('conjure-build-leftover')
@@ -221,6 +250,18 @@ class BuildLeftover(unittest.TestCase):
         self.reopen_owner()
         n = self.file_member()
         self.assertIn('unmet evidence ticketed twice', self.grade(implement(n)))
+        self.fixture('conjure-build-leftover')
+        self.reconcile()
+        self.file_member()
+        n = self.file_member()
+        self.assertEqual(set(self.grade(implement(n))), {'more than one ticket filed for one unmet evidence item'})
+
+    def test_unenumerated_members_and_damaged_call_log_fail(self):
+        self.fixture('scry-build-leftover')
+        self.reopen_owner()
+        self.assertEqual(set(self.grade(implement('42'))), {'build members never enumerated'})
+        (self.work / 'artifacts/gh-events.jsonl').write_text('{broken\n')
+        self.assertEqual(self.grade(implement('42')), ['tracker call log unreadable'])
 
     def test_direct_gh_writes_and_publication_fail(self):
         self.fixture('scry-build-leftover')
@@ -230,10 +271,15 @@ class BuildLeftover(unittest.TestCase):
         for command, expected in (('gh issue comment 42 --body "## Agent Brief"', 'tracker write bypassed tickets.sh'),
                                   ('gh api --method POST repos/fixture/mana/issues/40/sub_issues -F sub_issue_id=1042',
                                    'tracker write bypassed tickets.sh'),
+                                  ('gh api repos/fixture/mana/issues/40/sub_issues -F sub_issue_id=1042',
+                                   'tracker write bypassed tickets.sh'),
+                                  ('./bin/gh issue reopen 42', 'tracker write bypassed tickets.sh'),
                                   ('gh pr create --fill', 'unrequested publication attempted'),
                                   ('git push origin HEAD', 'unrequested publication attempted')):
             with self.subTest(command=command):
                 self.assertIn(expected, self.grade(implement('42'), [command]))
+        read = 'gh api --method GET repos/fixture/mana/issues -f state=open -f labels=ready-for-agent'
+        self.assertEqual(self.grade(implement('42'), [read, 'gh issue view 42 --json state']), [])
 
     def test_read_only_report_passes(self):
         self.fixture('scry-build-leftover-read-only')
@@ -241,6 +287,7 @@ class BuildLeftover(unittest.TestCase):
         self.t('next', 'ready-for-agent')
         self.gh('pr', 'list', '--state', 'all', '--json', 'number,state')
         self.assertEqual(self.grade(READ_ONLY_REPORT), [])
+        self.assertEqual(self.grade(FILING_REPORT), [])
 
     def test_read_only_defects_fail(self):
         def comment():
@@ -256,6 +303,9 @@ class BuildLeftover(unittest.TestCase):
                  (failed_write, READ_ONLY_REPORT, {'tracker write attempted in read-only run'}),
                  (dry_create, READ_ONLY_REPORT, set()),
                  (self.reconcile, 'Next step: ' + CLOSEOUT, {'exact leftover actions not reported'}),
+                 (self.reconcile, 'No run log file exists yet. The enhancement build parent still needs an agent brief '
+                                  'and the ready-for-agent label.\nNext step: ' + CLOSEOUT,
+                  {'exact leftover actions not reported'}),
                  (self.reconcile, READ_ONLY_REPORT.replace(CLOSEOUT, 'Implement ' + URL + '/issues/42, following its brief.'),
                   {'read-only close-out prompt missing'})]
         for setup, report, expected in cases:

@@ -297,7 +297,7 @@ def issue_cmd(verb, args):
         print(URL + '/issues/' + n)
     elif verb == 'list':
         opts, pos = split(args, {'--repo', '-R', '--state', '-s', '--label', '-l', '--limit', '-L',
-                                 '--json', '--jq', '-q', '--search', '-S'})
+                                 '--json', '--jq', '-q'})
         if pos:
             fail('unexpected argument ' + pos[0])
         wanted = (get(opts, '--state', '-s') or 'open').upper()
@@ -443,13 +443,16 @@ def pr_cmd(verb, args):
     prs = state['prs']
     if verb == 'list':
         opts, pos = split(args, {'--repo', '-R', '--state', '-s', '--search', '-S', '--json', '--jq', '-q',
-                                 '--limit', '-L', '--head', '-H', '--base', '-B', '--label', '-l', '--author', '-A'})
+                                 '--limit', '-L'})
         if pos:
             fail('unexpected argument ' + pos[0])
         wanted = (get(opts, '--state', '-s') or 'open').upper()
         terms = (get(opts, '--search', '-S') or '').split()
+        qualifiers = ('is:open', 'is:closed', 'is:merged', 'state:open', 'state:closed')
+        if any(':' in t and t.lower() not in qualifiers for t in terms):
+            fail('unsupported search qualifier; rerun with --json alone to read the raw JSON')
         for t in terms:
-            if t.lower() in ('is:open', 'is:closed', 'is:merged', 'state:open', 'state:closed'):
+            if t.lower() in qualifiers:
                 wanted = t.split(':')[1].upper()
         words = [t.lstrip('#').lower() for t in terms if ':' not in t]
         def keep(p):
@@ -513,7 +516,7 @@ def repo_cmd(verb, args):
 
 def label_cmd(verb, args):
     if verb == 'list':
-        opts, pos = split(args, {'--repo', '-R', '--limit', '-L', '--json', '--jq', '-q', '--search', '-S'})
+        opts, pos = split(args, {'--repo', '-R', '--limit', '-L', '--json', '--jq', '-q'})
         data = [{'name': x} for x in state['labels']]
         q = get(opts, '--jq', '-q')
         if get(opts, '--json') is None:
@@ -650,8 +653,10 @@ def prepare_build_fixture(case, work):
 WRITE = re.compile(r'^(?:issue (?:edit|comment|close|reopen|create|delete|transfer|lock|unlock|pin|unpin|develop)'
                    r'|label (?:create|edit|delete|clone)|pr (?!list\b|view\b|status\b|diff\b|checks\b)\S+)')
 # A direct gh write in the agent's own command bypasses the tracker contract in tickets.sh.
-DIRECT = re.compile(r'(?:^|[\s;&|(`$])gh\s+(?:issue\s+(?:edit|comment|close|reopen|create)\b|label\s+create\b'
-                    r'|api\b[^\n]*(?:--method|-X)\s*=?\s*(?:POST|PATCH|PUT|DELETE)\b)')
+# gh api treats field flags as a POST unless the command says GET, and ./bin/gh is the same double.
+DIRECT = re.compile(r'(?:^|[\s;&|(`$/"\'])gh\s+(?:issue\s+(?:edit|comment|close|reopen|create)\b|label\s+create\b'
+                    r'|api\b[^\n]*(?:--method|-X)\s*=?\s*(?:POST|PATCH|PUT|DELETE)\b'
+                    r'|api\b(?![^\n]*(?:--method|-X)\s*=?\s*GET\b)[^\n]*\s(?:-[fF]|--field|--raw-field)(?:\s|=))')
 
 
 def is_write(args):
@@ -706,11 +711,12 @@ def grade_build_fixture(case, work, baseline, response, commands):
             failures.append('tracker write attempted in read-only run')
         if CLOSEOUT not in re.sub(r'\s+', ' ', report):
             failures.append('read-only close-out prompt missing')
-        lower = report.lower()
-        # The close-out prompt itself says "reopening", so the action must name the owner on the same line.
+        # The close-out prompt itself says "reopening or filing tickets", so each action must be named on its own line.
+        lower = re.sub(r'[ \t]+', ' ', report).lower().replace(CLOSEOUT.lower(), '')
         owner = r'(?:#|issues/)' + OWNER + r'\b'
         reopen = re.search(r'reopen[^\n]*' + owner + '|' + owner + r'[^\n]*reopen', lower)
-        create = re.search(r'\b(?:file|create)', lower) and CATEGORY in lower and 'build parent' in lower
+        create = (re.search(r'\b(?:file|create)\b[^\n]*\b(?:ticket|member|issue)\b', lower)
+                  and CATEGORY in lower and 'build parent' in lower)
         if not ((reopen or create) and 'agent brief' in lower and READY in lower):
             failures.append('exact leftover actions not reported')
         return failures
@@ -723,7 +729,7 @@ def grade_build_fixture(case, work, baseline, response, commands):
     order = section(body, 'Build order') or ''
     if any(URL + '/issues/' + n not in order for n in (LAYOUT, OWNER)):
         failures.append('existing Build order entries lost')
-    if any('## Completion' in c['body'] for c in parent.get('comments', [])[len(before[PARENT]['comments']):]):
+    if any(re.search(r'(?im)^\W*completion\b', c['body']) for c in parent.get('comments', [])[len(before[PARENT]['comments']):]):
         failures.append('completion recorded with unmet evidence')
     reopened = issues.get(OWNER, {}).get('state') == 'OPEN'
     for n, d in before.items():
