@@ -210,7 +210,7 @@ fi
 
 Same rebase-or-stop rule as Stage 4. Never force-push.
 
-Capture at least one evidence file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`; see the closing line in `references/body.md`). Then run `scripts/open-pr.sh` with the title, body file, and attaches.
+Capture at least one evidence file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`) only when Stage 3 found every acceptance criterion met and this PR is not a draft waiting on an unmet criterion. Any criterion still unmet or unverified ends the body with a reference line instead (`Refs #42`, `Refs ENG-42`), so the merge leaves the ticket open, and the report's Ticket row names those criteria. `references/body.md` gives each tracker's form under the closing line. Then run `scripts/open-pr.sh` with the title, body file, and attaches.
 
 The script repeats the preflight and checks GitHub after writing. If exit 4 reports conflicts after writing, rerun the preflight command to fetch the current base before using the same resolution procedure. Validate and refresh proof, then push and update the PR. Limit this to two resolution passes per run; continued base movement gets a concrete handoff. Exit 5 means mergeability remains unknown: report the URL and uncertainty without claiming the PR is ready. Existing PRs keep their review state. Clean mergeability applies to the checked snapshot; it does not guarantee future base changes or semantic compatibility.
 
@@ -241,6 +241,7 @@ Write the result as markdown, not as a code block and not as plain indented line
 | **Commit** | sha |
 | **Pushed** | yes, to branch \| no, no upstream \| no, push failed: reason |
 | **PR** | url \| none: no-pr \| none: reason |
+| **Ticket** | closes on merge: line \| stays open: line and unmet criteria \| none: reason |
 | **Mergeability** | clean \| conflicting: files and base \| unknown: reason \| skipped: no-pr |
 | **Evidence** | files and what they demonstrate, or none |
 | **Comment cleanup** | skipped: reason \| deleted count, repairs, and open items |

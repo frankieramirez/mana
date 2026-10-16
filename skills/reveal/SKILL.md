@@ -110,6 +110,7 @@ orca worktree set --worktree active --workspace-status in-review --comment "PR <
 ```
 Reveal: <title>
 PR: <url>
+Ticket: <closes on merge: line | stays open: line and unmet outcomes | none: reason>
 Mergeability: <clean | conflicting: files and base | unknown: reason>
 Attach: <yes | skipped: reason>
 Evidence: <files and what they demonstrate>
