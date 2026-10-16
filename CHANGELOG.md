@@ -2,8 +2,12 @@
 
 ## 0.42.0
 
-- A build effort whose tickets are all closed but whose Destination evidence is unmet no longer strands its remaining work in the parent's Next step prose. The progress check reopens the closed ticket that owns the missing evidence, after posting a fresh agent brief for it, or files a new ticket under the parent and adds it to the build order. The next action then names that ticket. Without write authorization it reports the exact actions instead. `tickets.sh` gains `reopen`, which also clears the assignee so `next` can offer the ticket again, on GitHub, Linear, and Jira.
+- A build effort whose tickets are all closed but whose Destination evidence is unmet no longer strands its remaining work in the parent's Next step prose. The progress check reopens the closed ticket that owns the missing evidence, after posting a fresh agent brief for it, or files a new ticket under the parent and adds it to the build order. The next action then names that ticket. Without write authorization it reports the exact actions instead. `tickets.sh` gains `reopen`, which also clears the assignee so `next` can offer the ticket again, on GitHub, Linear, and Jira. Build progress and cast define the same `reopen` for a Linear or Jira host connector.
 - Scry checks a build parent itself instead of stopping with a prompt nothing could load. It runs the same build progress check in a new Stage 5, closing the parent when its evidence holds. Build tickets still get the implement prompt. Scry now ships `tickets.sh`, `build-progress.md`, and `agent-brief.md`, and cast ships `agent-brief.md` for the same check.
+
+## 0.41.2
+
+- Cast and reveal end a PR body with `Closes #N` only when the PR delivers the whole ticket. A PR that leaves any acceptance criterion unmet or unverified, including a draft that says no run passes yet, ends with a reference line such as `Refs #N`, so merging it leaves the ticket open. Both reports gain a Ticket line naming the unmet criteria. Reveal without a ticket brief keeps closing unless the body records the intended outcome as unmet or unverified.
 
 ## 0.41.1
 
