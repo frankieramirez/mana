@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.41.2
+
+- Cast and reveal end a PR body with `Closes #N` only when the PR delivers the whole ticket. A PR that leaves any acceptance criterion unmet or unverified, including a draft that says no run passes yet, ends with a reference line such as `Refs #N`, so merging it leaves the ticket open. Both reports gain a Ticket line naming the unmet criteria. Reveal without a ticket brief keeps closing unless the body records the intended outcome as unmet or unverified.
+
 ## 0.41.1
 
 - Sift triages every unlabeled or `needs-triage` issue whoever opened it. The external-author filter was meant for pull requests only, but its wording read as applying to all discovery, so some models skipped issues a maintainer or an agent had filed. The tracker templates now say the `## External authors` section narrows pull request discovery only.
