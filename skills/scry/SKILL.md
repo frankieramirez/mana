@@ -1,7 +1,7 @@
 ---
 name: scry
-description: "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, or /scry."
-argument-hint: "[loose idea | map number | ticket number | issue URL] [you-pick] [pr | no-pr]"
+description: "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, check or close out a build effort, or /scry."
+argument-hint: "[loose idea | map number | ticket number | build number | issue URL] [you-pick] [pr | no-pr]"
 disable-model-invocation: true
 ---
 
@@ -53,15 +53,20 @@ Parse tokens, then treat the remainder as the idea, number, or URL.
 - Label `scry:research`, `scry:prototype`, `scry:interrogation`, or `scry:task`: walk its parent map and claim this ticket.
   Treat the legacy label `scry:grilling` as `scry:interrogation` when resuming existing tickets.
 - The same labels under the older `wayfinder:` prefix mean the same thing. Walk them as they are; do not relabel.
-- Any other issue: read its body and labels before doing anything. A body with the exact line `Work kind: build`, a `Build parent:` line, or the ready label (the string `docs/agents/triage-labels.md` maps for `ready-for-agent`, else `ready-for-agent`) marks build work, and charting a map from it is never the answer. Say what the issue is and stop: a build effort wants a progress check, and a build ticket wants to be implemented, so give the prompt `Implement <ticket URL>, following its brief.` or `Check progress and close out the build effort at <parent URL> once the pending work is complete.` Any other issue charts a new map whose destination is informed by that issue.
+- Any other issue: read its body and labels before doing anything. Charting a map from build work is never the answer.
+  - A body with the exact line `Work kind: build` is a build parent. Check its progress and close it out in Stage 5.
+  - A `Build parent:` line or the ready label (the string `docs/agents/triage-labels.md` maps for `ready-for-agent`, else `ready-for-agent`) marks a build ticket. Say what the issue is and stop with the prompt `Implement <ticket URL>, following its brief.`
+
+  An issue that is neither charts a new map whose destination is informed by that issue.
 
 ## Execution spine
 
 1. Resolve the tracker (Stage 1).
-2. Decide chart vs walk from the arguments (above).
+2. Decide chart, walk, or build progress from the arguments (above).
 3. Chart: Stage 2, then stop. Walking tickets is a later session.
 4. Walk: Stage 3. Check for an already finished map, or resolve one ticket and file new fog. Check closeout before stopping.
-5. Ship: Stage 4 runs before the final report on every path that ends the session, including the early stops. It finds the files this session wrote and offers them as a pull request.
+5. Build parent: Stage 5 runs the build progress check, which closes the parent only when its evidence holds. Then stop.
+6. Ship: Stage 4 runs before the final report on every path that ends the session, including the early stops. It finds the files this session wrote and offers them as a pull request.
 
 ---
 
@@ -75,9 +80,9 @@ git status --porcelain=v1 -uall
 
 Keep the printed list in the conversation. Shell state does not persist. Outside a git checkout, note that Stage 4 has nothing to ship.
 
-If `docs/agents/issue-tracker.md` exists, read it. Its `Tracker:` line names the tracker. On `github`, follow its "Wayfinding operations" section for any mechanic it specifies (extra labels, owning docs, parent-link fallbacks) and continue below. On any other tracker, that section replaces `map.sh` entirely: it says what a map, a ticket, a blocking edge, a claim, and a resolution are there, and which connector or API to use. Follow it for every operation in Stage 2 and Stage 3, keep the same map body and ticket shapes from `references/map-shape.md`, and skip the rest of this stage. When it says maps are not supported, read `references/scratch.md` and keep the map under `.scratch/`. Missing file: GitHub via `gh`, using the operations in `references/github-ops.md`.
+If `docs/agents/issue-tracker.md` exists, read it. Its `Tracker:` line names the tracker, and its `Adapter flags:` line gives the flags Stage 5 passes to `scripts/tickets.sh`. On `github`, follow its "Wayfinding operations" section for any mechanic it specifies (extra labels, owning docs, parent-link fallbacks) and continue below. On any other tracker, that section replaces `map.sh` entirely: it says what a map, a ticket, a blocking edge, a claim, and a resolution are there, and which connector or API to use. Follow it for every operation in Stage 2 and Stage 3, keep the same map body and ticket shapes from `references/map-shape.md`, and skip the rest of this stage. When it says maps are not supported, read `references/scratch.md` and keep the map under `.scratch/`. Missing file: GitHub via `gh`, using the operations in `references/github-ops.md`.
 
-Load `references/github-ops.md` now. `scripts/map.sh` is the only way to create issues, attach children, wire blocks, query the frontier, and claim. Do not improvise those `gh` calls.
+Load `references/github-ops.md` now. `scripts/map.sh` is the only way to create map issues and decision tickets, attach children, wire blocks, query the frontier, and claim. Build progress in Stage 5 uses `scripts/tickets.sh` instead. Do not improvise those `gh` calls.
 
 Confirm the host with `gh repo view`. If that fails, stop.
 
@@ -90,6 +95,8 @@ GH_HOST=<derived-host> bash "<SKILL_DIR>/scripts/map.sh" ensure-labels
 ```
 
 Exit 3 from the script means this token cannot write issues (usually HTTP 403). Read `references/scratch.md` and follow it. Do not keep retrying `gh issue create`.
+
+A build parent skips `ensure-labels`, since Stage 5 creates no map labels.
 
 ---
 
@@ -288,6 +295,16 @@ Otherwise ask whether to open a pull request for them, unless `pr`, `no-pr`, or 
 
 ---
 
+## Stage 5: Build progress
+
+A build parent indexes build tickets, so this stage checks it instead of charting. Load `references/build-progress.md` and follow it against the parent. It closes the parent when the evidence satisfies **Destination**, and gives unmet evidence an open ticket under **Leftover evidence**. That section loads `references/agent-brief.md` when it writes a brief. Claim nothing and start no build work.
+
+Run the reference's tracker operations through `scripts/tickets.sh` with the `Adapter flags:` from Stage 1, written into each command as `bash "<SKILL_DIR>/scripts/tickets.sh" <adapter flags> ...`. A missing tracker file means GitHub with no flags. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline too. GitHub always goes through the script. On Linear or Jira, a host connector for that tracker replaces the script when one exists; never mix the two in one run. For `local`, the parent and its tickets are files, as the reference describes. For `other`, follow the tracker file's Conventions by hand.
+
+Report the parent's linked title, its progress, and the reference's one next action, then run Stage 4 and stop.
+
+---
+
 ## References
 
 | Reference | Load at | Purpose |
@@ -301,3 +318,5 @@ Otherwise ask whether to open a pull request for them, unless `pr`, `no-pr`, or 
 | `references/prototype.md` | Stage 3 on prototype | Cheap artifact to react to |
 | `references/scratch.md` | Stage 1, exit 3 only | Local map when GitHub writes fail |
 | `references/ship.md` | Stage 4 | Commit, push, and open a pull request for the files this session wrote |
+| `references/build-progress.md` | Stage 5 | Build parent evidence checks, closeout, leftover evidence, and next action |
+| `references/agent-brief.md` | Stage 5, Leftover evidence only | The brief on a reopened or newly filed build ticket |

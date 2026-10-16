@@ -36,6 +36,7 @@ if a[:2] == ['issue','view']:
     elif q=='.state': print(d['state'])
     elif q=='.labels[].name': print('ready')
     elif q=='.assignees[].login': print('fixture')
+    elif q=='[.assignees[].login] | join(",")': print(','.join(d.get('assignees',[])))
     elif q=='[.number,.title,.url,.state] | @tsv': row(n,['number','title','url','state'])
     elif q=='[.number,.state,.title,.url] | @tsv': row(n,['number','state','title','url'])
     elif 'map(select' in q: print('')
@@ -44,7 +45,14 @@ elif a[:2] == ['issue','edit']:
     n=next(x for x in a[2:] if x.isdigit())
     issue(n)
     if '--body-file' in a: state[n]['body']=Path(option('--body-file')).read_text().rstrip('\n')
+    if '--remove-assignee' in a:
+        gone=option('--remove-assignee').split(',')
+        state[n]['assignees']=[x for x in state[n].get('assignees',[]) if x not in gone]
     save('edit '+n)
+elif a[:2] == ['issue','reopen']:
+    n=next(x for x in a[2:] if x.isdigit())
+    issue(n)['state']='OPEN'
+    save('reopen '+n)
 elif a[0]=='api':
     endpoint=next((x for x in a[1:] if x.startswith('repos/') or x=='user'), '')
     if endpoint=='user': print('fixture'); sys.exit()
@@ -111,7 +119,7 @@ state={str(n):{'title':f'Issue {n}','url':f'https://github.com/acme/widgets/issu
  'state':'OPEN','body':'Slice literal [x].','parent':None} for n in range(1,8)}
 # Bodies edited in the GitHub web UI come back with CRLF; the parent and issue 7 carry it.
 state['1']['body']='Work kind: build\r\n\r\n## Destination\r\nDeliver the feature'
-state['3'].update(state='CLOSED',body='Build parent: [Build](https://github.com/acme/widgets/issues/1)')
+state['3'].update(state='CLOSED',assignees=['fixture'],body='Build parent: [Build](https://github.com/acme/widgets/issues/1)')
 state['6'].update(parent='5')
 state['7']['body']='Build parent: [Build](https://github.com/acme/widgets/issues/1)\r\n\r\nSlice literal [x].'
 state['5']['body']='Blocked by: #2, #3\r\n\r\nSlice literal [x].'
@@ -182,5 +190,20 @@ DEPS=404 run blocked 5 > "$tmp/blockers"
 DEPS=404 expect_fail run blocked 4
 # The API answers first: an empty API result wins over a Blocked by: line.
 expect_fail run blocked 5
+# Reopening a closed member releases the claim from the work that closed it.
+run reopen https://github.com/acme/widgets/issues/3 > "$tmp/reopened"
+[ "$(cat "$tmp/reopened")" = $'reopened\t3' ]
+tail -n 2 "$tmp/mutations" | grep -qx 'reopen 3'
+tail -n 1 "$tmp/mutations" | grep -qx 'edit 3'
+run children 1 | grep -q $'^3\tOPEN\t'
+python3 - "$tmp/state.json" <<'CHECK'
+import json, sys
+assert json.load(open(sys.argv[1]))['3'].get('assignees') == []
+CHECK
+# A ticket that is already open keeps its assignee: someone may have claimed it.
+before=$(wc -l < "$tmp/mutations")
+run reopen 2 > "$tmp/reopened"
+[ "$(cat "$tmp/reopened")" = $'already open\t2' ]
+[ "$(wc -l < "$tmp/mutations")" -eq "$before" ]
 python3 "$root/scripts/test-build-python.py"
 echo 'build ticket adapter fixtures: ok'

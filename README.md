@@ -392,6 +392,7 @@ Turns work too large for one session into a map of decision tickets, then resolv
 
 - Charting starts from the goal and researches questions in parallel.
 - Walking claims the next unblocked ticket and files new questions as answers emerge.
+- Given a build parent, it checks the parent's progress and closes it out instead of charting a map.
 
 ```text
 # Chart the idea in the conversation
@@ -446,7 +447,7 @@ Turns a finished map, spec, or conversation plan into a separate build effort wi
 
 The planning map stays closed. Its handoff links the new `Build: <outcome>` parent, whose children track implementation. Older flat build-ticket lists remain usable and can be adopted without recreating tickets. Repeating the command reuses the matching effort.
 
-After a build session, the agent checks the parent and names the next available ticket or pending review. A PR awaiting merge keeps the effort open. Once all required tickets are complete and the implementation destination is delivered, a progress check closes the parent. These checks run during sessions; no background automation is installed.
+After a build session, the agent checks the parent and names the next available ticket or pending review. A PR awaiting merge keeps the effort open. Once all required tickets are complete and the implementation destination is delivered, a progress check closes the parent. When every ticket is closed but the destination's evidence is still missing, the check reopens the ticket that owns that evidence, or files a new one under the parent, so the remaining work shows up as ready. These checks run during sessions; no background automation is installed.
 
 A refused remote write keeps the parent in `.scratch/<slug>/build.md` and missing tickets in `.scratch/<slug>/tickets/`. A configured local tracker keeps the parent and its tickets in its own ticket directory instead. Any remote tickets already created keep their links.
 

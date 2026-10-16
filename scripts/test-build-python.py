@@ -98,6 +98,12 @@ class LinearTransport:
         variables = variables or {}
         if "teams(" in query:
             return {"teams": {"nodes": [{"id": "team", "key": "TEAM", "name": "Team"}]}}
+        if "states{" in query:
+            return {"team": {"states": {"nodes": [
+                {"id": "st-done", "type": "completed", "position": 3},
+                {"id": "st-todo", "type": "unstarted", "position": 1},
+                {"id": "st-backlog", "type": "backlog", "position": 0},
+            ]}}}
         if "issue(id:" in query:
             issue = self.issues.get(variables.get("i"))
             if not issue:
@@ -124,6 +130,9 @@ class LinearTransport:
             if "assigneeId" in payload:
                 issue["assignee"] = {"id": payload["assigneeId"], "name": "Fixture"} if payload["assigneeId"] else None
                 self.updates.append((issue["identifier"], "assignee", payload["assigneeId"]))
+            if "stateId" in payload:
+                issue["state"] = {"name": payload["stateId"], "type": "unstarted"}
+                self.updates.append((issue["identifier"], "state", payload["stateId"]))
             return {"issueUpdate": {"success": True}}
         if "issueRelationCreate" in query:
             return {"issueRelationCreate": {"success": True}}
@@ -168,6 +177,18 @@ class JiraTransport:
             account = (payload or {}).get("accountId")
             self.issues[key]["fields"]["assignee"] = {"accountId": account} if account else None
             self.updates.append((key, "assignee", account))
+            return {}
+        if method == "GET" and path.startswith("/issue/") and path.endswith("/transitions"):
+            return {"transitions": [
+                {"id": "t-done", "to": {"statusCategory": {"key": "done"}}},
+                {"id": "t-progress", "to": {"statusCategory": {"key": "indeterminate"}}},
+                {"id": "t-todo", "to": {"statusCategory": {"key": "new"}}},
+            ]}
+        if method == "POST" and path.startswith("/issue/") and path.endswith("/transitions"):
+            key = path.split("/")[2]
+            category = {"t-done": "done", "t-progress": "indeterminate", "t-todo": "new"}[payload["transition"]["id"]]
+            self.issues[key]["fields"]["status"] = {"name": category, "statusCategory": {"key": category}}
+            self.updates.append((key, "transition", payload["transition"]["id"]))
             return {}
         if method == "GET" and path.startswith("/issue/"):
             key = path.split("/")[2].split("?")[0]
@@ -427,6 +448,36 @@ class AdapterContract(unittest.TestCase):
         with self.assertRaises(SystemExit) as none:
             transport.base.blockers("PROJ-10")
         self.assertEqual(none.exception.code, 1)
+
+    def test_linear_reopen_moves_to_todo_and_releases_assignee(self):
+        ns = load_python_adapter("linear")
+        transport = LinearTransport(ns)
+        closed = transport.issue("DONE-1", "Closed early", "brief", state_type="completed")
+        closed["assignee"] = {"id": "someone", "name": "Someone"}
+        transport.issues["DONE-1"] = closed
+        _, printed = output_of(transport.base.reopen, "DONE-1")
+        self.assertEqual(printed.split(), ["reopened", "DONE-1"])
+        self.assertEqual(closed["state"]["name"], "st-todo")
+        self.assertIsNone(closed["assignee"])
+        before = len(transport.updates)
+        _, printed = output_of(transport.base.reopen, "CH-1")
+        self.assertEqual(printed.strip(), "already open\tCH-1")
+        self.assertEqual(len(transport.updates), before)
+
+    def test_jira_reopen_moves_to_todo_and_releases_assignee(self):
+        ns = load_python_adapter("jira")
+        transport = JiraTransport(ns)
+        closed = transport.issue("PROJ-20", "Closed early", "brief", status_category="done")
+        closed["fields"]["assignee"] = {"accountId": "someone"}
+        transport.issues["PROJ-20"] = closed
+        _, printed = output_of(transport.base.reopen, "PROJ-20")
+        self.assertEqual(printed.split(), ["reopened", "PROJ-20"])
+        self.assertEqual(closed["fields"]["status"]["statusCategory"]["key"], "new")
+        self.assertIsNone(closed["fields"]["assignee"])
+        before = len(transport.updates)
+        _, printed = output_of(transport.base.reopen, "PROJ-2")
+        self.assertEqual(printed.strip(), "already open\tPROJ-2")
+        self.assertEqual(len(transport.updates), before)
 
     def test_build_links_accepts_crlf_bodies(self):
         ns = load_python_adapter("linear")

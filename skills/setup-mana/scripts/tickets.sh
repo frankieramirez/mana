@@ -19,6 +19,7 @@
 #   label ID [--add L]... [--remove L]...     change labels
 #   comment ID                                body on stdin
 #   close ID                                  close, or move to the done state
+#   reopen ID                                 reopen a closed ticket and release its assignee
 #
 # Global options, before or after the subcommand:
 #   --tracker github|linear|jira   default github
@@ -30,7 +31,7 @@
 # JIRA_API_TOKEN, and optionally JIRA_ISSUE_TYPE (default Task). Both exit 3 on 401 or 403.
 # Label strings are arguments. The calling skill resolves them from docs/agents/triage-labels.md;
 # this script never reads that file. IDs are whatever the tracker uses: 42, ENG-42, PROJ-42.
-# A GitHub, Linear, or Jira issue URL is reduced to that id before view, claim, wire, label, comment, close.
+# A GitHub, Linear, or Jira issue URL is reduced to that id before view, claim, wire, label, comment, close, reopen.
 
 set -euo pipefail
 
@@ -60,6 +61,8 @@ usage: tickets.sh [--tracker github|linear|jira] [--project KEY] [--repo OWNER/R
   label ID [--add L]... [--remove L]...  change labels
   comment ID                             body on stdin
   close ID                               close the issue
+  reopen ID                              reopen a closed issue and clear its assignees so
+                                         next can offer it again; no-op when already open
 
 Exit 3 means this token cannot write; write the same shape locally instead.
 EOF
@@ -658,6 +661,19 @@ gh_close() {
   run_gh gh issue close --repo "$OWNER/$REPO" "$n"
 }
 
+gh_reopen() {
+  local n="$1" state who
+  state=$(gh issue view --repo "$OWNER/$REPO" "$n" --json state --jq .state) || die "cannot read state of $n"
+  case "$state" in
+    OPEN|open) printf 'already open\t%s\n' "$n"; return ;;
+  esac
+  run_gh gh issue reopen --repo "$OWNER/$REPO" "$n" >/dev/null
+  # The earlier claim belongs to the work that closed it; release it so next can offer the ticket.
+  who=$(gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '[.assignees[].login] | join(",")') || die "cannot read assignees of $n"
+  [ -z "$who" ] || run_gh gh issue edit --repo "$OWNER/$REPO" "$n" --remove-assignee "$who" >/dev/null
+  printf 'reopened\t%s\n' "$n"
+}
+
 # ---------------------------------------------------------------- Linear and Jira (python3 stdlib)
 
 # The adapter reads: TICKETS_TRACKER, TICKETS_PROJECT, TICKETS_DRY, TICKETS_BODY_FILE (the body
@@ -1075,6 +1091,23 @@ class Linear:
         self.gql("mutation($id:String!,$i:IssueUpdateInput!){issueUpdate(id:$id,input:$i){success}}",
                  {"id": d["id"], "i": {"stateId": done[0]["id"]}})
 
+    def reopen(self, ident):
+        d = self.issue(ident)
+        if d["state"]["type"] not in DONE_TYPES:
+            out("already open", d["identifier"])
+            return
+        t = self.team()
+        states = self.gql("query($t:String!){team(id:$t){states{nodes{id type position}}}}", {"t": t["id"]})["team"]["states"]["nodes"]
+        for kind in ("unstarted", "backlog"):
+            todo = sorted((s for s in states if s["type"] == kind), key=lambda s: s["position"])
+            if todo:
+                break
+        else:
+            die("this team has no unstarted or backlog state")
+        self.gql("mutation($id:String!,$i:IssueUpdateInput!){issueUpdate(id:$id,input:$i){success}}",
+                 {"id": d["id"], "i": {"stateId": todo[0]["id"], "assigneeId": None}})
+        out("reopened", d["identifier"])
+
 
 # ------------------------------------------------------------------ Jira Cloud
 
@@ -1334,6 +1367,22 @@ class Jira:
             die(f"no transition to a done status is available on {key}")
         self.api("POST", f"/issue/{key}/transitions", {"transition": {"id": done[0]["id"]}})
 
+    def reopen(self, key):
+        status = self.api("GET", f"/issue/{key}?fields=status")["fields"]["status"]
+        if status["statusCategory"]["key"] != "done":
+            out("already open", key)
+            return
+        trans = self.api("GET", f"/issue/{key}/transitions").get("transitions", [])
+        for kind in ("new", "indeterminate"):
+            back = [t for t in trans if (t.get("to") or {}).get("statusCategory", {}).get("key") == kind]
+            if back:
+                break
+        else:
+            die(f"no transition out of a done status is available on {key}")
+        self.api("POST", f"/issue/{key}/transitions", {"transition": {"id": back[0]["id"]}})
+        self.unclaim(key)
+        out("reopened", key)
+
 
 # ------------------------------------------------------------------ dispatch
 
@@ -1386,6 +1435,8 @@ def main():
         t.comment(rest[0], read_body())
     elif cmd == "close":
         t.close(rest[0])
+    elif cmd == "reopen":
+        t.reopen(rest[0])
     else:
         die("unknown subcommand: " + cmd)
 
@@ -1470,7 +1521,7 @@ case "$cmd" in
     EXPECTED_BODY="${3:-}"
     ;;
   find) [ $# -eq 1 ] && [ -n "$1" ] || die "find needs literal text" ;;
-  list|view|claim|blocked|comment|close|children|body) [ $# -ge 1 ] || die "$cmd needs an argument" ;;
+  list|view|claim|blocked|comment|close|reopen|children|body) [ $# -ge 1 ] || die "$cmd needs an argument" ;;
   attach|wire) [ $# -ge 2 ] || die "$cmd needs two issue IDs" ;;
   label) [ $# -ge 2 ] || die "label ID [--add L]... [--remove L]..." ;;
   check) ;;
@@ -1478,7 +1529,7 @@ case "$cmd" in
 esac
 
 case "$cmd" in
-  view|claim|blocked|comment|close|children|body|update-body)
+  view|claim|blocked|comment|close|reopen|children|body|update-body)
     set -- "$(normalize_id "$1")"
     ;;
   attach|wire)
@@ -1532,4 +1583,5 @@ case "$cmd" in
     ;;
   comment) gh_comment "$1" ;;
   close) gh_close "$1" ;;
+  reopen) gh_reopen "$1" ;;
 esac
