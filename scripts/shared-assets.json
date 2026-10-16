@@ -41,13 +41,16 @@
       "source": "skills/sift/references/agent-brief.md",
       "destinations": [
         "skills/conjure/references/agent-brief.md",
-        "skills/ultima/references/agent-brief.md"
+        "skills/ultima/references/agent-brief.md",
+        "skills/cast/references/agent-brief.md",
+        "skills/scry/references/agent-brief.md"
       ]
     },
     {
       "source": "skills/conjure/references/build-progress.md",
       "destinations": [
-        "skills/cast/references/build-progress.md"
+        "skills/cast/references/build-progress.md",
+        "skills/scry/references/build-progress.md"
       ]
     },
     {
@@ -60,7 +63,8 @@
         "skills/attune/scripts/tickets.sh",
         "skills/ultima/scripts/tickets.sh",
         "skills/portal/scripts/tickets.sh",
-        "skills/vision/scripts/tickets.sh"
+        "skills/vision/scripts/tickets.sh",
+        "skills/scry/scripts/tickets.sh"
       ]
     },
     {

@@ -26,6 +26,7 @@ Blocked by: 01-<ticket-slug>.md
 - **Claim** is rewriting `Status: claimed` with your name on the next line, before any work.
 - **Comment** is appending under a `## Comments` heading at the bottom, with a date.
 - **Close** is `Status: closed`.
+- **Reopen** is `Status: ready-for-agent` again, with the reason appended under `## Comments`.
 
 A pull request that resolves a local ticket names the file in its body. Nothing closes the file on merge; the builder does.
 

@@ -154,6 +154,17 @@ class Packages(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'missing bundled asset'):
                     verify_packages.inspect_package(folder, contract)
 
+    def test_scry_build_progress_assets_are_required_in_isolation(self):
+        contract = json.loads((ROOT / 'scripts/package-contracts.json').read_text())['skills']['scry']
+        for relative in ('references/build-progress.md', 'references/agent-brief.md', 'scripts/tickets.sh'):
+            with self.subTest(asset=relative), tempfile.TemporaryDirectory() as temp:
+                folder = Path(temp) / 'scry'
+                shutil.copytree(ROOT / 'skills/scry', folder)
+                self.assertIn(relative, contract['required'])
+                (folder / relative).unlink()
+                with self.assertRaisesRegex(ValueError, 'missing bundled asset'):
+                    verify_packages.inspect_package(folder, contract)
+
     def test_missing_required_asset_fails_without_a_link(self):
         verify_packages.inspect_package(self.root, self.contract)
         (self.root / "SKILL.md").write_text("No links.\n")
