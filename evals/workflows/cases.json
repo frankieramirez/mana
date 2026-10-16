@@ -284,6 +284,42 @@
         "commit": false,
         "evidence_directory": "artifacts/"
       }
+    },
+    {
+      "id": "scry-build-leftover",
+      "skill": "scry",
+      "fixture": "build-parent",
+      "expected_status": "leftover-ticket",
+      "request": "Use scry 40. Issue 40 is a build parent on the GitHub tracker fixture/mana. Check its progress and give the one next action. The tracker writes the build progress check calls for are authorized: closing the parent once its Destination evidence holds, posting a brief, reopening, labels, filing and attaching a ticket, and the guarded parent body update. Claim and implement nothing. No commit, push, or PR. The supplied gh is an offline tracker.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "conjure-build-leftover",
+      "skill": "conjure",
+      "fixture": "build-parent",
+      "expected_status": "leftover-ticket",
+      "request": "Use conjure on build parent 40 in the GitHub tracker fixture/mana. Filing for this effort is finished and no slice changes. Check its progress and give the next action. The tracker writes the progress check calls for are authorized: closing the parent once its Destination evidence holds, posting a brief, reopening, labels, filing and attaching a ticket, and the guarded parent body update. Claim and implement nothing. No commit, push, or PR. The supplied gh is an offline tracker.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "scry-build-leftover-read-only",
+      "skill": "scry",
+      "fixture": "build-parent",
+      "expected_status": "leftover-report",
+      "request": "Use scry 40. Issue 40 is a build parent on the GitHub tracker fixture/mana. This run is read-only: make no tracker writes at all (no comments, reopening, labels, new tickets, attachments, body edits, or closing), and no commit, push, or PR. Check its progress, report each exact action the build progress check would take, and give the one next action. The supplied gh is an offline tracker.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
     }
   ]
 }

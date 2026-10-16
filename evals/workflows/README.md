@@ -117,3 +117,38 @@ python3 -B evals/workflows/archive_delegated.py evals/workflows/evidence/package
 ```
 
 That existing archive tool supports these serial records as well as delegated evidence. Installed payload hashes identify each snapshot. The final validator output is in `evidence/package-d-validation.txt`.
+
+## Build progress leftover evidence
+
+`build_fixtures.py` adds the `build-parent` fixture for the **Leftover evidence** path in `build-progress.md`, which conjure owns and cast and scry copy. Its offline `gh` holds an open build parent, #40, whose body starts with `Work kind: build` and carries Destination, Build order, and Next step. Both members are closed. #41 closed when PR #51 merged. #42 closed when PR #52 merged, before any agent run existed, as `ultima#746` did. No PR is open. The one unmet Destination item is three recorded agent runs on one merged revision, which #42's Build order Outcome names. The tracker also holds the closed planning map #30 and an older, unrelated ready ticket #99, which a global `next` returns first.
+
+| Case | Request | Observable outcome |
+|------|---------|--------------------|
+| `scry-build-leftover` | scry on 40, tracker writes authorized | `leftover-ticket` |
+| `conjure-build-leftover` | conjure on 40, progress only, tracker writes authorized | `leftover-ticket` |
+| `scry-build-leftover-read-only` | scry on 40, every tracker write forbidden | `leftover-report` |
+
+`leftover-ticket` grades the final tracker state. It accepts either branch of the reference, and exactly one of them:
+
+- #42 reopened with no assignee and the ready label, carrying a new comment with an `## Agent Brief` line that the call log shows was posted before the reopen.
+- One new open, unclaimed member with `Build parent:` and `Planning source:` lines, an `## Agent Brief`, the category and ready labels, native attachment under #40, and an entry in the parent's Build order.
+
+Both branches together count as ticketing one item twice, and neither counts as leaving the evidence without a ticket. In either branch the parent stays open, keeps its marker, Destination, and original Build order entries, and gets no Completion comment. No other ticket changes state, labels, or assignees, and the report contains `Implement <ticket URL>, following its brief.` for that ticket, never #99.
+
+`leftover-report` requires the tracker to match its starting state and the call log to hold no write, including a failed one. The report must contain `Check progress and close out the build effort at <parent URL>, reopening or filing tickets for its unmet evidence.` and list the actions it did not take: reopening #42 on one line, the agent brief, and the ready label, or the filing equivalents.
+
+Every case must enumerate the members through a sub-issue read. A `gh` write in the agent's own command fails as bypassing `tickets.sh`, and a pull request or push fails as unrequested publication. The double answers the jq expressions the bundled `tickets.sh` and `map.sh` use, plain path expressions, and `--json` without `--jq`, plus PR and closing-reference reads. Any other operation exits 97 with a hint to rerun with `--json` alone.
+
+The grader tests build each known good and bad outcome with the installed skill's real `tickets.sh`, so they also check that the double serves every call the reference makes:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_build_leftover.py
+```
+
+Live evaluation of these cases has not run. The offline tests establish fixture and grader behavior only. A live run uses the usual controls:
+
+```bash
+python3 -B evals/workflows/run.py --live \
+  --case scry-build-leftover --case conjure-build-leftover \
+  --case scry-build-leftover-read-only --limit 3 --timeout 300
+```
