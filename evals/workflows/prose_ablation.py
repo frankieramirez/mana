@@ -25,6 +25,9 @@ ROOT = HERE.parent.parent
 PAYLOAD_SET = HERE / 'prose-ablation'
 BASELINE_REVISION = '9d1aa521974bc7c72bf9cdd676de18c09a036468'
 SOURCE_PATH = 'skills/dispel'
+# Byte identity of the audit baseline, so a shallow checkout still pins the current arm.
+BASELINE_SHA256 = {'SKILL.md': '5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7',
+                   'references/archmage.md': '337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6'}
 ENTRYPOINT = 'SKILL.md'
 ARMS = ('current-fidelity', 'scope-fidelity', 'section-removed')
 CHANGED_ARMS = ARMS[1:]
@@ -42,7 +45,8 @@ SECTION_START = '## Fidelity\n'
 SECTION_END = '## Positive rules\n'
 SELF_CHECK = '## Self-check before returning\n'
 NUMBERED = re.compile(r'\d+\. ')
-RESERVED_NAMES = {'.git', '.gitignore', 'installed', 'artifacts', 'home', 'bin', 'AGENTS.md', 'CLAUDE.md'}
+RESERVED_NAMES = {'.git', '.gitignore', 'installed', 'artifacts', 'home', 'bin', 'AGENTS.md', 'CLAUDE.md',
+                  ENTRYPOINT, 'references'}
 # The same host surface the focused runner freezes; identical for every arm.
 DISABLED_FEATURES = ('apps', 'plugins', 'remote_plugin', 'hooks', 'memories', 'multi_agent', 'multi_agent_v2',
                      'browser_use', 'browser_use_external', 'computer_use', 'image_generation', 'in_app_browser',
@@ -184,6 +188,8 @@ def verify_payload_set(set_dir=PAYLOAD_SET):
         raise ValueError('current payload differs from the recorded source')
     if conditions.digest(conditions.encoded(record['source_inventory'])) != record['source_inventory_sha256']:
         raise ValueError('recorded source inventory digest is wrong')
+    if {k: v['sha256'] for k, v in record['source_inventory'].items()} != BASELINE_SHA256:
+        raise ValueError('current payload is not the audit baseline')
     current = read_text(roots['current-fidelity'] / ENTRYPOINT)
     texts = derive(current)
     regions = selected_regions(current)
@@ -232,8 +238,8 @@ def checked_study(data):
     if data['host'] not in run.SUPPORTED_HOSTS:
         raise ValueError('unvalidated study host')
     if (not isinstance(data['model'], str) or not data['model'].strip()
-            or data['reasoning'] not in ('low', 'medium', 'high')):
-        raise ValueError('model and reasoning must be explicit')
+            or data['reasoning'] != 'medium'):
+        raise ValueError('model must be explicit and reasoning must be medium')
     if type(data['seed']) is not int or type(data['repetitions']) is not int or not 1 <= data['repetitions'] <= 3:
         raise ValueError('invalid schedule controls')
     if not isinstance(data['payload_set'], str) or not Path(data['payload_set']).is_absolute():
@@ -655,6 +661,10 @@ def execute_slot(study, slot):
             stop = True
             result['execution'] = 'collection_failed'
             result['failures'].append('archive failed: ' + str(exc))
+            metadata.update({'execution_status': 'collection_failed', 'task_outcome': None,
+                             'failures': result['failures']})
+            metadata['deterministic_checks']['failures'] = None
+            (out / 'evaluation.json').write_bytes(conditions.encoded(metadata))
             (out / 'result.json').write_bytes(conditions.encoded(result))
         if stop:
             (study.root / 'results' / 'STOP.json').write_bytes(conditions.encoded({
@@ -706,6 +716,8 @@ def main(argv=None):
             if not args.live or args.check or args.slot is None:
                 raise ValueError('a frozen study needs either --check or --live with one --slot')
             return execute_slot(study, args.slot)
+        if not args.check_payloads:
+            raise ValueError('choose --check-payloads, --build-payloads, --freeze-study or --study')
         print(json.dumps(verify_payload_set(), indent=2))
         return 0
     except (OSError, ValueError) as exc:

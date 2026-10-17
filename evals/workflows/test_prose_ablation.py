@@ -298,6 +298,21 @@ class StudyTests(unittest.TestCase):
                                       '--check', '--live', '--slot', '1']), 2)
             self.assertEqual(pa.main(['--study', str(study.root), '--controls-sha256', result['controls_sha256'], '--live']), 2)
         self.assertEqual(pa.main(['--check-payloads']), 0)
+        with patch('builtins.print'), patch.object(pa.sys, 'stderr'):
+            self.assertEqual(pa.main([]), 2)
+
+    def test_reasoning_is_fixed_and_payload_names_are_reserved(self):
+        for key, value in (('reasoning', 'high'),):
+            manifest = dict(base_manifest(), **{key: value})
+            with self.assertRaisesRegex(ValueError, 'reasoning must be medium'):
+                pa.checked_study(manifest)
+        for name in ('SKILL.md', 'references/archmage.md'):
+            with self.assertRaisesRegex(ValueError, 'invalid source file name'):
+                pa.safe_source_name(name)
+
+    def test_current_arm_is_pinned_without_git_history(self):
+        record = json.loads((SET / 'payloads.json').read_text())
+        self.assertEqual({k: v['sha256'] for k, v in record['source_inventory'].items()}, pa.BASELINE_SHA256)
 
 
 class ExecutionTests(unittest.TestCase):
@@ -371,6 +386,17 @@ class ExecutionTests(unittest.TestCase):
         self.assertTrue((self.study.root / 'results/STOP.json').exists())
         with self.assertRaisesRegex(ValueError, 'study stopped'):
             self.study.claim(2)
+
+    def test_archive_failure_rewrites_the_evaluation_record(self):
+        with patch.object(archive_delegated, 'archive', side_effect=OSError('disk full')):
+            code, _, evaluation, result = self.execute(1, 'keep')
+        self.assertEqual(code, 1)
+        self.assertEqual(result['execution'], 'collection_failed')
+        self.assertEqual(evaluation['execution_status'], 'collection_failed')
+        self.assertIsNone(evaluation['task_outcome'])
+        self.assertIsNone(evaluation['deterministic_checks']['failures'])
+        self.assertIn('archive failed: disk full', evaluation['failures'])
+        self.assertTrue((self.study.root / 'results/STOP.json').exists())
 
     def test_unvalidated_host_preserves_attempt_without_launch(self):
         self.env['FAKE_HOST_VERSION'] = 'codex-cli unvalidated'
