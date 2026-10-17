@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.43.3
 
 - Leyline gains a challenge stage. `challenge.sh` runs an installed control from committed bytes in disposable worktrees through baseline, declared break, restore, concurrent runs, SIGINT and SIGTERM cancellation, and plan-declared faults such as a missing browser, zero executed cases, source mutation and teardown failure. Each probe checks that an unknown listener survives, that no started process outlives its run, and that HEAD, index, tracked and untracked bytes are unchanged. Reports and control evidence are retained outside the checkout with a SHA-256 manifest that is checked again after cleanup. The generated Node control adds prerequisite probes, owned process verification, artifact digests, and treats suite errors such as a failed teardown as incomplete while keeping failed assertions. A synthetic acceptance fixture exercises every path; no consumer conformance is claimed.
+
+## 0.43.2
+
+- Frozen condition studies seal every allocated slot as a write-once attempt record that keeps execution status apart from task outcome, inventories each artifact with its hash, and rejects hidden replacements. Completed attempts export to anonymized review packets that withhold condition names and instruction text and record what masking could not hide. Two independent judgments, a human adjudication and append-only regrades preserve the original evidence hashes. Unobserved model identity, child usage and human review time stay null. No reviewer cohort or live study has run.
 
 ## 0.43.1
 
