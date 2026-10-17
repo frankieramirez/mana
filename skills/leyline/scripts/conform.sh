@@ -13,12 +13,15 @@
 #       unexecuted expected case is never a pass). --exit is the exit code the process that
 #       wrote the report returned, and must match. Exit 0 when valid, 1 when not.
 #
-#   dynamic REPO --trust [--feature ID] [--timeout SECONDS] [--keep]
+#   dynamic REPO --trust [--feature ID] [--timeout SECONDS] [--out DIR] [--keep]
 #       Run the project's control CLI in a disposable git worktree of HEAD and probe it: list,
 #       describe, an unknown selector, a baseline run, a declared break patch that must fail
-#       for its scenario, the restored run, and two concurrent runs. Runs project code, so it
-#       refuses without --trust. Removes only the worktree it created. Exit 0 when every probe
-#       passes, 1 when one fails, 3 when a probe is blocked and none failed.
+#       for its scenario, the restored run, and two concurrent runs. Every probe appears in the
+#       output, as blocked with a reason when it could not run. Each feature run records its
+#       run id, and its report is copied with a SHA-256 into DIR (a new temporary directory by
+#       default, never inside the worktree; DIR must be empty or absent). Runs project code, so
+#       it refuses without --trust. Removes only the worktree it created. Exit 0 when every
+#       probe passes, 1 when one fails, 3 when a probe is blocked and none failed.
 #
 # Exit 2 is a usage error and exit 4 means python3 is missing. Everything here is python3
 # standard library inside bash; there is no jq, no node, no pip package.
@@ -41,7 +44,7 @@ need_python() {
 run_python() {
   need_python
   python3 - "$@" <<'PY'
-import json, os, re, shlex, shutil, signal, subprocess, sys, tempfile, threading, time
+import hashlib, json, os, re, shlex, shutil, signal, subprocess, sys, tempfile, threading, time
 
 CONTRACT = "control/0"
 KNOWLEDGE = {"proposed", "confirmed", "unresolved"}
@@ -55,6 +58,8 @@ KEY_LINE = re.compile(r"^(Command|Prepare|Features|Scenarios|Bindings|Breaks):[ 
 BINDING = re.compile(r"""[A-Za-z_$]*[sS]cenario\(\s*['"`]([^'"`]+)['"`]""")
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", ".scratch", ".next", "coverage", "vendor", "target", "__pycache__", ".venv", ".turbo"}
 SOURCE_EXT = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".py", ".go", ".rs", ".rb", ".sh", ".swift", ".kt", ".java", ".cs"}
+PROBES = ("list", "describe", "unknown", "baseline", "break", "restore", "parallel")
+TAIL = 2000
 DEFAULTS = {"Features": "verification/features", "Scenarios": "verification/scenarios", "Bindings": ".", "Breaks": "verification/breaks"}
 
 
@@ -337,7 +342,7 @@ def check_report(data, process_exit=None):
         findings.add("report.process-exit", f"the process exited {process_exit} but the report says {exit_code!r}")
     source = data.get("source") if isinstance(data.get("source"), dict) else {}
     identity = source.get("identity") if isinstance(source.get("identity"), dict) else None
-    if identity is None or not (identity.get("head") is None or isinstance(identity.get("head"), str)):
+    if identity is None or "head" not in identity or not (identity["head"] is None or isinstance(identity["head"], str)):
         findings.add("report.source", "source.identity.head must record the revision (a string, or null outside git)")
     elif not isinstance((identity.get("manifest") or {}).get("digest"), str):
         findings.add("report.source", "source.identity.manifest.digest must record the hash of the checked bytes")
@@ -393,11 +398,11 @@ def check_report(data, process_exit=None):
     return findings
 
 
-def parse_document(stdout):
-    """The report is the JSON document on stdout. Tolerate banner lines a package runner prints first."""
+def split_document(stdout):
+    """Return the JSON document on stdout and its exact text. Tolerate banner lines a package runner prints first."""
     text = stdout.strip()
     try:
-        return json.loads(text)
+        return json.loads(text), text
     except ValueError:
         pass
     decoder = json.JSONDecoder()
@@ -407,8 +412,12 @@ def parse_document(stdout):
         except ValueError:
             continue
         if not stdout[end:].strip():
-            return value
-    return None
+            return value, stdout[match.start():end]
+    return None, None
+
+
+def parse_document(stdout):
+    return split_document(stdout)[0]
 
 
 def run_cli(command, args, cwd, timeout):
@@ -433,23 +442,69 @@ def git(repo, *args, check=True):
     return p
 
 
-def dynamic(root, feature, timeout, keep):
+def dynamic(root, feature, timeout, keep, out):
     probes = []
+    doc = {"contract": CONTRACT, "mode": "dynamic", "root": root, "static": None, "worktree": None, "feature": None,
+           "retained": None, "probes": probes}
 
-    def probe(name, status, detail, result=None):
+    def probe(name, status, detail, result=None, runs=None):
         entry = {"probe": name, "status": status, "detail": detail}
         if result:
             entry.update({"argv": result["argv"], "exit": result["exit"], "ms": result["ms"]})
-            if status != "passed" and result.get("stderr"):
-                entry["stderr"] = result["stderr"][-2000:]
+            if status != "passed":
+                # A report kept on disk already holds stdout. Otherwise keep its tail, where tools such
+                # as pnpm print the reason a prerequisite is missing.
+                if result.get("stdout") and not any(run.get("report") for run in runs or []):
+                    entry["stdout"] = result["stdout"][-TAIL:]
+                if result.get("stderr"):
+                    entry["stderr"] = result["stderr"][-TAIL:]
+        if runs is not None:
+            entry["runs"] = runs
         probes.append(entry)
 
-    doc = {"contract": CONTRACT, "mode": "dynamic", "root": root, "static": None, "worktree": None, "feature": None, "probes": probes}
+    try:
+        probe_all(root, feature, timeout, keep, out, doc, probe)
+    finally:
+        kept = doc["retained"]
+        if out is None and kept and os.path.isdir(kept) and not os.listdir(kept):
+            os.rmdir(kept)
+            doc["retained"] = None
+        # Every probe appears. One that never started is blocked by the first probe that did not pass.
+        seen = {p["probe"] for p in probes}
+        cause = next((p for p in probes if p["status"] != "passed"), None)
+        for name in PROBES:
+            if name not in seen:
+                why = f"the {cause['probe']} probe was {cause['status']}: {cause['detail']}" if cause else "the checker stopped first"
+                probe(name, "blocked", f"not run, because {why}")
+    return doc
+
+
+def retain(out, name, result):
+    """Copy the report a feature run printed into OUT, outside the worktree, and say where it went."""
+    value, text = split_document(result["stdout"])
+    run = {"runId": None, "exit": result["exit"], "report": None, "sha256": None}
+    if isinstance(value, dict) and isinstance(value.get("runId"), str):
+        run["runId"] = value["runId"]
+    if value is not None:
+        data = (text + "\n").encode("utf-8")
+        path = os.path.join(out, name + ".json")
+        with open(path, "wb") as fh:
+            fh.write(data)
+        run.update(report=path, sha256=hashlib.sha256(data).hexdigest())
+    return value, run
+
+
+def probe_all(root, feature, timeout, keep, out, doc, probe):
     if git(root, "rev-parse", "--is-inside-work-tree", check=False).returncode != 0:
         probe("control", "blocked", "not a git checkout, so there is no disposable worktree to run in")
-        return doc
+        return
     if git(root, "status", "--porcelain", check=False).stdout.strip():
         doc["excludedChanges"] = "the worktree is built from HEAD; uncommitted changes in the checkout were not probed"
+    if out is None:
+        out = tempfile.mkdtemp(prefix="conform-reports-")
+    else:
+        os.makedirs(out, exist_ok=True)
+    doc["retained"] = out
 
     tmp = tempfile.mkdtemp(prefix="conform-")
     tree = os.path.join(tmp, "tree")
@@ -466,19 +521,19 @@ def dynamic(root, feature, timeout, keep):
         prepare = static["control"]["keys"].get("Prepare")
         if not command:
             probe("control", "blocked", "HEAD has no Command: line in a control skill reached from the Control: line")
-            return doc
+            return
         if feature is None:
             with_break = [static["scenarios"][s] for s in static["breaks"] if s in static["scenarios"]]
             feature = with_break[0] if with_break else (static["features"][0] if static["features"] else None)
         if feature is None:
             probe("control", "blocked", "HEAD has no feature records to run")
-            return doc
+            return
         doc["feature"] = feature
         if prepare:
             r = run_cli(prepare, [], tree, timeout)
             if r["exit"] != 0:
                 probe("prepare", "blocked", f"Prepare: exited {r['exit']}", r)
-                return doc
+                return
             probe("prepare", "passed", "the worktree is prepared", r)
 
         r = run_cli(command, ["list", "--json"], tree, timeout)
@@ -501,48 +556,53 @@ def dynamic(root, feature, timeout, keep):
 
         def run_feature(name, want):
             r = run_cli(command, ["feature", feature, "--json"], tree, timeout)
+            report, run = retain(out, name, r)
+            runs = [run]
             if r["exit"] is None:
-                probe(name, "failed", f"timed out after {timeout}s", r)
+                probe(name, "failed", f"timed out after {timeout}s", r, runs)
                 return None
-            report = parse_document(r["stdout"])
             if report is None:
-                probe(name, "failed", "feature --json printed no JSON report", r)
+                probe(name, "failed", "feature --json printed no JSON report", r, runs)
                 return None
             problems = check_report(report, r["exit"]).errors
             if problems:
-                probe(name, "failed", "; ".join(p["message"] for p in problems[:4]), r)
+                probe(name, "failed", "; ".join(p["message"] for p in problems[:4]), r, runs)
                 return None
             if r["exit"] not in want:
-                if r["exit"] == 3 and 0 in want:
-                    probe(name, "blocked", "the run was incomplete, so nothing is established; see the report's prerequisites", r)
+                if r["exit"] == 3:
+                    # An incomplete run establishes nothing, under the break patch as much as at HEAD.
+                    probe(name, "blocked", "the run was incomplete, so nothing is established; see the report's prerequisites", r, runs)
                 else:
-                    probe(name, "failed", f"expected exit {sorted(want)}, got {r['exit']}", r)
+                    probe(name, "failed", f"expected exit {sorted(want)}, got {r['exit']}", r, runs)
                 return None
-            return r, report
+            return r, report, runs
 
         base = run_feature("baseline", {0})
         if base:
-            probe("baseline", "passed", f"feature {feature} passes at HEAD", base[0])
+            probe("baseline", "passed", f"feature {feature} passes at HEAD", base[0], base[2])
 
         patches = [s for s in static["breaks"] if static["scenarios"].get(s) == feature]
         if not base:
             probe("break", "blocked", "the baseline did not pass, so a failure under the break patch would prove nothing")
+            probe("restore", "blocked", "not run, because the baseline did not pass and no break patch was applied")
         elif not patches:
             probe("break", "blocked", f"no break patch declared for a scenario of {feature}")
+            probe("restore", "blocked", "not run, because no break patch was applied")
         else:
             sid = patches[0]
             patch = os.path.join(inside(tree, static["control"]["keys"]["Breaks"]), sid + ".patch")
             applied = git(tree, "apply", patch, check=False)
             if applied.returncode != 0:
                 probe("break", "failed", f"the break patch for {sid} no longer applies: {applied.stderr.strip()}")
+                probe("restore", "blocked", "not run, because the break patch did not apply")
             else:
                 broken = run_feature("break", {1})
                 if broken:
                     failed = [c for c in broken[1].get("checks", []) if isinstance(c, dict) and c.get("status") == "failed"]
                     if any(sid in json.dumps(c) for c in failed):
-                        probe("break", "passed", f"the break patch fails the run and names {sid}", broken[0])
+                        probe("break", "passed", f"the break patch fails the run and names {sid}", broken[0], broken[2])
                     else:
-                        probe("break", "failed", f"the run failed but no failed check names {sid}, so the failure may be unrelated", broken[0])
+                        probe("break", "failed", f"the run failed but no failed check names {sid}, so the failure may be unrelated", broken[0], broken[2])
                 reverted = git(tree, "apply", "-R", patch, check=False)
                 if reverted.returncode != 0:
                     probe("restore", "blocked", f"the break patch for {sid} did not revert, so the worktree no longer matches HEAD: {reverted.stderr.strip()}")
@@ -550,7 +610,7 @@ def dynamic(root, feature, timeout, keep):
                 else:
                     restored = run_feature("restore", {0})
                     if restored:
-                        probe("restore", "passed", "reverting the break patch passes again", restored[0])
+                        probe("restore", "passed", "reverting the break patch passes again", restored[0], restored[2])
 
         if base:
             results = [None, None]
@@ -563,12 +623,12 @@ def dynamic(root, feature, timeout, keep):
                 t.start()
             for t in threads:
                 t.join()
-            reports = [parse_document(r["stdout"]) or {} for r in results]
-            ids = {rep.get("runId") for rep in reports}
-            if all(r["exit"] == 0 for r in results) and len(ids) == 2:
-                probe("parallel", "passed", "two concurrent runs both pass with distinct run ids", results[0])
+            runs = [retain(out, f"parallel-{i + 1}", r)[1] for i, r in enumerate(results)]
+            ids = {run["runId"] for run in runs}
+            if all(r["exit"] == 0 for r in results) and len(ids) == 2 and None not in ids:
+                probe("parallel", "passed", "two concurrent runs both pass with distinct run ids", results[0], runs)
             else:
-                probe("parallel", "failed", f"concurrent runs exited {[r['exit'] for r in results]} with run ids {sorted(map(str, ids))}", results[1])
+                probe("parallel", "failed", f"concurrent runs exited {[r['exit'] for r in results]} with run ids {sorted(map(str, ids))}", results[1], runs)
         else:
             probe("parallel", "blocked", "the baseline did not pass, or the worktree no longer matches HEAD")
     finally:
@@ -576,7 +636,6 @@ def dynamic(root, feature, timeout, keep):
             git(root, "worktree", "remove", "--force", tree, check=False)
         if not keep:
             shutil.rmtree(tmp, ignore_errors=True)
-    return doc
 
 
 def main(argv):
@@ -618,7 +677,7 @@ def main(argv):
         print(json.dumps({"contract": CONTRACT, "mode": "report", "file": path, "valid": not findings.errors, "findings": findings.items}, indent=2))
         return 0 if not findings.errors else 1
     if sub == "dynamic":
-        root, trust, feature, timeout, keep = None, False, None, 900, False
+        root, trust, feature, timeout, keep, out = None, False, None, 900, False, None
         i = 0
         while i < len(rest):
             arg = rest[i]
@@ -626,6 +685,8 @@ def main(argv):
                 trust, i = True, i + 1
             elif arg == "--keep":
                 keep, i = True, i + 1
+            elif arg == "--out" and i + 1 < len(rest):
+                out, i = rest[i + 1], i + 2
             elif arg == "--feature" and i + 1 < len(rest):
                 feature, i = rest[i + 1], i + 2
             elif arg == "--timeout" and i + 1 < len(rest):
@@ -643,7 +704,11 @@ def main(argv):
         root = os.path.realpath(root)
         if not os.path.isdir(root):
             usage_error(f"dynamic: not a directory: {root}")
-        doc = dynamic(root, feature, timeout, keep)
+        if out is not None:
+            out = os.path.realpath(out)
+            if os.path.exists(out) and (not os.path.isdir(out) or os.listdir(out)):
+                usage_error(f"dynamic: --out must name an empty or absent directory: {out}")
+        doc = dynamic(root, feature, timeout, keep, out)
         print(json.dumps(doc, indent=2))
         states = {p["status"] for p in doc["probes"]}
         return 1 if "failed" in states else 3 if "blocked" in states else 0
