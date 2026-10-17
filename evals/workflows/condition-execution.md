@@ -113,35 +113,35 @@ Those checks establish fixture and adapter behavior only. A successful check is 
 
 After each live slot the archived runner seals `results/NNN.attempt.json`. The record is written once, read-only, and listed with its SHA-256 in the append-only `results/attempts.jsonl`. It keeps the reporting contract's fields and adds the runner's own status, an artifact inventory of every file and link in the slot directory with its hash and archive coverage, the portable archive digest, and the frozen fixture, tool, payload, request and case digests.
 
-`execution_status` is one of `setup_failed`, `agent_failed`, `timeout`, `collection_failed` or `completed`. `task_outcome` is null unless execution completed; it is then `passed`, `failed`, or `needs_adjudication` when the automatic grader raised an error. Only `passed` sets `counts_as_pass`. A claimed slot whose runner died before writing its result is sealed as `collection_failed`. Allocated slots without a record are reported as unstarted, so the denominator is always the whole schedule. `actual_model`, `tool_operations`, child usage and family usage stay null unless the host observed them; `retry_attempts` is always 0.
+`execution_status` is one of `setup_failed`, `agent_failed`, `timeout`, `collection_failed` or `completed`. `task_outcome` is null unless execution completed; it is then `passed`, `failed`, or `needs_adjudication` when the automatic grader raised an error. Only `passed` sets `counts_as_pass`. A claimed slot whose runner died before writing its result is sealed as `collection_failed`, and sealing it writes `results/STOP.json` because later slots cannot run. Allocated slots without a record are reported as unstarted, so the denominator is always the whole schedule. `actual_model`, `tool_operations`, child usage and family usage stay null unless the host observed them; `retry_attempts` is always 0.
 
-Sealing again with identical evidence does nothing. Sealing different evidence for the same slot fails. Verification fails when a sealed record or any file it inventories changes, when the ledger lists a slot twice, when a claimed slot is never sealed, or when the results directory holds anything outside the allocated slots, such as a `001-retry` directory. The workspace Git index stays inventoried but is exempt from that change check, because read-only Git commands in a later offline regrade can refresh its stat data. Seal an interrupted slot and check the study with:
+Freeze archives `attempts.py` and `adjudication.py` in `runner-source/`. Run the archived copy: the tool refuses to open a study whose frozen copies differ from the modules it loaded. The `seal` command seals only claimed slots that have no ledger entry. Sealing a sealed slot again with the same evidence does nothing; different evidence fails. Verification fails when a sealed record or any file it inventories changes, when the ledger lists a slot twice, when a claimed slot is never sealed, or when the results directory holds anything outside the allocated slots, such as a `001-retry` directory. The workspace Git index stays inventoried but is exempt from that change check, because read-only Git commands in a later offline regrade can refresh its stat data. Seal an interrupted slot and check the study with:
 
 ```bash
-python3 -B evals/workflows/adjudication.py seal --study /absolute/new-study --controls-sha256 SAVED_DIGEST
-python3 -B evals/workflows/adjudication.py status --study /absolute/new-study --controls-sha256 SAVED_DIGEST
+python3 -B /absolute/new-study/runner-source/adjudication.py seal --study /absolute/new-study --controls-sha256 SAVED_DIGEST
+python3 -B /absolute/new-study/runner-source/adjudication.py status --study /absolute/new-study --controls-sha256 SAVED_DIGEST
 ```
 
 ### Review packets
 
 ```bash
-python3 -B evals/workflows/adjudication.py export --study /absolute/new-study \
+python3 -B /absolute/new-study/runner-source/adjudication.py export --study /absolute/new-study \
   --controls-sha256 SAVED_DIGEST --out /absolute/new-review --mask-term SUITE_NAME
 ```
 
 Export creates a new directory once. Each completed attempt gets `packets/<random id>/` with the ordinary request and allowed effects, the frozen source files, the final product files, agent artifacts, the final diff, observed commands with exit codes and output, claimed and observed checks, child artifacts when collected, and the final message. `manifest.json` lists every packet file hash. Attempts that did not complete get no packet and are listed as not exported with their status.
 
-Packets withhold the condition name, invocation prompt, slot, repetition, source group, automatic grader verdict, payload inventories and revisions. Lines and sentences of at least 16 characters from either suite's instruction files are replaced by `[instruction text withheld]`. Paths under an instruction root become `<instructions>/<instruction-file>`. The word `mana`, each `--mask-term`, and payload revisions and digests are replaced too. Binary files are copied as they are unless they match instruction bytes or a suite term, and then they are withheld. Export fails if a masked text file still contains an instruction segment or suite term.
+Packets withhold the condition name, invocation prompt, slot, repetition, source group, automatic grader verdict, payload inventories and revisions. Lines and sentences of at least 16 characters from either suite's instruction files are replaced by `[instruction text withheld]`. Paths under an instruction root become `<instructions>/<instruction-file>`, as do payload file paths and root-level payload file names that no fixture also uses. The word `mana`, each `--mask-term`, and payload revisions and digests are replaced too. Binary files are copied as they are unless they match instruction bytes, `mana` or a `--mask-term`, and then they are withheld. Packets are exported in random slot order and every packet file and directory gets the same fixed timestamp, so neither identifiers nor file times follow the schedule. Export fails if a masked text file still contains an instruction segment or suite term.
 
 `restricted/` is mode 0700. Its `key.json` maps each packet to its slot, condition, attempt hash and packet hash, and records what masking could not hide for that packet: placeholders reveal that instructions were loaded, which the no-suite condition never shows; report style and workflow formats are not rewritten; the ordinary words "reference" and "none" stay; short instruction lines stay; copied binaries are unmasked. Give reviewers only `packets/`.
 
 ### Judgments and regrades
 
 ```bash
-python3 -B evals/workflows/adjudication.py assign --study S --controls-sha256 D --review R --reviewer alice
-python3 -B evals/workflows/adjudication.py judge --study S --controls-sha256 D --review R --packet ID \
+python3 -B S/runner-source/adjudication.py assign --study S --controls-sha256 D --review R --reviewer alice
+python3 -B S/runner-source/adjudication.py judge --study S --controls-sha256 D --review R --packet ID \
   --reviewer alice --kind human --role initial --outcome failed --reason "..." --active-seconds 240 --order-position 1
-python3 -B evals/workflows/adjudication.py regrade --study S --controls-sha256 D --review R \
+python3 -B S/runner-source/adjudication.py regrade --study S --controls-sha256 D --review R \
   --supersedes RECORD_SHA256 --reviewer carol --kind human --outcome passed --reason "..."
 ```
 
@@ -157,4 +157,6 @@ The offline tests drive the real runner through every execution status with a st
 python3 -B -m unittest discover -s evals/workflows -p test_attempts.py
 ```
 
-They establish record and packet behavior on synthetic fixtures. They are not evidence that masking hides every condition from a motivated reviewer, and no human review cohort has run.
+Known limits: `attempts.jsonl` is append-only by convention and each record is hashed, but deleting the final slot together with its directory, archive, record and ledger line leaves it reading as unstarted. Keep a copy of `status` output outside the study after each slot when that matters. A crash during a seal or review write can leave `results/.seal-lock` or `restricted/.lock`; later writes then refuse with a message naming the lock, and it can be removed once no writer is running.
+
+The tests establish record and packet behavior on synthetic fixtures. They are not evidence that masking hides every condition from a motivated reviewer, and no human review cohort has run.

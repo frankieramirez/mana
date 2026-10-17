@@ -188,25 +188,49 @@ def _ledger(results):
     return entries
 
 
+def comparable(record):
+    """Fields a reseal must reproduce: volatile Git stat data and the sealing tool's hash are excluded."""
+    value = {k: v for k, v in record.items() if k not in ('artifact_index', 'artifact_index_sha256', 'sealed_by')}
+    value['artifact_index'] = stable(record['artifact_index'])
+    return value
+
+
+def locked(path):
+    try:
+        path.mkdir()
+    except FileExistsError:
+        raise ValueError(f'{path.name} exists; confirm no seal or review write is running, '
+                         'then remove the stale lock directory') from None
+
+
 def seal(study, slot):
-    """Write the slot's record once. Resealing identical evidence is a no-op; different evidence fails."""
+    """Write the slot's record once. Resealing the same evidence is a no-op; different evidence fails."""
     study.verify()
     if type(slot) is not int or not 1 <= slot <= len(study.schedule):
         raise ValueError('invalid scheduled slot')
     results = study.root / 'results'
-    record = build_record(study, slot)
-    data = encoded(record)
     target = results / f'{slot:03d}.attempt.json'
     lock = results / '.seal-lock'
-    lock.mkdir()
+    locked(lock)
     try:
+        out = results / f'{slot:03d}'
+        stop = results / 'STOP.json'
+        if (out.is_dir() and not (out / 'result.json').is_file() and not stop.exists()
+                and not target.exists()):
+            # An interrupted claim cannot be followed by later slots; record why the schedule ended.
+            stop.write_bytes(encoded({'slot': slot, 'execution': 'collection_failed', 'failures': [
+                'result.json missing: interrupted or unrecorded attempt'],
+                'reason': 'interrupted allocated attempt sealed without a runner result'}))
+        record = build_record(study, slot)
+        data = encoded(record)
         entries = _ledger(results)
         if target.exists() or target.is_symlink():
-            if target.is_symlink() or target.read_bytes() != data:
-                raise ValueError(f'slot {slot} is already sealed with different evidence')
-            if not any(e['slot'] == slot and e['sha256'] == digest(data) for e in entries):
+            existing = target.read_bytes() if not target.is_symlink() else b''
+            if not any(e['slot'] == slot and e['sha256'] == digest(existing) for e in entries):
                 raise ValueError(f'slot {slot} record is missing from the attempt ledger')
-            return {'slot': slot, 'sha256': digest(data), 'created': False}
+            if comparable(json.loads(existing)) != comparable(record):
+                raise ValueError(f'slot {slot} is already sealed with different evidence')
+            return {'slot': slot, 'sha256': digest(existing), 'created': False}
         if any(e['slot'] == slot for e in entries):
             raise ValueError(f'slot {slot} already has a ledger entry')
         descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o444)
@@ -220,12 +244,16 @@ def seal(study, slot):
 
 
 def seal_claimed(study):
-    """Seal every claimed slot that lacks a record, such as one interrupted before its runner finished."""
-    sealed = []
+    """Seal claimed slots without a ledger entry, such as one interrupted before its runner finished.
+
+    Already sealed slots are skipped; verify() reports any later change to their evidence.
+    """
+    sealed = [e['slot'] for e in _ledger(study.root / 'results')]
+    created = []
     for slot in range(1, len(study.schedule) + 1):
-        if (study.root / 'results' / f'{slot:03d}').is_dir():
-            sealed.append(seal(study, slot))
-    return sealed
+        if slot not in sealed and (study.root / 'results' / f'{slot:03d}').is_dir():
+            created.append(seal(study, slot))
+    return created
 
 
 def verify(study):

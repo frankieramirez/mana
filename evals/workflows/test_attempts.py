@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import random
 import shutil
@@ -169,6 +170,33 @@ class AttemptTests(unittest.TestCase):
         record = attempts.verify(study)[1][0]
         self.assertEqual((record['execution_status'], record['task_outcome']), ('collection_failed', None))
         self.assertIn('result.json missing or unreadable: interrupted or unrecorded attempt', record['failures'])
+        self.assertTrue(record['stopped_schedule'])
+        self.assertEqual(attempts.summarize(study)['stopped_at_slot'], 1)
+        with self.assertRaises(ValueError):
+            study.claim(2)
+
+    def test_refreshed_index_does_not_block_resealing_or_later_slots(self):
+        study = self.freeze()
+        self.execute(study, 1)
+        results = study.root / 'results'
+        work = results / '001' / 'workspace'
+        index = work / '.git' / 'index'
+        before = index.read_bytes()
+        os.utime(work / 'app.txt', (2000000000, 2000000000))
+        run.git(work, 'update-index', '--refresh')
+        self.assertNotEqual(index.read_bytes(), before)
+        self.assertFalse(attempts.seal(study, 1)['created'])
+        attempts.verify(study)
+        study.claim(2)
+        study.release()
+        created = attempts.seal_claimed(study)
+        self.assertEqual([item['slot'] for item in created], [2])
+        records = attempts.verify(study)
+        self.assertEqual(records[2][0]['execution_status'], 'collection_failed')
+        self.assertEqual(attempts.summarize(study, records)['stopped_at_slot'], 2)
+        (results / '.seal-lock').mkdir()
+        with self.assertRaisesRegex(ValueError, 'stale lock'):
+            attempts.seal(study, 1)
 
     def test_sealed_records_are_immutable_and_hidden_replacement_is_detected(self):
         study = self.freeze()
@@ -211,6 +239,9 @@ class AttemptTests(unittest.TestCase):
         def extra(out, work, condition):
             (work / 'artifacts' / 'shot.bin').write_bytes(b'\x89PNG\x00\xff')
             (work / 'artifacts' / 'copied.bin').write_bytes(b'\x00\xff\xfe' + b'mana')
+            (work / 'artifacts' / 'termed.bin').write_bytes(b'\x00\xff' + b'CURSOR')
+            if condition['kind'] == 'mana':
+                (work / 'artifacts' / 'note.txt').write_text('Read SKILL.md and asset.bin first.\n')
             if condition['kind'] == 'reference':
                 (out / 'threads.json').write_text(json.dumps({'child-1': {'model': 'gpt-6.1-sol'}}))
                 (out / 'children').mkdir()
@@ -233,6 +264,11 @@ class AttemptTests(unittest.TestCase):
                              'artifacts/shot.bin'):
                 self.assertIn(required, manifest['files'])
             self.assertNotIn('artifacts/copied.bin', manifest['files'])
+            self.assertNotIn('artifacts/termed.bin', manifest['files'])
+            if entry['condition'] == 'mana':
+                self.assertEqual((directory / 'artifacts/note.txt').read_text(),
+                                 'Read <instruction-file> and <instruction-file> first.\n')
+            self.assertTrue(all(path.lstat().st_mtime == 0 for path in directory.rglob('*')))
             self.assertFalse((directory / 'prompt.txt').exists())
             text = '\n'.join(p.read_bytes().decode('utf-8', 'replace') for p in directory.rglob('*') if p.is_file())
             for forbidden in ('MANA ONLY', 'REFERENCE ONLY', 'a' * 40, 'b' * 40, 'Use the instructions at',
@@ -258,7 +294,7 @@ class AttemptTests(unittest.TestCase):
                 self.assertIn('children/threads.json', manifest['files'])
             else:
                 self.assertEqual(manifest['children'], {'collected': False, 'reason': 'delegation was disabled for this study'})
-            layouts[packet_id] = {p for p in manifest['files'] if not p.startswith('children/')}
+            layouts[packet_id] = {p for p in manifest['files'] if not p.startswith('children/') and p != 'artifacts/note.txt'}
         self.assertEqual(len({frozenset(v) for v in layouts.values()}), 1)
         with self.assertRaises(FileExistsError):
             adjudication.export(study, review_root)
@@ -416,7 +452,17 @@ class AttemptTests(unittest.TestCase):
     def test_archived_runner_seals_and_cli_reviews_without_model(self):
         study = self.completed_study()
         self.assertIn('attempts.py', study.controls['runner_inventory'])
-        tool = [sys.executable, '-B', str(run.HERE / 'adjudication.py')]
+        self.assertIn('adjudication.py', study.controls['runner_inventory'])
+        tool = [sys.executable, '-B', str(study.root / 'runner-source/adjudication.py')]
+        edited = self.root / 'edited-source'
+        shutil.copytree(study.root / 'runner-source', edited)
+        (edited / 'adjudication.py').chmod(0o644)
+        (edited / 'adjudication.py').write_text((edited / 'adjudication.py').read_text() + '# edited\n')
+        drift = subprocess.run([sys.executable, '-B', str(edited / 'adjudication.py'), 'status', '--study',
+                                str(study.root), '--controls-sha256', study.expected_digest],
+                               capture_output=True, text=True)
+        self.assertNotEqual(drift.returncode, 0)
+        self.assertIn('differs from frozen sources', drift.stderr)
         pin = ['--study', str(study.root), '--controls-sha256', study.expected_digest]
         status = subprocess.run(tool + ['status'] + pin, capture_output=True, text=True)
         self.assertEqual(status.returncode, 0, status.stderr)

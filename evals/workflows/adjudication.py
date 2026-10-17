@@ -62,6 +62,9 @@ class Masker:
         self.binary = set()
         self.paths = []
         revisions = []
+        root_names = set()
+        # Bare names also used by a fixture stay readable; the fixture file is identical across conditions.
+        fixture_names = {p.name for p in (study.root / 'fixture-source').rglob('*')}
         for kind in ('mana', 'reference'):
             root = study.root / 'payloads' / kind
             payload = study.controls['conditions'][kind]
@@ -73,6 +76,8 @@ class Masker:
                 self.binary.add(info['sha256'])
                 if '/' in relative:
                     self.paths.append((relative, '<instruction-file>'))
+                elif relative not in fixture_names:
+                    root_names.add(relative)
                 try:
                     text = (root / relative).read_text(encoding='utf-8')
                 except UnicodeError:
@@ -84,6 +89,9 @@ class Masker:
         self.paths.append((str(study.root), '<study>'))
         terms = ['mana'] + [t for t in extra_terms if t.strip()]
         self.terms = re.compile(r'(?i)(?<![A-Za-z0-9])(' + '|'.join(re.escape(t) for t in terms) + r')(?![A-Za-z0-9])')
+        self.binary_terms = re.compile(b'(?i)' + b'|'.join(re.escape(t.encode()) for t in terms))
+        self.root_names = (re.compile(r'(?<![\w./-])(' + '|'.join(re.escape(n) for n in sorted(root_names, key=len, reverse=True))
+                                      + r')(?![\w-])') if root_names else None)
         self.revisions = re.compile('|'.join(re.escape(r) for r in revisions)) if revisions else None
 
     def instruction_spans(self, text):
@@ -119,6 +127,9 @@ class Masker:
                 text = text.replace(old, new)
         # A file name under an instruction root can name the suite's workflow.
         text = re.sub(r'<instructions>/[^\s\'"`)\]]+', '<instructions>/<instruction-file>', text)
+        if self.root_names is not None and self.root_names.search(text):
+            hits.add('instruction_path')
+            text = self.root_names.sub('<instruction-file>', text)
         if self.revisions is not None and self.revisions.search(text):
             hits.add('revision')
             text = self.revisions.sub('<revision>', text)
@@ -199,7 +210,7 @@ class PacketWriter:
         try:
             self.put_bytes(relative, self.text(data.decode('utf-8')).encode())
         except UnicodeError:
-            if digest(data) in self.masker.binary or re.search(rb'(?i)mana', data):
+            if digest(data) in self.masker.binary or self.masker.binary_terms.search(data):
                 self.withheld.append(relative + ' (binary instruction bytes or suite term)')
                 self.limits.append('binary file withheld because it matches instruction bytes or a suite term: ' + relative)
             else:
@@ -299,8 +310,11 @@ def build_packet(study, record, slot_dir, directory, packet_id, masker):
 
 
 def _lock_down(root):
+    # A fixed timestamp keeps file times from revealing the export order.
     for path in sorted(root.rglob('*'), reverse=True):
+        os.utime(path, (0, 0), follow_symlinks=False)
         path.chmod(0o555 if path.is_dir() else 0o444)
+    os.utime(root, (0, 0))
     root.chmod(0o555)
 
 
@@ -322,7 +336,9 @@ def export(study, destination, extra_terms=()):
            'attempts_sha256': digest(Path(attempts.__file__).read_bytes()),
            'mask_terms': ['mana'] + list(extra_terms), 'packets': {}, 'not_exported': []}
     used = set()
-    for slot in range(1, len(study.schedule) + 1):
+    order = list(range(1, len(study.schedule) + 1))
+    random.SystemRandom().shuffle(order)
+    for slot in order:
         if slot not in records:
             key['not_exported'].append({'slot': slot, 'reason': 'unstarted or unsealed allocated slot'})
             continue
@@ -344,6 +360,7 @@ def export(study, destination, extra_terms=()):
             'slot': slot, 'case_id': record['case_id'], 'condition': record['condition'],
             'repetition': record['repetition'], 'attempt_sha256': sha, 'packet_sha256': packet_sha,
             'automatic_task_outcome': record['task_outcome'], 'masking': masking}
+    key['not_exported'].sort(key=lambda item: item['slot'])
     descriptor = os.open(restricted / 'key.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o400)
     with os.fdopen(descriptor, 'wb') as file:
         file.write(encoded(key))
@@ -413,7 +430,7 @@ class Review:
 
     def append(self, kind, record):
         lock = self.restricted / '.lock'
-        lock.mkdir()
+        attempts.locked(lock)
         try:
             entries = self.entries()
             seq = len(entries) + 1
@@ -675,7 +692,12 @@ def main():
     parser.add_argument('--grader-sha256')
     args = parser.parse_args()
     try:
-        study = conditions.FrozenStudy(args.study, args.controls_sha256)
+        # Only the archived runner-source copies of these modules may seal or review the study.
+        here = Path(__file__).resolve().parent
+        loaded = {'attempts.py': digest(Path(attempts.__file__).read_bytes()), 'adjudication.py': source_hash()}
+        if Path(attempts.__file__).resolve().parent != here:
+            raise ValueError('attempts.py must load from beside adjudication.py')
+        study = conditions.FrozenStudy(args.study, args.controls_sha256, loaded, here)
         if args.command == 'seal':
             result = attempts.seal_claimed(study)
         elif args.command == 'export':
