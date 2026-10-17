@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "study": "effectiveness-pilot-1",
+  "area": "debugging",
+  "ticket": "https://github.com/frankieramirez/mana/issues/106",
+  "contract": "docs/specs/effectiveness-evaluation.md",
+  "status": "authored and hash-locked; second review pending; not yet frozen into a study directory; no outcomes collected",
+  "ready_for_study_freeze": false,
+  "blockers": [
+    "Independent second review of contracts, known-good and known-bad outcomes and valid alternatives is pending.",
+    "Reference package inventory digest is unresolved.",
+    "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
+  ],
+  "exposure_rule": "A source group whose request, workspace or oracle a candidate-instruction author reads while tuning becomes development. Record it in exposures, set its split to development and author an untouched replacement group for confirmation.",
+  "exposures": [],
+  "cases": [
+    {
+      "id": "debug-boundary",
+      "source_group": "sealed-debug-boundary-01",
+      "job": "debugging",
+      "split": "confirmation",
+      "fixture_path": "inputs/debug-boundary/workspace",
+      "fixture_sha256": "340140232c9cf82ae9b158b016f8088413898f307bace0c2b8aadbc47548af29",
+      "request_path": "inputs/debug-boundary/request.md",
+      "request_sha256": "e059af8dbfc4d21d8a9fc779bb1042f783aa20faa0fc53efa632db34b452bc04",
+      "allowed_effects": {
+        "product_files": [
+          "ingest.py",
+          "validation.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "cast/SKILL.md",
+        "reference": "skills/poteto-mode/SKILL.md",
+        "none": null
+      },
+      "timeout_seconds": 600,
+      "delegation_allowed": true,
+      "oracle_id": "oracle-debug-boundary-01",
+      "oracle_sha256": "8f55af54ab6ffb14ddf1fa58773d2d4e90dcde5e4fb2a5404a62e9bcd43ed36f"
+    },
+    {
+      "id": "debug-false-premise",
+      "source_group": "sealed-debug-regression-claim-01",
+      "job": "debugging",
+      "split": "confirmation",
+      "fixture_path": "inputs/debug-false-premise/workspace",
+      "fixture_sha256": "1ed70b4f880cf09422263bac08925ad83369e0a0db01e5fc122f791c53f1a99b",
+      "request_path": "inputs/debug-false-premise/request.md",
+      "request_sha256": "3c7216b07ed8493be683f3ec6d8da47c55f87695e4da45417baf273b99da67b8",
+      "allowed_effects": {
+        "product_files": [
+          "billing.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "cast/SKILL.md",
+        "reference": "skills/poteto-mode/SKILL.md",
+        "none": null
+      },
+      "timeout_seconds": 600,
+      "delegation_allowed": true,
+      "oracle_id": "oracle-debug-regression-claim-01",
+      "oracle_sha256": "005cb81feac3ccb5feecc9fb699328de050933cda547b13b2632ee3991716bdc"
+    },
+    {
+      "id": "debug-partial-retry",
+      "source_group": "sealed-debug-retry-01",
+      "job": "debugging",
+      "split": "confirmation",
+      "fixture_path": "inputs/debug-partial-retry/workspace",
+      "fixture_sha256": "79271bea273ae17e1c83103e0391b3574aea3c49a613c9f0b59bba0658c4478c",
+      "request_path": "inputs/debug-partial-retry/request.md",
+      "request_sha256": "40750fa9ceb044273c09e82a01cded5ce698e16477e6444586a18c598f428ca8",
+      "allowed_effects": {
+        "product_files": [
+          "shipping.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "cast/SKILL.md",
+        "reference": "skills/poteto-mode/SKILL.md",
+        "none": null
+      },
+      "timeout_seconds": 600,
+      "delegation_allowed": true,
+      "oracle_id": "oracle-debug-retry-01",
+      "oracle_sha256": "f05a4fb0b30e5ef94c2da06f1012c29c13a791514e24d0ceafc38aa4db747e4a"
+    }
+  ],
+  "conditions": {
+    "mana": {
+      "repository": "frankieramirez/mana",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+      "package_root": "skills",
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "inventory_files": 181,
+      "inventory_status": "verified: conditions.inventory_digest over git archive of skills/ at the revision",
+      "entrypoint": "cast/SKILL.md",
+      "entrypoint_sha256": "4ba50041e555b52219a2a6c40f7d972fbbac109ff490ec6f53a802204937acf7",
+      "supporting_files": {},
+      "route": "Cast implements one ticket, spec or conversation request; the request bounds it to a local repair with no commit or publication.",
+      "adapter_translations": []
+    },
+    "reference": {
+      "repository": "cursor/plugins",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+      "package_root": "pstack",
+      "inventory_sha256": null,
+      "inventory_status": "unresolved: the authoring session could fetch single files at the revision but not list the package tree. Run run.py --payload-inventory on a checkout of pstack/ at the revision before any study freeze.",
+      "inventory_files": null,
+      "entrypoint": "skills/poteto-mode/SKILL.md",
+      "entrypoint_sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a",
+      "supporting_files": {
+        "skills/poteto-mode/playbooks/bug-fix.md": "66e26542dad131cfd7df80ac0cdf81ed4d85e7b5e3f0eb65b933888760c4831f"
+      },
+      "route": "poteto-mode selects its bug fix playbook for all three requests. The request bounds it to a local repair with no commit, delegation to a configured external model, or pull request.",
+      "adapter_translations": []
+    },
+    "none": {
+      "payload": null,
+      "entrypoint": null
+    }
+  },
+  "freeze": {
+    "frozen_on": "2026-10-17",
+    "method": "freeze_sha256 is conditions.digest(conditions.encoded({cases, conditions})). Review records sit outside it so the second reviewer can sign without changing the freeze.",
+    "freeze_sha256": "2e4e6c078d4b37073f0fe46bfc8728c9c72df1fc15d94591e66cfa5603eb1949"
+  },
+  "review": {
+    "author": {
+      "identity": "Claude Opus 5.5 fixture-author worker for issue 106 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "role": "Instantiated requests, workspaces, hidden controls and graded variants.",
+      "edits_candidate_instructions": false,
+      "read_public_development_inputs": "Read the public debugging fixtures only to avoid reusing them; no prompt, source variant or expected output was copied.",
+      "date": "2026-10-17"
+    },
+    "second_review": {
+      "status": "pending",
+      "reviewer": null,
+      "date": null,
+      "checked": [],
+      "findings": [],
+      "note": "REVIEWER RECORD SLOT. An independent reviewer who did not author these fixtures checks each contract, the known-good and known-bad outcomes and the valid alternatives, then records identity, date, what was checked and findings here. Editing this block does not change freeze_sha256."
+    }
+  }
+}

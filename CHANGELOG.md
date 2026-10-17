@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. The second review, the reference package inventory and runner integration are still pending.
+
 ## 0.43.0
 
 - Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.
