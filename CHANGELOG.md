@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Leyline's dynamic conformance check keeps the reports it judged. Each feature probe records its run id, and the checker copies every report with its SHA-256 into a retained folder (`--out`) before it removes the worktree. An incomplete run under the break patch now blocks the `break` probe instead of failing the checker. A probe that does not pass keeps the tail of stdout as well as stderr, and every probe appears with a reason when it never ran. The report check rejects a report with no `source.identity.head`. Regressions for all five cases from the Ultima refresh are in `scripts/test-leyline.sh`.
+
 ## 0.43.1
 
 - The evaluator freezes the dispel payloads for the first prose instruction ablation. Beside the current Fidelity rules, one arm swaps in the narrow source-and-scope candidate and another removes the Fidelity section and its self-check item. Each arm is a complete standalone skill with a hashed file inventory, and each changed arm keeps its exact patch. A prose adapter freezes studies over those arms and archives the raw source, protected spans, final output and observed instruction reads for every attempt. Offline checks prove that only the two selected blocks differ between arms. The installed dispel skill does not change, and no confirmation cases or live runs are included.
