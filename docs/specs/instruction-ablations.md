@@ -1,7 +1,7 @@
 # Instruction changes supported by outcome evidence
 
 Decision: [Choose instruction changes through failure cases, counterexamples, and ablation](https://github.com/frankieramirez/mana/issues/84).
-Status: decision settled on 2026-10-17; candidate payloads and live experiments unstarted.
+Status: decision settled on 2026-10-17. The three prose-fidelity payloads and their execution adapter are frozen in [prose instruction-ablation payloads](../../evals/workflows/prose-ablation.md). Confirmation cases and live experiments are unstarted.
 
 ## Decision and dependencies
 
@@ -68,7 +68,7 @@ The candidate's author does not tune against those labels. Before execution, an 
 
 Run six groups, three conditions and two repetitions: 36 parent invocations, no children, 180 seconds each, one parent at a time. Maximum parent process time is 108 minutes. Use the same validated host, requested model and medium reasoning as the main protocol, with a fresh host check and an explicit instruction-loading wrapper. Shuffle condition/repetition cells within each source group using seed `20261017`; retain every attempt and provide no automatic retries. This group is separate from the 72-invocation comparative pilot.
 
-The existing workflow loader does not yet support dispel execution. Add a prose fixture and explicit condition payloads inside the existing evaluation machinery before launching. Preserve the original raw source and final answer, plus actual skill-file reads. The optional semantic runner may grade saved outputs afterwards; it does not execute the conditions or replace human fidelity review.
+The [prose adapter](../../evals/workflows/prose-ablation.md) supplies the prose fixture and the explicit condition payloads inside the existing evaluation machinery. Preserve the original raw source and final answer, plus actual skill-file reads. The optional semantic runner may grade saved outputs afterwards; it does not execute the conditions or replace human fidelity review.
 
 ## Acceptance, reversion and uncertainty
 

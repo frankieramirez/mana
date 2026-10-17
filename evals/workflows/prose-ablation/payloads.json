@@ -1,0 +1,88 @@
+{
+  "arms": {
+    "current-fidelity": {
+      "directory": "payloads/current-fidelity",
+      "inventory": {
+        "SKILL.md": {
+          "bytes": 10434,
+          "executable": false,
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "references/archmage.md": {
+          "bytes": 3489,
+          "executable": false,
+          "sha256": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+        }
+      },
+      "inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+      "patch": null,
+      "patch_sha256": null
+    },
+    "scope-fidelity": {
+      "directory": "payloads/scope-fidelity",
+      "inventory": {
+        "SKILL.md": {
+          "bytes": 9876,
+          "executable": false,
+          "sha256": "c6afcf89eb980750463905a7c822c0d30074779b5837fe17023207ce6cb83458"
+        },
+        "references/archmage.md": {
+          "bytes": 3489,
+          "executable": false,
+          "sha256": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+        }
+      },
+      "inventory_sha256": "b7df17082998f0a266db017fac6a502476ad25ea18e746c8d466498bf9e771db",
+      "patch": "patches/scope-fidelity.patch",
+      "patch_sha256": "6ced65658d9ed9184d370604680f948591e94704b72f2e3961647ade6b64b0cb"
+    },
+    "section-removed": {
+      "directory": "payloads/section-removed",
+      "inventory": {
+        "SKILL.md": {
+          "bytes": 9359,
+          "executable": false,
+          "sha256": "8fcb47e1f1723c6e06c7a2d248f480bc82c8528b7a9a0498b45b9a7507c0201f"
+        },
+        "references/archmage.md": {
+          "bytes": 3489,
+          "executable": false,
+          "sha256": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+        }
+      },
+      "inventory_sha256": "69c4df4644f9ddd7d50a059cfbd8e12fc91a4199ec6d77e955f5308055971e0c",
+      "patch": "patches/section-removed.patch",
+      "patch_sha256": "3353a40bf1f702438b40597cee12dd206b6721d771f662c9ccc306b963dcb1b8"
+    }
+  },
+  "baseline_revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+  "candidate_text": "Preserve the source's task-relevant facts, conditions, quantifiers and uncertainty. Make the wording concrete only with details the source prose states. Preserve exempt text exactly; derive new claims from it only when the user explicitly requests interpretation. A missing reason or measurement stays missing. Removing filler must preserve a qualified claim that matters to the task. Before returning, compare every changed claim with its source and restore any lost condition or unsupported addition.",
+  "entrypoint": "SKILL.md",
+  "evaluation_only": true,
+  "experiment": "prose-fidelity-1",
+  "selected_regions": {
+    "fidelity_section": {
+      "first_line": 101,
+      "last_line": 112
+    },
+    "self_check_item_9": {
+      "first_line": 134,
+      "last_line": 134
+    }
+  },
+  "source_inventory": {
+    "SKILL.md": {
+      "bytes": 10434,
+      "executable": false,
+      "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+    },
+    "references/archmage.md": {
+      "bytes": 3489,
+      "executable": false,
+      "sha256": "337e7dec905ac43d1fba6085fbdae67d3b02a2201bd18e99169433472efbeed6"
+    }
+  },
+  "source_inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+  "source_path": "skills/dispel",
+  "version": 1
+}
