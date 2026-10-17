@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Frozen condition studies seal every allocated slot as a write-once attempt record that keeps execution status apart from task outcome, inventories each artifact with its hash, and rejects hidden replacements. Completed attempts export to anonymized review packets that withhold condition names and instruction text and record what masking could not hide. Two independent judgments, a human adjudication and append-only regrades preserve the original evidence hashes. Unobserved model identity, child usage and human review time stay null. No reviewer cohort or live study has run.
+
 ## 0.43.0
 
 - Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.

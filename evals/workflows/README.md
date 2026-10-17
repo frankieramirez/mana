@@ -100,7 +100,7 @@ See `findings.md` for measured pilot outcomes and limits.
 
 ## Package C focused comparisons
 
-For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study.
+For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study. Each allocated slot is sealed as an immutable attempt record, and completed attempts export to blinded review packets with independent judgment and regrade records.
 
 Use `--skill-root /absolute/baseline/skills` to install a saved baseline payload; omit it for the candidate. Each run records the installed file hashes and retains the runner sources beside the results. Keep baseline and candidate requests, model, reasoning, and tool configuration identical. Example:
 
