@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The evaluator freezes the dispel payloads for the first prose instruction ablation. Beside the current Fidelity rules, one arm swaps in the narrow source-and-scope candidate and another removes the Fidelity section and its self-check item. Each arm is a complete standalone skill with a hashed file inventory, and each changed arm keeps its exact patch. A prose adapter freezes studies over those arms and archives the raw source, protected spans, final output and observed instruction reads for every attempt. Offline checks prove that only the two selected blocks differ between arms. The installed dispel skill does not change, and no confirmation cases or live runs are included.
+
 ## 0.43.0
 
 - Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.
