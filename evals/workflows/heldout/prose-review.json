@@ -10,7 +10,7 @@
   "second_review": {
     "status": "changes_required",
     "reviewer": "independent reviewer agent, Claude",
-    "reviewed_freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+    "reviewed_freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
     "date": "2026-10-17",
     "checked": {
       "contracts": true,
@@ -20,127 +20,106 @@
     },
     "notes": {
       "verdict": "changes required",
-      "checks_meaning": "true: checked with no defect; false: checked and found defects. known_good is false because faithful rewrites now fail contradicted-fact; known_bad is false because negated or appended contradictions still pass.",
-      "previous_outputs": "All 35 outputs from history entries 1 and 2 regrade as expected. The two defects of entry 2 are fixed for the exact phrasings tested, and labels r7 to r10 (prose-exempt) and r7 to r9 (prose-scope) are correct.",
+      "checks_meaning": "true: checked with no defect; false: checked and found defects.",
+      "labeled_examples": "All 70 labeled examples grade to their expected outcome and failures. No known-bad example passes and no known-good or valid-alternative example fails. r10 routing to a reviewer is acceptable.",
+      "previous_outputs": "All 52 outputs from earlier rounds grade acceptably: every faithful one passes or goes to a reviewer, and every unfaithful one fails or goes to a reviewer, except the two open-ended added facts recorded as observations since the first re-review (sweep also runs at startup; most common example).",
       "alternatives": [
         {
           "case": "prose-exempt",
-          "output": "\"The cache does not stay warm across a restart; it starts cold.\"",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"There is no restart after which the cache isn't cold.\"",
+          "output": "\"Nothing in the cache survives a restart, so it starts cold.\"",
           "reviewer_label": "faithful",
           "grader_result": "failed contradicted-fact"
         },
         {
           "case": "prose-exempt",
-          "output": "\"A full cache, one that is not empty but has no room left, still renders new thumbnails without storing them.\"",
+          "output": "\"No thumbnail is kept across a restart; the cache starts cold.\"",
           "reviewer_label": "faithful",
-          "grader_result": "failed contradicted-fact"
+          "grader_result": "needs_adjudication"
         },
         {
           "case": "prose-exempt",
-          "output": "\"Once the cache is no longer empty and fills up, new thumbnails still render but are not stored.\"",
-          "reviewer_label": "faithful",
-          "grader_result": "failed contradicted-fact"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"A restart leaves it cold; nothing is kept from before.\"",
+          "output": "\"Whatever was cached before a restart is gone, so the cache starts cold.\"",
           "reviewer_label": "faithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-exempt",
-          "output": "\"A restart doesn't leave the cache cold.\"",
+          "output": "starts cold, \"but old thumbnails are still there afterwards\"",
           "reviewer_label": "unfaithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-exempt",
-          "output": "\"After a restart the cache isn't left cold.\"",
+          "output": "starts cold, then \"Thumbnails stay in it across restarts.\"",
           "reviewer_label": "unfaithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-exempt",
-          "output": "\"The cache doesn't come back cold after a restart.\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "starts cold, \"though thumbnails from before the restart are carried over\"",
+          "output": "full cache: new thumbnails not stored \"and older ones are pushed aside\"",
           "reviewer_label": "unfaithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-scope",
-          "output": "failing records, \"including one with a future posted_on date, is not imported\"",
+          "output": "\"every record that clears validation\"",
           "reviewer_label": "faithful",
-          "grader_result": "passed"
+          "grader_result": "needs_adjudication"
         },
         {
           "case": "prose-scope",
-          "output": "failing records, \"a future posted_on date among them, aren't imported\"",
+          "output": "\"a future posted_on date is one example, not the only reason\"",
           "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "one sentence, \"rejects the rest, including any with a future posted_on date\"",
-          "reviewer_label": "faithful",
-          "grader_result": "needs_adjudication (invalid-excluded-and-reported)"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"Others (a future posted_on date is one example) are skipped\"",
-          "reviewer_label": "faithful",
-          "grader_result": "needs_adjudication (records-not-modified)"
-        },
-        {
-          "case": "prose-scope",
-          "output": "valid records imported, \"future posted_on dates included\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "valid records imported, \"future posted_on dates too\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "importer \"now accepts a future posted_on date\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "a future posted_on date \"only triggers a warning\"",
-          "reviewer_label": "unfaithful",
           "grader_result": "failed example-made-exhaustive"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"Records that fail validation, not only those with a future posted_on date, aren't imported\"",
+          "reviewer_label": "faithful",
+          "grader_result": "failed example-made-exhaustive"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"while a record that fails, for example one with a future posted_on date, is not imported\"",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"Records with a future posted_on date no longer fail validation and are imported.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "failed contradicted-fact"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"A future posted_on date is no reason to reject a record.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
         }
       ],
       "defects": [
         {
-          "where": "evals/workflows/heldout/oracles/prose-exempt.json:116",
-          "scenario": "The negated cold/empty pattern ignores its subject and the restart, so faithful text fails contradicted-fact: \"one that is not empty but has no room left\" about a full cache, \"Once the cache is no longer empty and fills up\", and the double negative \"no restart after which the cache isn't cold\"."
+          "where": "evals/workflows/heldout/oracles/prose-exempt.json:117",
+          "scenario": "The unnegated \"cache survives ... restart\" contradiction matches inside \"Nothing in the cache survives a restart, so it starts cold\", a faithful sentence, and hard-fails it as contradicted-fact."
         },
         {
-          "where": "evals/workflows/heldout/oracles/prose-exempt.json:115-117",
-          "scenario": "Negations with other verbs pass with nothing flagged: \"A restart doesn't leave the cache cold\", \"isn't left cold\", \"doesn't come back cold\", and \"thumbnails from before the restart are carried over\"."
+          "where": "evals/workflows/heldout/oracles/prose-scope.json:49",
+          "scenario": "The exhaustive-example contradiction is negation blind: \"one example, not the only reason\" and \"not only those with a future posted_on date\" are faithful and hard-fail example-made-exhaustive."
         },
         {
-          "where": "evals/workflows/heldout/oracles/prose-scope.json:67-68",
-          "scenario": "A future posted_on record placed in the success scope still passes when the marker follows the field or uses another verb: \"future posted_on dates included\", \"future posted_on dates too\", \"now accepts a future posted_on date\"."
+          "where": "evals/workflows/heldout/oracles/prose-exempt.json:120-135",
+          "scenario": "A contradiction with no negation and a verb outside the second clause rule passes: \"old thumbnails are still there afterwards\" (no restart word in that clause) and \"Thumbnails stay in it across restarts\"."
+        },
+        {
+          "where": "evals/workflows/heldout/oracles/prose-exempt.json:91-97",
+          "scenario": "no-full-eviction-mechanism still relies on a verb list with no reviewer routing: \"older ones are pushed aside\" when the cache is full passes."
+        },
+        {
+          "where": "evals/workflows/heldout/oracles/prose-scope.json:70-79",
+          "scenario": "The posted_on sentence rule is skipped when any failure word appears, so \"A future posted_on date is no reason to reject a record\" passes."
         }
       ],
-      "recommendation": "Each round of added verbs closes the tested phrasings and leaves neighbours open. A sturdier screen would send any negation in a clause that mentions cold, empty or restart to needs_adjudication, and any sentence that names posted_on without a failure cue (fail, reject, invalid, skip, example) to needs_adjudication, keeping hard failures for unnegated contradictions."
+      "recommendation": "Route the remaining hard contradictions through the negation cue first (any negation in the clause sends to a reviewer before a fail), give no-full-eviction-mechanism a scoped rule like cold-after-restart, send any sentence after a cold or restart statement that mentions thumbnails with still, stay, remain or keep to a reviewer, and treat a negation next to the failure word in the posted_on rule as no failure word."
     }
   },
   "history": [
@@ -446,6 +425,142 @@
         "observations": [
           "Open-ended added facts (sweep runs at startup, most common example) pass the screens. Both groups now carry a general reviewer question for added facts (prose-exempt no-inferred-purpose at line 145, prose-scope no-inferred-fact at line 131), so these rest on reviewers and are not counted as defects."
         ]
+      }
+    },
+    {
+      "status": "changes_required",
+      "reviewer": "independent reviewer agent, Claude",
+      "reviewed_freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+      "date": "2026-10-17",
+      "checked": {
+        "contracts": true,
+        "known_good": false,
+        "known_bad": false,
+        "valid_alternatives": true
+      },
+      "notes": {
+        "verdict": "changes required",
+        "checks_meaning": "true: checked with no defect; false: checked and found defects. known_good is false because faithful rewrites now fail contradicted-fact; known_bad is false because negated or appended contradictions still pass.",
+        "previous_outputs": "All 35 outputs from history entries 1 and 2 regrade as expected. The two defects of entry 2 are fixed for the exact phrasings tested, and labels r7 to r10 (prose-exempt) and r7 to r9 (prose-scope) are correct.",
+        "alternatives": [
+          {
+            "case": "prose-exempt",
+            "output": "\"The cache does not stay warm across a restart; it starts cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"There is no restart after which the cache isn't cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"A full cache, one that is not empty but has no room left, still renders new thumbnails without storing them.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"Once the cache is no longer empty and fills up, new thumbnails still render but are not stored.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"A restart leaves it cold; nothing is kept from before.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"A restart doesn't leave the cache cold.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"After a restart the cache isn't left cold.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"The cache doesn't come back cold after a restart.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "starts cold, \"though thumbnails from before the restart are carried over\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "failing records, \"including one with a future posted_on date, is not imported\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "failing records, \"a future posted_on date among them, aren't imported\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "one sentence, \"rejects the rest, including any with a future posted_on date\"",
+            "reviewer_label": "faithful",
+            "grader_result": "needs_adjudication (invalid-excluded-and-reported)"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"Others (a future posted_on date is one example) are skipped\"",
+            "reviewer_label": "faithful",
+            "grader_result": "needs_adjudication (records-not-modified)"
+          },
+          {
+            "case": "prose-scope",
+            "output": "valid records imported, \"future posted_on dates included\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "valid records imported, \"future posted_on dates too\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "importer \"now accepts a future posted_on date\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "a future posted_on date \"only triggers a warning\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed example-made-exhaustive"
+          }
+        ],
+        "defects": [
+          {
+            "where": "evals/workflows/heldout/oracles/prose-exempt.json:116",
+            "scenario": "The negated cold/empty pattern ignores its subject and the restart, so faithful text fails contradicted-fact: \"one that is not empty but has no room left\" about a full cache, \"Once the cache is no longer empty and fills up\", and the double negative \"no restart after which the cache isn't cold\"."
+          },
+          {
+            "where": "evals/workflows/heldout/oracles/prose-exempt.json:115-117",
+            "scenario": "Negations with other verbs pass with nothing flagged: \"A restart doesn't leave the cache cold\", \"isn't left cold\", \"doesn't come back cold\", and \"thumbnails from before the restart are carried over\"."
+          },
+          {
+            "where": "evals/workflows/heldout/oracles/prose-scope.json:67-68",
+            "scenario": "A future posted_on record placed in the success scope still passes when the marker follows the field or uses another verb: \"future posted_on dates included\", \"future posted_on dates too\", \"now accepts a future posted_on date\"."
+          }
+        ],
+        "recommendation": "Each round of added verbs closes the tested phrasings and leaves neighbours open. A sturdier screen would send any negation in a clause that mentions cold, empty or restart to needs_adjudication, and any sentence that names posted_on without a failure cue (fail, reject, invalid, skip, example) to needs_adjudication, keeping hard failures for unnegated contradictions."
       }
     }
   ]
