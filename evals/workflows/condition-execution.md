@@ -2,7 +2,7 @@
 
 [Implementation ticket 91](https://github.com/frankieramirez/mana/issues/91) adds an opt-in condition layer to the existing focused runner. It installs actual, separately pinned Mana and reference payloads, or an empty instruction directory for `none`. Each condition receives the same ordinary request, fixture, tools and response envelope. The instruction-loading prefix names only that condition's entrypoint. Discovery, user configuration, integrations and delegation remain disabled.
 
-This is development infrastructure. It does not implement the twelve held-out source groups, comparative delegated collection, independent adjudication or human effort measurement in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md). No comparative model runs have been performed for this change. The existing host allowlist remains unchanged; a live attempt requires the exact frozen host and a fresh containment probe. The installed `0.159.0-alpha.3` host is not accepted.
+This is development infrastructure. It does not implement the twelve held-out source groups or comparative delegated collection in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md). No comparative model runs have been performed for this change. [Sealed attempts and blinded review](#sealed-attempts-and-blinded-review) supplies attempt, packet and judgment records; no reviewer cohort has used them. The existing host allowlist remains unchanged; a live attempt requires the exact frozen host and a fresh containment probe. The installed `0.159.0-alpha.3` host is not accepted.
 
 ## Supported fixtures
 
@@ -95,7 +95,7 @@ An artifact index and portable archive are produced per attempt, including binar
 python3 -B evals/workflows/archive_delegated.py /absolute/new-study/results/001.json.gz
 ```
 
-`evaluation.json` separates execution status from task outcome and records the schedule slot, source group, request hash, inventories and controls pin. It counts observed command events separately; total tool operations, actual backend model identity and human review time remain null when unobserved. A malformed event record cannot be rescued by later valid command or usage records; the attempt becomes `collection_failed` and stops the schedule. Grader corrections still use separate `--regrade /absolute/new-study/results` records and preserve original judgments.
+`evaluation.json` separates execution status from task outcome and records the schedule slot, source group, request hash, inventories and controls pin. It counts observed command events separately; total tool operations, actual backend model identity and human review time remain null when unobserved. A malformed event record cannot be rescued by later valid command or usage records; the attempt becomes `collection_failed` and stops the schedule. Automatic grader corrections can still use separate `--regrade /absolute/new-study/results` records, which preserve original judgments; reviewer corrections use the append-only regrades below.
 
 The offline tests exercise separate installs and empty controls, known-good versus harmful edits, invalid payload rejection, frozen-input mutation, source drift, serial slots, archive recovery and host rejection without launching a model:
 
@@ -104,3 +104,59 @@ python3 -B -m unittest discover -s evals/workflows -p test_conditions.py
 ```
 
 Those checks establish fixture and adapter behavior only. A successful check is not a live containment probe, proof of reference capability equivalence, held-out effectiveness evidence, or evidence of reviewer time saved.
+
+## Sealed attempts and blinded review
+
+[Implementation ticket 103](https://github.com/frankieramirez/mana/issues/103) adds `attempts.py` and `adjudication.py`. Neither invokes a model.
+
+### Attempt records
+
+After each live slot the archived runner seals `results/NNN.attempt.json`. The record is written once, read-only, and listed with its SHA-256 in the append-only `results/attempts.jsonl`. It keeps the reporting contract's fields and adds the runner's own status, an artifact inventory of every file and link in the slot directory with its hash and archive coverage, the portable archive digest, and the frozen fixture, tool, payload, request and case digests.
+
+`execution_status` is one of `setup_failed`, `agent_failed`, `timeout`, `collection_failed` or `completed`. `task_outcome` is null unless execution completed; it is then `passed`, `failed`, or `needs_adjudication` when the automatic grader raised an error. Only `passed` sets `counts_as_pass`. A claimed slot whose runner died before writing its result is sealed as `collection_failed`, and sealing it writes `results/STOP.json` because later slots cannot run. Allocated slots without a record are reported as unstarted, so the denominator is always the whole schedule. `actual_model`, `tool_operations`, child usage and family usage stay null unless the host observed them; `retry_attempts` is always 0.
+
+Freeze archives `attempts.py` and `adjudication.py` in `runner-source/`. Run the archived copy: the tool refuses to open a study whose frozen copies differ from the modules it loaded. The `seal` command seals only claimed slots that have no ledger entry. Sealing a sealed slot again with the same evidence does nothing; different evidence fails. Verification fails when a sealed record or any file it inventories changes, when the ledger lists a slot twice, when a claimed slot is never sealed, or when the results directory holds anything outside the allocated slots, such as a `001-retry` directory. The workspace Git index stays inventoried but is exempt from that change check, because read-only Git commands in a later offline regrade can refresh its stat data. Seal an interrupted slot and check the study with:
+
+```bash
+python3 -B /absolute/new-study/runner-source/adjudication.py seal --study /absolute/new-study --controls-sha256 SAVED_DIGEST
+python3 -B /absolute/new-study/runner-source/adjudication.py status --study /absolute/new-study --controls-sha256 SAVED_DIGEST
+```
+
+### Review packets
+
+```bash
+python3 -B /absolute/new-study/runner-source/adjudication.py export --study /absolute/new-study \
+  --controls-sha256 SAVED_DIGEST --out /absolute/new-review --mask-term SUITE_NAME
+```
+
+Export creates a new directory once. Each completed attempt gets `packets/<random id>/` with the ordinary request and allowed effects, the frozen source files, the final product files, agent artifacts, the final diff, observed commands with exit codes and output, claimed and observed checks, child artifacts when collected, and the final message. `manifest.json` lists every packet file hash. Attempts that did not complete get no packet and are listed as not exported with their status.
+
+Packets withhold the condition name, invocation prompt, slot, repetition, source group, automatic grader verdict, payload inventories and revisions. Lines and sentences of at least 16 characters from either suite's instruction files are replaced by `[instruction text withheld]`. Paths under an instruction root become `<instructions>/<instruction-file>`, as do payload file paths and root-level payload file names that no fixture also uses. The word `mana`, each `--mask-term`, and payload revisions and digests are replaced too. Binary files are copied as they are unless they match instruction bytes, `mana` or a `--mask-term`, and then they are withheld. Packets are exported in random slot order and every packet file and directory gets the same fixed timestamp, so neither identifiers nor file times follow the schedule. Export fails if a masked text file still contains an instruction segment or suite term.
+
+`restricted/` is mode 0700. Its `key.json` maps each packet to its slot, condition, attempt hash and packet hash, and records what masking could not hide for that packet: placeholders reveal that instructions were loaded, which the no-suite condition never shows; report style and workflow formats are not rewritten; the ordinary words "reference" and "none" stay; short instruction lines stay; copied binaries are unmasked. Give reviewers only `packets/`.
+
+### Judgments and regrades
+
+```bash
+python3 -B S/runner-source/adjudication.py assign --study S --controls-sha256 D --review R --reviewer alice
+python3 -B S/runner-source/adjudication.py judge --study S --controls-sha256 D --review R --packet ID \
+  --reviewer alice --kind human --role initial --outcome failed --reason "..." --active-seconds 240 --order-position 1
+python3 -B S/runner-source/adjudication.py regrade --study S --controls-sha256 D --review R \
+  --supersedes RECORD_SHA256 --reviewer carol --kind human --outcome passed --reason "..."
+```
+
+Every judgment, regrade and order assignment is a write-once file under `restricted/records/`, listed in a hash-chained `restricted/ledger.jsonl`. Each write first rechecks the ledger, every packet hash and every sealed attempt. Judgments and regrades copy the attempt, archive, artifact index, controls, fixture, payload, request and packet hashes into the record.
+
+A packet takes exactly two initial judgments from different reviewers. Adjudication needs both, comes from a third reviewer who is human, considers both initial record hashes, and resolves to passed or failed. Initial review time is capped at 600 active seconds, and a censored review must be `needs_adjudication`. A model or automatic grader records no active time, cannot adjudicate, and two model judgments never settle an outcome without a human. When a reviewer has an assigned order, each judgment must give its position in that order.
+
+A regrade supersedes the latest version of one judgment, keeps the superseded outcome and the original judgment hash, and fails if the evidence hashes changed. The original record stays in the ledger. An automatic regrade must name its grader SHA-256. `status --review R` reports outcomes for every allocated slot, final reviewed outcomes with their basis, and human active seconds only from records that measured them; it is null when none did. Nothing estimates reviewer time saved.
+
+The offline tests drive the real runner through every execution status with a stubbed host, then export, judge, tamper and regrade:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_attempts.py
+```
+
+Known limits: `attempts.jsonl` is append-only by convention and each record is hashed, but deleting the final slot together with its directory, archive, record and ledger line leaves it reading as unstarted. Keep a copy of `status` output outside the study after each slot when that matters. A crash during a seal or review write can leave `results/.seal-lock` or `restricted/.lock`; later writes then refuse with a message naming the lock, and it can be removed once no writer is running.
+
+The tests establish record and packet behavior on synthetic fixtures. They are not evidence that masking hides every condition from a motivated reviewer, and no human review cohort has run.
