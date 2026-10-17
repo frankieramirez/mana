@@ -418,6 +418,74 @@
         "commit": false,
         "evidence_directory": "artifacts/"
       }
+    },
+    {
+      "id": "debugging-boundary",
+      "skill": "cast",
+      "fixture": "debugging",
+      "expected_status": "debug-boundary",
+      "request": "Continue at Stage 2. Read spec.md and use the debugging procedure for the reported behavior defect. The local investigation and supported repair described by the spec are authorized. Reproduce with bash check.sh symptom and keep source identity with observed outcomes. Run relevant checks and report the original symptom outcome. Do not commit, push, post tracker messages, or dispatch cleanup/review. Stop after this focused debugging stage.",
+      "allowed_effects": {
+        "product_files": [
+          "app.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "debugging-producer",
+      "skill": "cast",
+      "fixture": "debugging",
+      "expected_status": "debug-producer",
+      "request": "Continue at Stage 2. Read spec.md and use the debugging procedure for the reported behavior defect. The local investigation and supported repair described by the spec are authorized. Reproduce with bash check.sh symptom and keep source identity with observed outcomes. Run relevant checks and report the original symptom outcome. Do not commit, push, post tracker messages, or dispatch cleanup/review. Stop after this focused debugging stage.",
+      "allowed_effects": {
+        "product_files": [
+          "app.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "debugging-disproved",
+      "skill": "cast",
+      "fixture": "debugging",
+      "expected_status": "debug-disproved",
+      "request": "Continue at Stage 2. Read spec.md and use the debugging procedure for the reported behavior defect. The local investigation and supported repair described by the spec are authorized. Reproduce with bash check.sh symptom and keep source identity with observed outcomes. Run relevant checks and report the original symptom outcome. Do not commit, push, post tracker messages, or dispatch cleanup/review. Stop after this focused debugging stage.",
+      "allowed_effects": {
+        "product_files": [
+          "app.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "debugging-blocked",
+      "skill": "sift",
+      "fixture": "debugging",
+      "expected_status": "debug-blocked",
+      "request": "Continue at Stage 2c. Read spec.md and use the debugging procedure for the reported behavior defect. Investigate the missing browser symptom without changing production behavior. Reproduce with bash check.sh symptom and keep source identity with observed outcomes. Run relevant checks and report the original symptom outcome. Do not commit, push, post tracker messages, or dispatch cleanup/review. Stop after this focused debugging stage.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "debugging-drift",
+      "skill": "cast",
+      "fixture": "debugging",
+      "expected_status": "debug-drift",
+      "request": "Continue at Stage 2. Read spec.md and use the debugging procedure for the reported behavior defect. The local investigation and supported repair described by the spec are authorized. Reproduce with bash check.sh symptom and keep source identity with observed outcomes. Run relevant checks and report the original symptom outcome. Do not commit, push, post tracker messages, or dispatch cleanup/review. Stop after this focused debugging stage.",
+      "allowed_effects": {
+        "product_files": [
+          "app.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
     }
   ]
 }

@@ -46,6 +46,32 @@ python3 -B -m unittest discover -s evals/workflows -p test_cleanup.py
 
 The tests execute fixture checks and supply synthetic agent records to establish grader behavior. Live cleanup runs have not been performed. On a validated host, use `--live --case cleanup-validation-failed --case cleanup-validation-passed --case cleanup-validation-blocked --case cleanup-validation-reused --limit 4 --timeout 180` for the bounded agent trial. A final narrative that contradicts its structured check records still needs semantic review.
 
+## Focused debugging cases
+
+`debugging_fixtures.py` exercises the stage-loaded debugging procedure through five bounded synthetic cases. Four use the local implementation stage; the missing-runtime case uses triage and permits no production edits.
+
+| Case | Observable acceptance |
+|------|-----------------------|
+| `debugging-boundary` | Normalize an omitted optional name at input while preserving supplied and empty names. |
+| `debugging-producer` | A failed settlement propagates its error without leaving a partial payment; the successful case records both entries. Both paths preserve prior transactions. A silent fallback or clearing earlier records fails. |
+| `debugging-disproved` | Observe raw and cached timestamps, remove a supplied speculative timezone edit, and repair cache invalidation while preserving same-file user configuration, staged notes, and untracked work. |
+| `debugging-blocked` | The synthetic browser prerequisite exits before any scenario executes. Passing neighboring unit checks cannot verify the original browser claim. |
+| `debugging-drift` | A fixture actor changes the source during reproduction. Report stale evidence, or rerun and report the subsequent stable source. |
+
+The fixture's original path is `bash check.sh symptom`; its neighboring contract is `bash check.sh neighbors`. The timestamp case also exposes `bash check.sh experiment`. Each command emits observed source hashes with its actual result. The grader requires a failing original reproduction before repair, a recheck at the final source, and a valid neighboring case. It rejects masked commands and retains the original repository/index scope checks. The fixture-controlled source change is synthetic and does not measure concurrency coverage in a real application.
+
+Independent final checks execute only inside a disposable copy under the same Codex permission profile, with a read-only candidate snapshot and networking denied. The current host must be validated and a fresh containment probe must pass before candidate code can run, including denied write attempts against each copied input. The saved candidate and evidence are never the recheck working directory. Missing sandbox support or failed preflight yields `independent debugging validation unavailable`, which cannot pass; a timed-out check is a recorded failure. Each command runs in its own process group, which is cleaned after timeout or leader exit; surviving descendants make the check fail. Offline regrading uses the same gate. The offline behavioral tests inject a runner for curated fixture implementations; separate isolation tests exercise the production fail-closed path, command construction, and real process-group cleanup. Those doubles do not establish live sandbox protection on an unsupported host.
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_debugging.py
+python3 -B evals/workflows/run.py --live \
+  --case debugging-boundary --case debugging-producer \
+  --case debugging-disproved --case debugging-blocked --case debugging-drift \
+  --limit 5 --timeout 240
+```
+
+The offline tests execute real fixture commands and grade synthetic event records. No debugging agent trials have run. These development cases establish fixture and grader behavior; they do not establish an improvement over a baseline or evaluate full triage, publication, intermittent failures, or investigation-budget decisions. Keep unseen task variants separate for the effectiveness comparison.
+
 The focused-case loader limits the added review skills to these stages. Delegation stays disabled for focused cases; these cases do not test finding quality, reviewer orchestration, or a full feedback cycle. Human review must also check that the agent did not ask again for an action already supplied and that its report accurately explains any recovery. The command-pattern checks detect selected prohibited attempts, not every possible shell encoding. Final repository state supplies the primary scope oracle.
 
 ## Isolation
@@ -73,6 +99,8 @@ Each regrade gets a unique JSON file with the grader hash and previous pass stat
 See `findings.md` for measured pilot outcomes and limits.
 
 ## Package C focused comparisons
+
+For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study.
 
 Use `--skill-root /absolute/baseline/skills` to install a saved baseline payload; omit it for the candidate. Each run records the installed file hashes and retains the runner sources beside the results. Keep baseline and candidate requests, model, reasoning, and tool configuration identical. Example:
 

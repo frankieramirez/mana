@@ -67,7 +67,8 @@
         "references/tdd.md",
         "scripts/open-pr.sh",
         "scripts/text-frame.sh",
-        "scripts/tickets.sh"
+        "scripts/tickets.sh",
+        "references/debugging.md"
       ],
       "smoke": [
         {
@@ -134,11 +135,27 @@
         "references/archmage.md",
         "references/contract.md",
         "references/conformance.md",
-        "scripts/conform.sh"
+        "scripts/conform.sh",
+        "scripts/generate.sh",
+        "references/inspect.md",
+        "references/feature-map.md",
+        "references/install.md",
+        "references/challenge.md",
+        "references/control-skill-template.md",
+        "references/recipes/typescript-node.md",
+        "references/recipes/briefing-map.example.json",
+        "references/recipes/control.ts.template"
       ],
       "smoke": [
         {
           "script": "scripts/conform.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/generate.sh",
           "args": [
             "--help"
           ],
@@ -397,7 +414,8 @@
         "references/archmage.md",
         "references/interrogate.md",
         "references/out-of-scope.md",
-        "scripts/tickets.sh"
+        "scripts/tickets.sh",
+        "references/debugging.md"
       ],
       "smoke": [
         {

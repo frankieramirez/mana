@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Package synthetic run evidence, excluding host state and Git internals."""
 import argparse
+import base64
 import gzip
 import hashlib
 import json
@@ -19,10 +20,15 @@ def archive(directory, destination):
         if '__pycache__' in relative.parts:
             continue
         data = path.read_bytes()
-        files[str(relative)] = {'sha256': hashlib.sha256(data).hexdigest(), 'text': data.decode('utf-8')}
+        value = {'sha256': hashlib.sha256(data).hexdigest()}
+        try:
+            value['text'] = data.decode('utf-8')
+        except UnicodeError:
+            value['base64'] = base64.b64encode(data).decode('ascii')
+        files[str(relative)] = value
     payload = {'schema_version': 1, 'source_run': directory.name, 'files': files,
                'excluded': ['workspace/.git', 'workspace/home', 'workspace/installed', 'symlinks', '__pycache__']}
-    # Deterministic gzip header; complete text bytes recover through UTF-8 encoding.
+    # Existing text records stay compatible; binary payloads retain exact bytes.
     destination.write_bytes(gzip.compress((json.dumps(payload, ensure_ascii=False) + '\n').encode(), mtime=0))
     return {'path': str(destination), 'sha256': hashlib.sha256(destination.read_bytes()).hexdigest(),
             'files': len(files), 'bytes': destination.stat().st_size}
@@ -31,7 +37,10 @@ def archive(directory, destination):
 def verify(path):
     payload = json.loads(gzip.decompress(path.read_bytes()))
     for name, value in payload['files'].items():
-        if hashlib.sha256(value['text'].encode()).hexdigest() != value['sha256']:
+        if ('text' in value) == ('base64' in value):
+            raise ValueError('ambiguous content encoding: ' + name)
+        data = value['text'].encode() if 'text' in value else base64.b64decode(value['base64'], validate=True)
+        if hashlib.sha256(data).hexdigest() != value['sha256']:
             raise ValueError('content digest mismatch: ' + name)
     return {'run': payload['source_run'], 'verified_files': len(payload['files'])}
 

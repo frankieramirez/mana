@@ -140,6 +140,8 @@ Do not start coding until that intent is written. If the ticket is still a quest
 
 ## Stage 2: Build
 
+For an unexplained behavior defect or failed behavior check, load `references/debugging.md` now and use its implementation path. Skip it for prose, ordinary feature work, or a cause already established by direct observation.
+
 When the change has meaningful behavior to verify and the repo has a test harness, read `references/tdd.md` and follow it at the seams you wrote down. Docs, configuration, and other changes with no behavioral effect do not require a TDD loop just because a harness exists. If there is no harness, build without a red-green loop and say so once.
 
 Typecheck and run meaningful behavior tests around the files you touch as you go. Run the project's required validation: use the `Validation:` line in the `## Agent skills` block of `CLAUDE.md` or `AGENTS.md` when one exists, else what the repo's manifest and docs name. A successful validation may be reused when no edits have happened since it ran. Classify a failure against the pre-change baseline first. Rerun it after a new edit or an unresolved concern that needs a fresh run.

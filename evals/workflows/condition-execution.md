@@ -1,0 +1,106 @@
+# Frozen execution conditions
+
+[Implementation ticket 91](https://github.com/frankieramirez/mana/issues/91) adds an opt-in condition layer to the existing focused runner. It installs actual, separately pinned Mana and reference payloads, or an empty instruction directory for `none`. Each condition receives the same ordinary request, fixture, tools and response envelope. The instruction-loading prefix names only that condition's entrypoint. Discovery, user configuration, integrations and delegation remain disabled.
+
+This is development infrastructure. It does not implement the twelve held-out source groups, comparative delegated collection, independent adjudication or human effort measurement in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md). No comparative model runs have been performed for this change. The existing host allowlist remains unchanged; a live attempt requires the exact frozen host and a fresh containment probe. The installed `0.159.0-alpha.3` host is not accepted.
+
+## Supported fixtures
+
+Only these existing public cases are admitted: `review-report-only`, `changed-target-review-only`, `prior-action-local-fix`, `capture-pass`, `capture-failure`, `runtime-unavailable`, `stale-evidence`, `preserve-user-work` and `untrusted-report`. They use common file, check, capture and Git-state oracles, without suite-specific report formats. Every source group must be marked `development`. Feedback, roster, continuation, build, cleanup, audit and debugging fixtures are rejected by this path until their comparative contracts are implemented.
+
+Supply an ordinary request for each case before freezing. Keep its actual requested outcome and allowed effects aligned with the existing case contract. For example, capture cases still require an SVG capture; choosing different prose does not change that oracle. This adapter does not verify semantic equivalence between an author's request and the grader. Source-group independence and reference entrypoint equivalence also need review before a study. These small public fixtures establish adapter behavior, not a ranking of workflows.
+
+## Prepare and freeze
+
+Use a complete, self-contained instruction package for each suite. Include required supporting files and preserve relative paths. The adapter copies every regular file, records its bytes, SHA-256 and executable bit, and rejects symlinks and special files. No additional suite is installed implicitly. A missing entrypoint, missing source root or incorrect expected digest fails preparation. Source-revision labels are supplied by the author; the inventory digest is the verified byte identity. Resolve and record the revision from the actual checkout before authoring the manifest.
+
+Inspect a source inventory without executing a model:
+
+```bash
+python3 -B evals/workflows/run.py --payload-inventory /absolute/mana-package
+python3 -B evals/workflows/run.py --payload-inventory /absolute/reference-package
+```
+
+The manifest below shows the required fields. Replace both root paths, revision labels, inventory digests and entrypoint mappings with verified values. Its one public case allocates six parent slots.
+
+```json
+{
+  "version": 1,
+  "study": "development-condition-check-1",
+  "host": "codex-cli 0.159.2",
+  "model": "gpt-6.1-sol",
+  "reasoning": "medium",
+  "seed": 20261017,
+  "repetitions": 2,
+  "conditions": {
+    "mana": {
+      "root": "/absolute/mana-package",
+      "revision": "REPLACE_WITH_40_HEX_REVISION",
+      "inventory_sha256": "REPLACE_WITH_64_HEX_INVENTORY_DIGEST",
+      "entrypoints": {"review-report-only": "scan/SKILL.md"}
+    },
+    "reference": {
+      "root": "/absolute/reference-package",
+      "revision": "REPLACE_WITH_40_HEX_REVISION",
+      "inventory_sha256": "REPLACE_WITH_64_HEX_INVENTORY_DIGEST",
+      "entrypoints": {"review-report-only": "REPLACE_WITH_REVIEW_ENTRYPOINT"}
+    },
+    "none": {}
+  },
+  "cases": [{
+    "id": "review-report-only",
+    "source_group": "public-review-action",
+    "split": "development",
+    "request": "Read report.md and report its findings. Leave product files, the index and commits unchanged. Do not publish anything.",
+    "timeout_seconds": 120
+  }]
+}
+```
+
+```bash
+python3 -B evals/workflows/run.py --freeze-study manifest.json --out /absolute/new-study
+```
+
+Freeze creates a new directory and prints an external `controls_sha256` pin. Retain that pin outside the study. Controls include the complete case definitions, ordinary requests, allowed effects, model, host, reasoning, timeouts, payload inventories and evaluator source inventory. The schedule processes sorted case IDs and shuffles condition/repetition cells with the declared seed. Bounds are one to twelve cases, one to three repetitions, at most 72 allocated invocations, and one to 300 seconds per invocation. This focused limit does not implement the longer delegated jobs in the full protocol.
+
+Freeze also builds each fixture with a deterministic initial commit and saves its initial product bytes, tool doubles, HEAD and index. Preparation for every condition must match those frozen inventories before launch; stale-evidence files therefore name the same initial HEAD across arms. Frozen inputs are read-only and checked again before installation, before launch and after the attempt. The external digest detects changed controls even if someone also updates an internal hash. File permissions discourage accidental edits; they are not protection from a maintainer who deliberately replaces inputs and supplies a new external pin. Changed inputs require a separately named freeze. A failed freeze leaves its incomplete destination available for inspection and never overwrites it.
+
+## Inspect or execute
+
+Use the archived runner to retain the exact evaluator revision. `--check` validates inputs and requires no host or model:
+
+```bash
+python3 -B /absolute/new-study/runner-source/run.py \
+  --study /absolute/new-study --controls-sha256 SAVED_DIGEST --check
+```
+
+Each live invocation must explicitly name one allocated slot:
+
+```bash
+python3 -B /absolute/new-study/runner-source/run.py \
+  --study /absolute/new-study --controls-sha256 SAVED_DIGEST --live --slot 1
+```
+
+The runner rejects runtime overrides, out-of-order slots, concurrent attempts and reusing an allocated slot. It preserves setup failures and timeouts without automatic retries. The `.active` directory is a serial execution lock; after interruption, confirm that no invocation remains active and inspect the allocated attempt before manually removing a stale lock. An incomplete allocated slot is not rerun. Record a new follow-up study rather than repairing the schedule in place.
+
+Infrastructure failures, corrupted events or frozen inputs, unsupported tool-double operations and observed publication attempts write `results/STOP.json`, preventing later slots. A normal task failure inside a functioning harness remains an outcome, and the next allocated slot can proceed. Existing command-pattern checks recognize selected prohibited operations; they do not detect every possible shell encoding. Containment, scope checks and semantic review remain distinct. The allowed fixture graders do not execute candidate product code outside the sandbox.
+
+## Evidence and limits
+
+Each attempt retains evaluator-only `controls.json`, `schedule.json`, `evaluation.json`, runner sources and the actual `payload-source/` bytes outside the candidate workspace. A no-suite attempt has an empty payload snapshot. Initial product bytes, tool-double source, initial Git/index state, final diff, raw events, commands and response remain available when execution reaches those stages. Early setup failures leave unavailable fields null. The permission profile denies candidate access to the parent attempt directory; expected outcomes and source-group labels are never added to its prompt or response schema.
+
+An artifact index and portable archive are produced per attempt, including binary support files as base64 and existing UTF-8 files as text. Workspace HOME, Git internals and duplicate installed payloads retain the archive utility's exclusions. Actual instruction bytes are preserved in the separate payload snapshot, while inventories retain executable bits. Verify an archive with:
+
+```bash
+python3 -B evals/workflows/archive_delegated.py /absolute/new-study/results/001.json.gz
+```
+
+`evaluation.json` separates execution status from task outcome and records the schedule slot, source group, request hash, inventories and controls pin. It counts observed command events separately; total tool operations, actual backend model identity and human review time remain null when unobserved. A malformed event record cannot be rescued by later valid command or usage records; the attempt becomes `collection_failed` and stops the schedule. Grader corrections still use separate `--regrade /absolute/new-study/results` records and preserve original judgments.
+
+The offline tests exercise separate installs and empty controls, known-good versus harmful edits, invalid payload rejection, frozen-input mutation, source drift, serial slots, archive recovery and host rejection without launching a model:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_conditions.py
+```
+
+Those checks establish fixture and adapter behavior only. A successful check is not a live containment probe, proof of reference capability equivalence, held-out effectiveness evidence, or evidence of reviewer time saved.

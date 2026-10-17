@@ -1,7 +1,7 @@
 ---
 name: leyline
-description: "Check that a project gives agents an honest way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, or /leyline."
-argument-hint: "[blank for this repo | path:<repo>] [report:<file>] [run[:<feature>]]"
+description: "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, or /leyline."
+argument-hint: "[inspect | map | install] [path:<repo>] [report:<file>] [run[:<feature>]]"
 ---
 
 <!-- BEGIN MANA PERSONA -->
@@ -20,45 +20,59 @@ Honor explicit user instructions and decisions already made over this skill's wo
 
 If a skill rule requires a pause or leaves requested work unfinished, name and link to the exact SKILL.md and quote the rule. Then explain what decision or prerequisite is missing. Distinguish a required gate from your interpretation.
 
-An agent can only be trusted with a project it can run and check. That takes two things the project owns: a control CLI that runs the app's checks and reports honestly, and a feature map that says what the app does, how a user reaches each feature, and which tests prove it. This skill checks both against a shared contract, so a report means the same thing in every project. It does not supply the CLI; each project's CLI fits that project.
+A project control gives an agent a feature map and a way to run existing assertions with honest source-bound reports. The project owns its runtime, records and tests. This skill inspects an existing control or generates a reviewable first installation for an explicitly mapped Node briefing feature.
 
-This version checks an existing control setup and reports the smallest changes that bring it into line. It does not yet draft a feature map or generate a CLI.
+The first-install recipe is implemented locally. Existing-control adaptation, refresh, a private consumer rollout and cold-session measurement remain separate work. A generated candidate is not a readiness result.
 
-## Arguments
+## Arguments and authority
 
-- Blank: the current repository.
-- `path:<repo>`: another checkout on this machine.
-- `report:<file>`: validate one saved run report. Ask for the exit code the run returned if the user has it.
-- `run` or `run:<feature>`: also run the dynamic probes, which execute the project's own code. Needs the user's agreement in this conversation.
+- Blank or `inspect`: inspect the current repository; `path:<repo>` selects another checkout.
+- `map`: draft a review artifact from inspected source and explicit scenario bindings. It does not modify the target.
+- `install`: apply the candidate within existing edit authority. Generate and inspect the concrete diff first; proceed without a second permission question when installation is already authorized.
+- `report:<file>`: validate a saved report with the actual process exit when known.
+- `run` or `run:<feature>`: execute dynamic probes for the selected feature. An existing request to run these checks covers execution; static-only scope does not.
 
-## Gates
-
-- Static checks and report checks are read-only. Never edit the checked project in this workflow; propose changes as a diff or a list and let the user decide.
-- Never run the project's code without the user's agreement in this conversation. `run` in the arguments counts as agreement for the named feature.
-- Never mark a feature `confirmed`, and never rewrite a record to match what the code does today. Intent is the user's to settle.
-- Never report a blocked or incomplete probe as passed.
+Never promote inferred intent to `confirmed`. Preserve existing verifiers, assertions, hand-maintained instructions and unrelated files. A missing prerequisite or unfinished probe remains incomplete. Publication and consumer changes follow the authority covering those actions.
 
 ## Stage 1: Inspect
 
-Find the `## Agent skills` block in `CLAUDE.md` or `AGENTS.md` and its `Control:` line. When the line exists, read the control skill it names. When it does not, look for an existing verification CLI and records anyway (`verification/`, a `verify` script in the package manifest, scenario registrations in tests) and say what you found. A project with none of it gets one plain sentence saying so and a pointer to the contract; stop there unless the user asks for more.
+Load [references/inspect.md](references/inspect.md). Read root guidance and the Control pointer, package commands, records and relevant test assertions. Use the bundled static inspection helper. For an existing control, proceed to Conformance. For a requested new control, identify the smallest mapped behavior and actual runner before Map. Static inspection never executes project code.
 
-## Stage 2: Conformance
+## Stage 2: Map
 
-Load [references/contract.md](references/contract.md) and [references/conformance.md](references/conformance.md).
+For requested generation, load [references/feature-map.md](references/feature-map.md) and [references/recipes/typescript-node.md](references/recipes/typescript-node.md). Draft the explicit specification, preserve existing assertions, and record inferred intent as proposed. Generate the map outside the target checkout:
 
-Run the static check:
+```bash
+bash "<SKILL_DIR>/scripts/generate.sh" map <repo> --spec <spec.json> --out <map.json>
+```
+
+Inspect exact output paths, candidate content, source identity, prerequisites and release obligations. Unsupported project shapes receive a focused adaptation proposal; do not replace an existing control with the first-install template.
+
+## Stage 3: Install
+
+When editing is authorized, load [references/install.md](references/install.md). Apply the reviewed map in an isolated candidate checkout using the bundled installer. It checks static conformance and records ownership before returning a candidate. Keep the source-bound map and ledger. Preserve conflicts instead of overwriting them. Refresh is not implemented by this command.
+
+## Stage 4: Conformance and challenge
+
+Load [references/contract.md](references/contract.md) and [references/conformance.md](references/conformance.md). Run the static check:
 
 ```bash
 bash "<SKILL_DIR>/scripts/conform.sh" static <repo>
 ```
 
-With `report:<file>`, also run the report check. With `run`, confirm the feature to probe and its likely cost, then run the dynamic check with `--trust`. Pick an affordable feature when none is named; the run repeats five times.
+For `report:<file>`, validate the actual saved report and process exit. For authorized dynamic work, load [references/challenge.md](references/challenge.md), select an affordable feature and run with `--trust`. The dynamic checker repeats the feature five times and uses committed HEAD bytes. Name any excluded uncommitted changes. A static pass or successful discovery never substitutes for executed assertions.
 
-## Stage 3: Report
+## Stage 5: Report
 
-Lead with the verdict: conformant, or the number of errors and what they block. Then one line per rule group with the smallest fix, then warnings, then what was not checked and why (no dynamic run, uncommitted changes excluded, a blocked probe). Quote probe outcomes as the checker gave them. Offer to draft the fixes as a diff; applying them is a separate request.
+Lead with the actual state: inspected, candidate installed, statically conformant, or the observed challenge outcome. Name errors, missing prerequisites and unexecuted work. Link the source identity, raw reports, retained artifacts and installation ledger when present. State which feature/scenarios and environment the evidence covers. Local synthetic fixtures cannot establish a private consumer's browser readiness or a performance improvement.
 
 ## References
 
-- [references/contract.md](references/contract.md): the control/0 contract. Stage 2.
-- [references/conformance.md](references/conformance.md): running the checker and reading its findings. Stage 2.
+- [references/inspect.md](references/inspect.md): read-only discovery. Inspect.
+- [references/feature-map.md](references/feature-map.md): explicit source-bound candidate. Map.
+- [references/install.md](references/install.md): ownership and first installation. Install.
+- [references/recipes/typescript-node.md](references/recipes/typescript-node.md): Node/Vitest recipe and example. Map and Install.
+- [references/control-skill-template.md](references/control-skill-template.md): generated project instructions. Map.
+- [references/contract.md](references/contract.md): control/0. Conformance.
+- [references/conformance.md](references/conformance.md): checker usage. Conformance.
+- [references/challenge.md](references/challenge.md): execution evidence and its limits. Challenge.

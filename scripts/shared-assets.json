@@ -85,6 +85,12 @@
       "destinations": [
         "skills/attune/references/triage-labels.md"
       ]
+    },
+    {
+      "source": "skills/sift/references/debugging.md",
+      "destinations": [
+        "skills/cast/references/debugging.md"
+      ]
     }
   ],
   "agents": [

@@ -48,7 +48,7 @@ Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, 
 | File the build tickets | [conjure](#conjure) | Session-sized tickets in build order |
 | Build | [cast](#cast) | A committed change and a PR with proof |
 | Review | [scan](#scan), [augur](#augur) | Findings, optional fixes, and evidence the change is safe |
-| Check agents can run and verify the app | [leyline](#leyline) | Conformance findings for the control CLI and feature map, with probe results |
+| Give agents a way to run and verify the app | [leyline](#leyline) | A project-owned control candidate, or conformance findings and probe results for an existing setup |
 | Audit the project | [ultima](#ultima) | A tabbed HTML report of UX, architecture, data reliability, optional security, and performance or delivery findings, with tickets or one fix on request |
 | Answer feedback | [remedy](#remedy), [mimic](#mimic) | Resolved feedback and paste-ready replies |
 | Attend an open PR | [ward](#ward) | Validated fixes and continued monitoring until merge or closure |
@@ -656,6 +656,7 @@ A map's Notes and a build parent's body carry `Milestone: <name> on [Roadmap](ur
 
 Checks that a project gives agents an honest way to find a feature, run the app, and report what happened: a control CLI and a feature map the project owns, held to a shared contract.
 
+- Generates a first Node/Vitest briefing control from an explicit source map, preserving existing assertions and recording installed-file ownership. Existing controls are preserved for focused adaptation.
 - Checks feature and scenario records, the tests that register them, and how a user reaches each feature, without running any project code.
 - Validates run reports: zero executed tests, a missing prerequisite, or an exit code that disagrees with the report is never a pass.
 - With your agreement, runs the project's CLI in a throwaway worktree and applies a declared break patch to prove the right check fails.
@@ -666,6 +667,9 @@ Checks that a project gives agents an honest way to find a feature, run the app,
 
 # Also run the probes for one feature
 /mana:leyline run:briefing
+
+# Draft and install the first mapped control within the authorized edit scope
+/mana:leyline install
 ```
 
 <details>
@@ -673,7 +677,7 @@ Checks that a project gives agents an honest way to find a feature, run the app,
 
 The project's `## Agent skills` block names its control skill with a `Control:` line. That skill gives the CLI prefix and where records, test registrations, and break patches live. The CLI answers `list`, `describe`, `feature`, `changed`, and `release`, prints one JSON report with `--json`, and exits 0 passed, 1 failed, 2 usage, or 3 incomplete. The full contract is in `skills/leyline/references/contract.md`.
 
-`run` builds a worktree of HEAD and probes list, describe, an unknown id, a baseline run, the break patch, the restored run, and two runs at once. A probe that could not happen is reported as blocked, never passed. This version checks an existing setup; drafting a feature map and generating a CLI come later.
+`run` builds a worktree of HEAD and probes list, describe, an unknown id, a baseline run, the break patch, the restored run, and two runs at once. A probe that could not happen is reported as blocked, never passed. Installation creates a candidate; actual challenge results establish its execution scope. Refresh and private-consumer rollout remain separate work.
 
 </details>
 

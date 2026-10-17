@@ -1,0 +1,22 @@
+{
+  "project": "hosted-app",
+  "feature": {
+    "id": "briefing",
+    "summary": "Show the returning account's production summary in the kingdom Overview.",
+    "aliases": ["welcome back", "came back", "empty briefing", "workers stopped"],
+    "sourceRoots": ["src/hosted/briefing.ts", "src/hosted/cli.ts", "src/app/router.tsx", "src/app/routes/kingdom.tsx"],
+    "knowledge": "proposed",
+    "reach": [{"route": "/kingdom", "steps": ["Return to the authenticated kingdom Overview. The old /briefing route redirects here."]}]
+  },
+  "scenarios": [
+    {"id": "briefing.return-summary", "steps": [{"action": "Return after synthetic worker activity.", "expect": "The existing API, CLI and browser assertions preserve the accounting and return summary."}]},
+    {"id": "briefing.no-activity", "steps": [{"action": "Request the API briefing for an account with no workers.", "expect": "The existing assertions prove zero production, valid dates and rejection of malformed or future since values."}]}
+  ],
+  "bindings": ["tests/hosted/briefing.test.ts"],
+  "runner": {"argv": ["node", "node_modules/vitest/vitest.mjs", "run", "tests/hosted/briefing.test.ts", "--reporter=json", "--outputFile={report}"], "format": "vitest-json"},
+  "prepare": {"argv": ["npm", "ci", "--offline"]},
+  "prerequisites": [{"need": "vitest", "path": "node_modules/vitest/vitest.mjs"}],
+  "release": null,
+  "timeoutSeconds": 300,
+  "break": {"scenario": "briefing.return-summary", "path": "control-inputs/briefing.return-summary.patch"}
+}

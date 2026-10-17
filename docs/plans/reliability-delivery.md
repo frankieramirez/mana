@@ -3,6 +3,10 @@
 Planning source: [Improve mana's reliability and measured effectiveness](https://github.com/frankieramirez/mana/issues/72).
 Date: 2026-10-17. This is the ordered implementation handoff for the settled decisions. Closing the decision map does not establish that every delivery below has shipped.
 
+Implementation tracking: [Build: Deliver reliable workflows, project controls, and measured effectiveness](https://github.com/frankieramirez/mana/issues/88). Its 41 tickets own the remaining implementation and evidence, including separately resumable benchmark source groups. The build stays open until their acceptance evidence is complete.
+
+Mana 0.43.0 delivers [the debugging reference and focused fixtures](https://github.com/frankieramirez/mana/issues/89), [generic control inspection, mapping and first installation](https://github.com/frankieramirez/mana/issues/90), and [frozen evaluation conditions for supported development cases](https://github.com/frankieramirez/mana/issues/91). The hosted consumer pilot, refresh, broader comparison support and live outcomes remain pending. The bounded ticket scopes take precedence over treating a whole delivery row below as shipped.
+
 ## Settled contracts
 
 | Decision | Owning contract |
