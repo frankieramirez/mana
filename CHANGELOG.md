@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.43.2
 
 - Frozen condition studies seal every allocated slot as a write-once attempt record that keeps execution status apart from task outcome, inventories each artifact with its hash, and rejects hidden replacements. Completed attempts export to anonymized review packets that withhold condition names and instruction text and record what masking could not hide. Two independent judgments, a human adjudication and append-only regrades preserve the original evidence hashes. Unobserved model identity, child usage and human review time stay null. No reviewer cohort or live study has run.
 
