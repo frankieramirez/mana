@@ -166,10 +166,12 @@
     "id": "r3-negated-persist",
     "label": "valid-alternative",
     "output": "r3-negated-persist.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
-    "note": "Review defect 3: a negated \"persist\" keeps the cold start."
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Review defect 3: faithful, so it must not fail. Since the third review a negation beside \"restart\" goes to a reviewer."
   },
   {
     "id": "r4-inferred-sweep-purpose",
@@ -235,10 +237,89 @@
     "id": "r10-restart-keeps-thumbnails",
     "label": "known-bad",
     "output": "r10-restart-keeps-thumbnails.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "contradicted-fact"
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
     ],
-    "note": "Re-review defect 1: rephrased as thumbnails surviving a restart."
+    "note": "Re-review defect 1: unfaithful. The cache is not the subject, so since the third review it goes to a reviewer instead of a deterministic failure."
+  },
+  {
+    "id": "r11-not-empty-no-room",
+    "label": "valid-alternative",
+    "output": "r11-not-empty-no-room.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "full-still-renders-not-stored",
+      "cold-after-restart"
+    ],
+    "note": "Third review: faithful. A negation beside \"empty\" goes to a reviewer instead of failing; \"without storing them\" is also left to the reviewer."
+  },
+  {
+    "id": "r12-no-longer-empty",
+    "label": "valid-alternative",
+    "output": "r12-no-longer-empty.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Third review: faithful, held for review."
+  },
+  {
+    "id": "r13-double-negative",
+    "label": "valid-alternative",
+    "output": "r13-double-negative.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Third review: faithful double negative, held for review."
+  },
+  {
+    "id": "r14-restart-doesnt-leave-cold",
+    "label": "adjudicate",
+    "output": "r14-restart-doesnt-leave-cold.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Third review: unfaithful, restart as subject. Must not pass."
+  },
+  {
+    "id": "r15-isnt-left-cold",
+    "label": "adjudicate",
+    "output": "r15-isnt-left-cold.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Third review: unfaithful. Must not pass."
+  },
+  {
+    "id": "r16-doesnt-come-back-cold",
+    "label": "adjudicate",
+    "output": "r16-doesnt-come-back-cold.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Third review: unfaithful. Must not pass."
+  },
+  {
+    "id": "r17-carried-over",
+    "label": "adjudicate",
+    "output": "r17-carried-over.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Third review: unfaithful appended claim. Must not pass."
   }
 ]

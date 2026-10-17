@@ -2,7 +2,7 @@
 
 [Ticket 108](https://github.com/frankieramirez/mana/issues/108) instantiates the three prose rows of the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md): `prose-exempt`, `prose-scope` and `prose-verbatim`. Each is its own source group (`sealed-prose-exempt-01`, `sealed-prose-scope-01`, `sealed-prose-verbatim-01`), split `confirmation`, with new inputs that share no sentence of 30 or more characters with the public prose evals, the semantic pilot or the focused workflow cases.
 
-Status: frozen, with both payload inventories verified. The first review and the re-review each requested changes. The author repaired the oracles both times before any outcome existed and refroze. The current freeze still needs a new review, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
+Status: frozen, with both payload inventories verified. Three review rounds each requested changes. The author repaired the oracles every time before any outcome existed and refroze. The current freeze still needs a new review, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
 
 ## Layout
 
@@ -11,7 +11,7 @@ Status: frozen, with both payload inventories verified. The first review and the
 | `heldout/inputs/<case>/request.md` | Candidate: the ordinary request, identical across conditions |
 | `heldout/inputs/<case>/fixture/` | Candidate: the workspace product files |
 | `heldout/oracles/<case>.json` | Evaluator only: contract, exact checks, fact screens, reviewer questions |
-| `heldout/oracles/<case>/examples/` | Evaluator only: labeled known-good, known-bad, valid-alternative and ambiguous outcomes |
+| `heldout/oracles/<case>/examples/` | Evaluator only: labeled known-good, known-bad, valid-alternative, ambiguous and adjudicate outcomes |
 | `heldout/prose-manifest.json` | Evaluator only: source groups, hashes, allowed effects, condition routes, freeze digest and freeze history |
 | `heldout/prose-review.json` | Evaluator only: author record, the current second reviewer slot and earlier review results |
 
@@ -33,7 +33,9 @@ Exact checks are deterministic and conclusive. `prose-exempt` requires the fence
 
 Fact screens look for stated facts, contradictions and inferences. A contradiction or a known inference fails with a named identity such as `lost-scope`, `example-made-exhaustive`, `inferred-number`, `inferred-reason` or `invented-mechanism`. A stated fact the screen cannot find, or a suspicious cue such as `because`, goes to `needs_adjudication`; absence of a condition is never passed automatically. Only `version-named` in `prose-scope` fails on absence, because no paraphrase can carry the condition without the number. `version-onward` fails when the reply moves the condition before 4.2 or limits it to 4.2 alone, and holds a bare "In version 4.2" for review.
 
-Sentence spans in the patterns stop at line breaks, so list items never join into one sentence. Contradictions that a negation would reverse only match an unnegated clause. "A full cache does not stop new thumbnails from rendering" keeps the stated fact, while "the cache does not start cold" still fails.
+Sentence spans in the patterns stop at line breaks, so list items never join into one sentence. Contradictions that a negation would reverse only match an unnegated clause. "A full cache does not stop new thumbnails from rendering" keeps the stated fact.
+
+Hard failures stay narrow, and scoped cues send the neighbourhood of a protected fact to a reviewer, so the screen does not grow a verb list. In `prose-exempt`, `cold-after-restart` fails only when the cache is the subject and is said to persist, stay warm or not be cold or empty after a restart. Any other negation in a clause about cold, empty, restart, carried over or survive goes to `needs_adjudication`, as does a clause that ties a restart to kept, carried over or restored thumbnails. In `prose-scope`, a sentence that names the `posted_on` date without a failure cue (fail, reject, skip, not imported, error, invalid, excluded) goes to a reviewer, beside the existing failures for an included or passing future date. Clauses break at commas, dashes and sentence ends.
 
 The screens do not score register. Patterns never mention dashes, filler or other style rules, and the tests apply dash, filler and opener edits outside protected bytes to every labeled example except the deliberately unedited doc, and no verdict changes. A passing screen is a screen: the two independent reviewers still grade each packet with the reviewer questions stored in the oracle.
 
@@ -52,7 +54,7 @@ Changing any input, oracle, example or manifest field needs a deliberate refreez
 
 ## Review record
 
-`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. The first review requested changes against freeze `a9689245…9eba`; its eight defects now have regression examples (`r1` to `r6` in `prose-exempt` and `prose-scope`), and its record is history entry 1. The re-review of freeze `9f40b4cc…5ecc` requested changes for negated cold-start statements and for a failing example placed inside the success scope. Its record stays in the `second_review` slot, and examples `r7` onward reproduce both defects.
+`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. The first review requested changes against freeze `a9689245…9eba`; its eight defects now have regression examples (`r1` to `r6` in `prose-exempt` and `prose-scope`), and its record is history entry 1. The re-review of freeze `9f40b4cc…5ecc` requested changes for negated cold-start statements and for a failing example placed inside the success scope. That record is history entry 2, and examples `r7` to `r10` (`prose-exempt`) and `r7` to `r9` (`prose-scope`) reproduce both defects. The third review of freeze `f6afdd62…54aa` found that added verbs closed only the tested phrasings, which led to the scoped cues above. Its record stays in the `second_review` slot, and examples `r11` to `r17` (`prose-exempt`) and `r10` to `r13` (`prose-scope`) cover it. Examples labeled `adjudicate` must reach a reviewer. Under the new rule, `r3` (faithful) and `r10` (unfaithful, with thumbnails as the subject) in `prose-exempt` go to a reviewer instead of passing or failing.
 
 ## Limits
 

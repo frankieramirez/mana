@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; oracles repaired after the re-review, which requested changes; a new review of this freeze is needed",
+  "status": "frozen; payload inventories verified; oracles reworked after the third review, which requested changes; a new review of this freeze is needed",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -54,7 +54,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-exempt-01",
-      "oracle_sha256": "cd2c2fe87b7c028169cc9b4e09fe16db1759bfa062215037416ffabf77876a3e"
+      "oracle_sha256": "be81f3817b3f540072053ed17071e7c659b7ad0e32a940493d36eef0036d89c6"
     },
     {
       "id": "prose-scope",
@@ -85,7 +85,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-scope-01",
-      "oracle_sha256": "c0b52d3f585648cbb8829866385262096445787c6a45e18d2134918197f79f9a"
+      "oracle_sha256": "b1d177ae5263f0129d4671f188967dea42dbf33a56317ab636d3a7b95d1c53c8"
     },
     {
       "id": "prose-verbatim",
@@ -120,7 +120,7 @@
     }
   ],
   "exposure": [],
-  "freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+  "freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
   "history": [
     {
       "date": "2026-10-17",
@@ -149,6 +149,13 @@
       "previous_freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
       "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
       "change": "Oracle repair after the re-review of freeze 9f40b4cc, before any outcome: cold-after-restart contradictions cover contracted and rephrased negations (isn't cold, not empty, doesn't start out cold, survives a restart, doesn't empty the cache); example-retained fails when the future posted_on record is placed inside the success scope or said to pass; regression examples r7 to r10 (prose-exempt) and r7 to r9 (prose-scope) added."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+      "previous_freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Oracle approach change after the third review of freeze f6afdd62, before any outcome: cold-after-restart fails deterministically only when the cache is the subject and is said to persist or not be cold after a restart; any negation in a clause about cold, empty, restart, carried over or survive, and any clause tying a restart to kept thumbnails, goes to needs_adjudication. In prose-scope, a sentence naming posted_on without a failure cue goes to needs_adjudication. Grader gains clause and sentence scoped reviewer cues. Examples r11 to r17 (prose-exempt) and r10 to r13 (prose-scope) added; r3 and r10 (prose-exempt) now go to a reviewer under the new rule."
     }
   ]
 }

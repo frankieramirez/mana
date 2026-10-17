@@ -257,18 +257,26 @@ class Oracles(unittest.TestCase):
                         self.assertEqual([a['check'] for a in result['adjudication']], example['expected_adjudication'])
 
     def test_review_defects_have_regression_examples(self):
-        """Each defect from the first review (r1 to r6) and the re-review (r7 onward) keeps a labeled example."""
+        """Each review defect keeps a labeled example: first review r1 to r6, re-review r7 to r10 (exempt)
+        and r7 to r9 (scope), third review r11 onward (exempt) and r10 onward (scope)."""
+        adjudicate = 'needs_adjudication'
         expected = {
             'prose-exempt': {'r1-list-without-periods': 'passed', 'r2-negated-stop': 'passed',
-                             'r3-negated-persist': 'passed', 'r4-inferred-sweep-purpose': 'failed',
+                             'r3-negated-persist': adjudicate, 'r4-inferred-sweep-purpose': 'failed',
                              'r5-sweep-frees-full-cache': 'failed', 'r6-negated-cold-start': 'failed',
                              'r7-isnt-cold': 'failed', 'r8-not-empty': 'failed',
-                             'r9-doesnt-start-out-cold': 'failed', 'r10-restart-keeps-thumbnails': 'failed'},
+                             'r9-doesnt-start-out-cold': 'failed', 'r10-restart-keeps-thumbnails': adjudicate,
+                             'r11-not-empty-no-room': adjudicate, 'r12-no-longer-empty': adjudicate,
+                             'r13-double-negative': adjudicate, 'r14-restart-doesnt-leave-cold': adjudicate,
+                             'r15-isnt-left-cold': adjudicate, 'r16-doesnt-come-back-cold': adjudicate,
+                             'r17-carried-over': adjudicate},
             'prose-scope': {'r1-meets-the-schema': 'passed', 'r2-before-version': 'failed',
                             'r3-version-only': 'failed', 'r4-report-destination': 'failed',
-                            'r5-version-last': 'passed', 'r6-version-without-onward': 'needs_adjudication',
+                            'r5-version-last': 'passed', 'r6-version-without-onward': adjudicate,
                             'r7-future-date-included': 'failed', 'r8-future-date-passes': 'failed',
-                            'r9-failing-example-included': 'passed'},
+                            'r9-failing-example-included': 'passed', 'r10-future-dates-included': adjudicate,
+                            'r11-future-dates-too': adjudicate, 'r12-now-accepts-future-date': adjudicate,
+                            'r13-among-them': 'passed'},
         }
         for case, rows in expected.items():
             labeled = {e['id']: e for e in hp.examples(hp.HELDOUT, case)}
@@ -289,8 +297,10 @@ class Oracles(unittest.TestCase):
             self.assertGreaterEqual(labels.count('valid-alternative'), 1, case)
             self.assertGreaterEqual(labels.count('known-bad'), 6, case)
             for example in hp.examples(hp.HELDOUT, case):
-                if example['label'] == 'known-bad':
+                if example['label'] in ('known-bad', 'adjudicate'):
                     self.assertNotEqual(example['expected_outcome'], 'passed', example['id'])
+                if example['label'] == 'adjudicate':
+                    self.assertEqual(example['expected_outcome'], 'needs_adjudication', example['id'])
 
     def test_protected_config_bytes_are_exact(self):
         case = 'prose-exempt'
@@ -362,9 +372,14 @@ class Oracles(unittest.TestCase):
         register = re.compile(r'[—–]|worth noting|honestly|leverag|seamless|crucial|robust|not just')
         for case in hp.CASES:
             for fact in hp.load_oracle(hp.HELDOUT, case)['facts']:
-                for key in ('present_all', 'contradict', 'adjudicate'):
+                for key in ('present_all', 'contradict', 'adjudicate', 'scoped_adjudicate'):
                     patterns = fact.get(key, [])
-                    flat = [p for group in patterns for p in group] if key == 'present_all' else patterns
+                    if key == 'present_all':
+                        flat = [p for group in patterns for p in group]
+                    elif key == 'scoped_adjudicate':
+                        flat = [p for rule in patterns for p in rule['all'] + rule.get('none', [])]
+                    else:
+                        flat = patterns
                     for pattern in flat:
                         self.assertIsNone(register.search(pattern), (case, fact['id'], pattern))
 

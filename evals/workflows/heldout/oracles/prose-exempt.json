@@ -111,10 +111,27 @@
         ]
       ],
       "contradict": [
-        "(?:^|[.;]){N}(restart|reboot|\\bboot){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|reload)\\w*",
-        "(?:^|[.;]){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|surviv|retain|keeps?\\s+(its\\s+)?(thumbnails|contents|entries))\\w*{N}\\b(restart|reboot|boot)",
-        "(not|n't|never|no\\s+longer)\\s+(be\\s+|stay\\w*\\s+|remain\\w*\\s+|start\\w*\\s+(out\\s+|up\\s+)?|begin\\w*\\s+|come\\w*\\s+up\\s+|boot\\w*\\s+(up\\s+)?)?(cold|empty)\\b",
-        "(not|n't|never|no\\s+longer)\\s+(empt|clear|wip|reset|flush|purg|drop)\\w*\\s+(out\\s+)?(the\\s+)?(image\\s+)?cache"
+        "\\bcache\\s+(is\\s+not|isn't|is\\s+never)\\s+(cold|empty)\\b{S}\\b(after|across|following|on)\\s+(a\\s+|the\\s+|each\\s+|every\\s+)?(restart|reboot)",
+        "\\b(after|across|following|on)\\s+(a\\s+|the\\s+|each\\s+|every\\s+)?(restart|reboot),?\\s+the\\s+(image\\s+)?cache\\s+(is\\s+not|isn't|is\\s+never)\\s+(cold|empty)\\b",
+        "\\bcache\\s+(does\\s+not|doesn't|never)\\s+starts?\\s+(out\\s+)?(cold|empty)\\b",
+        "\\bcache\\s+(persists|survives|is\\s+kept|is\\s+preserved|is\\s+restored|stays\\s+warm|remains\\s+warm|is\\s+warm|starts\\s+warm)\\b{S}\\b(restart|reboot)",
+        "\\b(after|across|following)\\s+(a\\s+|the\\s+)?(restart|reboot),?\\s+the\\s+(image\\s+)?cache\\s+(is\\s+warm|stays\\s+warm|is\\s+restored|is\\s+still\\s+(full|populated))\\b"
+      ],
+      "scoped_adjudicate": [
+        {
+          "scope": "clause",
+          "all": [
+            "\\bnot\\b|n't\\b|\\bnever\\b|\\bno\\b|\\bnothing\\b|\\bnone\\b|\\bwithout\\b",
+            "\\bcold\\b|\\bempty\\b|restart|reboot|carr(y|ied|ies)\\s+over|surviv"
+          ]
+        },
+        {
+          "scope": "clause",
+          "all": [
+            "restart|reboot",
+            "carr(y|ied|ies)\\s+over|surviv|persist|retain|\\bkept\\b|preserv|restor|reload|\\bwarm(?!_on_boot)"
+          ]
+        }
       ],
       "review_question": "Does the prose still say the cache starts cold after a restart, with nothing contradicting that?"
     },

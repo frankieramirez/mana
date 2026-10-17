@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator holds three new prose-fidelity source groups for protected config bytes, quantified scope and exact quotation. Candidate inputs sit apart from evaluator-only oracles, labeled outcomes and a manifest that freezes request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite routes. Offline tests check byte-exact oracles, fact screens that ignore style and negation, prompt isolation, freeze tampering, a chained freeze history and review results that request changes. The first independent review requested changes; the oracles were repaired before any outcome and a re-review is pending, so no confirmation run can start.
+- The workflow evaluator holds three new prose-fidelity source groups for protected config bytes, quantified scope and exact quotation. Candidate inputs sit apart from evaluator-only oracles, labeled outcomes and a manifest that freezes request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite routes. Fact screens keep hard failures narrow and send negations and claims near a protected fact to a reviewer. Offline tests check byte-exact oracles, style independence, prompt isolation, freeze tampering, a chained freeze history and review results that request changes. Three independent reviews requested changes; the oracles were repaired before any outcome each time and a new review is pending, so no confirmation run can start.
 
 ## 0.43.0
 

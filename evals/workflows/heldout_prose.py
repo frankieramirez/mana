@@ -30,6 +30,10 @@ RELATIVE = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-
 SENTENCE = r'(?:[^.;\n]|\.(?=\d))*'
 # The same span when it holds no negation, so a contradiction cannot fire on a negated clause.
 UNNEGATED = r"(?:(?!\bnot\b|n't\b|\bnever\b|\bno\b|\bnothing\b|\bnor\b)(?:[^.;\n]|\.(?=\d)))*"
+# Scoped reviewer cues: a negation or claim near a protected fact goes to a reviewer instead of
+# being passed or failed by a growing verb list. Clauses break at commas, dashes and sentence ends.
+SENTENCE_BREAK = r'(?:[!?\n]|\.(?!\d))+'
+CLAUSE_BREAK = r'(?:[;:!?\n,—–]|\.(?!\d))+'
 REVIEW_STATUSES = ('pending', 'changes_required', 'complete')
 REVIEW_CHECKS = {'contracts', 'known_good', 'known_bad', 'valid_alternatives'}
 HISTORY_FIELDS = {'date', 'freeze_sha256', 'previous_freeze_sha256', 'by', 'change'}
@@ -256,6 +260,11 @@ def screen_fact(fact, prose):
         return 'fail', 'contradicted or invented: ' + fact['id']
     if any(compiled(p).search(prose) for p in fact.get('adjudicate', [])):
         return 'adjudicate', 'reviewer cue matched: ' + fact['id']
+    for rule in fact.get('scoped_adjudicate', []):
+        for part in re.split(CLAUSE_BREAK if rule['scope'] == 'clause' else SENTENCE_BREAK, prose):
+            if (all(compiled(p).search(part) for p in rule['all'])
+                    and not any(compiled(p).search(part) for p in rule.get('none', []))):
+                return 'adjudicate', f'{rule["scope"]} needs a reviewer: ' + fact['id']
     if fact['kind'] == 'forbid':
         return 'pass', None
     if all(any(compiled(p).search(prose) for p in group) for group in fact['present_all']):

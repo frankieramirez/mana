@@ -221,5 +221,47 @@
     "expected_failures": [],
     "expected_adjudication": [],
     "note": "Guard for the repair: \"including\" inside the failing clause stays faithful."
+  },
+  {
+    "id": "r10-future-dates-included",
+    "label": "adjudicate",
+    "output": "r10-future-dates-included.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "example-retained"
+    ],
+    "note": "Third review: unfaithful. Must not pass."
+  },
+  {
+    "id": "r11-future-dates-too",
+    "label": "adjudicate",
+    "output": "r11-future-dates-too.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "example-retained"
+    ],
+    "note": "Third review: unfaithful. Must not pass."
+  },
+  {
+    "id": "r12-now-accepts-future-date",
+    "label": "adjudicate",
+    "output": "r12-now-accepts-future-date.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "example-retained"
+    ],
+    "note": "Third review: unfaithful. Must not pass."
+  },
+  {
+    "id": "r13-among-them",
+    "label": "valid-alternative",
+    "output": "r13-among-them.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Third review: faithful, with a failure cue in the sentence."
   }
 ]
