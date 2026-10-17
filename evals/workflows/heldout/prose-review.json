@@ -8,17 +8,121 @@
     "date": "2026-10-17"
   },
   "second_review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewed_freeze_sha256": null,
-    "date": null,
+    "status": "changes_required",
+    "reviewer": "independent reviewer agent, Claude",
+    "reviewed_freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+    "date": "2026-10-17",
     "checked": {
-      "contracts": null,
-      "known_good": null,
-      "known_bad": null,
-      "valid_alternatives": null
+      "contracts": true,
+      "known_good": true,
+      "known_bad": false,
+      "valid_alternatives": true
     },
-    "notes": "Re-review requested after the author repaired the eight defects in history entry 1; regression examples r1 to r6 in each affected group reproduce them."
+    "notes": {
+      "verdict": "changes required",
+      "checks_meaning": "true: checked with no defect; false: checked and found defects. known_bad is false because two new unfaithful outputs that contradict a preserved fact pass with nothing flagged.",
+      "previous_defects": "All eight defects from history entry 1 are fixed. The original 21 outputs regrade as expected: the four faithful outputs that failed now pass, the reversed and narrowed version conditions fail lost-condition, the sweep purpose fails inferred-reason, the sweep-frees-space mechanism fails invented-mechanism, the report destination fails inferred-fact, and verify_review now records changes_required while readiness keeps the groups out.",
+      "labels_checked": "Every labeled example, including r1 to r6 in prose-exempt and prose-scope, is labeled correctly.",
+      "alternatives": [
+        {
+          "case": "prose-exempt",
+          "output": "\"fills up ... keep rendering without being cached\", \"A restart leaves the cache cold\"",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "\"stops storing new thumbnails, but they still render\", \"Nothing is restored after a restart\"",
+          "reviewer_label": "faithful",
+          "grader_result": "needs_adjudication (full-still-renders-not-stored)"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "all prose moved below the YAML sample, \"the cache is empty\" after restart",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "\"The cache isn't cold after a restart.\" (contradicted fact)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "sweep \"also runs once at startup\" (inferred fact)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"As of 4.2 ... every schema-valid record ... never alters a record\"",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"Since version 4.2, records that pass schema validation are all imported, and none of them is modified\"",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"In 4.2 and later ... imported unchanged. Invalid records are rejected\"",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "valid records imported \"including records with a future posted_on date\" (contradicted fact)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "future posted_on \"is the most common example\" (inferred fact)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-verbatim",
+          "output": "exact quote with trailing spaces and three newlines",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-verbatim",
+          "output": "exact quote after a leading CRLF",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-verbatim",
+          "output": "en dash in 3–5 changed to an em dash",
+          "reviewer_label": "unfaithful",
+          "grader_result": "failed quote-altered"
+        },
+        {
+          "case": "prose-verbatim",
+          "output": "hedge clause between the dashes replaced by a comma",
+          "reviewer_label": "unfaithful",
+          "grader_result": "failed quote-altered"
+        }
+      ],
+      "defects": [
+        {
+          "where": "evals/workflows/heldout/oracles/prose-exempt.json:102-118 (cold-after-restart, contradiction at 116)",
+          "scenario": "\"The cache isn't cold after a restart.\" passes. present_all finds cold and restart, and the only negated contradiction covers \"not start cold\", so a plain negation of the stated fact escapes."
+        },
+        {
+          "where": "evals/workflows/heldout/oracles/prose-scope.json:54-67 (example-retained, contradiction at 66)",
+          "scenario": "\"every record that passes schema validation, including records with a future posted_on date\" passes. The screen checks only that posted_on and future appear, so turning the failure example into a passing record is accepted."
+        }
+      ],
+      "observations": [
+        "Open-ended added facts (sweep runs at startup, most common example) pass the screens. Both groups now carry a general reviewer question for added facts (prose-exempt no-inferred-purpose at line 145, prose-scope no-inferred-fact at line 131), so these rest on reviewers and are not counted as defects."
+      ]
+    }
   },
   "history": [
     {

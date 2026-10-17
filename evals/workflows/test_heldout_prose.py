@@ -159,7 +159,7 @@ class FreezeIntegrity(unittest.TestCase):
         self.assertEqual(hp.verify(self.root), [])
         self.assertNotIn('second review is pending', hp.readiness(self.root))
         (self.root / hp.REVIEW_NAME).write_bytes(original)
-        rewrite(self.root, lambda m, r: r['second_review'].update(reviewer='someone'))
+        rewrite(self.root, lambda m, r: r['second_review'].update(status='pending', reviewer='someone'))
         self.assertTrue(any('pending second review' in p for p in hp.verify(self.root)))
         (self.root / hp.REVIEW_NAME).write_bytes(original)
         rewrite(self.root, lambda m, r: r['author'].update(edits_candidate_instructions=True))
