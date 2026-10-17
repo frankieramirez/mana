@@ -61,6 +61,9 @@ def check_record(record, name='record'):
                 or not all(isinstance(item, str) and item for item in value['evidence'])):
             raise ValueError('capability %s needs a status and evidence: %s' % (key, name))
         parse_time(value.get('observed_at'))
+    cap = capabilities.get('active_thread_cap')
+    if cap and cap['status'] == 'verified' and cap.get('counts') not in ('children', 'including_parent'):
+        raise ValueError('a verified thread cap must record whether it counts the parent: ' + name)
     return record
 
 

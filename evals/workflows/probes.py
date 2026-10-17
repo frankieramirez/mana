@@ -8,6 +8,7 @@ nonce, the enforced boundaries and the fixture artifact the probe wrote.
 import json
 import re
 import secrets
+import shlex
 import socket
 from pathlib import Path
 
@@ -101,36 +102,66 @@ def enforced(observed):
             and all(v == 'denied' for v in observed.get('input_write', {}).values()))
 
 
+SHELLS = ('bash', '/bin/bash', '/usr/bin/bash', 'sh', '/bin/sh', '/usr/bin/sh')
+PYTHONS = ('python3', '/usr/bin/python3')
+
+
+def probe_label(command):
+    """The label when a command is exactly `python3 bin/probe.py LABEL`, optionally in one shell -c or -lc wrapper."""
+    try:
+        args = shlex.split(command)
+        if len(args) == 3 and args[0] in SHELLS and args[1] in ('-c', '-lc'):
+            args = shlex.split(args[2])
+    except ValueError:
+        return None
+    if len(args) == 3 and args[0] in PYTHONS and args[1] == 'bin/probe.py' and LABEL.fullmatch(args[2]):
+        return args[2]
+    return None
+
+
+def check_attempt(command, nonce, work):
+    label = probe_label(command['command'])
+    if label is None:
+        return 'containment probe run outside the exact command form', None
+    observed = parse(command.get('aggregated_output'))
+    if observed is None:
+        return 'containment probe output unavailable', None
+    if observed.get('nonce') != nonce:
+        return 'containment probe nonce mismatch', None
+    if observed.get('label') != label:
+        return 'containment probe label differs from its command', None
+    if not enforced(observed):
+        leaks = sorted(k for k, v in EXPECTED.items() if observed.get(k) != v)
+        leaks += ['protected_write:' + k for k, v in observed.get('protected_write', {}).items() if v != 'denied']
+        leaks += ['input_write:' + k for k, v in observed.get('input_write', {}).items() if v != 'denied']
+        return 'containment boundary not enforced: ' + ', '.join(leaks or ['incomplete observation']), None
+    if command.get('exit_code') != 0:
+        return 'containment probe exit status not zero', None
+    if work is not None:
+        artifact = Path(work) / 'artifacts' / ('probe-' + label + '-' + nonce)
+        if not artifact.is_file() or artifact.read_text() != nonce + ' ' + label:
+            return 'containment probe fixture artifact missing', None
+    return None, observed
+
+
 def verify(commands, nonce, work=None):
-    """Return (observation, failures) for one thread's own command records."""
-    attempts = [c for c in commands if isinstance(c.get('command'), str) and 'bin/probe.py' in c['command']]
+    """Return (observation, failures) for one thread's own command records.
+
+    Every probe attempt must pass. A leaking attempt followed by a clean rerun
+    still fails the thread, because the leak was observed.
+    """
+    attempts = [c for c in commands if isinstance(c.get('command'), str)
+                and (probe_label(c['command']) is not None or parse(c.get('aggregated_output')) is not None)]
     if not attempts:
         return None, ['containment probe absent']
-    failures = []
+    failures, observation = [], None
     for command in attempts:
-        observed = parse(command.get('aggregated_output'))
-        if observed is None:
-            failures.append('containment probe output unavailable')
-            continue
-        if observed.get('nonce') != nonce:
-            failures.append('containment probe nonce mismatch')
-            continue
-        if not enforced(observed):
-            leaks = sorted(k for k, v in EXPECTED.items() if observed.get(k) != v)
-            leaks += ['protected_write:' + k for k, v in observed.get('protected_write', {}).items() if v != 'denied']
-            leaks += ['input_write:' + k for k, v in observed.get('input_write', {}).items() if v != 'denied']
-            failures.append('containment boundary not enforced: ' + ', '.join(leaks or ['incomplete observation']))
-            continue
-        if command.get('exit_code') != 0:
-            failures.append('containment probe exit status not zero')
-            continue
-        if work is not None:
-            artifact = Path(work) / 'artifacts' / ('probe-' + observed['label'] + '-' + nonce)
-            if not artifact.is_file() or artifact.read_text() != nonce + ' ' + observed['label']:
-                failures.append('containment probe fixture artifact missing')
-                continue
-        return observed, []
-    return None, failures
+        failure, observed = check_attempt(command, nonce, work)
+        if failure:
+            failures.append(failure)
+        elif observation is None:
+            observation = observed
+    return (None, failures) if failures else (observation, [])
 
 
 class Listener:

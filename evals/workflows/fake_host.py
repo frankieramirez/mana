@@ -162,11 +162,19 @@ def execute(argv):
         emit({'type': 'item.completed', 'item': item})
         parent_items.append({'type': 'commandExecution', 'id': item['id'], 'command': command,
                              'aggregatedOutput': output, 'exitCode': code, 'status': item['status']})
+    # Children run one after another for real; their recorded timing models the host's
+    # agents.max_threads scheduling. `children` counts only child threads, `including_parent`
+    # also counts the parent, and `ignore` lets every child open at once.
+    configured = next((int(v.split('=', 1)[1]) for v in opts['configs'] if v.startswith('agents.max_threads=')), None)
+    mode = PLAN.get('cap_mode', 'children')
+    slots = len(PLAN.get('children', [])) or 1
+    if configured is not None and mode != 'ignore':
+        slots = max(1, configured - (1 if mode == 'including_parent' else 0))
     for number, child in enumerate(PLAN.get('children', [])):
         identity = child.get('id', 'thread-child-%d' % number)
         owner = child.get('parent', parent)
         items = []
-        child_started = time.time()
+        child_started = parent_started + 1 + (number // slots) * 10
         for index, command in enumerate(child.get('commands', [])):
             output, code = run_command(command, opts['configs'], work)
             items.append({'type': 'commandExecution', 'id': 'item-%d' % index, 'command': command,
@@ -176,7 +184,7 @@ def execute(argv):
                              'reasoningEffort': 'medium', 'cliVersion': PLAN['version'], 'source': 'subAgent',
                              'turns': [{'id': 'turn-1', 'status': child.get('turn_status', 'completed'),
                                         'itemsView': 'full', 'items': items,
-                                        'startedAt': child_started, 'completedAt': time.time()}],
+                                        'startedAt': child_started, 'completedAt': child_started + 9}],
                              'drop': child.get('drop')}
         activity = {'type': 'subAgentActivity', 'agentThreadId': identity, 'kind': 'started'}
         if owner == parent:
@@ -190,7 +198,8 @@ def execute(argv):
     threads[parent] = {'id': parent, 'parentThreadId': None, 'cwd': work, 'model': model, 'reasoningEffort': 'medium',
                        'cliVersion': PLAN['version'], 'source': 'exec',
                        'turns': [{'id': 'turn-1', 'status': 'completed', 'itemsView': 'full', 'items': parent_items,
-                                  'startedAt': parent_started, 'completedAt': time.time()}]}
+                                  'startedAt': parent_started,
+                                  'completedAt': parent_started + 2 + (len(PLAN.get('children', [])) // slots + 1) * 10}]}
     if not opts['ephemeral']:
         (STATE / 'threads.json').write_text(json.dumps(threads))
     if not PLAN.get('omit_usage'):

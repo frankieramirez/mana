@@ -12,9 +12,11 @@ from pathlib import Path
 import signal
 import subprocess
 import sys
+import threading
 import time
 
 PR_SET_CHILD_SUBREAPER = 36
+PR_GET_CHILD_SUBREAPER = 37
 
 
 class Cancelled(Exception):
@@ -25,14 +27,20 @@ def now():
     return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds')
 
 
-def enable_subreaper():
+def set_subreaper(value):
+    """Set the child subreaper flag. Return the previous value, or None where unsupported."""
     if not sys.platform.startswith('linux'):
-        return False
+        return None
     try:
         libc = ctypes.CDLL(None, use_errno=True)
-        return libc.prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) == 0
+        current = ctypes.c_int(0)
+        if libc.prctl(PR_GET_CHILD_SUBREAPER, ctypes.byref(current), 0, 0, 0) != 0:
+            return None
+        if libc.prctl(PR_SET_CHILD_SUBREAPER, value, 0, 0, 0) != 0:
+            return None
+        return current.value
     except (OSError, AttributeError):
-        return False
+        return None
 
 
 def table():
@@ -106,23 +114,42 @@ def reap_adopted(runner, root, preexisting):
 
 
 def run_bounded(command, stdin_text, stdout, stderr, timeout, env=None, cwd=None):
-    """Run one host invocation. Never retries. Always returns a durable record."""
+    """Run one host invocation. Never retries. Always returns a durable record.
+
+    Signals that arrive during the final sweep are deferred and recorded, so a
+    second interrupt cannot skip the sweep or lose the record.
+    """
+    linux = sys.platform.startswith('linux')
+    previous_reaper = set_subreaper(1)
     record = {'started_at': now(), 'timeout_seconds': timeout, 'outcome': None, 'exit_code': None,
-              'subreaper': enable_subreaper(), 'platform': sys.platform}
+              'subreaper': previous_reaper is not None, 'platform': sys.platform}
     runner = os.getpid()
-    preexisting = {pid for pid, row in table().items() if row[0] == runner} if sys.platform.startswith('linux') else set()
-    previous = signal.getsignal(signal.SIGTERM)
+    preexisting = {pid for pid, row in table().items() if row[0] == runner} if linux else set()
+    in_main = threading.current_thread() is threading.main_thread()
+    handlers = {}
+    deferred = []
 
     def cancel(signum, frame):
         raise Cancelled('signal %d' % signum)
 
-    in_main = True
+    def defer(signum, frame):
+        deferred.append(signum)
+
+    def restore():
+        for number, handler in handlers.items():
+            signal.signal(number, handler)
+        if previous_reaper == 0:
+            set_subreaper(0)
+
+    if in_main:
+        handlers[signal.SIGTERM] = signal.signal(signal.SIGTERM, cancel)
+        handlers[signal.SIGINT] = signal.getsignal(signal.SIGINT)
     try:
-        signal.signal(signal.SIGTERM, cancel)
-    except ValueError:
-        in_main = False
-    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr, text=True,
-                               start_new_session=True, env=env, cwd=cwd)
+        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr, text=True,
+                                   start_new_session=True, env=env, cwd=cwd)
+    except BaseException:
+        restore()
+        raise
     record['host_pid'] = process.pid
     try:
         try:
@@ -135,30 +162,38 @@ def run_bounded(command, stdin_text, stdout, stderr, timeout, env=None, cwd=None
             record['outcome'] = 'cancelled'
             record['cancel_reason'] = type(exc).__name__ + (': ' + str(exc) if str(exc) else '')
     finally:
-        if sys.platform.startswith('linux'):
-            signalled, remaining = sweep(process.pid, runner, preexisting)
-        else:
-            signalled, remaining = [], []
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except OSError:
-                pass
-        try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            remaining = sorted(set(remaining) | {process.pid})
-        for pipe in (process.stdin,):
-            try:
-                if pipe and not pipe.closed:
-                    pipe.close()
-            except OSError:
-                pass
         if in_main:
-            signal.signal(signal.SIGTERM, previous)
+            signal.signal(signal.SIGTERM, defer)
+            signal.signal(signal.SIGINT, defer)
+        try:
+            if linux:
+                signalled, remaining = sweep(process.pid, runner, preexisting)
+            else:
+                signalled, remaining = [], []
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except OSError:
+                    pass
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                remaining = sorted(set(remaining) | {process.pid})
+            try:
+                if process.stdin and not process.stdin.closed:
+                    process.stdin.close()
+            except OSError:
+                pass
+        finally:
+            restore()
         record.update({'ended_at': now(), 'signalled_pids': signalled, 'surviving_pids': remaining,
                        'family_terminated': not remaining,
                        'method': 'session, group and subtree sweep with runner subreaper' if record['subreaper']
                        else 'session, group and subtree sweep without subreaper'})
+        if deferred:
+            record['deferred_signals'] = deferred
+            if record['outcome'] != 'cancelled':
+                record['outcome'] = 'cancelled'
+                record['cancel_reason'] = 'signal during the termination sweep'
         if record['outcome'] == 'completed' and signalled:
             record['lingering_after_exit'] = len(signalled)
     return record

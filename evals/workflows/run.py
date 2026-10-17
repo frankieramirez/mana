@@ -551,7 +551,12 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
             result['probe'] = {'nonce': nonce, 'listener_port': listener.port, 'installed_at': process_family.now()}
         # Freeze the pilot's exposed surfaces: native filesystem tools only, no MCP or host integrations.
         # Every arm of a study gets this same configuration; delegation limits never vary by condition.
-        config += delegation.host_config(limits, model, reasoning)
+        cap = None
+        if limits:
+            # Translate the protocol limit into this host's recorded meaning of agents.max_threads.
+            cap = delegation.thread_cap(limits, result['host_capability']['capabilities']['active_thread_cap'].get('counts'))
+            result['host_thread_cap'] = cap
+        config += delegation.host_config(limits, model, reasoning, thread_cap=cap)
         # Saved sessions are required to read descendant history after the parent exits.
         session = [] if limits else ["--ephemeral"]
         command = [str(executable), "exec", "--ignore-user-config", "--ignore-rules", *session, "--json", "--color", "never",

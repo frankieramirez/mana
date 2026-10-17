@@ -52,6 +52,7 @@ def verified_record(host=FAKE, at=None, **overrides):
     at = at or process_family.now()
     caps = {key: {'status': 'verified', 'observed_at': at, 'evidence': ['offline fixture probe']}
             for key in hosts.MODES['comparative-delegated']}
+    caps['active_thread_cap']['counts'] = 'children'
     caps.update(overrides)
     return {'schema_version': 1, 'host': host, 'platform': 'linux', 'recorded_at': at,
             'source': 'offline test', 'capabilities': caps}
@@ -92,15 +93,35 @@ class Registry(unittest.TestCase):
     def write(self, name, record):
         (self.dir / name).write_text(json.dumps(record))
 
-    def test_recorded_history_supports_existing_modes_and_blocks_comparison(self):
-        self.assertEqual(hosts.accepted_versions('focused'), {'codex-cli 0.155.1', 'codex-cli 0.159.2'})
-        self.assertEqual(hosts.accepted_versions('delegated'), {'codex-cli 0.159.2'})
-        self.assertEqual(hosts.accepted_versions('comparative-delegated'), set())
+    def test_accepted_hosts_are_derived_from_committed_evidence(self):
+        # Recompute acceptance from the raw committed records, independently of hosts.assess.
+        raw = [json.loads(path.read_text()) for path in sorted(hosts.EVIDENCE.glob('*.json'))]
+        recorded = {record['host'] for record in raw}
+        now = datetime.datetime.now(datetime.timezone.utc)
+        for mode, needs in hosts.MODES.items():
+            expected = set()
+            for host in recorded:
+                latest = {}
+                for record in raw:
+                    if record['host'] != host or record['platform'] != 'linux':
+                        continue
+                    for key, value in record['capabilities'].items():
+                        if key not in latest or hosts.parse_time(value['observed_at']) >= hosts.parse_time(latest[key]['observed_at']):
+                            latest[key] = value
+                fresh = all(now - hosts.parse_time(latest[key]['observed_at']) <= datetime.timedelta(days=30)
+                            for key in needs if key in latest) if mode == 'comparative-delegated' else True
+                if all(latest.get(key, {}).get('status') == 'verified' for key in needs) and fresh:
+                    expected.add(host)
+            with self.subTest(mode=mode):
+                self.assertEqual(hosts.accepted_versions(mode, at=now), expected)
         self.assertEqual(run.SUPPORTED_HOSTS, hosts.accepted_versions('focused'))
+        # The migrated pilot record keeps 0.159.2 delegated support but never comparative support.
+        self.assertIn('codex-cli 0.159.2', hosts.accepted_versions('delegated'))
         missing = hosts.assess('codex-cli 0.159.2', 'comparative-delegated')['missing']
-        self.assertEqual(missing, ['active_thread_cap=unknown', 'process_family_termination=unknown'])
-        with self.assertRaisesRegex(ValueError, 'unvalidated host codex-cli 0.159.0-alpha.3'):
-            hosts.require('codex-cli 0.159.0-alpha.3', 'focused')
+        self.assertIn('process_family_termination=unknown', missing)
+        for host in ('codex-cli 0.159.0-alpha.3', 'codex-cli 9.0.0-unrecorded', '2.1.302 (Claude Code)'):
+            with self.subTest(host=host), self.assertRaisesRegex(ValueError, 'unvalidated host'):
+                hosts.require(host, 'focused')
 
     def test_a_version_without_evidence_is_never_accepted(self):
         record = verified_record()
@@ -133,7 +154,8 @@ class Registry(unittest.TestCase):
                 lambda r: r['capabilities']['installation'].pop('observed_at'),
                 lambda r: r['capabilities'].update(teleport={'status': 'verified'}),
                 lambda r: r['capabilities']['installation'].update(status='probably'),
-                lambda r: r.update(host=''))):
+                lambda r: r.update(host=''),
+                lambda r: r['capabilities']['active_thread_cap'].pop('counts'))):
             with self.subTest(index=index):
                 record = verified_record()
                 mutate(record)
@@ -203,6 +225,47 @@ class Termination(unittest.TestCase):
         self.assertEqual(record['lingering_after_exit'], 1)
         self.assertFalse(alive(pid))
 
+    def test_signal_during_sweep_is_deferred_and_the_record_survives(self):
+        original = process_family.sweep
+
+        def interrupted(*args, **kwargs):
+            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGINT)
+            return original(*args, **kwargs)
+
+        with patch.object(process_family, 'sweep', interrupted):
+            record = self.launch(self.hanging(), 2)
+        daemon = wait_for(self.root / 'daemon.pid')
+        self.assertEqual(record['outcome'], 'cancelled')
+        self.assertEqual(record['cancel_reason'], 'signal during the termination sweep')
+        self.assertEqual(sorted(record['deferred_signals']), sorted([signal.SIGTERM, signal.SIGINT]))
+        self.assertTrue(record['family_terminated'])
+        self.assertFalse(alive(daemon))
+        self.assertIs(signal.getsignal(signal.SIGINT), signal.default_int_handler)
+
+    def test_survivor_check_uses_command_line_tokens_instead_of_sandbox_pids(self):
+        token = 'mana-family-' + probes.new_nonce()
+        process = subprocess.Popen(['/bin/sh', '-c', 'sleep 30; : ' + token])
+        try:
+            deadline = time.monotonic() + 5
+            while process.pid not in host_probe.token_processes(token) and time.monotonic() < deadline:
+                time.sleep(0.05)
+            self.assertIn(process.pid, host_probe.token_processes(token))
+        finally:
+            process.kill()
+            process.wait()
+        self.assertEqual(host_probe.token_processes(token), [])
+
+    def test_subreaper_flag_is_restored(self):
+        previous = process_family.set_subreaper(0)
+        try:
+            with (self.root / 'out').open('w') as out, (self.root / 'err').open('w') as err:
+                record = process_family.run_bounded(['/bin/true'], '', out, err, 5)
+            self.assertTrue(record['subreaper'])
+            self.assertEqual(process_family.set_subreaper(0), 0)
+        finally:
+            process_family.set_subreaper(previous or 0)
+
 
 @unittest.skipUnless(LINUX, 'fake sandbox containment and the family sweep target Linux')
 class Isolation(unittest.TestCase):
@@ -252,6 +315,27 @@ class Isolation(unittest.TestCase):
         self.assertEqual(probes.verify([dict(command, exit_code=1)], nonce)[1], ['containment probe exit status not zero'])
         self.assertEqual(probes.verify([{'command': 'echo ok', 'aggregated_output': ''}], nonce)[1],
                          ['containment probe absent'])
+        # Reading the probe source is not an attempt; running it in another form is a failure.
+        self.assertEqual(probes.verify([{'command': 'cat bin/probe.py', 'aggregated_output': 'print(...)'}], nonce)[1],
+                         ['containment probe absent'])
+        wrapped = dict(command, command="/bin/bash -lc 'python3 bin/probe.py parent'")
+        (self.work / 'artifacts' / ('probe-parent-' + nonce)).write_text(nonce + ' parent')
+        self.assertEqual(probes.verify([wrapped], nonce, self.work)[1], [])
+        self.assertEqual(probes.verify([dict(command, command='env python3 bin/probe.py parent')], nonce)[1],
+                         ['containment probe run outside the exact command form'])
+        self.assertEqual(probes.verify([dict(command, command='python3 bin/probe.py other')], nonce)[1],
+                         ['containment probe label differs from its command'])
+
+    def test_a_leaking_attempt_fails_even_after_a_clean_rerun(self):
+        leaky, nonce, _, _ = self.sandbox_probe('leaky')
+        clean = json.loads(leaky['aggregated_output'][len(probes.MARKER):])
+        clean.update(outside_read='denied', network='denied', protected_write={'installed': 'denied', 'bin': 'denied'})
+        rerun = dict(leaky, aggregated_output=probes.MARKER + json.dumps(clean), exit_code=0)
+        self.assertEqual(probes.verify([rerun], nonce, self.work), (clean, []))
+        observed, failures = probes.verify([leaky, rerun], nonce, self.work)
+        self.assertIsNone(observed)
+        self.assertEqual(len(failures), 1)
+        self.assertIn('containment boundary not enforced', failures[0])
 
     def test_preflight_rejects_a_leaky_sandbox(self):
         for containment, ok in (('enforced', True), ('leaky', False)):
@@ -319,10 +403,23 @@ class DelegatedConditions(unittest.TestCase):
         self.assertTrue(result['started_at'] < result['ended_at'])
         argv = host.calls()[0]['argv']
         self.assertNotIn('--ephemeral', argv)
-        self.assertIn('agents.max_threads=4', argv)
+        self.assertIn('agents.max_threads=3', argv)
         self.assertIn('features.multi_agent=true', argv)
         self.assertTrue((out / 'threads.json').is_file())
         self.assertTrue((out / 'attributed-events.jsonl').is_file())
+        self.assertEqual(result['host_thread_cap'], 3)
+
+    def test_thread_cap_follows_the_recorded_meaning_of_the_host_setting(self):
+        record = verified_record()
+        record['capabilities']['active_thread_cap']['counts'] = 'including_parent'
+        (self.registry / 'fake.json').write_text(json.dumps(record))
+        result, _, host = self.execute(family_plan(), 'including-parent')
+        self.assertTrue(result['passed'], result['failures'])
+        self.assertIn('agents.max_threads=4', host.calls()[0]['argv'])
+        with self.assertRaisesRegex(ValueError, 'thread cap meaning is unrecorded'):
+            delegation.thread_cap(LIMITS, None)
+        with self.assertRaisesRegex(ValueError, 'explicit host thread cap'):
+            delegation.host_config(LIMITS, MODEL, 'medium')
 
     def test_missing_or_unproven_descendants_fail_closed(self):
         cases = {
@@ -334,7 +431,7 @@ class DelegatedConditions(unittest.TestCase):
             'no-probe': (family_plan(children=1), {'commands': ['cat report.md']},
                          'containment probe absent: thread-child-0'),
             'escaped-probe': (family_plan(children=1), {'commands': ['env python3 bin/probe.py reviewer-1']},
-                              'containment boundary not enforced'),
+                              'containment probe run outside the exact command form'),
             'reused-label': (family_plan(children=1), {'commands': ['python3 bin/probe.py parent']},
                              'containment probe label reused'),
             'incomplete-turn': (family_plan(children=1), {'turn_status': 'interrupted'},
@@ -453,7 +550,7 @@ class DelegatedConditions(unittest.TestCase):
         with self.assertRaises(ValueError):
             delegation.checked(dict(LIMITS, max_active_threads=5))
         self.assertEqual(delegation.host_config(None, MODEL, 'medium')[-1], 'model="gpt-6.1-sol"')
-        self.assertNotEqual(delegation.host_config(LIMITS, MODEL, 'medium'), delegation.host_config(None, MODEL, 'medium'))
+        self.assertNotEqual(delegation.host_config(LIMITS, MODEL, 'medium', thread_cap=3), delegation.host_config(None, MODEL, 'medium'))
         with patch.object(hosts, 'EVIDENCE', run.HERE / 'host-evidence'):
             with self.assertRaisesRegex(ValueError, 'comparative-delegated'):
                 hosts.require('codex-cli 0.159.2', 'comparative-delegated')
@@ -475,19 +572,47 @@ class ProbeCommand(unittest.TestCase):
                                       case=self.case)
         return record, host
 
+    def cap_plan(self, children=3, **overrides):
+        plan = family_plan(children=children, **overrides)
+        plan['children'] = [{'commands': ['python3 bin/probe.py child-%d' % n]} for n in range(1, children + 1)]
+        return plan
+
     def test_enforced_host_yields_evidence_the_registry_accepts(self):
-        plan = family_plan(children=2)
-        plan['children'] = [{'commands': ['python3 bin/probe.py child-%d' % n]} for n in (1, 2)]
-        record, host = self.probe(plan, 'enforced')
+        record, host = self.probe(self.cap_plan(), 'enforced')
         statuses = {k: v['status'] for k, v in record['capabilities'].items()}
         self.assertEqual(set(statuses.values()), {'verified'}, statuses)
+        self.assertEqual(record['capabilities']['active_thread_cap']['counts'], 'children')
+        self.assertIn('peak concurrent children 2', record['capabilities']['active_thread_cap']['evidence'][0])
+        self.assertEqual(record['capabilities']['process_family_termination']['status'], 'verified')
         self.assertEqual(record['model_invocations'], 1)
         self.assertEqual(len(host.calls()), 1)
+        self.assertIn('agents.max_threads=2', host.calls()[0]['argv'])
+        self.assertIn('Start exactly 3 child agents', host.calls()[0]['prompt'])
         self.assertNotIn(str(self.root), json.dumps(record))
         registry = self.root / 'registry'
         registry.mkdir()
         shutil.copy2(self.root / 'enforced/host-evidence.json', registry / 'probe.json')
         self.assertTrue(hosts.assess(FAKE, 'comparative-delegated', directory=registry)['accepted'])
+
+    def test_thread_cap_needs_a_challenge_and_fails_when_ignored(self):
+        ignored, _ = self.probe(self.cap_plan(cap_mode='ignore'), 'ignored')
+        self.assertEqual(ignored['capabilities']['active_thread_cap']['status'], 'failed')
+        self.assertIn('children exceeded the configured cap', ignored['capabilities']['active_thread_cap']['evidence'][0])
+        # A cap that only ever saw as many children as it allows was never challenged.
+        unchallenged, _ = self.probe(self.cap_plan(children=2), 'unchallenged')
+        self.assertNotIn('active_thread_cap', unchallenged['capabilities'])
+        self.assertTrue(any('not challenged' in note for note in unchallenged['unknown']))
+        # Fewer concurrent children than the setting allows, with no refusal, is ambiguous.
+        ambiguous, _ = self.probe(self.cap_plan(cap_mode='including_parent'), 'ambiguous')
+        self.assertNotIn('active_thread_cap', ambiguous['capabilities'])
+        for name, record in (('ignored', ignored), ('unchallenged', unchallenged), ('ambiguous', ambiguous)):
+            registry = self.root / ('registry-' + name)
+            registry.mkdir()
+            shutil.copy2(self.root / name / 'host-evidence.json', registry / 'probe.json')
+            result = hosts.assess(FAKE, 'comparative-delegated', directory=registry)
+            self.assertFalse(result['accepted'])
+            self.assertTrue(any(m.startswith('active_thread_cap=') for m in result['missing']))
+        self.assertEqual(host_probe.thread_cap(1, 2, 1, 2)[0]['counts'], 'including_parent')
 
     def test_leaky_host_fails_without_a_model_call(self):
         leaky, host = self.probe(dict(family_plan(), containment='leaky'), 'leaky')

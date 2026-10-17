@@ -31,13 +31,27 @@ def checked(value):
     return dict(value)
 
 
-def host_config(delegation, model, reasoning):
+def thread_cap(delegation, counts):
+    """The host's agents.max_threads value for the protocol's active-thread limit, which includes the parent.
+
+    `counts` is what the host's recorded probe showed the setting limits.
+    """
+    if counts == 'children':
+        return delegation['max_active_threads'] - 1
+    if counts == 'including_parent':
+        return delegation['max_active_threads']
+    raise ValueError('host thread cap meaning is unrecorded; probe the host before delegated runs')
+
+
+def host_config(delegation, model, reasoning, thread_cap=None):
     """One host configuration for every arm. Nothing here depends on the condition."""
     if delegation:
+        if type(thread_cap) is not int or thread_cap < 1:
+            raise ValueError('delegated runs need an explicit host thread cap')
         disabled = [name for name in DISABLED if name not in ('multi_agent', 'multi_agent_v2')]
         config = [f'features.{name}=false' for name in disabled]
         config += ['features.multi_agent=true', 'features.multi_agent_v2=true',
-                   'agents.max_threads=%d' % delegation['max_active_threads']]
+                   'agents.max_threads=%d' % thread_cap]
     else:
         config = [f'features.{name}=false' for name in DISABLED]
     config += ['features.skip_host_skill_discovery=true', 'web_search="disabled"', 'project_doc_max_bytes=0',
