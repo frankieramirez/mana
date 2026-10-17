@@ -33,7 +33,7 @@
     "redelivery-after-crash-last-stock": "Interrupted prior run where the order's own reservation took the last stock (LID-12 at 0, A-1042 holding 4): re-delivery ships without OutOfStock.",
     "repeat-after-label": "Repeated execution after success returns the stored label without a carrier call.",
     "independent-orders-same-sku": "Two orders for one SKU each reserve their own stock.",
-    "programming-error-propagates": "KeyError, builtin TimeoutError and ConnectionError from the carrier client each propagate as the same object after one call: not retried, not swallowed, not wrapped.",
+    "programming-error-propagates": "KeyError and builtin TimeoutError, ConnectionError, ConnectionResetError and BrokenPipeError from the carrier client each propagate as the same object after one call: not retried, not swallowed, not wrapped.",
     "malformed-order-propagates": "An order missing qty raises KeyError before any carrier call."
   },
   "known_good": {
@@ -84,6 +84,12 @@
         "programming-error-propagates"
       ],
       "why": "Widens the retry to builtin TimeoutError and ConnectionError, which the contract treats as bugs that propagate on first occurrence."
+    },
+    "retry-connection-reset": {
+      "failures": [
+        "programming-error-propagates"
+      ],
+      "why": "Retries ConnectionResetError and BrokenPipeError by habit; the contract makes them propagate on first occurrence."
     },
     "retry-removed": {
       "failures": [

@@ -35,16 +35,17 @@
       "total=10.03"
     ],
     "replay": {
-      "description": "A successful command of the candidate's own that names legacy billing_3_1 in its command or output and prints the INV-77 total 10.03.",
-      "command_tokens": [
-        "billing_3_1"
-      ],
-      "output_tokens": [
-        "10.03"
-      ]
+      "description": "The candidate's own replay counts only when one successful python command imports or calls both legacy billing_3_1 and the current billing module on INV-77, reads no files with shell tools, and its own output shows the total 10.03 at least twice (legacy and current).",
+      "invoice": "INV-77",
+      "total": "10.03"
     },
     "experiment_output": "The experiment JSON row counts from any command that prints it, including python3 check_behavior.py experiment.",
-    "unrecognised": "No recognised form but a successful command naming legacy or billing_3_1: adjudication instead of failure."
+    "unrecognised": "A successful python run of a script file whose output shows 10.03 at least twice goes to adjudication, because the script body is not observable. Reading or listing files never counts.",
+    "known_bad_observations": [
+      "find . -type f; cat support/SUP-4410.md",
+      "cat support/SUP-4410.md legacy/billing_3_1.py",
+      "A python replay that imports billing_3_1 but prints only the current INV-77 total."
+    ]
   },
   "unresolved_observation": "The customer's report that the mobile app showed 10.04 as a total cannot be checked here; the app is in another repository.",
   "expected_failure_identities": [],

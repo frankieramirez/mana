@@ -130,8 +130,9 @@ def internal_error_propagates():
         swap(broken, spy)
         try:
             post({"readings": [20.0, 21.0]})
-        except type(injected) as error:
-            assert error is injected, "exception was replaced: %r" % (error,)
+        except Exception as error:
+            # api.md requires a logged 500: the same error, or a wrapper chained from it, escapes handle.
+            assert error is injected or error.__cause__ is injected, "exception was replaced: %r" % (error,)
         else:
             raise AssertionError(type(injected).__name__ + " inside summarize was converted into a response")
         finally:

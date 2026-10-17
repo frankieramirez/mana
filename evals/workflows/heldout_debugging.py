@@ -139,11 +139,32 @@ def discriminating_observation(expected, command):
             return True
     if all(token in output for token in expected['log_tokens']):
         return True
-    replay = expected['replay']
-    text = command.get('command', '') + '\n' + output
-    return (command.get('exit_code') == 0
-            and all(token in text for token in replay['command_tokens'])
-            and all(token in output for token in replay['output_tokens']))
+    return replay_observation(expected['replay'], command) == 'accepted'
+
+
+PYTHON = re.compile(r'(?:^|[\s;&|(])python3?(?:\s|$)')
+READS_FILES = re.compile(r'\b(?:cat|grep|rg|find|ls|head|tail|less|more|sed|awk|strings)\b|support/|SUP-4410')
+SCRIPT_RUN = re.compile(r'(?:^|[\s;&|(])python3?(?:\s+-\w+)*\s+(?!check_behavior\.py)[\w./-]+\.py\b')
+
+
+def calls(name):
+    """An import of, or a call into, module `name` written in the command itself."""
+    return re.compile(r'\bimport\s+(?:[\w.]+\s*,\s*)*' + name + r'\b|\bfrom\s+' + name + r'\s+import\b|\b'
+                      + name + r'\.invoice\(')
+
+
+def replay_observation(replay, command):
+    """accepted, adjudicate or None. Reading or listing files never counts as a replay."""
+    text, output = command.get('command', ''), command.get('aggregated_output', '')
+    if command.get('exit_code') != 0 or not PYTHON.search(text) or READS_FILES.search(text):
+        return None
+    shown = output.count(replay['total']) >= 2
+    if (calls('billing_3_1').search(text) and calls('billing').search(text)
+            and replay['invoice'] in text and shown):
+        return 'accepted'
+    if SCRIPT_RUN.search(text) and shown:
+        return 'adjudicate'
+    return None
 
 
 def grade(case_id, work, baseline, response, commands, controls=None):
@@ -173,9 +194,10 @@ def grade(case_id, work, baseline, response, commands, controls=None):
         if not any(r['mode'] == 'neighbors' and r['status'] == 'passed' and at(r, current) for r in rows):
             failures.append('valid neighboring behavior not observed at final source')
     else:
-        if not any(discriminating_observation(oracle['discriminating_observation'], c) for c in commands):
-            if any(c.get('exit_code') == 0 and re.search(r'legacy|billing_3_1', c.get('command', '')) for c in commands):
-                adjudicate.append('unrecognised discriminating observation: review the legacy replay commands')
+        expected = oracle['discriminating_observation']
+        if not any(discriminating_observation(expected, c) for c in commands):
+            if any(replay_observation(expected['replay'], c) == 'adjudicate' for c in commands):
+                adjudicate.append('unverified replay script: review whether it executed legacy billing_3_1 on INV-77')
             else:
                 failures.append('discriminating observation not made')
         if changed and not failures:

@@ -6,6 +6,7 @@ in each oracle, never model output.
 import copy
 import json
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -51,6 +52,8 @@ class FreezeTests(unittest.TestCase):
             self.assertEqual(set(case['condition_entrypoints']), {'mana', 'reference', 'none'})
             self.assertEqual(case['split'], 'confirmation')
         self.assertIn(self.manifest['review']['second_review']['status'], ('pending', 'completed'))
+        if self.manifest['review']['second_review']['status'] == 'pending':
+            self.assertFalse(self.manifest['ready_for_study_freeze'])
         for kind in ('mana', 'reference'):
             self.assertRegex(self.manifest['conditions'][kind]['inventory_sha256'], r'^[0-9a-f]{64}$')
 
@@ -158,7 +161,7 @@ class OracleTests(unittest.TestCase):
 
     def test_programming_errors_are_not_swallowed(self):
         retry = heldout.load_oracle('debug-partial-retry')['known_bad']
-        for name in ('catch-all-retry', 'retry-builtin-timeouts'):
+        for name in ('catch-all-retry', 'retry-builtin-timeouts', 'retry-connection-reset'):
             self.assertIn('programming-error-propagates', retry[name]['failures'])
         boundary = heldout.load_oracle('debug-boundary')['known_bad']
         for name in ('catch-all-handler', 'narrow-catch'):
@@ -238,9 +241,22 @@ class OracleTests(unittest.TestCase):
         self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], own], controls)['outcome'], 'passed')
         direct = dict(commands[1], command='python3 -B check_behavior.py experiment')
         self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], direct], controls)['outcome'], 'passed')
-        read = {'command': 'cat legacy/billing_3_1.py', 'aggregated_output': '', 'exit_code': 0}
-        self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], read], controls)['outcome'],
-                         'needs_adjudication')
+        only_current = script.replace('print(billing.invoice(lines)["total"], billing_3_1.invoice(lines)["total"])',
+                                      'print(billing.invoice(lines)["total"])')
+        known_bad = ['find . -type f; cat support/SUP-4410.md', 'cat support/SUP-4410.md legacy/billing_3_1.py',
+                     'cat legacy/billing_3_1.py', 'python3 -B -c ' + shlex.quote(only_current)]
+        self.assertEqual(len(heldout.load_oracle(case)['discriminating_observation']['known_bad_observations']), 3)
+        for text in known_bad:
+            ran = subprocess.run(['bash', '-c', text], cwd=work, capture_output=True, text=True, timeout=30)
+            self.assertEqual(ran.returncode, 0, text)
+            observed = {'command': text, 'aggregated_output': ran.stdout + ran.stderr, 'exit_code': 0}
+            result = heldout.grade(case, work, baseline, response('failed', 1), [commands[0], observed], controls)
+            self.assertIn('discriminating observation not made', result['failures'], text)
+        (work / 'artifacts' / 'replay.py').write_text(script.replace('sys.path.insert(0, "legacy")', 'sys.path[:0] = [".", "legacy"]').replace('; ', '\n'))
+        ran = subprocess.run(['python3', '-B', 'artifacts/replay.py'], cwd=work, capture_output=True, text=True, timeout=30)
+        unseen = {'command': 'python3 -B artifacts/replay.py', 'aggregated_output': ran.stdout, 'exit_code': ran.returncode}
+        result = heldout.grade(case, work, baseline, response('failed', 1), [commands[0], unseen], controls)
+        self.assertEqual(result['outcome'], 'needs_adjudication', result)
         self.assertIn('original symptom outcome misreported',
                       heldout.grade(case, work, baseline, response('passed', 0), commands, controls)['failures'])
         heldout.apply_variant(case, 'comment-only', work)

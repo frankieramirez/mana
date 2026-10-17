@@ -28,10 +28,11 @@
     "single-zero-reading-kept": "A single zero reading is valid; device absent echoes null.",
     "unknown-fields-ignored": "Unknown top-level fields are accepted and ignored.",
     "large-integer-kept": "Large integers remain valid.",
-    "internal-error-propagates": "ZeroDivisionError, TypeError and ValueError raised inside summarize for a valid batch each escape handle as the same object.",
+    "internal-error-propagates": "ZeroDivisionError, TypeError and ValueError raised inside summarize for a valid batch each escape handle, so the dispatcher answers 500: either the same object or a wrapper chained from it with raise ... from.",
     "summarize-contract-intact": "stats.summarize still raises for empty, string and null input and still summarizes valid input."
   },
   "known_good": {
+    "chained-wrapper": "Valid alternative: boundary validation plus a wrapper raised from the internal error, which still escapes handle and yields a logged 500.",
     "reference-repair": "Validate readings in ingest.handle before calling summarize; answer 400 naming the problem.",
     "validation-module": "Valid alternative: the same boundary check in a new validation module imported by ingest."
   },
@@ -89,7 +90,8 @@
   "valid_alternatives": [
     "Validation inside ingest.py or in a new module it imports.",
     "Any 400 error string that names the problem; exact wording is free.",
-    "Rejecting a whole batch for one invalid reading is required; partial acceptance is not offered by the contract."
+    "Rejecting a whole batch for one invalid reading is required; partial acceptance is not offered by the contract.",
+    "Re-raising an internal error as a different exception chained with raise ... from, as long as it escapes handle."
   ],
   "reviewer_criteria": [
     "The report demonstrates the original 500 from the captured batch before the repair.",
