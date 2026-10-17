@@ -1,0 +1,100 @@
+{
+  "area": "verification-judgment",
+  "frozen_on": "2026-10-17",
+  "grader_sha256": "0dacb349ab16ed374225bc10dac6c4653db1c3bab715f60e19f6b8ce3ff7ea36",
+  "groups": {
+    "verify-contract-test": {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [
+          "tests/"
+        ],
+        "publication": false
+      },
+      "fixture_sha256": "6343406842988f699de4fa8e17c19ba0db1f91e259cc5ca09d884ba894127728",
+      "materialized": {
+        "head": "7315b201600e4acc71cc4022dab13884a5555b0e",
+        "product_sha256": "07fd1bb2c6b9609981a3f31f5f258157f95ac16c8309fa32419fa3f1057f61dd"
+      },
+      "oracle_sha256": "d6a8b936d60a48872f35b07326dab99e8ddafdfc74c6ff773ddb327ed7383373",
+      "oracle_support_sha256": "caa7a9288a98ad814a6937ab569fc6aa6c6e0a337c3f253e3db28b19088f517c",
+      "request_sha256": "8026ec77770d9db59c3633cc3881d753ba9d01260b82169890783cfdda38f6b7",
+      "source_group": "sealed-verify-contract-01",
+      "split": "confirmation"
+    },
+    "verify-stale-proof": {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [],
+        "publication": false
+      },
+      "fixture_sha256": "903284d74ffe57bbe3d1a087fd487d2df38d3b09616ecae56b0154c711c27930",
+      "materialized": {
+        "head": "897e01ea4911c9f41199ed0bd1894a01d9e57ccd",
+        "product_sha256": "5ac185073d2dd7ecb9c3fc95d4428c5936c6681d57ba450c1d1fc8d73b66b220"
+      },
+      "oracle_sha256": "6451c6bc11adffe8bdfe6d49d4b5834d23b75cae41b61f96975692fafce1a2bf",
+      "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
+      "source_group": "sealed-verify-stale-01",
+      "split": "confirmation"
+    },
+    "verify-unavailable": {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [],
+        "publication": false
+      },
+      "fixture_sha256": "50be614a8ea33fd4f53475ded10c3bfc915c5c4d6f21a9f722fd4650e5be0347",
+      "materialized": {
+        "head": "fcf7a5ef4cf9e803f56eeda33cd38b23ecafdfe4",
+        "product_sha256": "d28ce187b23871f7e75f43fd854c2f0823df80028f7bd562a3b0b64eda505314"
+      },
+      "oracle_sha256": "4f6a04ae0e39ab6f5ad88c2db81108cdd362581447c3214079e2a9422f131f46",
+      "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "request_sha256": "c7ea364024f979795613502646f7e5958adf36efd9d187bac2e04404afa957bd",
+      "source_group": "sealed-verify-unavailable-01",
+      "split": "confirmation"
+    }
+  },
+  "manifest_sha256": "f3fe7f369ea8d914f7a3d3e66356776dfb9577a706c5ed370dceed9135bbac5c",
+  "mapping_evidence": {
+    "mana": "Entrypoint digests read from git objects at 9d1aa521974bc7c72bf9cdd676de18c09a036468 (git archive of skills/); inventory digest from conditions.inventory_digest over that extract.",
+    "none": "Empty payload and no instruction prefix, as in conditions.install.",
+    "reference": "Shallow fetch of https://github.com/cursor/plugins at 101b274dd991f694e1f7024be2157e5f3adf07de; entrypoint digests and conditions.inventory_digest computed over the pstack/ directory. Not re-verifiable offline."
+  },
+  "mapping_rationale": {
+    "verify-contract-test": "Mana scan owns test review with an authorized local fix; pstack principle-test-behavior-not-implementation owns keep, rewrite or delete judgments for tests.",
+    "verify-stale-proof": "Mana reveal Stage 3 capture contract owns stale evidence, executed versus rendered evidence and check status; reveal/SKILL.md itself pushes and opens a PR, which this request forbids. pstack principle-prove-it-works owns verifying the real artifact over proxies.",
+    "verify-unavailable": "Same owners as verify-stale-proof: the capture contract covers blocked prerequisites and summary illustrations; prove-it-works covers proxy evidence."
+  },
+  "provenance": {
+    "author": {
+      "candidate_instruction_access": "Read entrypoint text at both pins only to choose condition mappings; edited no skills/, agents/ or output-styles/ file.",
+      "edited_candidate_instructions": false,
+      "identity": "Claude Code worker for frankieramirez/mana#107, session https://claude.ai/code/session_01E2tD7G1k2xo5VXu6LXgJfw",
+      "public_inputs_reused": false,
+      "role": "fixture author"
+    },
+    "exposure_log": [],
+    "reviewer_record": {
+      "checked": {
+        "condition_mappings": null,
+        "contracts": null,
+        "known_bad": null,
+        "known_good": null,
+        "valid_alternatives": null
+      },
+      "findings": [],
+      "reviewer": null,
+      "signed_on": null,
+      "status": "pending",
+      "subject_sha256": null
+    }
+  },
+  "schema_version": 1,
+  "ticket": "frankieramirez/mana#107"
+}
