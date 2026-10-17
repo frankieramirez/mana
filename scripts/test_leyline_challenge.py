@@ -80,6 +80,22 @@ class ProcessIdentityTests(unittest.TestCase):
         time.sleep(0.2)
         self.assertIsNone(self.proc.poll(), "a process that was never observed was signalled")
 
+    def test_abort_completes_for_a_run_interrupted_before_or_during_start(self):
+        Run, active = CHALLENGE_MODULE["Run"], CHALLENGE_MODULE["ACTIVE"]
+        with tempfile.TemporaryDirectory(prefix="lc-abort-") as temp:
+            never = Run("true", [], temp, dict(os.environ), 5, Path(temp) / "never")
+            active.add(never)  # start() registers the run before anything else exists.
+            result = never.abort()
+            self.assertEqual((result["observedIdentities"], result["remaining"]), ([], []))
+            self.assertNotIn(never, active)
+            partial = Run("true", [], temp, dict(os.environ), 5, Path(temp) / "partial")
+            active.add(partial)
+            partial.folder.mkdir()
+            partial.out = open(partial.folder / "stdout.txt", "wb")  # Signal arrived after the first handle opened.
+            self.assertEqual(partial.abort()["remaining"], [])
+            self.assertTrue(partial.out.closed)
+            self.assertNotIn(partial, active)
+
     def test_the_observed_process_is_stopped(self):
         seen = {self.proc.pid: {(self.pgid, self.start)}}
         self.assertEqual(CHALLENGE_MODULE["reap_owned"](seen, wait=0), ([self.proc.pid], [self.proc.pid]))
@@ -315,6 +331,16 @@ class ChallengeTests(unittest.TestCase):
         self.assertEqual(len(self.fixture.git("worktree", "list", "--porcelain").stdout.split("worktree ")) - 1, 1)
         self.assertTrue(doc["preservation"][-1]["unchanged"])
         self.assertTrue(json.loads((self.evidence / "result.json").read_text())["retained"]["verifiedAfterCleanup"])
+
+    def test_tmpdir_inside_the_checkout_is_refused_before_anything_is_created(self):
+        inner = self.repo / "inner-tmp"
+        inner.mkdir()
+        env = dict(self.fixture.env, TMPDIR=str(inner))
+        refused = subprocess.run(["bash", str(CHALLENGE), str(self.repo), "--trust"], cwd=self.repo, env=env,
+                                 capture_output=True, text=True, timeout=60)
+        self.assertEqual(refused.returncode, 2, refused.stderr)
+        self.assertIn("TMPDIR must be outside the checkout", refused.stderr)
+        self.assertEqual(list(inner.iterdir()), [])
 
     def test_refusals(self):
         self.evidence.mkdir()

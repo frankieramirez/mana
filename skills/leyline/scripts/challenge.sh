@@ -254,6 +254,8 @@ class Run:
         self.observed = {}
         self.monitor_ok = True
         self.done = threading.Event()
+        # A signal can arrive at any point in start(); abort() must cope with whatever exists.
+        self.out = self.err = self.proc = self.thread = None
 
     def start(self):
         ACTIVE.add(self)
@@ -290,6 +292,8 @@ class Run:
         return [pid for pid in self.observed if pid != self.proc.pid]
 
     def signal_group(self, signum):
+        if self.proc is None:
+            return
         try:
             os.killpg(self.proc.pid, signum)
         except ProcessLookupError:
@@ -329,16 +333,19 @@ class Run:
 
     def abort(self):
         """Stop an unfinished run: its CLI session first, then anything left that it started."""
-        self.signal_group(signal.SIGTERM)
-        try:
-            self.proc.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            self.signal_group(signal.SIGKILL)
-            self.proc.wait()
+        if self.proc is not None:
+            self.signal_group(signal.SIGTERM)
+            try:
+                self.proc.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self.signal_group(signal.SIGKILL)
+                self.proc.wait()
         self.done.set()
-        self.thread.join()
-        self.out.close()
-        self.err.close()
+        if self.thread is not None and self.thread.is_alive():
+            self.thread.join()
+        for handle in (self.out, self.err):
+            if handle is not None and not handle.closed:
+                handle.close()
         survivors, killed = reap_owned(self.observed)
         ACTIVE.discard(self)
         return {"argv": self.line, "observedIdentities": self.identities(), "survivorsAfterSignal": survivors,
@@ -900,6 +907,9 @@ def main(argv):
         unknown = only - set(OPTIONAL) - {v["name"] for v in plan.get("variants") or []}
         if unknown:
             usage(f"--only names unknown probes {sorted(unknown)}")
+    # Check TMPDIR before anything is created there; a default evidence folder would land in it.
+    if inside(root, tempfile.gettempdir()):
+        usage("TMPDIR must be outside the checkout")
     if evidence is None:
         evidence = tempfile.mkdtemp(prefix="leyline-challenge-evidence-")
     evidence = Path(evidence).resolve()
@@ -908,8 +918,6 @@ def main(argv):
     if evidence.exists() and any(evidence.iterdir()):
         usage("the evidence directory must be new or empty")
     evidence.mkdir(parents=True, exist_ok=True)
-    if inside(root, tempfile.gettempdir()):
-        usage("TMPDIR must be outside the checkout")
     challenge = Challenge(root, plan, Path(plan_path).resolve() if plan_path else None, feature,
                           timeout or int(plan.get("timeoutSeconds") or 900), evidence, only)
     for signum in (signal.SIGINT, signal.SIGTERM):
