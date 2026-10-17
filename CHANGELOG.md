@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. The second review, the reference package inventory and runner integration are still pending.
+- The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. A re-review of the revised oracles and runner integration are still pending.
 
 ## 0.43.0
 

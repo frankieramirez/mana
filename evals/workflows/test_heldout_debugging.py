@@ -50,8 +50,9 @@ class FreezeTests(unittest.TestCase):
         for case in self.manifest['cases']:
             self.assertEqual(set(case['condition_entrypoints']), {'mana', 'reference', 'none'})
             self.assertEqual(case['split'], 'confirmation')
-        self.assertEqual(self.manifest['review']['second_review']['status'], 'pending')
-        self.assertFalse(self.manifest['ready_for_study_freeze'])
+        self.assertIn(self.manifest['review']['second_review']['status'], ('pending', 'completed'))
+        for kind in ('mana', 'reference'):
+            self.assertRegex(self.manifest['conditions'][kind]['inventory_sha256'], r'^[0-9a-f]{64}$')
 
     def test_changed_inputs_or_oracles_break_the_freeze(self):
         case = 'debug-partial-retry'
@@ -156,10 +157,13 @@ class OracleTests(unittest.TestCase):
                     self.assertEqual(heldout.run_controls(case, self.work(case, name)[0]), sorted(bad['failures']))
 
     def test_programming_errors_are_not_swallowed(self):
-        retry = heldout.load_oracle('debug-partial-retry')['known_bad']['catch-all-retry']['failures']
-        self.assertIn('programming-error-propagates', retry)
-        boundary = heldout.load_oracle('debug-boundary')['known_bad']['catch-all-handler']['failures']
-        self.assertIn('internal-error-propagates', boundary)
+        retry = heldout.load_oracle('debug-partial-retry')['known_bad']
+        for name in ('catch-all-retry', 'retry-builtin-timeouts'):
+            self.assertIn('programming-error-propagates', retry[name]['failures'])
+        boundary = heldout.load_oracle('debug-boundary')['known_bad']
+        for name in ('catch-all-handler', 'narrow-catch'):
+            self.assertIn('internal-error-propagates', boundary[name]['failures'])
+        self.assertEqual(retry['stock-check-first']['failures'], ['redelivery-after-crash-last-stock'])
         for case in ('debug-partial-retry', 'debug-boundary'):
             self.assertIn(next(c for c in heldout.load_oracle(case)['controls'] if 'propagates' in c),
                           heldout.control_report(case, self.work(case, 'reference-repair')[0])['passed'])
@@ -202,8 +206,9 @@ class OracleTests(unittest.TestCase):
                               heldout.grade(case, work, baseline, response('failed', 1), commands, controls(case))['failures'])
         work, baseline, commands = self.repaired_run('debug-partial-retry', 'once-per-call')
         result = heldout.grade('debug-partial-retry', work, baseline, response('passed', 0), commands, controls('debug-partial-retry'))
-        self.assertEqual(result['failures'], ['hidden control failed: redelivery-after-crash',
-                                              'hidden control failed: redelivery-after-crash-with-timeout'])
+        expected = heldout.load_oracle('debug-partial-retry')['known_bad']['once-per-call']['failures']
+        self.assertEqual(result['failures'], ['hidden control failed: ' + name for name in expected])
+        self.assertIn('redelivery-after-crash-last-stock', expected)
         work, baseline, commands = self.repaired_run('debug-boundary', 'catch-all-handler')
         result = heldout.grade('debug-boundary', work, baseline, response('passed', 0), commands, controls('debug-boundary'))
         self.assertIn('hidden control failed: internal-error-propagates', result['failures'])
@@ -224,6 +229,18 @@ class OracleTests(unittest.TestCase):
         self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], log], controls)['outcome'], 'passed')
         self.assertIn('discriminating observation not made',
                       heldout.grade(case, work, baseline, response('failed', 1), commands[:1], controls)['failures'])
+        script = ('import json, sys; sys.path.insert(0, "legacy"); import billing, billing_3_1; '
+                  'lines = json.load(open("data/INV-77.json"))["lines"]; '
+                  'print(billing.invoice(lines)["total"], billing_3_1.invoice(lines)["total"])')
+        replay = subprocess.run(['python3', '-B', '-c', script], cwd=work, capture_output=True, text=True, timeout=30)
+        self.assertEqual(replay.stdout.split(), ['10.03', '10.03'])
+        own = {'command': 'python3 -B -c ' + repr(script), 'aggregated_output': replay.stdout, 'exit_code': 0}
+        self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], own], controls)['outcome'], 'passed')
+        direct = dict(commands[1], command='python3 -B check_behavior.py experiment')
+        self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], direct], controls)['outcome'], 'passed')
+        read = {'command': 'cat legacy/billing_3_1.py', 'aggregated_output': '', 'exit_code': 0}
+        self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], read], controls)['outcome'],
+                         'needs_adjudication')
         self.assertIn('original symptom outcome misreported',
                       heldout.grade(case, work, baseline, response('passed', 0), commands, controls)['failures'])
         heldout.apply_variant(case, 'comment-only', work)

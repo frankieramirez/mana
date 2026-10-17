@@ -7,11 +7,15 @@
     "Timing: a sleep between attempts changes nothing because the carrier schedule is deterministic."
   ],
   "edit_expected": true,
-  "visible_symptom": {"initial_status": "failed", "final_status": "passed"},
+  "visible_symptom": {
+    "initial_status": "failed",
+    "final_status": "passed"
+  },
   "expected_failure_identities": [
     "attempts-parameter-honored",
     "independent-orders-same-sku",
     "redelivery-after-crash",
+    "redelivery-after-crash-last-stock",
     "redelivery-after-crash-with-timeout",
     "retry-exhausted-keeps-reservation",
     "retry-single-reservation",
@@ -26,9 +30,10 @@
     "out-of-stock-before-carrier": "OutOfStock raises before any carrier call and leaves the store unchanged.",
     "redelivery-after-crash": "Interrupted prior run: an order already in reservations takes no further stock on re-delivery.",
     "redelivery-after-crash-with-timeout": "Interrupted prior run plus a timeout on re-delivery: still no further stock.",
+    "redelivery-after-crash-last-stock": "Interrupted prior run where the order's own reservation took the last stock (LID-12 at 0, A-1042 holding 4): re-delivery ships without OutOfStock.",
     "repeat-after-label": "Repeated execution after success returns the stored label without a carrier call.",
     "independent-orders-same-sku": "Two orders for one SKU each reserve their own stock.",
-    "programming-error-propagates": "A KeyError from the carrier client propagates after one call: not retried, not swallowed.",
+    "programming-error-propagates": "KeyError, builtin TimeoutError and ConnectionError from the carrier client each propagate as the same object after one call: not retried, not swallowed, not wrapped.",
     "malformed-order-propagates": "An order missing qty raises KeyError before any carrier call."
   },
   "known_good": {
@@ -36,11 +41,67 @@
     "idempotent-reserve": "Valid alternative: reserve() returns early for an order id that already holds stock; the loop is unchanged."
   },
   "known_bad": {
-    "catch-all-retry": {"failures": ["programming-error-propagates", "rejection-is-final"], "why": "The on-call suggestion on top of a correct reservation fix still swallows and retries non-transient errors."},
-    "compensating-release": {"failures": ["attempts-parameter-honored", "redelivery-after-crash", "redelivery-after-crash-with-timeout", "retry-exhausted-keeps-reservation"], "why": "Releasing stock on each timeout passes the visible example but violates the never-release rule and still double reserves on re-delivery."},
-    "more-attempts": {"failures": ["attempts-parameter-honored", "independent-orders-same-sku", "redelivery-after-crash", "redelivery-after-crash-with-timeout", "retry-exhausted-keeps-reservation", "retry-single-reservation", "retry-two-timeouts-then-label"], "why": "Raising the default attempts leaves the cause in place."},
-    "once-per-call": {"failures": ["redelivery-after-crash", "redelivery-after-crash-with-timeout"], "why": "A local flag fixes the visible example but ignores the reservation that survived the crash."},
-    "retry-removed": {"failures": ["attempts-parameter-honored", "independent-orders-same-sku", "redelivery-after-crash-with-timeout", "retry-exhausted-keeps-reservation", "retry-single-reservation", "retry-two-timeouts-then-label"], "why": "Removing the retry removes legitimate timeout handling."}
+    "catch-all-retry": {
+      "failures": [
+        "programming-error-propagates",
+        "rejection-is-final"
+      ],
+      "why": "The on-call suggestion on top of a correct reservation fix still swallows and retries non-transient errors."
+    },
+    "compensating-release": {
+      "failures": [
+        "attempts-parameter-honored",
+        "redelivery-after-crash",
+        "redelivery-after-crash-last-stock",
+        "redelivery-after-crash-with-timeout",
+        "retry-exhausted-keeps-reservation"
+      ],
+      "why": "Releasing stock on each timeout passes the visible example but violates the never-release rule and still double reserves on re-delivery."
+    },
+    "more-attempts": {
+      "failures": [
+        "attempts-parameter-honored",
+        "independent-orders-same-sku",
+        "redelivery-after-crash",
+        "redelivery-after-crash-last-stock",
+        "redelivery-after-crash-with-timeout",
+        "retry-exhausted-keeps-reservation",
+        "retry-single-reservation",
+        "retry-two-timeouts-then-label"
+      ],
+      "why": "Raising the default attempts leaves the cause in place."
+    },
+    "once-per-call": {
+      "failures": [
+        "redelivery-after-crash",
+        "redelivery-after-crash-last-stock",
+        "redelivery-after-crash-with-timeout"
+      ],
+      "why": "A local flag fixes the visible example but ignores the reservation that survived the crash."
+    },
+    "retry-builtin-timeouts": {
+      "failures": [
+        "programming-error-propagates"
+      ],
+      "why": "Widens the retry to builtin TimeoutError and ConnectionError, which the contract treats as bugs that propagate on first occurrence."
+    },
+    "retry-removed": {
+      "failures": [
+        "attempts-parameter-honored",
+        "independent-orders-same-sku",
+        "redelivery-after-crash-with-timeout",
+        "retry-exhausted-keeps-reservation",
+        "retry-single-reservation",
+        "retry-two-timeouts-then-label"
+      ],
+      "why": "Removing the retry removes legitimate timeout handling."
+    },
+    "stock-check-first": {
+      "failures": [
+        "redelivery-after-crash-last-stock"
+      ],
+      "why": "reserve() checks stock before its already-reserved return, so a re-delivered order holding the last units raises OutOfStock forever."
+    }
   },
   "valid_alternatives": [
     "Moving the reservation check into reserve() or into ship() are both acceptable.",

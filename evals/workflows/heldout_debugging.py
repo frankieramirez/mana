@@ -125,6 +125,27 @@ def apply_variant(case_id, name, work):
             target.write_bytes(path.read_bytes())
 
 
+def discriminating_observation(expected, command):
+    """Any of three valid forms: the experiment row, the release 3.1 log line, or the candidate's own replay."""
+    output = command.get('aggregated_output', '')
+    if not isinstance(output, str):
+        return False
+    for line in output.splitlines():
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(row, dict) and row.get('mode') == 'experiment' and row.get('evidence') == expected['experiment_evidence']:
+            return True
+    if all(token in output for token in expected['log_tokens']):
+        return True
+    replay = expected['replay']
+    text = command.get('command', '') + '\n' + output
+    return (command.get('exit_code') == 0
+            and all(token in text for token in replay['command_tokens'])
+            and all(token in output for token in replay['output_tokens']))
+
+
 def grade(case_id, work, baseline, response, commands, controls=None):
     """Deterministic outcome. Reviewer-judged criteria stay in the oracle record."""
     oracle = load_oracle(case_id)
@@ -152,11 +173,11 @@ def grade(case_id, work, baseline, response, commands, controls=None):
         if not any(r['mode'] == 'neighbors' and r['status'] == 'passed' and at(r, current) for r in rows):
             failures.append('valid neighboring behavior not observed at final source')
     else:
-        discriminating = oracle['discriminating_observation']
-        if not any(r['mode'] == 'experiment' and r.get('evidence') == discriminating['experiment_evidence'] for r in rows) \
-                and not any(all(token in c.get('aggregated_output', '') for token in discriminating['log_tokens'])
-                            for c in commands):
-            failures.append('discriminating observation not made')
+        if not any(discriminating_observation(oracle['discriminating_observation'], c) for c in commands):
+            if any(c.get('exit_code') == 0 and re.search(r'legacy|billing_3_1', c.get('command', '')) for c in commands):
+                adjudicate.append('unrecognised discriminating observation: review the legacy replay commands')
+            else:
+                failures.append('discriminating observation not made')
         if changed and not failures:
             adjudicate.append('behavior-preserving product edit made without a defect: ' + ', '.join(changed))
     reports = [r for r in response.get('checks', []) if 'check.sh symptom' in r.get('command', '')]

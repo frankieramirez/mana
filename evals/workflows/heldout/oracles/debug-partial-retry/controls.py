@@ -124,6 +124,15 @@ def redelivery_after_crash_with_timeout():
 
 
 @control
+def redelivery_after_crash_last_stock():
+    # The order's own reservation took the last units; re-delivery must still ship.
+    store = {"stock": {"LID-12": 0}, "reservations": {"A-1042": 4}, "labels": {}}
+    carrier = Carrier(["ok"])
+    assert shipping.ship(store, {"id": "A-1042", "sku": "LID-12", "qty": 4}, carrier) == "LBL-A-1042-1"
+    assert store == {"stock": {"LID-12": 0}, "reservations": {"A-1042": 4}, "labels": {"A-1042": "LBL-A-1042-1"}}, store
+
+
+@control
 def repeat_after_label():
     store, carrier = fresh(), Carrier(["ok"])
     first = shipping.ship(store, dict(ORDER), carrier)
@@ -142,10 +151,12 @@ def independent_orders_same_sku():
 
 @control
 def programming_error_propagates():
-    store, carrier = fresh(stock=100), Carrier(["bug"], other=KeyError("label_format"))
-    error = raises(KeyError, lambda: shipping.ship(store, dict(ORDER), carrier))
-    assert error.args == ("label_format",)
-    assert len(carrier.calls) == 1, "programming error was retried"
+    # Builtin TimeoutError and ConnectionError are not carrier timeouts under the contract.
+    for injected in (KeyError("label_format"), TimeoutError("socket read"), ConnectionError("reset by peer")):
+        store, carrier = fresh(stock=100), Carrier(["bug", "ok"], other=injected)
+        error = raises(type(injected), lambda: shipping.ship(store, dict(ORDER), carrier))
+        assert error is injected, "exception was replaced: %r" % (error,)
+        assert len(carrier.calls) == 1, type(injected).__name__ + " was retried"
 
 
 @control

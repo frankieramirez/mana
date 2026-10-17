@@ -120,19 +120,23 @@ def large_integer_kept():
 
 @control
 def internal_error_propagates():
-    def broken(values):
-        CALLS.append(values)
-        raise ZeroDivisionError("internal summary bug")
-    swap(broken, spy)
-    try:
-        post({"readings": [20.0, 21.0]})
-    except ZeroDivisionError:
-        pass
-    else:
-        raise AssertionError("internal exception was converted into a response")
-    finally:
-        swap(spy, broken)
-    assert len(CALLS) == 1
+    # TypeError and ValueError matter most: a narrowed catch around summarize hides them.
+    for injected in (ZeroDivisionError("internal summary bug"), TypeError("internal summary bug"),
+                     ValueError("internal summary bug")):
+        def broken(values, injected=injected):
+            CALLS.append(values)
+            raise injected
+        CALLS.clear()
+        swap(broken, spy)
+        try:
+            post({"readings": [20.0, 21.0]})
+        except type(injected) as error:
+            assert error is injected, "exception was replaced: %r" % (error,)
+        else:
+            raise AssertionError(type(injected).__name__ + " inside summarize was converted into a response")
+        finally:
+            swap(spy, broken)
+        assert len(CALLS) == 1
 
 
 @control

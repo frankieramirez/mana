@@ -4,11 +4,10 @@
   "area": "debugging",
   "ticket": "https://github.com/frankieramirez/mana/issues/106",
   "contract": "docs/specs/effectiveness-evaluation.md",
-  "status": "authored and hash-locked; second review pending; not yet frozen into a study directory; no outcomes collected",
+  "status": "authored and hash-locked; refrozen after second-review findings; re-review pending; not yet frozen into a study directory; no outcomes collected",
   "ready_for_study_freeze": false,
   "blockers": [
-    "Independent second review returned changes required on 2026-10-17: see review.second_review.findings. A re-review is pending after the fixes.",
-    "Reference package inventory digest is unresolved.",
+    "Re-review of the oracles changed after the first second review is pending.",
     "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
   ],
   "exposure_rule": "A source group whose request, workspace or oracle a candidate-instruction author reads while tuning becomes development. Record it in exposures, set its split to development and author an untouched replacement group for confirmation.",
@@ -40,7 +39,7 @@
       "timeout_seconds": 600,
       "delegation_allowed": true,
       "oracle_id": "oracle-debug-boundary-01",
-      "oracle_sha256": "8f55af54ab6ffb14ddf1fa58773d2d4e90dcde5e4fb2a5404a62e9bcd43ed36f"
+      "oracle_sha256": "4a56b252f22977ee45f785a6f20233e794c79631f36f2d6c4a51d471fe4d2ea4"
     },
     {
       "id": "debug-false-premise",
@@ -67,7 +66,7 @@
       "timeout_seconds": 600,
       "delegation_allowed": true,
       "oracle_id": "oracle-debug-regression-claim-01",
-      "oracle_sha256": "005cb81feac3ccb5feecc9fb699328de050933cda547b13b2632ee3991716bdc"
+      "oracle_sha256": "7d6c555616817c41e81fd85575e2661cca004fdda40189c5e6fcccc896b6ad0c"
     },
     {
       "id": "debug-partial-retry",
@@ -94,7 +93,7 @@
       "timeout_seconds": 600,
       "delegation_allowed": true,
       "oracle_id": "oracle-debug-retry-01",
-      "oracle_sha256": "f05a4fb0b30e5ef94c2da06f1012c29c13a791514e24d0ceafc38aa4db747e4a"
+      "oracle_sha256": "ab72531cfa43f3b5be0b83e262eedc69966e59f3d90fed929518e2ddea531045"
     }
   ],
   "conditions": {
@@ -115,9 +114,9 @@
       "repository": "cursor/plugins",
       "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
       "package_root": "pstack",
-      "inventory_sha256": null,
-      "inventory_status": "unresolved: the authoring session could fetch single files at the revision but not list the package tree. Run run.py --payload-inventory on a checkout of pstack/ at the revision before any study freeze.",
-      "inventory_files": null,
+      "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+      "inventory_status": "verified: conditions.inventory_digest over pstack/ in a read-only checkout of the revision, matching the second reviewer's recomputation; entrypoint and playbook digests match single-file fetches",
+      "inventory_files": 170,
       "entrypoint": "skills/poteto-mode/SKILL.md",
       "entrypoint_sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a",
       "supporting_files": {
@@ -134,7 +133,10 @@
   "freeze": {
     "frozen_on": "2026-10-17",
     "method": "freeze_sha256 is conditions.digest(conditions.encoded({cases, conditions})). Review records sit outside it so the second reviewer can sign without changing the freeze.",
-    "freeze_sha256": "2e4e6c078d4b37073f0fe46bfc8728c9c72df1fc15d94591e66cfa5603eb1949"
+    "freeze_sha256": "3a13b73b794ed1cc5779af8e8b3f56a2ebe269c4cc3a53dd5d6fdd9969ab4547",
+    "supersedes": [
+      "2e4e6c078d4b37073f0fe46bfc8728c9c72df1fc15d94591e66cfa5603eb1949"
+    ]
   },
   "review": {
     "author": {

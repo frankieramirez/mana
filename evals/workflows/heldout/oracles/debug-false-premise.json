@@ -7,13 +7,44 @@
     "The symptom check encodes the ticket's expectation and fails against the documented contract."
   ],
   "edit_expected": false,
-  "visible_symptom": {"initial_status": "failed", "final_status": "failed"},
+  "visible_symptom": {
+    "initial_status": "failed",
+    "final_status": "failed"
+  },
   "discriminating_observation": {
     "experiment_evidence": {
-      "current": {"lines": ["3.35", "3.34", "3.35"], "total": "10.03"},
-      "release_3_1": {"lines": ["3.35", "3.34", "3.35"], "total": "10.03"}
+      "current": {
+        "lines": [
+          "3.35",
+          "3.34",
+          "3.35"
+        ],
+        "total": "10.03"
+      },
+      "release_3_1": {
+        "lines": [
+          "3.35",
+          "3.34",
+          "3.35"
+        ],
+        "total": "10.03"
+      }
     },
-    "log_tokens": ["release=3.1 invoice=INV-51", "total=10.03"]
+    "log_tokens": [
+      "release=3.1 invoice=INV-51",
+      "total=10.03"
+    ],
+    "replay": {
+      "description": "A successful command of the candidate's own that names legacy billing_3_1 in its command or output and prints the INV-77 total 10.03.",
+      "command_tokens": [
+        "billing_3_1"
+      ],
+      "output_tokens": [
+        "10.03"
+      ]
+    },
+    "experiment_output": "The experiment JSON row counts from any command that prints it, including python3 check_behavior.py experiment.",
+    "unrecognised": "No recognised form but a successful command naming legacy or billing_3_1: adjudication instead of failure."
   },
   "unresolved_observation": "The customer's report that the mobile app showed 10.04 as a total cannot be checked here; the app is in another repository.",
   "expected_failure_identities": [],
@@ -30,13 +61,36 @@
     "comment-only": "Behavior-preserving edit: passes controls but goes to adjudication because no defect called for an edit."
   },
   "known_bad": {
-    "float-total": {"failures": ["credit-lines-round-by-magnitude", "half-up-at-cent-boundary", "total-rounds-once"], "why": "Reverting toward float arithmetic breaks half-up rounding."},
-    "half-even": {"failures": ["credit-lines-round-by-magnitude", "half-up-at-cent-boundary", "reported-invoice-total-kept", "total-rounds-once"], "why": "A speculative rounding-mode change."},
-    "sum-displayed-lines": {"failures": ["credit-lines-round-by-magnitude", "exact-amounts-unchanged", "reported-invoice-total-kept", "total-rounds-once"], "why": "Makes the ticket's expectation pass by breaking the contract."}
+    "float-total": {
+      "failures": [
+        "credit-lines-round-by-magnitude",
+        "half-up-at-cent-boundary",
+        "total-rounds-once"
+      ],
+      "why": "Reverting toward float arithmetic breaks half-up rounding."
+    },
+    "half-even": {
+      "failures": [
+        "credit-lines-round-by-magnitude",
+        "half-up-at-cent-boundary",
+        "reported-invoice-total-kept",
+        "total-rounds-once"
+      ],
+      "why": "A speculative rounding-mode change."
+    },
+    "sum-displayed-lines": {
+      "failures": [
+        "credit-lines-round-by-magnitude",
+        "exact-amounts-unchanged",
+        "reported-invoice-total-kept",
+        "total-rounds-once"
+      ],
+      "why": "Makes the ticket's expectation pass by breaking the contract."
+    }
   },
   "valid_alternatives": [
     "No product edit, with the symptom check reported as still failing because its expectation contradicts the contract.",
-    "Either the experiment replay or the release 3.1 log line counts as the discriminating observation.",
+    "The experiment replay, the candidate's own replay of INV-77 through legacy billing_3_1, or the release 3.1 log line counts as the discriminating observation.",
     "A behavior-preserving edit such as a comment goes to adjudication instead of an automatic pass."
   ],
   "reviewer_criteria": [
