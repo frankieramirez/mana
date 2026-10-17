@@ -65,7 +65,7 @@ function externalDirectory(value) {
   }
   const resolved = path.resolve(fs.realpathSync(ancestor), path.relative(ancestor, absolute));
   if (isWithin(root, resolved)) fail('snapshot and evidence storage must be outside the checkout', 3);
-  return absolute;
+  return resolved;
 }
 function json(file, expectedDigest = null) {
   let value, bytes;

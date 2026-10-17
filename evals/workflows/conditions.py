@@ -215,13 +215,19 @@ class FrozenStudy:
         if self.root.is_symlink():
             raise ValueError('study root cannot be a symlink')
         control_path = self.root / 'controls.json'
-        if control_path.is_symlink() or digest(control_path.read_bytes()) != self.expected_digest:
+        if control_path.is_symlink():
             raise ValueError('frozen controls changed')
-        self.controls = json.loads(control_path.read_text())
+        control_bytes = control_path.read_bytes()
+        if digest(control_bytes) != self.expected_digest:
+            raise ValueError('frozen controls changed')
+        self.controls = json.loads(control_bytes)
         schedule_path = self.root / 'schedule.json'
-        if schedule_path.is_symlink() or digest(schedule_path.read_bytes()) != self.controls['schedule_sha256']:
+        if schedule_path.is_symlink():
             raise ValueError('frozen schedule changed')
-        self.schedule = json.loads(schedule_path.read_text())
+        schedule_bytes = schedule_path.read_bytes()
+        if digest(schedule_bytes) != self.controls['schedule_sha256']:
+            raise ValueError('frozen schedule changed')
+        self.schedule = json.loads(schedule_bytes)
         for kind in ('mana', 'reference'):
             if inventory(self.root / 'payloads' / kind) != self.controls['conditions'][kind]['inventory']:
                 raise ValueError('frozen payload changed: ' + kind)

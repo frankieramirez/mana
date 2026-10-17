@@ -9,6 +9,7 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import time
 
 
 APPS = {
@@ -135,6 +136,38 @@ def observed_checks(commands, work):
     return rows
 
 
+def process_group_members(group, proc_root=Path('/proc')):
+    """Read Linux process states; disappeared entries were already reaped."""
+    members = {}
+    try:
+        for entry in proc_root.iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                fields = (entry / 'stat').read_text().rsplit(') ', 1)[1].split()
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+            if int(fields[2]) == group:
+                members[int(entry.name)] = fields[0]
+    except (OSError, IndexError, ValueError) as error:
+        raise ValueError('cannot establish sandbox process group termination') from error
+    return members
+
+
+def wait_for_group_exit(group, timeout=2):
+    """Wait for observed termination without depending on an external reaper."""
+    deadline = time.monotonic() + timeout
+    while True:
+        live = {pid: state for pid, state in process_group_members(group).items()
+                if state not in ('Z', 'X', 'x')}
+        if not live:
+            return
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ValueError('sandbox process group still has live members after cleanup deadline')
+        time.sleep(min(0.01, remaining))
+
+
 def run_recheck_group(command, snapshot, timeout=5):
     """Collect the leader and terminate its complete process group on every path."""
     environment = {'PATH': '/usr/bin:/bin', 'HOME': str(snapshot / 'home'), 'PYTHONDONTWRITEBYTECODE': '1'}
@@ -164,6 +197,7 @@ def run_recheck_group(command, snapshot, timeout=5):
                 output, errors = process.communicate(timeout=2)
             except subprocess.TimeoutExpired:
                 raise ValueError('sandbox process group did not terminate')
+        wait_for_group_exit(process.pid)
     return subprocess.CompletedProcess(command, process.returncode, output, errors), timed_out, leftovers
 
 

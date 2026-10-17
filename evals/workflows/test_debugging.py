@@ -225,8 +225,47 @@ class RecheckIsolationTests(unittest.TestCase):
     def assert_dead_child(self, record):
         process = Path('/proc') / record.read_text() / 'stat'
         # A killed child can remain a zombie briefly until its host reaper runs.
-        if process.exists():
-            self.assertIn(process.read_text().split(') ', 1)[1][0], ('Z', 'X'))
+        try:
+            state = process.read_text().rsplit(') ', 1)[1][0]
+        except FileNotFoundError:
+            return
+        self.assertIn(state, ('Z', 'X', 'x'))
+
+    def test_process_group_state_parser_handles_parentheses_in_command(self):
+        proc = self.root / 'proc'
+        proc.mkdir()
+        for pid, command, state, group in ((100, 'worker (nested) name)', 'R', 50),
+                                           (101, 'zombie', 'Z', 50),
+                                           (102, 'unrelated', 'R', 60)):
+            entry = proc / str(pid)
+            entry.mkdir()
+            (entry / 'stat').write_text(f'{pid} ({command}) {state} 1 {group} {group} 0\n')
+        (proc / '103').mkdir()  # A process can disappear during the scan.
+        self.assertEqual(fixtures.process_group_members(50, proc), {100: 'R', 101: 'Z'})
+        with patch.object(Path, 'read_text', side_effect=PermissionError('unreadable process')):
+            with self.assertRaisesRegex(ValueError, 'cannot establish'):
+                fixtures.process_group_members(50, proc)
+
+    def test_group_wait_observes_delayed_termination(self):
+        with patch.object(fixtures, 'process_group_members', side_effect=[{100: 'R'}, {100: 'D'}, {100: 'Z'}]) as observed, \
+             patch.object(fixtures.time, 'monotonic', side_effect=[10, 10.1, 10.2]), \
+             patch.object(fixtures.time, 'sleep') as slept:
+            fixtures.wait_for_group_exit(50, timeout=1)
+        self.assertEqual(observed.call_count, 3)
+        self.assertEqual(slept.call_count, 2)
+
+    def test_group_wait_fails_closed_at_deadline_or_unreadable_state(self):
+        with patch.object(fixtures, 'process_group_members', return_value={100: 'R'}), \
+             patch.object(fixtures.time, 'monotonic', side_effect=[10, 10.2, 11.1]), \
+             patch.object(fixtures.time, 'sleep') as slept:
+            with self.assertRaisesRegex(ValueError, 'still has live members'):
+                fixtures.wait_for_group_exit(50, timeout=1)
+            slept.assert_called_once()
+        with patch.object(fixtures, 'process_group_members', side_effect=ValueError('cannot establish termination')), \
+             patch.object(fixtures.time, 'sleep') as slept:
+            with self.assertRaisesRegex(ValueError, 'cannot establish'):
+                fixtures.wait_for_group_exit(50)
+            slept.assert_not_called()
 
 
 if __name__ == '__main__':

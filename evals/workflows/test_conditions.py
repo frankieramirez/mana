@@ -164,6 +164,52 @@ class ConditionTests(unittest.TestCase):
         study.claim(2)
         study.release()
 
+    def test_verification_parses_the_pinned_bytes_when_file_changes_after_read(self):
+        for name, error in (('controls.json', 'frozen controls changed'),
+                            ('schedule.json', 'frozen schedule changed')):
+            with self.subTest(name=name):
+                study, _ = self.freeze('read-race-' + name.split('.')[0])
+                expected_cell, expected_case, _ = copy.deepcopy(study.selection(1))
+                target = study.root / name
+                replacement = json.loads(target.read_bytes())
+                if name == 'controls.json':
+                    replacement['cases'][0]['definition']['request'] = 'Unpinned replacement request.'
+                else:
+                    replacement[0]['condition'] = 'none' if expected_cell['condition'] != 'none' else 'mana'
+                target.chmod(0o644)
+                original_read_bytes = Path.read_bytes
+                changed = False
+
+                def read_then_change(path):
+                    nonlocal changed
+                    data = original_read_bytes(path)
+                    if path == target and not changed:
+                        target.write_bytes(conditions.encoded(replacement))
+                        changed = True
+                    return data
+
+                with patch.object(Path, 'read_bytes', read_then_change):
+                    study.verify()
+                self.assertTrue(changed)
+                cell, case, _ = study.selection(1)
+                self.assertEqual(cell, expected_cell)
+                self.assertEqual(case, expected_case)
+                with self.assertRaisesRegex(ValueError, error):
+                    study.verify()
+
+    def test_verification_rejects_symlinked_controls_and_schedule(self):
+        for name, error in (('controls.json', 'frozen controls changed'),
+                            ('schedule.json', 'frozen schedule changed')):
+            with self.subTest(name=name):
+                study, _ = self.freeze('symlink-' + name.split('.')[0])
+                target = study.root / name
+                replacement = self.root / name
+                replacement.write_bytes(target.read_bytes())
+                target.unlink()
+                target.symlink_to(replacement)
+                with self.assertRaisesRegex(ValueError, error):
+                    study.verify()
+
     def test_stale_fixture_bytes_and_git_identity_are_frozen_across_conditions(self):
         manifest = copy.deepcopy(self.manifest)
         manifest['cases'][0].update(id='stale-evidence', source_group='public-stale',

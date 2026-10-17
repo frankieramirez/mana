@@ -264,6 +264,50 @@ fs.writeFileSync(ADDITIONAL,JSON.stringify(record)+'\\n');
         self.assertEqual(code, 1)
         self.assertEqual(report["checks"][-1]["status"], "failed")
 
+    def test_symlinked_external_storage_runs_with_canonical_paths(self):
+        storage = self.home / "storage"
+        temporary = storage / "temporary"
+        temporary.mkdir(parents=True)
+        alias = self.home / "storage-link"
+        alias.symlink_to(storage, target_is_directory=True)
+        self.config["evidenceDir"] = str(alias / "new" / "evidence")
+        self.save_config()
+        code, report = self.invoke("feature", "greeting", extra_env={"TMPDIR": str(alias / "temporary")})
+        self.assertEqual(code, 0)
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual(set(report["checks"][0]["executed"]), {"greeting.present", "greeting.exact"})
+        self.assertFalse(report["source"]["sourceChanged"])
+        snapshot = Path(report["snapshot"]["path"])
+        self.assertEqual(snapshot.parent.parent, temporary.resolve())
+        self.assertEqual(list(temporary.iterdir()), [])
+        evidence = Path(report["evidenceDir"])
+        self.assertEqual(evidence.parent, (storage / "new" / "evidence").resolve())
+        for artifact in report["artifacts"]:
+            retained = Path(artifact)
+            self.assertEqual(retained, retained.resolve())
+            self.assertEqual(retained.parent, evidence)
+            self.assertTrue(retained.is_file())
+
+    def test_symlinked_storage_cannot_resolve_into_checkout(self):
+        alias = self.home / "checkout-link"
+        alias.symlink_to(self.root, target_is_directory=True)
+        for location in ["temporary", "evidence"]:
+            with self.subTest(location=location):
+                self.config["evidenceDir"] = str(alias / "new-evidence" if location == "evidence" else self.home / "evidence")
+                self.save_config()
+                env = {**os.environ, "TMPDIR": str(alias / "new-temporary" if location == "temporary" else self.home)}
+                process = subprocess.run([NODE, "--experimental-strip-types", "scripts/control.ts", "feature", "greeting", "--json"],
+                                         cwd=self.root, env=env, capture_output=True, text=True, timeout=10)
+                self.assertEqual(process.returncode, 3)
+                report = json.loads(process.stdout)
+                self.assertEqual(report["status"], "incomplete")
+                self.assertEqual(report["checks"][0]["reason"], "snapshot and evidence storage must be outside the checkout")
+                self.assertEqual(report["checks"][0]["executed"], [])
+                self.assertIsNone(report["evidenceDir"])
+                self.assertIsNone(report["snapshot"]["path"])
+                self.assertFalse((self.root / "new-temporary").exists())
+                self.assertFalse((self.root / "new-evidence").exists())
+
     def test_evidence_cannot_write_into_checkout(self):
         self.config["evidenceDir"] = str(self.root / "new-evidence")
         self.save_config()
