@@ -100,7 +100,7 @@ See `findings.md` for measured pilot outcomes and limits.
 
 ## Package C focused comparisons
 
-For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study.
+For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study. Each allocated slot is sealed as an immutable attempt record, and completed attempts export to blinded review packets with independent judgment and regrade records.
 
 The first prose instruction ablation has its own frozen dispel payloads and adapter in [Prose instruction-ablation payloads](prose-ablation.md).
 

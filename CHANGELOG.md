@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.43.3
 
 - Leyline's dynamic conformance check keeps the reports it judged. Each feature probe records its run id, and the checker copies every report with its SHA-256 into a retained folder (`--out`) before it removes the worktree. An incomplete run under the break patch now blocks the `break` probe instead of failing the checker. A probe that does not pass keeps the tail of stdout as well as stderr, and every probe appears with a reason when it never ran. The report check rejects a report with no `source.identity.head`. Regressions for all five cases from the Ultima refresh are in `scripts/test-leyline.sh`.
+
+## 0.43.2
+
+- Frozen condition studies seal every allocated slot as a write-once attempt record that keeps execution status apart from task outcome, inventories each artifact with its hash, and rejects hidden replacements. Completed attempts export to anonymized review packets that withhold condition names and instruction text and record what masking could not hide. Two independent judgments, a human adjudication and append-only regrades preserve the original evidence hashes. Unobserved model identity, child usage and human review time stay null. No reviewer cohort or live study has run.
 
 ## 0.43.1
 
