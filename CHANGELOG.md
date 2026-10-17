@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Leyline gains a challenge stage. `challenge.sh` runs an installed control from committed bytes in disposable worktrees through baseline, declared break, restore, concurrent runs, SIGINT and SIGTERM cancellation, and plan-declared faults such as a missing browser, zero executed cases, source mutation and teardown failure. Each probe checks that an unknown listener survives, that no started process outlives its run, and that HEAD, index, tracked and untracked bytes are unchanged. Reports and control evidence are retained outside the checkout with a SHA-256 manifest that is checked again after cleanup. The generated Node control adds prerequisite probes, owned process verification, artifact digests, and treats suite errors such as a failed teardown as incomplete while keeping failed assertions. A synthetic acceptance fixture exercises every path; no consumer conformance is claimed.
+
 ## 0.43.1
 
 - The evaluator freezes the dispel payloads for the first prose instruction ablation. Beside the current Fidelity rules, one arm swaps in the narrow source-and-scope candidate and another removes the Fidelity section and its self-check item. Each arm is a complete standalone skill with a hashed file inventory, and each changed arm keeps its exact patch. A prose adapter freezes studies over those arms and archives the raw source, protected spans, final output and observed instruction reads for every attempt. Offline checks prove that only the two selected blocks differ between arms. The installed dispel skill does not change, and no confirmation cases or live runs are included.

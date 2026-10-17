@@ -56,3 +56,5 @@ Runs the project's own CLI, so it needs the user's agreement first; say what wil
 A probe is `blocked` when something it depends on did not happen, such as an incomplete baseline. Blocked is not passed; report what blocked it. Uncommitted changes are not in the worktree, and the output says so under `excludedChanges`.
 
 Pick a feature whose run is affordable. A feature run in a large project can take many minutes, and dynamic mode runs it five times. `--timeout` bounds each command.
+
+Dynamic mode is a quick probe. The challenge in [references/challenge.md](references/challenge.md) adds cancellation, declared fault variants, process ownership and checkout preservation, and retains every report outside the checkout.
