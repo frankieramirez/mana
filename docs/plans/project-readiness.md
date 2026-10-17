@@ -1,6 +1,6 @@
 # Project readiness plan
 
-Status: M1 shipped; M2 through M5 contracts decided, implementation and consumer challenges pending
+Status: M1 and the first inspect/map/install recipe shipped; consumer challenges, refresh and M4/M5 delivery remain pending
 Date: 2026-09-24
 Updated: 2026-10-17
 Decisions: [78](https://github.com/frankieramirez/mana/issues/78), [79](https://github.com/frankieramirez/mana/issues/79), [80](https://github.com/frankieramirez/mana/issues/80), under [map 72](https://github.com/frankieramirez/mana/issues/72)
@@ -11,7 +11,7 @@ Give each project a control skill that lets a fresh agent find a feature, run th
 
 Measure fewer repeated setup steps, avoidable human interventions, and escaped defects on real tasks. A readiness score, a successful process exit, and shorter instructions cannot establish those outcomes.
 
-This revision settles the remaining design decisions. It does not implement generation, change either consumer, run either current consumer, or establish a performance improvement. The historical M1 results below retain their original source revision.
+The October 17 decision review settled the remaining design choices without changing or running either consumer. Subsequent implementation is named separately above and in build 88. No live performance improvement is established. The historical M1 results below retain their original source revision.
 
 ## Current evidence and decisions
 
@@ -24,7 +24,7 @@ The consumer inspection on 2026-10-17 used immutable source revisions. Repositor
 | Clankhaven control gaps | The complete [source tree](https://api.github.com/repos/lightburden/clankhaven/git/trees/d07dcc13f819ba1e2617b0170ecd5419ee98ba1b?recursive=1) has no `verification/` or `.github/` paths. The [package scripts](https://github.com/lightburden/clankhaven/blob/d07dcc13f819ba1e2617b0170ecd5419ee98ba1b/package.json) have no control command; AGENTS has no Control pointer. This establishes no checked-in GitHub Actions workflow at this revision, not the absence of every external CI system. | Add a small adapter around existing tests, scenario records, a project control skill, and one declared break patch. Release-gate work follows the runnable pilot in M4. |
 | Ultima configuration drift | The [launch profile](https://github.com/frankieramirez/ultima/blob/bea865cdbb49e0e827e30b6b5d1e768555be7fd4/.claude/launch.json) uses port 5174 while the control instructions describe 5173. Separate profiles may intentionally differ. | Use this as a refresh reconciliation case. Record which profile each instruction describes before proposing a correction; do not replace both values blindly. |
 
-Mana already has [control/0](../../skills/leyline/references/contract.md), [conformance](../../skills/leyline/references/conformance.md), [capture evidence](../../skills/reveal/references/capture.md), a [build spec check](../../skills/cast/references/spec-check.md), and [review reconciliation](../../skills/scan/references/finish-review.md). Extend those owners. Leyline currently implements inspection and conformance only; the generation and integration stages below remain work to deliver.
+Mana already has [control/0](../../skills/leyline/references/contract.md), [conformance](../../skills/leyline/references/conformance.md), [capture evidence](../../skills/reveal/references/capture.md), a [build spec check](../../skills/cast/references/spec-check.md), and [review reconciliation](../../skills/scan/references/finish-review.md). Extend those owners. Mana 0.43.0 adds Leyline inspect/map/install with a project-owned Node recipe and local conformance fixtures under [ticket 90](https://github.com/frankieramirez/mana/issues/90). Actual consumer rollout, full challenge evidence, refresh and workflow integration remain tracked under [build 88](https://github.com/frankieramirez/mana/issues/88).
 
 ## Contract and ownership boundary
 

@@ -17,7 +17,7 @@ class RunnerSnapshotTests(unittest.TestCase):
                 check = subprocess.run([sys.executable, '-B', str(source / 'run.py'), '--check'],
                                        cwd=source, capture_output=True, text=True)
                 self.assertEqual(check.returncode, 0, check.stderr)
-                self.assertIn('33 valid; no agent executed', check.stdout)
+                self.assertIn(f'{len(run.load_cases())} valid; no agent executed', check.stdout)
                 if delegated:
                     check = subprocess.run([sys.executable, '-B', '-c', 'import delegated_review'],
                                            cwd=source, capture_output=True, text=True)

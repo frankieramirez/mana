@@ -1,0 +1,444 @@
+// Project-owned control/0 adapter. No runtime dependency beyond Node and git.
+// Run with Node >= 22.13: node --experimental-strip-types scripts/control.ts
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { spawn, spawnSync } from 'node:child_process';
+
+const root = fs.realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'));
+const runtimeDigest = hash(fs.readFileSync(fileURLToPath(import.meta.url)));
+const readDigests = new WeakMap();
+const contract = 'control/0';
+const idPattern = /^[a-z0-9][a-z0-9-]*(\.[a-z0-9][a-z0-9-]*)*$/;
+const excluded = new Set(['.git', 'node_modules']);
+const resultKeys = ['status', 'result', 'results', 'passed', 'lastRun', 'verified', 'outcome'];
+let cancelled = null;
+let active = null;
+const secretValues = Object.entries(process.env)
+  .filter(([key, value]) => /secret|token|password|credential|cookie|authorization|(?:^|_)key$/i.test(key) && value && value.length >= 4)
+  .map(([, value]) => value).sort((a, b) => b.length - a.length);
+
+function safe(value) {
+  let text = String(value);
+  for (const secret of secretValues) text = text.split(secret).join('[REDACTED]');
+  return text.replace(/(https?:\/\/)[^\s/@]+:[^\s/@]+@/gi, '$1[REDACTED]@')
+    .replace(/((?:password|secret|token|authorization|api[_-]?key)\s*[=:]\s*)[^\s,;]+/gi, '$1[REDACTED]');
+}
+function safeArgv(argv) {
+  let redact = false;
+  return argv.map(value => {
+    const out = redact ? '[REDACTED]' : safe(value);
+    redact = /^--?(?:password|secret|token|authorization|api[_-]?key)$/i.test(value);
+    return out;
+  });
+}
+function safeData(value) {
+  if (typeof value === 'string') return safe(value);
+  if (Array.isArray(value)) return value.map(safeData);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, safeData(entry)]));
+  return value;
+}
+function hash(bytes) { return crypto.createHash('sha256').update(bytes).digest('hex'); }
+function fail(message, code = 1) { const error = new Error(message); error.code = code; throw error; }
+function isWithin(base, value) { return value === base || value.startsWith(base + path.sep); }
+function relative(value, allowDependencies = false) {
+  if (typeof value !== 'string' || !value || path.isAbsolute(value) || value.includes('\0') || value.split(/[\\/]/).includes('..')) fail('configuration paths must stay inside the project');
+  const normal = path.normalize(value);
+  if (normal.split(path.sep).some(part => part === '.git' || (!allowDependencies && part === 'node_modules'))) fail('configuration cannot select .git or node_modules as source');
+  return normal;
+}
+function contained(base, rel, allowDependencies = false) {
+  const full = path.resolve(base, relative(rel, allowDependencies));
+  if (!isWithin(base, full)) fail('path escapes the project');
+  if (fs.existsSync(full) && !isWithin(base, fs.realpathSync(full))) fail('a selected path resolves outside the project');
+  return full;
+}
+function externalDirectory(value) {
+  const absolute = path.resolve(value);
+  let ancestor = absolute;
+  while (!fs.existsSync(ancestor)) {
+    const parent = path.dirname(ancestor);
+    if (parent === ancestor) fail('cannot resolve external storage', 3);
+    ancestor = parent;
+  }
+  const resolved = path.resolve(fs.realpathSync(ancestor), path.relative(ancestor, absolute));
+  if (isWithin(root, resolved)) fail('snapshot and evidence storage must be outside the checkout', 3);
+  return resolved;
+}
+function json(file, expectedDigest = null) {
+  let value, bytes;
+  try { bytes = fs.readFileSync(file); value = JSON.parse(bytes.toString('utf8')); }
+  catch { fail(`cannot read JSON record: ${path.relative(root, file)}`); }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) fail('configuration and records must be JSON objects');
+  const digest = hash(bytes);
+  if (expectedDigest !== null && digest !== expectedDigest) fail('control metadata differs from the captured source bytes', 3);
+  readDigests.set(value, digest);
+  return value;
+}
+function recordJSON(base, rel, capturedFiles) {
+  if (capturedFiles && !capturedFiles.has(rel)) fail('control metadata was added after source capture', 3);
+  return json(contained(base, rel), capturedFiles ? capturedFiles.get(rel) : null);
+}
+function strings(value) { return Array.isArray(value) && value.every(item => typeof item === 'string' && item.length > 0); }
+function command(value, formats) {
+  if (!value || !strings(value.argv) || !value.argv.length || value.argv.some(arg => arg.includes('\0'))) fail('command requires a nonempty argv array');
+  if (formats && !formats.includes(value.format)) fail('unsupported report format');
+  if (value.format === 'vitest-json' && !value.argv.some(arg => arg.includes('{report}'))) fail('vitest-json command requires a {report} argument');
+  return value;
+}
+function configuration(base = root, capturedFiles = null) {
+  const c = recordJSON(base, 'scripts/control-config.json', capturedFiles);
+  if (!idPattern.test(c.feature || '')) fail('configuration requires a feature id');
+  for (const key of ['sourceRoots', 'bindings']) {
+    if (!strings(c[key]) || !c[key].length) fail(`${key} requires project paths`);
+    c[key].forEach(value => relative(value));
+  }
+  for (const key of ['featuresDir', 'scenariosDir']) relative(c[key]);
+  command(c.runner, ['vitest-json']);
+  if (c.release !== null) command(c.release, ['vitest-json', 'exit']);
+  if (c.prepare !== undefined && c.prepare !== null) command(c.prepare);
+  if (!Array.isArray(c.prerequisites) || c.prerequisites.some(p => !p || typeof p.need !== 'string' || !p.need)) fail('prerequisites must name each required file');
+  c.prerequisites.forEach(p => relative(p.path, true));
+  if (!Number.isFinite(c.timeoutSeconds) || c.timeoutSeconds <= 0) fail('timeoutSeconds must be positive');
+  if (c.evidenceDir !== undefined && (typeof c.evidenceDir !== 'string' || !path.isAbsolute(c.evidenceDir))) fail('evidenceDir must be an absolute directory outside the checkout');
+  return c;
+}
+function records(c, base = root, capturedFiles = null) {
+  const features = [], scenarios = [];
+  const featureDir = contained(base, c.featuresDir), scenarioDir = contained(base, c.scenariosDir);
+  if (!fs.existsSync(featureDir) || !fs.existsSync(scenarioDir)) fail('feature or scenario directory is missing');
+  for (const name of fs.readdirSync(featureDir).sort().filter(name => name.endsWith('.json'))) {
+    const record = recordJSON(base, path.join(c.featuresDir, name), capturedFiles);
+    if (record.id !== name.slice(0, -5) || !idPattern.test(record.id) || typeof record.summary !== 'string' || !record.summary.trim() || !Array.isArray(record.aliases) || !record.aliases.every(a => typeof a === 'string') || !strings(record.sourceRoots) || !['proposed', 'confirmed', 'unresolved'].includes(record.knowledge)) fail(`malformed feature record: ${name}`);
+    record.sourceRoots.forEach(value => relative(value));
+    if (record.reach !== undefined && (!Array.isArray(record.reach) || !record.reach.length || !record.reach.every(entry => entry && ['route', 'command', 'shortcut'].some(key => typeof entry[key] === 'string' && entry[key])))) fail(`malformed feature reach: ${name}`);
+    if (resultKeys.some(key => key in record)) fail('feature records cannot store run outcomes');
+    features.push(record);
+    const dir = contained(base, path.join(c.scenariosDir, record.id));
+    if (!fs.existsSync(dir)) fail(`feature ${record.id} has no scenarios`);
+    const own = fs.readdirSync(dir).sort().filter(name => name.endsWith('.json'));
+    if (!own.length) fail(`feature ${record.id} has no scenarios`);
+    for (const scenarioFile of own) {
+      const scenario = recordJSON(base, path.join(c.scenariosDir, record.id, scenarioFile), capturedFiles);
+      if (scenario.id !== `${record.id}.${scenarioFile.slice(0, -5)}` || !idPattern.test(scenario.id) || !Array.isArray(scenario.steps) || !scenario.steps.length || !scenario.steps.every(step => step && typeof step.action === 'string' && typeof step.expect === 'string')) fail(`malformed scenario record: ${scenarioFile}`);
+      if (resultKeys.some(key => key in scenario)) fail('scenario records cannot store run outcomes');
+      scenarios.push({ ...scenario, feature: record.id });
+    }
+  }
+  for (const name of fs.readdirSync(scenarioDir)) {
+    const full = contained(base, path.join(c.scenariosDir, name));
+    if (fs.statSync(full).isDirectory() && !features.some(f => f.id === name) && fs.readdirSync(full).some(file => file.endsWith('.json'))) fail(`scenario directory has no feature: ${name}`);
+  }
+  if (!features.some(f => f.id === c.feature)) fail('configured feature has no record');
+  return { features, scenarios };
+}
+function options() {
+  const raw = process.argv.slice(2), words = [];
+  const out = { json: false, plan: false, search: null, base: null, words };
+  for (let i = 0; i < raw.length; i++) {
+    const arg = raw[i];
+    if (arg === '--json') out.json = true;
+    else if (arg === '--plan') out.plan = true;
+    else if (arg === '--search' || arg === '--base') {
+      if (!raw[i + 1] || raw[i + 1].startsWith('--')) fail(`${arg} requires a value`, 2);
+      out[arg.slice(2)] = raw[++i];
+    } else if (arg.startsWith('-')) fail(`unknown option: ${arg}`, 2);
+    else words.push(arg);
+  }
+  const verb = words[0];
+  if (!['list', 'describe', 'feature', 'changed', 'release'].includes(verb)) fail('expected list, describe, feature, changed, or release', 2);
+  if ((out.search !== null && verb !== 'list') || (out.base !== null && verb !== 'changed') || (out.plan && ['list', 'describe'].includes(verb))) fail('option does not apply to this verb', 2);
+  if (['list', 'changed', 'release'].includes(verb) && words.length !== 1) fail('unexpected argument', 2);
+  if (verb === 'feature' && words.length < 2) fail('feature requires an id', 2);
+  if (verb === 'describe' && (words.length !== 3 || !['feature', 'scenario'].includes(words[1]))) fail('describe requires feature or scenario and an id', 2);
+  return out;
+}
+function git(args, required = true) {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
+  const result = spawnSync('git', ['-C', root, ...args], { env, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  if (result.status !== 0 && required) fail('cannot inspect git source state', 3);
+  return result.status === 0 ? result.stdout : null;
+}
+function walk(base, rel, paths) {
+  const full = contained(base, rel);
+  let info;
+  try { info = fs.lstatSync(full); } catch (error) { if (error.code === 'ENOENT') return; throw error; }
+  if (info.isSymbolicLink()) fail('source symlinks require a project-specific snapshot adapter', 3);
+  if (info.isDirectory()) {
+    for (const entry of fs.readdirSync(full).sort()) if (!excluded.has(entry)) walk(base, path.join(rel, entry), paths);
+  } else if (info.isFile()) paths.add(rel);
+  else fail('source contains an unsupported special file', 3);
+}
+function inventory(c) {
+  const output = git(['ls-files', '--cached', '--others', '--exclude-standard', '-z']);
+  const paths = new Set();
+  for (const rel of output.split('\0').filter(Boolean)) {
+    if (rel.split('/').some(part => excluded.has(part))) continue;
+    const full = contained(root, rel);
+    let info;
+    try { info = fs.lstatSync(full); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+    if (!info.isFile() || info.isSymbolicLink()) fail('submodules, symlinks, and special source files require a project-specific snapshot adapter', 3);
+    paths.add(rel);
+  }
+  const fixturePaths = c.prerequisites.map(p => p.path).filter(rel => !rel.split(/[\\/]/).includes('node_modules'));
+  for (const rel of [...c.sourceRoots, ...c.bindings, c.featuresDir, c.scenariosDir, 'scripts/control.ts', 'scripts/control-config.json', ...fixturePaths]) walk(root, rel, paths);
+  return [...paths].sort();
+}
+function manifest(base, paths) {
+  return paths.map(rel => {
+    const full = contained(base, rel);
+    if (!fs.existsSync(full)) return { path: rel, missing: true };
+    const info = fs.lstatSync(full);
+    if (!info.isFile() || info.isSymbolicLink()) fail('checked source changed its file type', 3);
+    return { path: rel, mode: info.mode & 0o777, digest: hash(fs.readFileSync(full)) };
+  });
+}
+function identity(c) {
+  const files = manifest(root, inventory(c));
+  return { head: git(['rev-parse', '--verify', 'HEAD'], false)?.trim() || null, manifest: { digest: hash(JSON.stringify(files)), files } };
+}
+function killOwned(signal) {
+  if (!active?.pid) return;
+  try { process.kill(process.platform === 'win32' ? active.pid : -active.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+}
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => {
+  cancelled = signal;
+  killOwned(signal);
+  const child = active;
+  const timer = setTimeout(() => { if (active === child) killOwned('SIGKILL'); }, 1000);
+  timer.unref();
+});
+
+async function execute(spec, cwd, evidence, name, timeoutSeconds) {
+  const rawReport = path.join(evidence, `${name}.runner.json`);
+  const argv = spec.argv.map(arg => arg.replaceAll('{report}', rawReport));
+  const logPath = path.join(evidence, `${name}.log`);
+  const started = Date.now();
+  let output = '', timedOut = false, spawnError = false, truncated = false;
+  const append = chunk => {
+    if (output.length < 2_000_000) output += chunk.toString().slice(0, 2_000_000 - output.length);
+    else truncated = true;
+  };
+  const outcome = await new Promise(resolve => {
+    if (cancelled) { resolve({ code: null, signal: cancelled }); return; }
+    const env = { ...process.env, PWD: cwd, INIT_CWD: cwd };
+    for (const key of Object.keys(env)) if (key.startsWith('GIT_') || ['NODE_PATH', 'npm_config_local_prefix', 'npm_package_json'].includes(key)) delete env[key];
+    const child = spawn(argv[0], argv.slice(1), { cwd, env, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] });
+    active = child;
+    child.stdout.on('data', append);
+    child.stderr.on('data', append);
+    const timer = setTimeout(() => { timedOut = true; killOwned('SIGTERM'); }, timeoutSeconds * 1000);
+    const force = setTimeout(() => killOwned('SIGKILL'), timeoutSeconds * 1000 + 1000);
+    child.on('error', () => { spawnError = true; });
+    child.on('close', (code, signal) => {
+      clearTimeout(timer); clearTimeout(force);
+      killOwned('SIGTERM');
+      // The group belongs to this invocation, including descendants left by its leader.
+      const group = child.pid;
+      setTimeout(() => {
+        try { if (group) process.kill(process.platform === 'win32' ? group : -group, 'SIGKILL'); } catch {}
+        if (active === child) active = null;
+        resolve({ code, signal });
+      }, 50);
+    });
+  });
+  fs.writeFileSync(logPath, safe(output) + (truncated ? '\n[log truncated]\n' : ''), { mode: 0o600 });
+  // Keep diagnostics, but never retain a runner's unfiltered failure messages.
+  let runnerReport = null;
+  if (fs.existsSync(rawReport)) {
+    try { runnerReport = JSON.parse(fs.readFileSync(rawReport, 'utf8')); }
+    catch {}
+    const retained = runnerReport ? JSON.stringify(safeData(runnerReport), null, 2) + '\n' : safe(fs.readFileSync(rawReport, 'utf8'));
+    fs.writeFileSync(rawReport, retained, { mode: 0o600 });
+  }
+  return { argv: safeArgv(argv), code: outcome.code, signal: outcome.signal, timedOut, spawnError, ms: Date.now() - started, logPath, rawReport, runnerReport };
+}
+function assessed(result, expected, id, format) {
+  const check = { id, status: 'unavailable', reason: '', argv: result.argv, expected, executed: [], artifacts: [result.logPath], ms: result.ms };
+  if (fs.existsSync(result.rawReport)) check.artifacts.push(result.rawReport);
+  if (cancelled) { check.status = 'cancelled'; check.reason = `cancelled by ${cancelled}`; return { check, incomplete: true }; }
+  if (result.timedOut) { check.status = 'timed_out'; check.reason = 'runner exceeded the configured timeout'; return { check, incomplete: true }; }
+  if (result.spawnError || result.signal) { check.reason = result.spawnError ? 'runner could not start' : 'runner terminated by a signal'; return { check, incomplete: true }; }
+  if (format === 'exit') {
+    check.status = result.code === 0 ? 'passed' : 'failed';
+    check.reason = `required project release command exited ${result.code}; no additional scenario coverage claimed`;
+    check.executed = [id];
+    return { check, incomplete: false };
+  }
+  const report = result.runnerReport;
+  if (!report || !Array.isArray(report.testResults) || report.testResults.some(suite => !suite || !Array.isArray(suite.assertionResults))) {
+    check.reason = 'runner did not produce a complete Vitest JSON report';
+    return { check, incomplete: true };
+  }
+  const assertions = report.testResults.flatMap(suite => suite.assertionResults);
+  const matches = new Map(expected.map(sid => [sid, []]));
+  let invalid = false;
+  for (const assertion of assertions) {
+    if (!assertion || typeof assertion.status !== 'string' || !['passed', 'failed', 'pending', 'skipped', 'todo', 'disabled'].includes(assertion.status)) { invalid = true; continue; }
+    const names = [assertion.fullName, assertion.title].filter(name => typeof name === 'string');
+    if (!names.length) invalid = true;
+    const matchedIds = expected.filter(sid => {
+      const escaped = sid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const token = new RegExp(`(^|[^a-zA-Z0-9_.-])${escaped}($|[^a-zA-Z0-9_.-])`);
+      return names.some(name => token.test(name));
+    });
+    if (matchedIds.length > 1) { invalid = true; continue; }
+    for (const sid of matchedIds) matches.get(sid).push(assertion.status);
+  }
+  check.executed = expected.filter(sid => matches.get(sid).some(state => ['passed', 'failed'].includes(state)));
+  check.failed = expected.filter(sid => matches.get(sid).includes('failed'));
+  check.missing = expected.filter(sid => !matches.get(sid).length);
+  check.skipped = expected.filter(sid => matches.get(sid).some(state => !['passed', 'failed'].includes(state)));
+  const failed = assertions.some(a => a?.status === 'failed');
+  const incomplete = invalid || !assertions.length || !check.executed.length || check.missing.length > 0 || check.skipped.length > 0 ||
+    (typeof report.numTotalTests === 'number' && report.numTotalTests !== assertions.length) ||
+    (report.numRuntimeErrorTestSuites || 0) > 0 || (!failed && (result.code !== 0 || report.success === false || (report.numFailedTests || 0) > 0));
+  check.status = failed ? 'failed' : incomplete ? 'unavailable' : 'passed';
+  check.reason = failed ? `assertion failure${check.failed.length ? ': ' + check.failed.join(', ') : ' outside mapped scenarios'}` : incomplete ? 'missing, skipped, zero, malformed, or unfinished expected assertions' : `executed all ${expected.length} expected scenarios`;
+  return { check, incomplete };
+}
+function write(value, code) { process.stdout.write(JSON.stringify(value, null, 2) + '\n'); process.exitCode = code; }
+
+async function run(c, data, args) {
+  const bootstrapConfigDigest = readDigests.get(c);
+  const verb = args.words[0];
+  const selected = verb === 'feature' ? [...new Set(args.words.slice(1))] : [c.feature];
+  for (const id of selected) if (!data.features.some(f => f.id === id)) fail(`unknown feature: ${id}`, 2);
+  let expected = data.scenarios.filter(s => selected.includes(s.feature)).map(s => s.id);
+  const selection = { verb, features: selected, reason: verb === 'changed' ? 'single-feature adapter conservatively runs its complete mapped feature for every change' : 'explicit selection', base: null };
+  if (verb === 'changed') {
+    const ref = args.base || 'HEAD';
+    const resolved = git(['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`], false);
+    if (!resolved) fail('changed base does not resolve to a commit', 2);
+    selection.base = resolved.trim();
+  }
+  const plan = [{ id: c.feature, argv: safeArgv(c.runner.argv), expected }];
+  if (verb === 'release' && c.release) plan.push({ id: 'release.command', argv: safeArgv(c.release.argv), expected: c.release.format === 'exit' ? ['release.command'] : expected });
+  if (args.plan) { write({ contract, mode: 'plan', executed: false, selection, checks: plan, releaseConfigured: c.release !== null }, 0); return; }
+  const runId = `${new Date().toISOString().replace(/[^0-9]/g, '')}-${crypto.randomUUID()}`;
+  const report = { contract, runId, status: 'incomplete', exit: 3, source: { identity: { head: null, manifest: { digest: hash('[]') } }, sourceChanged: false }, selection, prerequisites: [], checks: [], evidenceDir: null, artifacts: [], snapshot: { path: null, cleaned: false }, environment: { node: process.version, platform: process.platform, dependencyStrategy: c.prepare ? 'project preparation in private snapshot' : 'no dependency installation or shared node_modules', externalInputs: 'inherited environment and external services are not fully fingerprinted; source identity alone does not establish environment equivalence' } };
+  let temp = null, before = null, snapshotFiles = null, sourcePaths = [], incomplete = false;
+  const addBlocked = reason => { report.checks.push({ id: c.feature, status: 'blocked', reason, argv: safeArgv(c.runner.argv), expected, executed: [] }); incomplete = true; };
+  try {
+    const tempBase = externalDirectory(os.tmpdir());
+    const evidenceBase = externalDirectory(c.evidenceDir || path.join(tempBase, 'project-control-evidence'));
+    fs.mkdirSync(evidenceBase, { recursive: true, mode: 0o700 });
+    report.evidenceDir = fs.mkdtempSync(path.join(evidenceBase, `${runId}-`));
+    temp = fs.mkdtempSync(path.join(tempBase, 'project-control-'));
+    const snapshot = path.join(temp, 'source');
+    fs.mkdirSync(snapshot);
+    report.snapshot.path = snapshot;
+    before = identity(c);
+    report.source.identity = { head: before.head, manifest: { digest: before.manifest.digest, fileCount: before.manifest.files.length, artifact: path.join(report.evidenceDir, 'manifest.json') } };
+    fs.writeFileSync(report.source.identity.manifest.artifact, JSON.stringify(before.manifest.files, null, 2) + '\n', { mode: 0o600 });
+    report.artifacts.push(report.source.identity.manifest.artifact);
+    for (const item of before.manifest.files) {
+      const from = contained(root, item.path), to = contained(snapshot, item.path);
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.copyFileSync(from, to);
+      fs.chmodSync(to, item.mode);
+    }
+    sourcePaths = before.manifest.files.map(item => item.path);
+    snapshotFiles = manifest(snapshot, sourcePaths);
+    if (hash(JSON.stringify(snapshotFiles)) !== before.manifest.digest) { report.source.sourceChanged = true; addBlocked('source changed while creating the snapshot'); }
+    // Bootstrap settings select snapshot scope and storage. They must be the same
+    // bytes as the settings retained in its identity, before any command can run.
+    const capturedFiles = new Map(before.manifest.files.map(file => [file.path, file.digest]));
+    const capturedConfig = configuration(snapshot, capturedFiles);
+    if (readDigests.get(capturedConfig) !== bootstrapConfigDigest || before.manifest.files.find(file => file.path === 'scripts/control.ts')?.digest !== runtimeDigest) {
+      report.source.sourceChanged = true;
+      addBlocked('control configuration or runtime changed before the source snapshot was captured');
+    }
+    if (!incomplete) {
+      c = capturedConfig;
+      data = records(c, snapshot, capturedFiles);
+      expected = data.scenarios.filter(s => selected.includes(s.feature)).map(s => s.id);
+      if (selected.some(id => !data.features.some(feature => feature.id === id))) {
+        report.source.sourceChanged = true;
+        addBlocked('selected feature records changed before the source snapshot was captured');
+      }
+      if (hash(JSON.stringify(manifest(snapshot, sourcePaths))) !== before.manifest.digest) {
+        report.source.sourceChanged = true;
+        addBlocked('captured source changed while loading control metadata');
+      }
+    }
+    if (selected.some(id => id !== c.feature)) addBlocked('this generated adapter only runs its configured feature; add an explicit project adapter for other features');
+    if (!incomplete && c.prepare) {
+      const prepared = await execute(c.prepare, snapshot, report.evidenceDir, 'prepare', c.timeoutSeconds);
+      report.preparation = { argv: prepared.argv, exit: prepared.code, ms: prepared.ms, log: prepared.logPath };
+      report.artifacts.push(prepared.logPath);
+      if (prepared.code !== 0 || prepared.timedOut || prepared.spawnError || prepared.signal || cancelled) addBlocked('snapshot preparation did not complete successfully');
+    }
+    report.prerequisites = c.prerequisites.map(p => ({ need: p.need, status: fs.existsSync(contained(snapshot, p.path, true)) ? 'present' : 'missing', detail: null }));
+    if (report.prerequisites.some(p => p.status === 'missing')) addBlocked('a named prerequisite is missing from the snapshot');
+    if (!incomplete && !cancelled) {
+      const result = await execute(c.runner, snapshot, report.evidenceDir, 'feature', c.timeoutSeconds);
+      const assessment = assessed(result, expected, c.feature, c.runner.format);
+      report.checks.push(assessment.check);
+      incomplete ||= assessment.incomplete;
+      report.artifacts.push(...assessment.check.artifacts);
+    }
+    if (verb === 'release') {
+      if (!c.release) { report.checks.push({ id: 'release.command', status: 'unavailable', reason: 'required project release checks have not been configured', argv: [], expected: [], executed: [] }); incomplete = true; }
+      else if (!incomplete && !cancelled) {
+        const result = await execute(c.release, snapshot, report.evidenceDir, 'release', c.timeoutSeconds);
+        const assessment = assessed(result, c.release.format === 'exit' ? ['release.command'] : expected, 'release.command', c.release.format);
+        report.checks.push(assessment.check);
+        incomplete ||= assessment.incomplete;
+        report.artifacts.push(...assessment.check.artifacts);
+      } else report.checks.push({ id: 'release.command', status: 'not_run', reason: 'feature or preparation was incomplete', argv: safeArgv(c.release.argv), expected: c.release.format === 'exit' ? ['release.command'] : expected, executed: [] });
+    }
+  } catch (error) {
+    addBlocked(safe(error.message));
+  } finally {
+    if (before) {
+      try {
+        const after = identity(c);
+        report.source.sourceChanged ||= after.head !== before.head || after.manifest.digest !== before.manifest.digest;
+        if (snapshotFiles) {
+          const paths = new Set(sourcePaths);
+          for (const rel of [...c.sourceRoots, ...c.bindings, c.featuresDir, c.scenariosDir]) walk(report.snapshot.path, rel, paths);
+          report.source.sourceChanged ||= hash(JSON.stringify(manifest(report.snapshot.path, [...paths].sort()))) !== before.manifest.digest;
+        }
+      } catch { report.source.sourceChanged = true; }
+    }
+    if (temp) {
+      try { fs.rmSync(temp, { recursive: true, force: true }); report.snapshot.cleaned = true; }
+      catch { incomplete = true; report.teardown = 'owned snapshot could not be removed'; }
+    }
+  }
+  if (cancelled) { report.status = 'cancelled'; report.exit = cancelled === 'SIGINT' ? 130 : 143; }
+  else if (incomplete || report.source.sourceChanged || !report.checks.length) { report.status = 'incomplete'; report.exit = 3; }
+  else if (report.checks.some(check => check.status === 'failed')) { report.status = 'failed'; report.exit = 1; }
+  else { report.status = 'passed'; report.exit = 0; }
+  if (report.evidenceDir) {
+    const reportFile = path.join(report.evidenceDir, 'report.json');
+    report.artifacts.push(reportFile);
+    try { fs.writeFileSync(reportFile, JSON.stringify(report, null, 2) + '\n', { mode: 0o600 }); }
+    catch {
+      report.artifacts = report.artifacts.filter(file => file !== reportFile);
+      report.retention = 'run report could not be retained';
+      if (!cancelled) { report.status = 'incomplete'; report.exit = 3; }
+    }
+  }
+  write(report, report.exit);
+}
+
+try {
+  const args = options(), c = configuration(), data = records(c), verb = args.words[0];
+  if (verb === 'list') {
+    const terms = (args.search || '').toLowerCase().split(/\s+/).filter(Boolean);
+    const ranked = entries => entries.map(entry => ({ ...entry, score: terms.reduce((n, term) => n + (JSON.stringify(entry).toLowerCase().includes(term) ? 1 : 0), 0) }))
+      .filter(entry => !terms.length || entry.score > 0).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    write({ contract, mode: 'discovery', features: ranked(data.features), scenarios: ranked(data.scenarios) }, 0);
+  } else if (verb === 'describe') {
+    const kind = args.words[1], record = data[kind === 'feature' ? 'features' : 'scenarios'].find(item => item.id === args.words[2]);
+    if (!record) fail(`unknown ${kind}: ${args.words[2]}`, 2);
+    write({ contract, mode: 'discovery', kind, record, scenarios: kind === 'feature' ? data.scenarios.filter(s => s.feature === record.id) : undefined, bindings: c.bindings, command: ['node', '--experimental-strip-types', 'scripts/control.ts', 'feature', kind === 'feature' ? record.id : record.feature, '--json'] }, 0);
+  } else await run(c, data, args);
+} catch (error) {
+  write({ contract, mode: 'error', error: safe(error.message) }, [1, 2, 3].includes(error.code) ? error.code : 1);
+}

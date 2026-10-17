@@ -1,7 +1,7 @@
 # Workflow effectiveness evaluation
 
 Decision: [Specify a fair benchmark for workflow effectiveness and review effort](https://github.com/frankieramirez/mana/issues/82), under [Improve mana's reliability and measured effectiveness](https://github.com/frankieramirez/mana/issues/72).
-Status: protocol settled on 2026-10-17; fixture and adapter implementation pending; live runs unstarted.
+Status: protocol settled on 2026-10-17; the focused condition adapter ships in mana 0.43.0. Held-out fixtures, comparative delegation and host validation remain pending; live runs are unstarted.
 
 ## Decision and evidence
 
@@ -9,7 +9,7 @@ Run a diagnostic pilot of 12 source scenarios, three conditions and two repetiti
 
 Extend `evals/workflows/`. Its existing adapter preserves failed attempts, source hashes, repository state, commands and separate regrades. The [delegated collector](../../evals/workflows/delegated-evaluation.md) observes child work. The [B/C record](../../evals/workflows/package-bc-results.json) covers two paired scenarios, with visible variant labels during manual grading and incomplete family usage. Those results support bounded observations. They establish no general performance ranking. The [semantic pilot](../../evals/semantic/findings.md) repeatedly missed the same confirmed scope error. Judge agreement and repeated verdicts cannot replace an outcome oracle.
 
-This specification does not launch the pilot. The current runner hardcodes Mana skills and fixture kinds, supplies an instruction-loading prefix and disables discovery. Passing `--skill-root` alone cannot run the reference or no-suite conditions. Implement the adapter and fixture requirements below before treating this protocol as executable. Keep existing command behavior and historical results intact.
+This specification does not launch the pilot. The opt-in [frozen condition adapter](../../evals/workflows/condition-execution.md) installs separate Mana, reference and no-suite payloads for nine existing development cases, with identical frozen inputs and verified inventories. Its legacy path keeps the original Mana behavior. Passing `--skill-root` alone still cannot run the other conditions. The held-out dataset, longer delegated jobs, blinded adjudication and validated live host remain separate tickets under [build 88](https://github.com/frankieramirez/mana/issues/88); the complete protocol is not yet executable.
 
 ## Conditions and source freeze
 

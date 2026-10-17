@@ -110,6 +110,8 @@ Tell the maintainer the category and state you lean toward, with reasoning, plus
 
 ### 2c. Verify
 
+For an unexplained behavior defect, load `references/debugging.md` now and use its triage path. Preserve production behavior while establishing the evidence for the brief. Skip it for prose, ordinary feature requests, or a cause already established by direct observation.
+
 Before interrogation, check the claim. For a bug, reproduce from the reporter's steps. For a PR, confirm the diff does what it claims: look at the code, run the relevant tests. Report confirmed (with the code path), failed, or too little detail (`needs-info`).
 
 ### 2d. Interrogate a thin request
@@ -167,5 +169,6 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 | Reference | Load at | Purpose |
 |-----------|---------|---------|
 | `references/interrogate.md` | Stage 2d | Design-tree interview |
+| `references/debugging.md` | Stage 2c, unexplained behavior defect | Reproduction, discriminating experiments, and evidence limits |
 | `references/agent-brief.md` | Stage 2e, ready-for-agent or ready-for-human | Brief contract |
 | `references/out-of-scope.md` | Stage 2a and 2e, rejected enhancements | `.out-of-scope/` files |

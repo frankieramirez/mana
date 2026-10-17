@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.43.0
+
+- Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.
+- Leyline inspects, maps and installs a project-owned Node control candidate around existing scenario bindings. The first briefing recipe preserves existing controls, checks source and output ownership, records installation hashes, and reports actual runner outcomes from disposable snapshots. Consumer rollout, refresh and the full challenge remain separate work.
+- The workflow evaluator supports opt-in frozen Mana, reference and no-suite conditions for supported development cases. Payload inventories, deterministic initial fixtures, schedules and archives are checked before execution; corrupt observations stop the study. Held-out fixtures, delegated comparison, host validation and live studies remain pending.
+
 ## 0.42.1
 
 - Augur runs proofs in preserved snapshots of the reviewed commit or local source, records source hashes and execution evidence, and rejects source changes or unfinished background work. Proofs must verify the actual imported implementation against the selected source manifest.

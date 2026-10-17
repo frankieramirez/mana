@@ -2,7 +2,7 @@
 
 Date: 2026-10-17
 Decision: [Bounded debugging](https://github.com/frankieramirez/mana/issues/81)
-Status: implementation contract; the paired cases below are designed acceptance cases, not observed incidents or completed trials.
+Status: reference, stage loading and focused offline fixtures implemented in mana 0.43.0 under [build ticket 89](https://github.com/frankieramirez/mana/issues/89). The paired cases below are designed acceptance cases, not observed incidents or completed live trials.
 
 ## Decision
 
