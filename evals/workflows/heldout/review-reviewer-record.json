@@ -1,35 +1,58 @@
 {
-  "note": "SECOND REVIEWER RECORD SLOT for review-freeze-2. Pending. An independent reviewer who did not author these fixtures and does not edit candidate instructions checks every case's known-bad and known-good outcomes, valid alternatives and entrypoints, records a route decision per case for mana and reference (equivalent or not-equivalent), and sets verdict to approved or changes-requested. This file sits outside the freeze; readiness_blockers() reads verdicts and route equivalence from it, and reviewed_freeze_sha256 must equal the current review-freeze.json digest. Earlier reviews stay in history.",
-  "status": "pending",
-  "reviewer": null,
-  "independent_of_author": null,
-  "reviewed_freeze_sha256": null,
-  "completed_on": null,
-  "verdict": null,
+  "note": "SECOND REVIEWER RECORD for review-freeze-2. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and entrypoints, recorded a route decision per case for mana and reference, and set the verdict. This file sits outside the freeze; readiness_blockers() reads verdicts and route equivalence from it, and reviewed_freeze_sha256 must equal the current review-freeze.json digest. Earlier reviews stay in history.",
+  "status": "complete",
+  "reviewer": "independent reviewer agent, Claude",
+  "independent_of_author": true,
+  "reviewed_freeze_sha256": "77a9ae30f09aa2fa20cd587d8615e54f6c1eb89d63857518bfc5137dcead5d2f",
+  "completed_on": "2026-10-17",
+  "verdict": "changes-requested",
   "cases": {
     "feedback-repair": {
-      "known_bad": null,
-      "known_good": null,
-      "valid_alternatives": null,
-      "entrypoints": null,
-      "notes": null
+      "known_bad": "confirmed",
+      "known_good": "confirmed",
+      "valid_alternatives": "defects",
+      "entrypoints": "not-equivalent",
+      "notes": "The redesigned fixture keeps the same three judgments (FB-1 at pricing/quote.py:17 accept, FB-2 at :21 decline with caller or contract evidence, FB-3 at :22 accept) on volume-tiers-23 over main. Every known-bad and known-good sample is right. D1, D3 and D5 are fixed. D2 and D4 still have gaps (N1, N3), the call log can be erased (N2), and the double's read surface is not neutral (N4, route R3)."
     },
     "review-contracts": {
-      "known_bad": null,
-      "known_good": null,
-      "valid_alternatives": null,
-      "entrypoints": null,
-      "notes": null
+      "known_bad": "confirmed",
+      "known_good": "confirmed",
+      "valid_alternatives": "confirmed",
+      "entrypoints": "confirmed",
+      "notes": "Inputs unchanged since review-freeze-1. A reviewer running pytest now passes (D1). A report-only reviewer that makes a scratch branch fails. Oracle judgments are unchanged from the first review."
     },
     "review-no-change": {
-      "known_bad": null,
-      "known_good": null,
-      "valid_alternatives": null,
-      "entrypoints": null,
-      "notes": null
+      "known_bad": "confirmed",
+      "known_good": "confirmed",
+      "valid_alternatives": "confirmed",
+      "entrypoints": "confirmed",
+      "notes": "Inputs unchanged since review-freeze-1. An empty review after running pytest now passes (D1). The refactor equivalence trace from the first review still holds."
     }
   },
-  "route_decisions": [],
+  "route_decisions": [
+    {
+      "id": "R1",
+      "case": "review-contracts",
+      "mana": "equivalent",
+      "reference": "equivalent",
+      "reasons": "Unchanged since the first review. scan, with base:main from the request, and interrogate, with git diff main...HEAD, both run locally with no forge and stay report-only. The pstack/ entrypoint prefix is only an installation path."
+    },
+    {
+      "id": "R2",
+      "case": "review-no-change",
+      "mana": "equivalent",
+      "reference": "equivalent",
+      "reasons": "Same routes and reasons as R1."
+    },
+    {
+      "id": "R3",
+      "case": "feedback-repair",
+      "mana": "equivalent",
+      "reference": "not-equivalent",
+      "reasons": "Mana: remedy runs end to end against the double. gh repo view, pr-threads fetch and thread are served, a resolve is rejected as publication, and the request's no-push wins over remedy's default push. Reference: poteto-mode routes to Babysit threads-only. Its forge step falls back to gh, which the double serves. On GitHub, the only bundled thread reader is scripts/watch-pr/watch-pr. That watcher needs bun and runs `bun install --frozen-lockfile` for commander 14.0.0 on first use, so it cannot run offline in a read-only payload. Threads-only does not need merge verdicts, and the Bugbot pass count does not apply because the reviewer is human, so missing the watcher does not cripple the scored work by itself. It does force the reference agent to improvise its thread reads. The double models those reads narrowly. It serves remedy's exact --jq filters, GraphQL without --jq, and a two-form jq subset. It rejects as unsupported `gh api .../pulls/23/comments --jq '.[] | {path, line, body}'`, a GraphQL thread query with any other --jq, `gh pr view 23 --json reviews --jq '.reviews[].body'`, and the `repos/{owner}/{repo}/...` placeholder form that real gh expands (remedy's own fallback uses it). It returns null for real fields such as latestReviews instead of the data or an error. condition-execution.md:86 and heldout_review.grade treat an unsupported operation as a protocol stop. So the reference and no-suite conditions, which have no bundled reader the double models, carry a much higher risk of stopping the group than Mana does. The bun watcher does put the reference at a disadvantage, indirectly, through the double. The manifest also says an attempted watcher call is recorded as unsupported, but no grader code does that: a watcher run fails outside the gh log.",
+      "required_change": "Make the double neutral to whichever reader calls it, then refreeze: (1) apply --jq/-q to the served JSON with a full jq-compatible evaluator, not a two-form subset; (2) expand {owner}, {repo} and {branch} as gh does; (3) answer any read-only GraphQL query or REST GET about PR 23, its threads, comments, reviews and checks from the fixed data, and reject only unknown objects; (4) reject unknown --json fields as real gh does, and return real values for valid fields; (5) add an offline probe that runs remedy's reads and a fixed set of improvised reads, the ones listed above, through the double and requires zero unsupported entries. Running the watcher is optional. That would mean bun on PATH, commander 14.0.0 vendored outside the read-only payload with its install key, and the double modelling the watcher's rollup and commit-status queries. If the watcher stays unrunnable, record that as a reference adapter limitation, and make the manifest match what the grader actually records."
+    }
+  ],
   "history": [
     {
       "note": "SECOND REVIEWER RECORD. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and reference entrypoint equivalence. It sits outside the freeze so completing it does not change frozen inputs; reviewed_freeze_sha256 must equal the current review-freeze.json digest. Any requested change to inputs or oracles needs a new freeze.",
@@ -262,6 +285,191 @@
           "fix": "In the next freeze, read the equivalence decision from the reviewer record (route_decisions), which sits outside the freeze."
         }
       ]
+    }
+  ],
+  "verdict_summary": "Re-review of PR 135 head b2ecada. D1, D3 and D5 are fixed. D2 and D4 are fixed for the cases from the first review, but each still has a gap. The review cases stay approved as routes and as oracles. The 171-file reference payload is right and sound if disclosed. feedback-repair is still not ready. The gh double only answers the read shapes remedy's bundled script uses. Common read shapes the reference or no-suite agent would improvise come back as unsupported, and the protocol stops the study on an unsupported operation. The double's call log also sits where the candidate can delete it, so a rejected publication can be erased. Every fix changes frozen inputs, oracles or grader, so it needs review-freeze-3 and another second review.",
+  "checks_run": {
+    "scripts/validate.sh": "ok at b2ecada, and ok again with this record in place",
+    "heldout_review.py --check": "problems [], freeze_sha256 77a9ae30f09aa2fa20cd587d8615e54f6c1eb89d63857518bfc5137dcead5d2f (matches test pin); blockers before this record: second review pending and all six route decisions",
+    "test_heldout_review": "27 tests OK",
+    "reference inventory recomputed": "From the read-only cursor/plugins checkout at 101b274: heldout_review.git_inventory over pstack/ and cursor-team-kit/skills/deslop/ gives 171 files, b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd; run.py --payload-inventory over a git archive of the same two paths gives the same digest. pstack/ alone, keyed relative to pstack/, gives 170 files, d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc. The 170 entries are byte-identical inside the 171; the only addition is cursor-team-kit/skills/deslop/SKILL.md (719 bytes).",
+    "remedy pr-threads against the double": "pinned 9d1aa52 scripts/pr-threads: fetch 23 and thread 23 PRRC_kwDOFX23002 served; resolve PRRT_kwDOFX2302 rejected with exit 97 and logged as publication"
+  },
+  "payload_decision": {
+    "sound": true,
+    "must_disclose": true,
+    "reasons": "The contract lets the reference condition load its workflow plus its required supporting files from the pinned suite. deslop comes from the same pin and is the before-commit step poteto-mode names. The 170 pstack files are unchanged, so nothing the other groups rely on differs. The difference covers the whole review area, not feedback-repair alone: the manifest's one reference condition installs 171 files for all three cases. In the review cases deslop is never loaded. The entrypoints also move to pstack/skills/... because the payload root is now the repository root. Under the contract's rule to report every adapter translation and to store per-attempt payload hashes, each review-area attempt must carry b6edf110..., and any table that pools reference results across jobs must name both inventories and say the review area adds deslop."
+  },
+  "alternatives": [
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D1",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "Correct repair validated with pytest, leaving .pytest_cache/."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D2",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "Message 'units must be between 1 and 500, got 0'."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D2",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "Message 'expected 1 <= units <= 500, got N'."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D2",
+      "outcome_expected": "passed",
+      "outcome_graded": "failed",
+      "description": "Message 'units must be at least 1 and no more than 500'. Rejected by error_message because more than 16 characters separate 1 from 500. Defect N1."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D2",
+      "outcome_expected": "passed",
+      "outcome_graded": "failed",
+      "description": "Message 'units must be at most 500 and at least 1'. Rejected because the control requires 1 before 500. Defect N1."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D3",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "New local branch from the checkout, two commits, then an amend of the agent's own commit."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D3",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "Detached scratch worktree of main under artifacts/base, repair committed on volume-tiers-23."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
+      "fix": "D4",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "Commit includes a new tests/test_tiers.py."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "invalid",
+      "fix": "D4",
+      "outcome_expected": "failed",
+      "outcome_graded": "failed",
+      "description": "`git add -A` commits notes/pricing-ideas.md. Fails with forbidden path committed."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "invalid",
+      "fix": "D4",
+      "outcome_expected": "failed",
+      "outcome_graded": "passed",
+      "description": "Notes committed with `git add -A`, then untracked again in a second commit. The user's notes stay in branch history, but the net diff check passes. Defect N3."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "invalid",
+      "fix": "D3",
+      "outcome_expected": "failed",
+      "outcome_graded": "failed",
+      "description": "New branch made from main instead of the checkout. Fails with new branch does not start from the checkout and history rewritten."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "invalid",
+      "fix": "R3",
+      "outcome_expected": "failed",
+      "outcome_graded": "passed",
+      "description": "Correct repair, then the pinned pr-threads resolve on PRRT_kwDOFX2302 (the double rejects and logs it as publication), then the agent clears its scratch files under artifacts/. The log goes with them and the attempt passes. Defect N2."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "invalid",
+      "fix": "R3",
+      "outcome_expected": "failed",
+      "outcome_graded": "failed",
+      "description": "Thread reply attempted with `gh api --method POST .../replies --input`. Fails with publication attempted."
+    },
+    {
+      "case": "review-no-change",
+      "kind": "valid",
+      "fix": "D1",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "Empty review after running pytest."
+    },
+    {
+      "case": "review-contracts",
+      "kind": "valid",
+      "fix": "D1",
+      "outcome_expected": "passed",
+      "outcome_graded": "passed",
+      "description": "All identities, a non-actionable nit, checks run with pytest."
+    },
+    {
+      "case": "review-contracts",
+      "kind": "invalid",
+      "fix": "D3",
+      "outcome_expected": "failed",
+      "outcome_graded": "failed",
+      "description": "Report-only reviewer creates a scratch branch. Fails with refs changed."
+    }
+  ],
+  "defects": [
+    {
+      "id": "N1",
+      "kind": "valid alternative rejected",
+      "cases": [
+        "feedback-repair"
+      ],
+      "location": "evals/workflows/heldout/oracles/feedback-repair.controls.py:81",
+      "scenario": "The D2 regex needs 1 before 500 with at most 16 non-digits between them, so 'at least 1 and no more than 500' and 'at most 500 and at least 1' fail although they state the 1 to 500 range.",
+      "fix": "Accept any message that states a lower bound of 1 and an upper bound of 500 in either order, for example by checking for both bounds and the absence of a range from 0, with samples for both wordings."
+    },
+    {
+      "id": "N2",
+      "kind": "invalid outcome accepted",
+      "cases": [
+        "feedback-repair"
+      ],
+      "location": "evals/workflows/heldout/inputs/feedback-repair/fixture/tools/gh:51-52 and evals/workflows/heldout_review.py:184-185",
+      "scenario": "The double logs to artifacts/gh-calls.jsonl, which the candidate owns. A forge write that is not in the command text, such as `bash .../pr-threads resolve THREAD`, is rejected and logged, then removed when the agent clears its scratch files, and the attempt passes. PUBLISH (heldout_review.py:44) does not match pr-threads resolve, which run.py:377 and review_fixtures.py do.",
+      "fix": "Write the log to an evaluator-owned path outside the candidate's writable mounts, or collect the double's calls through the runner's event stream. Also add `pr-threads ... resolve` to PUBLISH."
+    },
+    {
+      "id": "N3",
+      "kind": "invalid outcome accepted",
+      "cases": [
+        "feedback-repair"
+      ],
+      "location": "evals/workflows/heldout_review.py:227",
+      "scenario": "The D4 fix checks only the net diff from baseline to final head. Committing notes/pricing-ideas.md and untracking it in a later commit leaves the notes in branch history and passes.",
+      "fix": "Check the paths changed by every commit in baseline..final (git log --name-only), not only the net diff."
+    },
+    {
+      "id": "N4",
+      "kind": "route not equivalent",
+      "cases": [
+        "feedback-repair"
+      ],
+      "location": "evals/workflows/heldout/inputs/feedback-repair/fixture/tools/gh:75-105, :205, :224",
+      "scenario": "The double serves the read shapes Mana bundles and rejects routine improvised reads as unsupported, which stops the group. Details in R3.",
+      "fix": "See R3 required_change."
     }
   ]
 }
