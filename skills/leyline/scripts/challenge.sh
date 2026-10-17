@@ -197,20 +197,38 @@ def owned_alive(observed):
 
 
 def kill_owned(pid, identities):
-    """SIGKILL a PID only while it is still the process that was observed."""
-    handle = None
-    try:
-        if hasattr(os, "pidfd_open") and hasattr(signal, "pidfd_send_signal"):
-            handle = os.pidfd_open(pid)  # Pins this process, so the check below cannot race a reuse.
+    """SIGKILL a PID only while it is still the process that was observed.
+
+    A pidfd pins the process so the identity check cannot race a reuse. Where pidfds are
+    unavailable (ENOSYS before Linux 5.3, EPERM under seccomp), fall back to checking the
+    identity and then os.kill. ESRCH means the process is already gone."""
+    def same():
         now = proc_identity(pid)
-        if now is None or now[2] or (now[0], now[1]) not in identities:
+        return now is not None and not now[2] and (now[0], now[1]) in identities
+
+    handle = None
+    if hasattr(os, "pidfd_open") and hasattr(signal, "pidfd_send_signal"):
+        try:
+            handle = os.pidfd_open(pid)
+        except ProcessLookupError:
+            return False
+        except OSError:
+            handle = None
+    try:
+        if not same():
             return False
         if handle is not None:
-            signal.pidfd_send_signal(handle, signal.SIGKILL)
-        else:
-            os.kill(pid, signal.SIGKILL)
+            try:
+                signal.pidfd_send_signal(handle, signal.SIGKILL)
+                return True
+            except ProcessLookupError:
+                return False
+            except OSError:
+                if not same():
+                    return False
+        os.kill(pid, signal.SIGKILL)
         return True
-    except (ProcessLookupError, OSError):
+    except OSError:
         return False
     finally:
         if handle is not None:

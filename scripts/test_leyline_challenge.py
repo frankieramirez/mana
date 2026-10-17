@@ -6,6 +6,7 @@ runs challenge.sh against it. The project starts a real local HTTP server and re
 through a stand-in browser. Results cover this synthetic fixture only, never a consumer.
 """
 
+import errno
 import hashlib
 import json
 import os
@@ -17,6 +18,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from leyline_challenge_fixture import CHALLENGE, PLAN, Fixture, write  # noqa: E402
@@ -79,6 +81,21 @@ class ProcessIdentityTests(unittest.TestCase):
         self.assertEqual(CHALLENGE_MODULE["reap_owned"](regrouped, wait=0), ([], []))
         time.sleep(0.2)
         self.assertIsNone(self.proc.poll(), "a process that was never observed was signalled")
+
+    def test_unavailable_pidfd_still_kills_the_owned_process_and_spares_a_reused_pid(self):
+        for code in (errno.ENOSYS, errno.EPERM):  # Linux before 5.3, or a seccomp profile.
+            with self.subTest(errno=errno.errorcode[code]):
+                proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], start_new_session=True)
+                self.addCleanup(lambda proc=proc: proc.poll() is None and (proc.kill(), proc.wait()))
+                pgid, start, _ = CHALLENGE_MODULE["proc_identity"](proc.pid)
+                failing = mock.patch.object(os, "pidfd_open", side_effect=OSError(code, os.strerror(code)), create=True)
+                with failing as patched:
+                    self.assertFalse(CHALLENGE_MODULE["kill_owned"](proc.pid, {(pgid, "start time of an earlier process")}))
+                    self.assertIsNone(proc.poll())
+                    self.assertTrue(CHALLENGE_MODULE["kill_owned"](proc.pid, {(pgid, start)}))
+                if hasattr(signal, "pidfd_send_signal"):
+                    self.assertTrue(patched.called)
+                self.assertEqual(proc.wait(timeout=5), -signal.SIGKILL)
 
     def test_abort_completes_for_a_run_interrupted_before_or_during_start(self):
         Run, active = CHALLENGE_MODULE["Run"], CHALLENGE_MODULE["ACTIVE"]
