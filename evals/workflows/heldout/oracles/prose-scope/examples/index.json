@@ -133,5 +133,64 @@
       "reply-only"
     ],
     "note": "Adds a preface. Held for review."
+  },
+  {
+    "id": "r1-meets-the-schema",
+    "label": "valid-alternative",
+    "output": "r1-meets-the-schema.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Review defect 4: \"meets the schema\" keeps the scope."
+  },
+  {
+    "id": "r2-before-version",
+    "label": "known-bad",
+    "output": "r2-before-version.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "lost-condition"
+    ],
+    "note": "Review defect 5: reverses the version condition."
+  },
+  {
+    "id": "r3-version-only",
+    "label": "known-bad",
+    "output": "r3-version-only.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "lost-condition"
+    ],
+    "note": "Review defect 5: narrows the version condition."
+  },
+  {
+    "id": "r4-report-destination",
+    "label": "known-bad",
+    "output": "r4-report-destination.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "inferred-fact"
+    ],
+    "note": "Review defect 6: invents a destination for the rejection report."
+  },
+  {
+    "id": "r5-version-last",
+    "label": "valid-alternative",
+    "output": "r5-version-last.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Reviewer alternative: version stated last and \"modifies none of them\"."
+  },
+  {
+    "id": "r6-version-without-onward",
+    "label": "ambiguous",
+    "output": "r6-version-without-onward.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "version-onward"
+    ],
+    "note": "Release-note phrasing that may or may not carry \"and later\". A reviewer decides."
   }
 ]

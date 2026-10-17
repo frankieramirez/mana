@@ -33,7 +33,10 @@ def rewrite(root, mutate, refreeze=False):
     manifest, review = hp.load(root)
     mutate(manifest, review)
     if refreeze:
+        previous = manifest['freeze_sha256']
         manifest['freeze_sha256'] = hp.freeze_sha256(manifest)
+        manifest['history'].append({'date': '2026-10-18', 'freeze_sha256': manifest['freeze_sha256'],
+                                    'previous_freeze_sha256': previous, 'by': 'test', 'change': 'test edit'})
         review['freeze_sha256'] = manifest['freeze_sha256']
     (root / hp.MANIFEST_NAME).write_text(json.dumps(manifest, indent=2) + '\n')
     (root / hp.REVIEW_NAME).write_text(json.dumps(review, indent=2) + '\n')
@@ -162,6 +165,55 @@ class FreezeIntegrity(unittest.TestCase):
         rewrite(self.root, lambda m, r: r['author'].update(edits_candidate_instructions=True))
         self.assertTrue(any('must not edit candidate instructions' in p for p in hp.verify(self.root)))
 
+    def test_changes_required_review_is_recorded_and_not_ready(self):
+        def requested(reviewer, notes):
+            def edit(m, r):
+                r['second_review'].update(status='changes_required', reviewer=reviewer, date='2026-10-18',
+                                          reviewed_freeze_sha256=m['freeze_sha256'], notes=notes)
+            return edit
+        original = (self.root / hp.REVIEW_NAME).read_bytes()
+        rewrite(self.root, requested('independent reviewer', {'defects': ['example']}))
+        self.assertEqual(hp.verify(self.root), [])
+        self.assertIn('second review requires changes', hp.readiness(self.root))
+        (self.root / hp.REVIEW_NAME).write_bytes(original)
+        rewrite(self.root, requested('independent reviewer', None))
+        self.assertTrue(any('must record what failed' in p for p in hp.verify(self.root)))
+        (self.root / hp.REVIEW_NAME).write_bytes(original)
+        _, review = hp.load(self.root)
+        rewrite(self.root, requested(review['author']['identity'], {'defects': ['example']}))
+        self.assertTrue(any('different reviewer' in p for p in hp.verify(self.root)))
+        (self.root / hp.REVIEW_NAME).write_bytes(original)
+        rewrite(self.root, lambda m, r: r['history'][0].update(reviewer=r['author']['identity']))
+        self.assertTrue(any('review history entry 1' in p for p in hp.verify(self.root)))
+
+    def test_first_review_is_kept_in_history(self):
+        _, review = hp.load()
+        self.assertEqual(review['history'][0]['status'], 'changes_required')
+        self.assertEqual(len(review['history'][0]['notes']['defects']), 8)
+
+    def test_freeze_history_chains_to_current_freeze(self):
+        manifest, _ = hp.load()
+        self.assertEqual(manifest['history'][-1]['freeze_sha256'], manifest['freeze_sha256'])
+        original = (self.root / hp.MANIFEST_NAME).read_bytes()
+        rewrite(self.root, lambda m, r: m['history'][-1].update(previous_freeze_sha256='b' * 64))
+        self.assertIn('freeze history must chain to the current freeze_sha256', hp.verify(self.root))
+        (self.root / hp.MANIFEST_NAME).write_bytes(original)
+        rewrite(self.root, lambda m, r: m['history'].pop())
+        self.assertIn('freeze history must chain to the current freeze_sha256', hp.verify(self.root))
+
+    def test_refreeze_records_history(self):
+        before, _ = hp.load(self.root)
+        with self.assertRaises(ValueError):
+            hp.refreeze(self.root, 'author', 'no change', '2026-10-18')
+        example = self.root / 'oracles/prose-scope/examples/g1-plain.md'
+        example.write_text(example.read_text() + '\n')
+        new = hp.refreeze(self.root, 'author', 'example whitespace', '2026-10-18')
+        after, review = hp.load(self.root)
+        self.assertEqual(hp.verify(self.root), [])
+        self.assertEqual(review['freeze_sha256'], new)
+        self.assertEqual(len(after['history']), len(before['history']) + 1)
+        self.assertEqual(after['history'][-1]['previous_freeze_sha256'], before['freeze_sha256'])
+
     def test_mana_entrypoint_matches_pinned_revision(self):
         manifest, _ = hp.load()
         mana = manifest['conditions']['mana']
@@ -203,6 +255,28 @@ class Oracles(unittest.TestCase):
                     self.assertEqual(result['failures'], sorted(example['expected_failures']))
                     if 'expected_adjudication' in example:
                         self.assertEqual([a['check'] for a in result['adjudication']], example['expected_adjudication'])
+
+    def test_review_defects_have_regression_examples(self):
+        """Each defect from review history entry 1 keeps a labeled example with the corrected verdict."""
+        expected = {
+            'prose-exempt': {'r1-list-without-periods': 'passed', 'r2-negated-stop': 'passed',
+                             'r3-negated-persist': 'passed', 'r4-inferred-sweep-purpose': 'failed',
+                             'r5-sweep-frees-full-cache': 'failed', 'r6-negated-cold-start': 'failed'},
+            'prose-scope': {'r1-meets-the-schema': 'passed', 'r2-before-version': 'failed',
+                            'r3-version-only': 'failed', 'r4-report-destination': 'failed',
+                            'r5-version-last': 'passed', 'r6-version-without-onward': 'needs_adjudication'},
+        }
+        for case, rows in expected.items():
+            labeled = {e['id']: e for e in hp.examples(hp.HELDOUT, case)}
+            for ident, outcome in rows.items():
+                with self.subTest(case=case, example=ident):
+                    self.assertEqual(hp.grade(case, observation(case, labeled[ident]))['outcome'], outcome)
+
+    def test_sentence_spans_stop_at_line_breaks_and_negation(self):
+        self.assertIsNone(hp.compiled(r'full{S}removes').search('full\nremoves'))
+        self.assertIsNotNone(hp.compiled(r'version{S}removes').search('version 4.2 removes'))
+        self.assertIsNone(hp.compiled(r'full{N}stop').search('a full cache does not stop'))
+        self.assertIsNotNone(hp.compiled(r'full{N}stop').search('a full cache will stop'))
 
     def test_examples_cover_good_bad_and_alternatives(self):
         for case in hp.CASES:

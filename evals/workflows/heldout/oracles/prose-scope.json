@@ -37,7 +37,7 @@
         ]
       ],
       "contradict": [
-        "\\b(every|all|each)\\s+(single\\s+|one\\s+)?records?\\b(?!{S}\\b(pass|valid))"
+        "\\b(every|all|each)\\s+(single\\s+|one\\s+)?records?\\b(?!{S}\\b(pass|valid|meet|conform|satisf|schema))"
       ],
       "review_question": "Is the success guarantee still limited to records that pass schema validation?"
     },
@@ -76,7 +76,7 @@
           "reject\\w*\\s+(report|list|log)|report\\s+of\\s+reject"
         ],
         [
-          "(not|n't|never)\\s+(be\\s+|get\\s+)?(imported|brought\\s+in|loaded|accepted|ingested)|skip\\w*|exclud\\w*|left\\s+out|dropped|\\brejected\\b"
+          "(not|n't|never)\\s+(be\\s+|get\\s+)?(imported|brought\\s+in|loaded|accepted|ingested)|skip\\w*|exclud\\w*|left\\s+out|dropped|\\brejected\\b|instead\\s+of\\s+(being\\s+)?imported"
         ]
       ],
       "contradict": [
@@ -85,7 +85,7 @@
       "review_question": "Does the reply still say failing records are not imported and are listed in the rejection report?"
     },
     {
-      "id": "version-condition",
+      "id": "version-named",
       "kind": "preserve",
       "failure": "lost-condition",
       "absent": "fail",
@@ -97,7 +97,21 @@
       "contradict": [
         "\\b(?!4\\.2\\b)\\d+\\.\\d+\\b"
       ],
-      "review_question": "Does the reply keep the version 4.2 condition?"
+      "review_question": "Does the reply name version 4.2 and no other version?"
+    },
+    {
+      "id": "version-onward",
+      "kind": "preserve",
+      "failure": "lost-condition",
+      "present_all": [
+        [
+          "\\b(starting|as\\s+of|since|beginning)\\s+(with\\s+|in\\s+|from\\s+|at\\s+)?(version\\s+)?4\\.2\\b|\\bfrom\\s+(version\\s+)?4\\.2\\b|\\b4\\.2\\s+(and|or)\\s+(later|newer|above|up|beyond|after)|\\b4\\.2\\s+(on|onward|onwards|forward)\\b|\\b4\\.2\\+"
+        ]
+      ],
+      "contradict": [
+        "\\b(before|prior\\s+to|until|till|up\\s+to|earlier\\s+than|below|older\\s+than|pre-?)\\s*(version\\s+)?4\\.2\\b|\\b4\\.2\\s+only\\b|\\bonly\\s+(in\\s+)?(version\\s+)?4\\.2\\b|\\b4\\.2\\s+alone\\b"
+      ],
+      "review_question": "Does the reply say the guarantee holds from version 4.2 onward, not before it and not only in 4.2?"
     },
     {
       "id": "records-not-modified",
@@ -105,7 +119,7 @@
       "failure": "contradicted-fact",
       "present_all": [
         [
-          "(not|n't|never|\\bno\\b){S}\\b(modif|chang|alter|edit|rewrit|touch|transform)\\w*|unchanged|untouched|unmodified|\\bas[- ]is\\b|intact|unaltered"
+          "(not|n't|never|\\bno\\b){S}\\b(modif|chang|alter|edit|rewrit|touch|transform)\\w*|unchanged|untouched|unmodified|\\bas[- ]is\\b|intact|unaltered|\\b(modif|chang|alter)\\w*\\s+none\\b|\\bnone\\s+of\\s+(them|the\\s+records)\\s+(is|are|gets?)\\s+(modified|changed|altered)"
         ]
       ],
       "contradict": [
@@ -118,7 +132,7 @@
       "kind": "forbid",
       "failure": "inferred-fact",
       "contradict": [
-        "re-?import|resubmi|\\bretr(y|ies|ied)\\b|\\bfix(ed)?\\s+and|correct(ed)?\\s+and|\\bemail|notif|\\balert|timezone|time\\s+zone|clock\\s+skew|duplicat|dedup|automatically\\s+(fix|correct|repair)|faster|performance"
+        "re-?import|resubmi|\\bretr(y|ies|ied)\\b|\\bfix(ed)?\\s+and|correct(ed)?\\s+and|\\bemail|notif|\\balert|timezone|time\\s+zone|clock\\s+skew|duplicat|dedup|automatically\\s+(fix|correct|repair)|faster|performance|\\b(sent|delivered|emailed|mailed|routed|forwarded|returned)\\s+(back\\s+)?to\\b|\\buploader|\\bsubmitter|\\badmin"
       ],
       "adjudicate": [
         "\\bbecause\\b|\\bdue\\s+to\\b|\\bso\\s+that\\b|\\bto\\s+(prevent|avoid|ensure|protect)\\b"

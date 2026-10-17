@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
+  "freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
   "author": {
     "identity": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
     "role": "Instantiated requests, fixtures, oracles and labeled examples",
@@ -18,180 +18,195 @@
       "known_bad": null,
       "valid_alternatives": null
     },
-    "notes": {
+    "notes": "Re-review requested after the author repaired the eight defects in history entry 1; regression examples r1 to r6 in each affected group reproduce them."
+  },
+  "history": [
+    {
+      "status": "changes_required",
       "reviewer": "independent reviewer agent, Claude",
+      "reviewed_freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
       "date": "2026-10-17",
-      "verdict": "changes required",
-      "record_form": "verify_review accepts only pending or complete, and a complete review needs every check true while a pending one cannot carry a reviewer. A changes-required verdict therefore stays in status pending, with the reviewer result held here, so readiness keeps the groups out of confirmation.",
-      "reviewed_freeze_sha256": [
-        "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
-        "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba"
-      ],
-      "refreeze": "Only conditions.reference changed: inventory_sha256 d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc and status verified. The parent supplied the digest; the reviewer recomputed it from git archive and the checkout of cursor/plugins at 101b274dd991f694e1f7024be2157e5f3adf07de (pstack/, 170 files). test_heldout_prose.py now sets inventory_status unresolved in its unverified-digest case, which assumed the reference digest was still null. heldout-prose.md still describes the reference inventory as unresolved and needs the author to update it.",
-      "labels_checked": "Every labeled example in the three groups is labeled correctly. a1-cites-boot-setting reads as an imported reason to this reviewer, and holding it for adjudication is acceptable.",
-      "isolation_checked": "Candidate inputs hold only request.md and fixture/, carry no canary, oracle id, contract, review question or source group, and condition prompts carry only the request and route. Style edits outside protected bytes change no verdict.",
-      "alternatives": [
-        {
-          "case": "prose-exempt",
-          "output": "reworded: \"rendered normally but are not cached\", \"the cache is empty\" after restart",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "full-first bullet list with no terminal periods",
-          "reviewer_label": "faithful",
-          "grader_result": "failed invented-mechanism"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"A full cache does not stop new thumbnails from rendering; they just are not stored.\"",
-          "reviewer_label": "faithful",
-          "grader_result": "failed contradicted-fact"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"Cached thumbnails do not persist across a restart, so the cache starts cold.\"",
-          "reviewer_label": "faithful",
-          "grader_result": "failed contradicted-fact"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "sweep \"removes old thumbnails to free space\" (inferred purpose)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "full thumbnails \"are not stored until the next sweep frees space\" (inferred mechanism)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "drops \"when the cache is full\" (lost condition)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-scope",
-          "output": "merged into two sentences, \"never changes a record\"",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"From 4.2 onward ... all valid records ... Invalid ones ... are rejected\"",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"every record that meets the schema.\" with the scope sentence ending there",
-          "reviewer_label": "faithful",
-          "grader_result": "failed lost-scope"
-        },
-        {
-          "case": "prose-scope",
-          "output": "version stated last, \"modifies none of them\"",
-          "reviewer_label": "faithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"Before version 4.2, the importer brought in ...\" (reversed version condition)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"In version 4.2 only\" (narrowed version condition)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "rejection report \"goes to the uploader\" (inferred fact)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "drops \"not imported\" for failing records",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-verbatim",
-          "output": "exact quote with CRLF line end",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-verbatim",
-          "output": "exact quote after blank lines and a tab",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-verbatim",
-          "output": "quote without \"before the next cycle\" (lost condition)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "failed quote-altered"
-        },
-        {
-          "case": "prose-verbatim",
-          "output": "quote in a code fence",
-          "reviewer_label": "unfaithful",
-          "grader_result": "failed extra-text"
-        },
-        {
-          "case": "prose-verbatim",
-          "output": "quote given twice",
-          "reviewer_label": "unfaithful",
-          "grader_result": "failed extra-text"
-        },
-        {
-          "case": "prose-verbatim",
-          "output": "one space replaced by a no-break space",
-          "reviewer_label": "unfaithful",
-          "grader_result": "failed quote-altered"
-        }
-      ],
-      "defects": [
-        {
-          "where": "evals/workflows/heldout_prose.py:29 with heldout/oracles/prose-exempt.json:94",
-          "scenario": "SENTENCE spans newlines, so in a list whose items lack terminal periods \"full\" in one item and \"removes\" in the next match no-full-eviction-mechanism. A faithful rewrite fails invented-mechanism."
-        },
-        {
-          "where": "heldout/oracles/prose-exempt.json:84",
-          "scenario": "The full-still-renders contradiction is negation blind: \"A full cache does not stop new thumbnails from rendering\" fails contradicted-fact."
-        },
-        {
-          "where": "heldout/oracles/prose-exempt.json:113",
-          "scenario": "The cold-after-restart contradiction is negation blind: \"Cached thumbnails do not persist across a restart, so the cache starts cold\" fails contradicted-fact."
-        },
-        {
-          "where": "heldout/oracles/prose-scope.json:40",
-          "scenario": "The universal-scope contradiction only accepts pass or valid after \"every record\", while present_all at line 36 accepts \"meets the schema\". \"every record that meets the schema.\" fails lost-scope."
-        },
-        {
-          "where": "heldout/oracles/prose-scope.json:94-100",
-          "scenario": "version-condition checks only that 4.2 appears. \"Before version 4.2\" and \"In version 4.2 only\" pass with no adjudication, and the review question \"keep the version 4.2 condition?\" does not ask for 4.2 and later."
-        },
-        {
-          "where": "heldout/oracles/prose-exempt.json:90-99 and 130-141",
-          "scenario": "An inferred sweep purpose (\"to free space\") and a sweep-frees-space mechanism pass with no adjudication. prose-exempt has no general inferred-fact question, unlike prose-scope."
-        },
-        {
-          "where": "heldout/oracles/prose-scope.json no-inferred-fact",
-          "scenario": "An inferred destination for the rejection report (\"goes to the uploader\") passes with no adjudication; only the reviewer question would catch it."
-        },
-        {
-          "where": "evals/workflows/heldout_prose.py verify_review",
-          "scenario": "The review schema has no changes-required state: a named reviewer can only be recorded as complete with every check true, which readiness treats as approval."
-        }
-      ]
+      "checked": {
+        "contracts": null,
+        "known_good": null,
+        "known_bad": null,
+        "valid_alternatives": null
+      },
+      "notes": {
+        "reviewer": "independent reviewer agent, Claude",
+        "date": "2026-10-17",
+        "verdict": "changes required",
+        "record_form": "verify_review accepts only pending or complete, and a complete review needs every check true while a pending one cannot carry a reviewer. A changes-required verdict therefore stays in status pending, with the reviewer result held here, so readiness keeps the groups out of confirmation.",
+        "reviewed_freeze_sha256": [
+          "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
+          "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba"
+        ],
+        "refreeze": "Only conditions.reference changed: inventory_sha256 d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc and status verified. The parent supplied the digest; the reviewer recomputed it from git archive and the checkout of cursor/plugins at 101b274dd991f694e1f7024be2157e5f3adf07de (pstack/, 170 files). test_heldout_prose.py now sets inventory_status unresolved in its unverified-digest case, which assumed the reference digest was still null. heldout-prose.md still describes the reference inventory as unresolved and needs the author to update it.",
+        "labels_checked": "Every labeled example in the three groups is labeled correctly. a1-cites-boot-setting reads as an imported reason to this reviewer, and holding it for adjudication is acceptable.",
+        "isolation_checked": "Candidate inputs hold only request.md and fixture/, carry no canary, oracle id, contract, review question or source group, and condition prompts carry only the request and route. Style edits outside protected bytes change no verdict.",
+        "alternatives": [
+          {
+            "case": "prose-exempt",
+            "output": "reworded: \"rendered normally but are not cached\", \"the cache is empty\" after restart",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "full-first bullet list with no terminal periods",
+            "reviewer_label": "faithful",
+            "grader_result": "failed invented-mechanism"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"A full cache does not stop new thumbnails from rendering; they just are not stored.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"Cached thumbnails do not persist across a restart, so the cache starts cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "sweep \"removes old thumbnails to free space\" (inferred purpose)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "full thumbnails \"are not stored until the next sweep frees space\" (inferred mechanism)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "drops \"when the cache is full\" (lost condition)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "merged into two sentences, \"never changes a record\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"From 4.2 onward ... all valid records ... Invalid ones ... are rejected\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"every record that meets the schema.\" with the scope sentence ending there",
+            "reviewer_label": "faithful",
+            "grader_result": "failed lost-scope"
+          },
+          {
+            "case": "prose-scope",
+            "output": "version stated last, \"modifies none of them\"",
+            "reviewer_label": "faithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"Before version 4.2, the importer brought in ...\" (reversed version condition)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"In version 4.2 only\" (narrowed version condition)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "rejection report \"goes to the uploader\" (inferred fact)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "drops \"not imported\" for failing records",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-verbatim",
+            "output": "exact quote with CRLF line end",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-verbatim",
+            "output": "exact quote after blank lines and a tab",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-verbatim",
+            "output": "quote without \"before the next cycle\" (lost condition)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed quote-altered"
+          },
+          {
+            "case": "prose-verbatim",
+            "output": "quote in a code fence",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed extra-text"
+          },
+          {
+            "case": "prose-verbatim",
+            "output": "quote given twice",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed extra-text"
+          },
+          {
+            "case": "prose-verbatim",
+            "output": "one space replaced by a no-break space",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed quote-altered"
+          }
+        ],
+        "defects": [
+          {
+            "where": "evals/workflows/heldout_prose.py:29 with heldout/oracles/prose-exempt.json:94",
+            "scenario": "SENTENCE spans newlines, so in a list whose items lack terminal periods \"full\" in one item and \"removes\" in the next match no-full-eviction-mechanism. A faithful rewrite fails invented-mechanism."
+          },
+          {
+            "where": "heldout/oracles/prose-exempt.json:84",
+            "scenario": "The full-still-renders contradiction is negation blind: \"A full cache does not stop new thumbnails from rendering\" fails contradicted-fact."
+          },
+          {
+            "where": "heldout/oracles/prose-exempt.json:113",
+            "scenario": "The cold-after-restart contradiction is negation blind: \"Cached thumbnails do not persist across a restart, so the cache starts cold\" fails contradicted-fact."
+          },
+          {
+            "where": "heldout/oracles/prose-scope.json:40",
+            "scenario": "The universal-scope contradiction only accepts pass or valid after \"every record\", while present_all at line 36 accepts \"meets the schema\". \"every record that meets the schema.\" fails lost-scope."
+          },
+          {
+            "where": "heldout/oracles/prose-scope.json:94-100",
+            "scenario": "version-condition checks only that 4.2 appears. \"Before version 4.2\" and \"In version 4.2 only\" pass with no adjudication, and the review question \"keep the version 4.2 condition?\" does not ask for 4.2 and later."
+          },
+          {
+            "where": "heldout/oracles/prose-exempt.json:90-99 and 130-141",
+            "scenario": "An inferred sweep purpose (\"to free space\") and a sweep-frees-space mechanism pass with no adjudication. prose-exempt has no general inferred-fact question, unlike prose-scope."
+          },
+          {
+            "where": "heldout/oracles/prose-scope.json no-inferred-fact",
+            "scenario": "An inferred destination for the rejection report (\"goes to the uploader\") passes with no adjudication; only the reviewer question would catch it."
+          },
+          {
+            "where": "evals/workflows/heldout_prose.py verify_review",
+            "scenario": "The review schema has no changes-required state: a named reviewer can only be recorded as complete with every check true, which readiness treats as approval."
+          }
+        ]
+      }
     }
-  }
+  ]
 }

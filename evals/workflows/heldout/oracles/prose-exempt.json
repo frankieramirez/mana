@@ -74,14 +74,15 @@
           "\\bfull\\b|fills?\\s+up|at\\s+capacity|reaches\\s+(its\\s+)?(limit|capacity)"
         ],
         [
-          "still\\s+render|keeps?\\s+rendering|continues?\\s+to\\s+render|render\\w*\\s+(anyway|normally|as\\s+usual)"
+          "still\\s+render|keeps?\\s+rendering|continues?\\s+to\\s+render|render\\w*\\s+(anyway|normally|as\\s+usual)|(not|n't|never)\\s+(stop|prevent|block|keep)\\w*{S}\\brender"
         ],
         [
           "(not|n't|never)\\s+(get\\s+|be\\s+|being\\s+)?(stored|cached|saved|kept|added)|without\\s+being\\s+(stored|cached|saved)|skip\\w*\\s+(the\\s+)?(cache|stor\\w*)"
         ]
       ],
       "contradict": [
-        "\\bfull\\b{S}\\b(fail|error|block|wait|stop)\\w*{S}render",
+        "(?:^|[.;]){N}\\bfull\\b{N}\\b(fail|error|block|wait|stop|prevent)\\w*{S}\\brender",
+        "(?:^|[.;]){N}\\bfull\\b{N}\\brender\\w*\\s+(fail|stop|block|wait)\\w*",
         "\\bfull\\b{S}\\b(do\\s+not|don't|doesn't|does\\s+not|won't|cannot|can't)\\s+render"
       ],
       "review_question": "When the cache is full, does the prose still say new thumbnails render but are not stored, with nothing contradicting that?"
@@ -92,6 +93,7 @@
       "failure": "invented-mechanism",
       "contradict": [
         "\\b(full|capacity|limit)\\b{S}\\b(evict|replac|drop|remov|discard|delet|push\\w*\\s+out|make\\s+room|overwrit)\\w*",
+        "\\b(full|capacity)\\b{S}\\b(until|unless|sweep)",
         "least[- ]recently|\\bLRU\\b|\\bFIFO\\b|first[- ]in"
       ],
       "review_question": "Does the prose avoid inventing what happens to stored thumbnails when the cache is full?"
@@ -109,8 +111,9 @@
         ]
       ],
       "contradict": [
-        "(restart|reboot|\\bboot){S}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|reload)\\w*",
-        "\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist)\\w*{S}\\b(restart|reboot|boot)"
+        "(?:^|[.;]){N}(restart|reboot|\\bboot){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|reload)\\w*",
+        "(?:^|[.;]){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist)\\w*{N}\\b(restart|reboot|boot)",
+        "(not|n't|never)\\s+(start|begin)\\w*\\s+(out\\s+)?(cold|empty)"
       ],
       "review_question": "Does the prose still say the cache starts cold after a restart, with nothing contradicting that?"
     },
@@ -137,6 +140,18 @@
         "\\bbecause\\b|\\bdue\\s+to\\b|warm_on_boot|max_entries|evict_after_hours|sweep_cron"
       ],
       "review_question": "Does the prose avoid giving a reason for the sweep timing or any setting that the prose never stated?"
+    },
+    {
+      "id": "no-inferred-purpose",
+      "kind": "forbid",
+      "failure": "inferred-reason",
+      "contradict": [
+        "\\bto\\s+(free|reclaim|save)\\w*\\s+(up\\s+)?(space|room|memory|disk|storage)|\\bso\\s+(that\\s+)?(there\\s+is|there's)\\s+(space|room)|keep\\w*\\s+the\\s+cache\\s+(small|lean|from\\s+fill\\w*)"
+      ],
+      "adjudicate": [
+        "\\bto\\s+(prevent|avoid|ensure|reduce|improve|limit|cap|bound|speed)\\b|\\bso\\s+that\\b|\\bin\\s+order\\s+to\\s+(?!keep\\s+things\\s+tidy)"
+      ],
+      "review_question": "Does the prose avoid adding a purpose, cause or other fact (for example that the sweep frees space) that the prose never stated?"
     },
     {
       "id": "no-inferred-consequence",

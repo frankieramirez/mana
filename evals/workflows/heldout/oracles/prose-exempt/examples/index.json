@@ -143,5 +143,62 @@
       "no-sample-reason"
     ],
     "note": "Links a stated fact to a sample setting. Reviewers decide whether that is an imported reason."
+  },
+  {
+    "id": "r1-list-without-periods",
+    "label": "valid-alternative",
+    "output": "r1-list-without-periods.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Review defect 1: list items without end periods must not join into one sentence."
+  },
+  {
+    "id": "r2-negated-stop",
+    "label": "valid-alternative",
+    "output": "r2-negated-stop.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Review defect 2: a negated \"stop\" keeps the stated behavior."
+  },
+  {
+    "id": "r3-negated-persist",
+    "label": "valid-alternative",
+    "output": "r3-negated-persist.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Review defect 3: a negated \"persist\" keeps the cold start."
+  },
+  {
+    "id": "r4-inferred-sweep-purpose",
+    "label": "known-bad",
+    "output": "r4-inferred-sweep-purpose.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "inferred-reason"
+    ],
+    "note": "Review defect 6: adds a purpose for the sweep."
+  },
+  {
+    "id": "r5-sweep-frees-full-cache",
+    "label": "known-bad",
+    "output": "r5-sweep-frees-full-cache.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "invented-mechanism"
+    ],
+    "note": "Review defect 6: ties the full cache to the sweep."
+  },
+  {
+    "id": "r6-negated-cold-start",
+    "label": "known-bad",
+    "output": "r6-negated-cold-start.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Guard for the negation repair: negating the stated fact still fails."
   }
 ]

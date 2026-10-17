@@ -17,7 +17,8 @@ MANIFEST_NAME = 'prose-manifest.json'
 REVIEW_NAME = 'prose-review.json'
 CASES = ('prose-exempt', 'prose-scope', 'prose-verbatim')
 JOB = 'prose-fidelity'
-TOP_FIELDS = ('schema_version', 'study', 'job', 'status', 'conditions', 'cases', 'exposure', 'freeze_sha256')
+TOP_FIELDS = ('schema_version', 'study', 'job', 'status', 'conditions', 'cases', 'exposure', 'freeze_sha256',
+              'history')
 FROZEN_FIELDS = ('schema_version', 'study', 'job', 'conditions', 'cases', 'exposure')
 ENTRY_FIELDS = ('id', 'source_group', 'job', 'split', 'fixture_path', 'fixture_sha256', 'request_path',
                 'request_sha256', 'allowed_effects', 'condition_entrypoints', 'timeout_seconds',
@@ -25,8 +26,13 @@ ENTRY_FIELDS = ('id', 'source_group', 'job', 'split', 'fixture_path', 'fixture_s
 EFFECT_FIELDS = ('product_paths', 'local_commit', 'artifact_dir', 'external_publication')
 HEX40 = re.compile(r'[0-9a-f]{40}')
 RELATIVE = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*')
-# A sentence span that does not stop at the dot inside a version such as 4.2.
-SENTENCE = r'(?:[^.;]|\.(?=\d))*'
+# A sentence span: it stops at a line break and at sentence punctuation, but not at the dot in 4.2.
+SENTENCE = r'(?:[^.;\n]|\.(?=\d))*'
+# The same span when it holds no negation, so a contradiction cannot fire on a negated clause.
+UNNEGATED = r"(?:(?!\bnot\b|n't\b|\bnever\b|\bno\b|\bnothing\b|\bnor\b)(?:[^.;\n]|\.(?=\d)))*"
+REVIEW_STATUSES = ('pending', 'changes_required', 'complete')
+REVIEW_CHECKS = {'contracts', 'known_good', 'known_bad', 'valid_alternatives'}
+HISTORY_FIELDS = {'date', 'freeze_sha256', 'previous_freeze_sha256', 'by', 'change'}
 
 
 def load(root=HELDOUT):
@@ -130,6 +136,12 @@ def verify(root=HELDOUT):
             problems.append(case + ': oracle identity does not match the manifest')
     if manifest['freeze_sha256'] != freeze_sha256(manifest):
         problems.append('freeze_sha256 does not match the frozen manifest fields')
+    history = manifest['history']
+    if (not isinstance(history, list) or not history
+            or any(not isinstance(h, dict) or set(h) != HISTORY_FIELDS for h in history)
+            or history[-1]['freeze_sha256'] != manifest['freeze_sha256']
+            or any(a['freeze_sha256'] != b['previous_freeze_sha256'] for a, b in zip(history, history[1:]))):
+        problems.append('freeze history must chain to the current freeze_sha256')
     problems += verify_review(manifest, review)
     return problems
 
@@ -154,28 +166,49 @@ def verify_conditions(spec):
     return problems
 
 
+def review_problems(record, author, label):
+    """A named review result needs a different reviewer, a date, the freeze it read and every check."""
+    if not isinstance(record, dict) or record.get('status') not in REVIEW_STATUSES[1:]:
+        return [label + ' status must be changes_required or complete']
+    if (not record.get('reviewer') or record['reviewer'] == author.get('identity') or not record.get('date')
+            or not isinstance(record.get('reviewed_freeze_sha256'), str)
+            or not conditions.DIGEST.fullmatch(record['reviewed_freeze_sha256'])):
+        return [label + ' needs a different reviewer, a date and the reviewed freeze']
+    if not isinstance(record.get('checked'), dict) or set(record['checked']) != REVIEW_CHECKS:
+        return [label + ' must list every review check']
+    if record['status'] == 'changes_required' and not record.get('notes'):
+        return [label + ' requesting changes must record what failed']
+    return []
+
+
 def verify_review(manifest, review):
     problems = []
-    if set(review) != {'schema_version', 'freeze_sha256', 'author', 'second_review'}:
+    if set(review) != {'schema_version', 'freeze_sha256', 'author', 'second_review', 'history'}:
         return ['review record fields changed']
     if review['freeze_sha256'] != manifest['freeze_sha256']:
         problems.append('review record names a different freeze')
     author = review['author']
     if author.get('edits_candidate_instructions') is not False or not author.get('identity'):
         problems.append('fixture author must be named and must not edit candidate instructions')
+    if not isinstance(review['history'], list):
+        problems.append('review history must be a list')
+    else:
+        for index, old in enumerate(review['history'], 1):
+            problems += review_problems(old, author, f'review history entry {index}')
     second = review['second_review']
-    if second.get('status') == 'pending':
+    status = second.get('status')
+    if status == 'pending':
         if any(second.get(k) is not None for k in ('reviewer', 'reviewed_freeze_sha256', 'date')):
             problems.append('a pending second review cannot carry a reviewer result')
-    elif second.get('status') == 'complete':
-        checked = second.get('checked') or {}
-        if (not second.get('reviewer') or second['reviewer'] == author['identity']
-                or second.get('reviewed_freeze_sha256') != manifest['freeze_sha256']
-                or set(checked) != {'contracts', 'known_good', 'known_bad', 'valid_alternatives'}
-                or not all(v is True for v in checked.values())):
+    elif status in ('changes_required', 'complete'):
+        found = review_problems(second, author, 'second review')
+        problems += found
+        if not found and status == 'complete' and (
+                second['reviewed_freeze_sha256'] != manifest['freeze_sha256']
+                or not all(v is True for v in second['checked'].values())):
             problems.append('a complete second review needs a different reviewer, this freeze and every check')
     else:
-        problems.append('second review status must be pending or complete')
+        problems.append('second review status must be pending, changes_required or complete')
     return problems
 
 
@@ -186,8 +219,11 @@ def readiness(root=HELDOUT):
     for kind in ('mana', 'reference'):
         if manifest['conditions'][kind]['inventory_status'] != 'verified':
             reasons.append(kind + ' payload inventory is unresolved')
-    if review['second_review']['status'] != 'complete':
+    status = review['second_review']['status']
+    if status == 'pending':
         reasons.append('second review is pending')
+    elif status != 'complete':
+        reasons.append('second review requires changes')
     return reasons
 
 
@@ -210,7 +246,7 @@ def words(text):
 
 
 def compiled(pattern):
-    return re.compile(pattern.replace('{S}', SENTENCE), re.IGNORECASE | re.MULTILINE)
+    return re.compile(pattern.replace('{S}', SENTENCE).replace('{N}', UNNEGATED), re.IGNORECASE | re.MULTILINE)
 
 
 def screen_fact(fact, prose):
@@ -296,6 +332,25 @@ def grade(case_id, observation, root=HELDOUT):
             'review_questions': [f['review_question'] for f in oracle['facts']]}
 
 
+def refreeze(root, by, change, date):
+    """Author tool: recompute digests, chain a history entry and point the review record at the new freeze.
+    A completed review then names an older freeze, so verification asks for a new review."""
+    root = Path(root)
+    manifest, review = load(root)
+    for entry in manifest['cases']:
+        entry.update(computed_hashes(root, entry))
+    previous = manifest['freeze_sha256']
+    manifest['freeze_sha256'] = freeze_sha256(manifest)
+    if manifest['freeze_sha256'] == previous:
+        raise ValueError('nothing frozen changed; no refreeze recorded')
+    manifest['history'].append({'date': date, 'freeze_sha256': manifest['freeze_sha256'],
+                                'previous_freeze_sha256': previous, 'by': by, 'change': change})
+    review['freeze_sha256'] = manifest['freeze_sha256']
+    (root / MANIFEST_NAME).write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n')
+    (root / REVIEW_NAME).write_text(json.dumps(review, indent=2, ensure_ascii=False) + '\n')
+    return manifest['freeze_sha256']
+
+
 def example_observation(root, case_id, example):
     """Build an observation from a labeled oracle example, starting from the frozen fixture."""
     root = Path(root)
@@ -325,9 +380,14 @@ def main(argv=None):
     mode.add_argument('--check', action='store_true', help='verify frozen hashes, mappings and review record')
     mode.add_argument('--recompute', action='store_true', help='print hashes computed from the current bytes')
     mode.add_argument('--grade', nargs=2, metavar=('CASE', 'OBSERVATION_JSON'))
+    mode.add_argument('--refreeze', nargs=3, metavar=('BY', 'CHANGE', 'DATE'),
+                      help='author tool: record a deliberate refreeze in the manifest history')
     parser.add_argument('--root', default=str(HELDOUT))
     args = parser.parse_args(argv)
     root = Path(args.root)
+    if args.refreeze:
+        print(refreeze(root, *args.refreeze))
+        return 0
     if args.check:
         problems = verify(root)
         print(json.dumps({'problems': problems, 'not_ready': readiness(root)}, indent=2))

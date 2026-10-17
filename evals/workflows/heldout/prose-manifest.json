@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; second review requested changes",
+  "status": "frozen; payload inventories verified; second review pending after oracle repair",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -54,7 +54,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-exempt-01",
-      "oracle_sha256": "e436b3ea65bc7ed7a76b6ab10bfd8a5390228e1cff3415dd0b5fb5eb87337309"
+      "oracle_sha256": "f3089c034b959e56b7cdb38eee910e2360641633d535aba9b69ac3894d1800e0"
     },
     {
       "id": "prose-scope",
@@ -85,7 +85,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-scope-01",
-      "oracle_sha256": "6bc2d026f0c2bf12b376167f3a01e346da61154a2c8f9769e4d889852064810a"
+      "oracle_sha256": "1a939d916c4036a9d6dd37bb79d5be9445ad59145de2d7ce906588d71f37c018"
     },
     {
       "id": "prose-verbatim",
@@ -120,5 +120,28 @@
     }
   ],
   "exposure": [],
-  "freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba"
+  "freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+  "history": [
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
+      "previous_freeze_sha256": null,
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Initial freeze of prose-exempt, prose-scope and prose-verbatim with the reference package inventory unresolved."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
+      "previous_freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
+      "by": "independent reviewer agent, Claude",
+      "change": "Recorded the verified cursor/plugins pstack/ inventory digest d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+      "previous_freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Oracle repair after review history entry 1, before any outcome: sentence spans stop at line breaks; negation-aware contradictions for full-cache rendering and cold start; meets-the-schema and instead-of-imported wording accepted; version split into version-named and version-onward; new inferred-purpose screen for prose-exempt; report-destination inference for prose-scope; regression examples r1 to r6 added in both groups."
+    }
+  ]
 }
