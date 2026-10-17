@@ -192,26 +192,54 @@ cmd_wire() {
   fi
 }
 
-# True (exit 0) when the issue has an open blocker via API or a Blocked by: line.
+# Exit 0: blocked, 1: all known blockers closed, 2: readiness cannot be verified.
+# Native and documented body edges coexist when a dependency write fell back.
 is_blocked() {
   local n="$1"
-  local raw body ids id st
-  if raw=$(gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
-    (if type == "array" then . else (.blocked_by // []) end)
-    | [.[] | select(.state == "open" or .state == "OPEN")]
-    | length
-  ' 2>/dev/null); then
-    [ "${raw:-0}" -gt 0 ]
-    return
-  fi
-  body=$(gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body)
-  ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
-  for id in $ids; do
-    [ -n "$id" ] || continue
-    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state 2>/dev/null || true)
-    if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
-      return 0
+  local raw body lines ids id st err
+  err=$(mktemp)
+  if ! raw=$(gh api --paginate "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
+    (if type == "array" then .
+     elif type == "object" and (.blocked_by | type) == "array" then .blocked_by
+     else error("invalid blocker response") end)
+    | .[] | if .state == "" then "UNKNOWN" else (.state // "UNKNOWN") end
+  ' 2>"$err"); then
+    if ! grep -qE 'HTTP (404|410)' "$err"; then
+      cat "$err" >&2
+      rm -f "$err"
+      echo "map.sh: cannot read native blockers for #$n" >&2
+      return 2
     fi
+    raw=""
+  fi
+  rm -f "$err"
+  while IFS= read -r st; do
+    case "$st" in
+      OPEN|open) return 0 ;;
+      CLOSED|closed|"") ;;
+      *) echo "map.sh: unknown native blocker state for #$n: $st" >&2; return 2 ;;
+    esac
+  done <<< "$raw"
+  if ! body=$(gh issue view --repo "$OWNER/$REPO" "$n" --json body --jq .body); then
+    echo "map.sh: cannot read blocker body for #$n" >&2
+    return 2
+  fi
+  lines=$(printf '%s\n' "$body" | grep '^Blocked by:' || true)
+  if printf '%s\n' "$lines" | sed 's/^Blocked by://; s/#[0-9][0-9]*//g; s/[[:space:],]//g' | grep -q .; then
+    echo "map.sh: cannot parse blocker line for #$n" >&2
+    return 2
+  fi
+  ids=$(printf '%s\n' "$lines" | grep -oE '#[0-9]+' | tr -d '#' | awk '!seen[$0]++' || true)
+  for id in $ids; do
+    if ! st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state); then
+      echo "map.sh: cannot read blocker #$id for #$n" >&2
+      return 2
+    fi
+    case "$st" in
+      OPEN|open) return 0 ;;
+      CLOSED|closed) ;;
+      *) echo "map.sh: unknown state for blocker #$id of #$n: $st" >&2; return 2 ;;
+    esac
   done
   return 1
 }
@@ -255,6 +283,8 @@ cmd_frontier() {
     fi
     if is_blocked "$n"; then
       continue
+    elif [ "$?" -ne 1 ]; then
+      die "cannot determine readiness of #$n"
     fi
     typ=$(ticket_type "$n")
     title=$(gh issue view --repo "$OWNER/$REPO" "$n" --json title --jq .title)

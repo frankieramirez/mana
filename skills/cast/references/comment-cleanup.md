@@ -6,14 +6,16 @@ Read `references/comment-reaper.md` from this skill's directory. Spawn one subag
 
 ## Audit
 
-Inspect every deletion and flag before accepting it. Reject application-code edits and out-of-scope changes, preserving the session's implementation. Restore comments covered by the keep list: license headers, public API contracts, foreign quirks, formatter directives, style-only suppressions, and constraint links. Reject flags that misstate the code. Check for missed comments and suppressions within scope.
+Inspect every deletion and flag before accepting it. Reject application-code edits and out-of-scope changes, preserving the session's implementation. Restore comments covered by the reference's keep list, including pending constraints and necessary suppressions. A proposed or unverified repair does not replace its explanation. Reject flags that misstate the code. Check for missed comments and suppressions within scope.
 
 If the reviewer edits application code, escapes scope, or produces several invalid flags, undo only its changes and retry once with the failures named. A second failure stops the workflow before commit; report the reason.
 
 ## Repair
 
-For each valid `RESHAPE`, make the smallest repair within this ticket's changed code that makes the behavior clear. Never add a guard that hides the surprise instead of removing it. Leave repairs requiring changes outside that scope open and report them.
+For each valid `RESHAPE`, make the smallest authorized repair within this ticket's changed code that makes the behavior clear. Never add a guard that hides the surprise instead of removing it. Retain explanations for repairs requiring changes outside that scope and report them open.
 
-For a comment expressing a constraint, identify the cheapest enforcement in code, such as a type or test. Implement it when already authorized and within scope. Otherwise finish the authorized cleanup and report the proposed enforcement with the affected code. Name every deleted constraint that remains unenforced. If an open item prevents the ticket's acceptance criteria from holding, stop before commit.
+Apply the reference's evidence-before-deletion policy to constraints and suppressions. Implement cheap enforcement when already authorized and within scope. Verify that it rejects the prohibited behavior and accepts a legitimate alternative before removing the replaced warning; keep rationale the check does not establish. Retain unverified constraints, intentional negative tests, and necessary tool workarounds. If an open item prevents the ticket's acceptance criteria from holding, stop before commit.
 
-Run the project's required validation and meaningful tests for any changed behavior after cleanup edits. Reuse prior validation only when no edits occurred. Then continue to Stage 3, carrying deletion counts, repairs, and open items into the final report.
+## Validate
+
+Read `references/comment-validation.md` now and apply it to the final edits. A failed, blocked, or unrun required check prevents verified completion. Continue to Stage 3 with the actual validation results, deletion counts, repairs, and open items; do not describe incomplete acceptance evidence as passing.

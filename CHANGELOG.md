@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.42.1
+
+- Augur runs proofs in preserved snapshots of the reviewed commit or local source, records source hashes and execution evidence, and rejects source changes or unfinished background work. Proofs must verify the actual imported implementation against the selected source manifest.
+- Banish and Cast retain useful constraints until a replacement is verified, preserve intentional suppressions and external rationale, and share cleanup validation that reports failed, blocked, or unrun checks honestly.
+- Ultima accepts natural-language follow-up instructions, delivers its report before acting, keeps local fixes uncommitted unless authorized, and uses available host question mechanisms only when a choice remains unresolved.
+- Scry and the shared ticket adapter combine native and documented body blockers. Unknown dependency reads cannot make a ticket ready, and a failed readiness recheck releases a new automatic claim. Focused fixtures cover these repairs; live agent effectiveness remains unmeasured.
+
 ## 0.42.0
 
 - A build effort whose tickets are all closed but whose Destination evidence is unmet no longer strands its remaining work in the parent's Next step prose. The progress check reopens the closed ticket that owns the missing evidence, after posting a fresh agent brief for it, or files a new ticket under the parent and adds it to the build order. The next action then names that ticket. Without write authorization it reports the exact actions instead. `tickets.sh` gains `reopen`, which also clears the assignee so `next` can offer the ticket again, on GitHub, Linear, and Jira. Build progress and cast define the same `reopen` for a Linear or Jira host connector.

@@ -37,21 +37,25 @@ Read `references/comment-reaper.md` from this skill's directory. Then spawn one 
 Check the Reaper's diff and report before accepting anything:
 
 - Reject any change to application code. The Reaper deletes comments only.
-- Reject deletions that a keep-list clause in the reference file clearly covers (license headers, public API contracts, foreign quirks, formatter directives, style-only suppressions, constraint links). Restore those.
+- Reject deletions covered by the reference's keep list, including pending constraints and necessary suppressions. Restore useful explanations whose replacement is still only proposed or unverified.
 - Reject `RESHAPE` flags that misstate what the code does. Keep the ones that hold.
 - Look for comments and suppressions the Reaper missed inside the scope. Add them to the list.
 
-If the report fails badly (application code edited, scope escaped, several bad flags), revert its changes, spawn it once more with the failures named, and audit again. A second failure ends the run: report it and stop.
+If the report fails badly (application code edited, scope escaped, several bad flags), undo only the Reaper's changes, preserving the user's work. Spawn it once more with the failures named, and audit again. A second failure ends the run: report it and stop.
 
 ### 3. Act on RESHAPE flags
 
-Each surviving `RESHAPE` names a symbol whose behavior needed a comment to be understood. Make the smallest change inside the scope that makes the behavior obvious: rename, extract, narrow a type, add a guard, or delete a dead path. Where the fix needs code outside the scope, leave it and report it open. Never bolt on a guard that hides the surprise instead of removing it.
+Each surviving `RESHAPE` names a symbol whose behavior needed a comment to be understood. Make the smallest authorized change inside the scope that makes the behavior obvious: rename, extract, narrow a type, add a guard, or delete a dead path. Where the fix needs code outside the scope, retain the explanation and report it open. Never bolt on a guard that hides the surprise instead of removing it.
 
 ### 4. Encode constraints instead of pleading
 
-A comment that says "do not remove", "keep this order", or "talk to someone before changing" is a constraint. Find the cheapest enforcement that lives in the code: a type, a test, a runtime assertion, or a lint rule. If the caller already authorized that enforcement, implement it within scope and delete the comment. Otherwise finish the authorized cleanup and present the proposed enforcement with the affected code before asking. Unattended, report the proposal for later. A constraint left unenforced is named in the report when its comment is deleted.
+A comment that says "do not remove", "keep this order", or "talk to someone before changing" may record a constraint. Apply the reference's evidence-before-deletion policy. Implement cheap enforcement when authorized and within scope, then verify that it rejects the prohibited behavior and accepts a legitimate alternative before deleting the replaced warning. Keep any rationale the check does not establish. If a replacement is unverified, outside scope, or not worthwhile, retain the comment and report the open item. Remove a correctness suppression only after the underlying repair passes its relevant check; preserve intentional negative tests and valid tool workarounds.
 
-### 5. Report
+### 5. Validate
+
+Read `references/comment-validation.md` now. Apply it to the final edits before reporting completion. Carry failed, blocked, and unrun checks into the report; they cannot establish verified completion.
+
+### 6. Report
 
 ```
 Deleted: <n> comments across <n> files
@@ -63,6 +67,9 @@ Fixed
 
 Encoded
 - <file>: <constraint> -> <test | type | assertion | lint>
+
+Validation
+- <command>: <passed | failed | blocked | unrun>, <exit code or reason>; <behavior checked, or prior evidence reused and why>
 
 Open
 - <file> <symbol>: <RESHAPE or constraint left open, and why>

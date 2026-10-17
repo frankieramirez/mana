@@ -1,6 +1,6 @@
 # Fix one candidate
 
-One candidate, on the current branch, with the project's validation run before the commit. No push, no PR, no branch switch. The walk below is printed as output before any edit; it is not a second question.
+One candidate, on the current branch, with the project's validation run after the edit. Resolve the authorized actions at Stage 6 before loading this reference. A local fix leaves a validated diff; staging and committing require authorization that covers this repository and target. Publication requires its own covered authorization. The walk below is printed as output before any edit; it is not a second question.
 
 ## The walk
 
@@ -10,7 +10,7 @@ Print each check with its answer. A failed check stops the fix: write the candid
 2. **Eligible atomic fix?** Only action `fix` with confidence at least 75 and decision_status other than `revisit` qualifies. Security findings (including findings contributed by a security lens), plans, trace findings, decision-needed work, and effort L become local briefs with their migration and verification details. For S or M patterns, fix the entire verified pattern atomically. If it cannot fit a bounded validated change, write a plan; never fix only the hot files.
 3. **New dependency or new shared piece?** A fix that adds a package, a new primitive, or a new token stops here. Adding to the design system is a decision, not a cleanup.
 4. **What proves it?** Name the check that verifies the entire affected pattern and its callers, using the candidate verification and project validation. If the check covers only some required instances, write a plan instead of a partial fix.
-5. **Tree clean?** Run `git status --porcelain`. A dirty tree means implement and validate, then report the diff and stop without committing, so the user can commit it with their own work.
+5. **Tree clean, commit authorized?** Run `git status --porcelain` and record whether the user's instructions authorize a commit. A dirty tree or local-only permission means implement and validate, then report the diff without staging or committing. A clean tree alone does not authorize a commit.
 
 ## The edit
 
@@ -24,11 +24,11 @@ A validation failure means revert the edit that caused it, re-run, and report th
 
 ## The commit
 
-Tree was clean at check 5: stage only the files in the instance list and commit with the repo's convention. Use the project's commit scope for the affected area; the default subject is `refactor: <candidate title>`. Print the sha.
+Tree was clean at check 5 and committing is authorized: stage only the files in the instance list and commit with the repo's convention. Use the project's commit scope for the affected area; the default subject is `refactor: <candidate title>`. Print the sha.
 
-Tree was dirty: no commit. Print the changed files and the validation result.
+Tree was dirty or committing is outside the authorized actions: leave the index unchanged. Print the changed files and the validation result.
 
-Stop there. Do not push, do not open a PR, and do not start the next candidate; say which candidates remain and that the report still lists them.
+Stop after the authorized action. A push, PR, or another candidate requires instructions covering that action and target. Say which candidates remain and that the report still lists them. Continue wider work only when those instructions already cover it.
 
 ## Report
 
@@ -36,6 +36,6 @@ Stop there. Do not push, do not open a PR, and do not start the next candidate; 
 Fixed: <title> (<id>, rank <n>)
 Instances: <fixed>/<total>, <skipped> left for a ticket
 Validation: <command> passed | failed at <what>
-Commit: <sha> | not committed (dirty tree)
+Commit: <sha> | not committed (local-only permission or dirty tree)
 Remaining: <n> strong candidates in <report path>
 ```

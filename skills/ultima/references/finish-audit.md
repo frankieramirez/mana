@@ -63,7 +63,7 @@ On success, set `artifact_url` in `metadata.json` to the returned URL. When the 
 
 ## Terminal summary
 
-Before entering Stage 6, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. When `artifact_url` is recorded, put `[Open private Artifact](<artifact url>)` on the line after the report link. Deliver this summary on every run, including explicit `report`, `tickets`, or `fix[:n]` modes that skip the question tool and runs with no candidates. Use the actual absolute path, for example `[Open project audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing or executing an action.
+Before entering Stage 6, send a user-visible assistant message with a clickable Markdown link to the existing HTML report, then the top candidates. When `artifact_url` is recorded, put `[Open private Artifact](<artifact url>)` on the line after the report link. Deliver this summary on every run, including actions supplied in ordinary language, `report`, `tickets`, or `fix[:n]` shorthand, and runs with no candidates. Use the actual absolute path, for example `[Open project audit report](</tmp/ultima-501/20260909-120000-ab12cd34/report.html>)`. Keep the link outside code blocks. Shell output alone is insufficient: the user needs access before choosing or executing an action.
 
 Use this shape as prose, not a fenced code block:
 

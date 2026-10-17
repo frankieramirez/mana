@@ -32,6 +32,7 @@ q=option('--jq')
 if a[:2] == ['issue','view']:
     n=next(x for x in a[2:] if x.isdigit())
     d=issue(n)
+    if q=='.body' and os.environ.get('BODY_FAIL')==n: fail('HTTP 500 body read failed')
     if q=='.body': print(d['body'])
     elif q=='.state': print(d['state'])
     elif q=='.labels[].name': print('ready')
@@ -48,6 +49,11 @@ elif a[:2] == ['issue','edit']:
     if '--remove-assignee' in a:
         gone=option('--remove-assignee').split(',')
         state[n]['assignees']=[x for x in state[n].get('assignees',[]) if x not in gone]
+    if '--add-assignee' in a:
+        state[n]['assignees']=[option('--add-assignee')]
+        state[n]['after_claim']=True
+        if os.environ.get('BODY_AFTER_CLAIM'):
+            state[n]['body']=os.environ['BODY_AFTER_CLAIM']
     save('edit '+n)
 elif a[:2] == ['issue','reopen']:
     n=next(x for x in a[2:] if x.isdigit())
@@ -80,9 +86,17 @@ elif a[0]=='api':
             for k,d in state.items():
                 if d.get('parent')==n: print(k)
     elif endpoint.endswith('/dependencies/blocked_by'):
-        if os.environ.get('DEPS')=='404': fail('HTTP 404 Not Found')
-        open_ids=[k for k in issue(n).get('blocked_by',[]) if issue(k)['state']=='OPEN']
+        mode=os.environ.get('DEPS','ok')
+        if issue(n).get('after_claim') and os.environ.get('DEPS_AFTER_CLAIM'):
+            mode=os.environ['DEPS_AFTER_CLAIM']
+        if mode in ('404','410'): fail('HTTP '+mode+' Not Found')
+        if mode=='fail': fail('HTTP 500 dependency read failed')
+        ids=issue(n).get('blocked_by',[])
+        open_ids=[k for k in ids if issue(k)['state']=='OPEN']
         if 'length' in q: print(len(open_ids))
+        elif '@tsv' in q:
+            assert '--paginate' in a
+            for k in ids: print(k+'\t'+issue(k)['state'])
         elif '.number' in q: print('\n'.join(open_ids))
         else: fail('unexpected blocked_by query: '+q)
     elif n:
@@ -106,7 +120,7 @@ elif a[0]=='api':
     elif endpoint.endswith('/issues'):
         assert '--paginate' in a and 'Work kind: build' in q
         # Include the parent to also test the fresh per-candidate marker check.
-        for k in ('1','2'):
+        for k in os.environ.get('NEXT_IDS','1,2').split(','):
             d=issue(k); print(f"2026-01-0{k}\t{k}\t{d['title']}\t{d['url']}")
     else: fail('unexpected api: '+str(a))
 else: fail('unexpected gh command: '+str(a))
@@ -188,8 +202,91 @@ run next ready > "$tmp/next"
 DEPS=404 run blocked 5 > "$tmp/blockers"
 [ "$(cat "$tmp/blockers")" = "2" ]
 DEPS=404 expect_fail run blocked 4
-# The API answers first: an empty API result wins over a Blocked by: line.
-expect_fail run blocked 5
+# An empty native result still honors documented body blockers.
+run blocked 5 > "$tmp/blockers"
+[ "$(cat "$tmp/blockers")" = "2" ]
+# Keep dependency cases independent of the earlier claim and body-edit fixtures.
+cp "$tmp/state.json" "$tmp/dependency-baseline.json"
+configure_dependencies() {
+  python3 - "$tmp" "$1" <<'PY'
+import json,sys
+from pathlib import Path
+root=Path(sys.argv[1])
+state=json.loads((root/'dependency-baseline.json').read_text())
+for n,changes in json.loads(sys.argv[2]).items(): state[n].update(changes)
+(root/'state.json').write_text(json.dumps(state))
+PY
+}
+expect_unknown_blockers() {
+  local ec=0
+  run blocked "$1" > "$tmp/out" 2> "$tmp/err" || ec=$?
+  [ "$ec" -eq 2 ]
+  [ ! -s "$tmp/out" ]
+  grep -qF "$2" "$tmp/err"
+}
+
+configure_dependencies '{"5":{"blocked_by":["3"]}}'
+run blocked 5 > "$tmp/blockers"
+[ "$(cat "$tmp/blockers")" = "2" ]
+configure_dependencies '{"6":{"body":"Blocked by: #2, #4"}}'
+run blocked 6 > "$tmp/blockers"
+[ "$(cat "$tmp/blockers")" = $'2\n4' ]
+configure_dependencies '{"5":{"blocked_by":["3"],"body":"Blocked by: #3"}}'
+ec=0
+run blocked 5 > "$tmp/out" 2> "$tmp/err" || ec=$?
+[ "$ec" -eq 1 ] && [ ! -s "$tmp/out" ] && [ ! -s "$tmp/err" ]
+configure_dependencies '{}'
+DEPS=fail expect_unknown_blockers 5 'cannot read native blockers for 5'
+BODY_FAIL=5 expect_unknown_blockers 5 'cannot read blocker body for 5'
+READ_FAIL=2 expect_unknown_blockers 5 'cannot read blocker 2 for 5'
+configure_dependencies '{"2":{"state":"UNKNOWN"}}'
+expect_unknown_blockers 5 'unknown state for blocker 2 of 5'
+configure_dependencies '{"5":{"blocked_by":["3"]},"3":{"state":"UNKNOWN"}}'
+expect_unknown_blockers 5 'unknown native blocker state for 5'
+configure_dependencies '{"5":{"body":"Blocked by: #3"},"3":{"state":""}}'
+expect_unknown_blockers 5 'unknown state for blocker 3 of 5'
+configure_dependencies '{"5":{"body":"Blocked by: other/repo#3"}}'
+expect_unknown_blockers 5 'cannot parse blocker line for 5'
+configure_dependencies '{"5":{"body":"\n\n\n\n\n\n\n\nBlocked by: #2\nBlocked by: #3"}}'
+run blocked 5 > "$tmp/blockers"
+[ "$(cat "$tmp/blockers")" = "2" ]
+DEPS=404 run blocked 5 > "$tmp/blockers"
+[ "$(cat "$tmp/blockers")" = "2" ]
+
+# Neither selection nor selection-with-claim may advertise the body-blocked issue.
+before=$(wc -l < "$tmp/mutations")
+NEXT_IDS=5 run next ready > "$tmp/out"
+[ ! -s "$tmp/out" ]
+NEXT_IDS=5 run next ready --claim > "$tmp/out"
+[ ! -s "$tmp/out" ]
+[ "$(wc -l < "$tmp/mutations")" -eq "$before" ]
+DEPS=fail NEXT_IDS=5 expect_fail run next ready --claim
+[ ! -s "$tmp/out" ]
+grep -q 'cannot determine readiness of 5' "$tmp/err"
+[ "$(wc -l < "$tmp/mutations")" -eq "$before" ]
+configure_dependencies '{"2":{"state":"UNKNOWN"}}'
+NEXT_IDS=5 expect_fail run next ready --claim
+[ ! -s "$tmp/out" ]
+[ "$(wc -l < "$tmp/mutations")" -eq "$before" ]
+
+# A dependency read failure after assignment releases the claim and reports unknown.
+configure_dependencies '{"4":{"body":"Slice","assignees":[],"after_claim":false}}'
+DEPS_AFTER_CLAIM=fail NEXT_IDS=4 expect_fail run next ready --claim
+[ ! -s "$tmp/out" ]
+grep -q 'cannot verify readiness after claiming 4; released claim' "$tmp/err"
+python3 - "$tmp/state.json" <<'PY'
+import json,sys
+assert json.load(open(sys.argv[1]))['4']['assignees'] == []
+PY
+# A newly added fallback blocker after assignment also releases it.
+configure_dependencies '{"4":{"body":"Slice","assignees":[],"after_claim":false}}'
+BODY_AFTER_CLAIM='Blocked by: #2' NEXT_IDS=4 run next ready --claim > "$tmp/out"
+[ ! -s "$tmp/out" ]
+python3 - "$tmp/state.json" <<'PY'
+import json,sys
+assert json.load(open(sys.argv[1]))['4']['assignees'] == []
+PY
+configure_dependencies '{}'
 # Reopening a closed member releases the claim from the work that closed it.
 run reopen https://github.com/acme/widgets/issues/3 > "$tmp/reopened"
 [ "$(cat "$tmp/reopened")" = $'reopened\t3' ]

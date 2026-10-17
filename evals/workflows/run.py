@@ -8,6 +8,8 @@ from pathlib import Path
 from review_fixtures import prepare_review_fixture, grade_review_fixture
 from portal_fixtures import prepare_portal_fixture, grade_portal_fixture, prepare_portal_resume
 from build_fixtures import prepare_build_fixture, grade_build_fixture
+from cleanup_fixtures import prepare_cleanup_fixture, grade_cleanup_fixture
+from ultima_fixtures import prepare_ultima_fixture, grade_ultima_fixture
 import re
 import shlex
 import shutil
@@ -36,9 +38,9 @@ def load_cases():
             raise ValueError("invalid case fields")
         if not re.fullmatch(r"[a-z0-9-]+", case["id"]) or case["id"] in seen:
             raise ValueError("invalid or duplicate case id")
-        if case["fixture"] not in {"check", "stale", "dirty", "tracker", "injection", "handoff", "action", "rejected-push", "feedback", "risk", "continuation", "build-parent"}:
+        if case["fixture"] not in {"check", "stale", "dirty", "tracker", "injection", "handoff", "action", "rejected-push", "feedback", "risk", "continuation", "build-parent", "cleanup"}:
             raise ValueError("unknown fixture")
-        if case["skill"] not in {"cast", "reveal", "vision", "portal", "scan", "remedy", "scry", "conjure"}:
+        if case["skill"] not in {"cast", "reveal", "vision", "portal", "scan", "remedy", "scry", "conjure", "banish", "ultima"}:
             raise ValueError("unsupported pilot skill")
         if not isinstance(case["request"], str) or not case["request"]:
             raise ValueError("empty request")
@@ -52,10 +54,12 @@ def load_cases():
             raise ValueError("check fixture needs check_exit")
         if "check_exit" in case and (type(case["check_exit"]) is not int or case["check_exit"] not in (0, 7, 127)):
             raise ValueError("invalid check exit")
-        if case["expected_status"] not in {"passed", "failed", "blocked", "failed-or-stale", "committed", "labelled-dry-run", "fallback", "local-fix", "push-rejected", "report-only", "targeted-judgment", "full-judgment", "risk-roster", "supported-fix", "effort-prepared", "map-destination", "workspace-stop", "single-unit", "leftover-ticket", "leftover-report"}:
+        if case["expected_status"] not in {"passed", "failed", "blocked", "failed-or-stale", "committed", "labelled-dry-run", "fallback", "local-fix", "push-rejected", "report-only", "targeted-judgment", "full-judgment", "risk-roster", "supported-fix", "effort-prepared", "map-destination", "workspace-stop", "single-unit", "leftover-ticket", "leftover-report", "cleanup-passed", "cleanup-failed", "cleanup-blocked", "cleanup-reused"}:
             raise ValueError("unknown expected outcome")
         if case["skill"] == "scan" and case["fixture"] != "risk" and (case["fixture"] != "action" or case["expected_status"] not in {"local-fix", "report-only"}):
             raise ValueError("scan pilot requires a completed review action fixture")
+        if case["skill"] == "ultima" and (case["fixture"] != "action" or case["expected_status"] not in {"local-fix", "report-only"}):
+            raise ValueError("ultima pilot requires a completed audit action fixture")
         if case["skill"] == "remedy" and case["fixture"] != "feedback" and (case["fixture"] != "rejected-push" or case["expected_status"] != "push-rejected"):
             raise ValueError("remedy pilot requires a rejected push fixture")
         if case["fixture"] == "feedback" and (case["skill"] != "remedy" or case["expected_status"] not in {"targeted-judgment", "full-judgment", "supported-fix"}):
@@ -69,6 +73,11 @@ def load_cases():
         if case["fixture"] == "build-parent" and (case["expected_status"] not in {"leftover-ticket", "leftover-report"}
                                                   or effects["product_files"] or effects["commit"]):
             raise ValueError("build-parent fixture requires a leftover evidence outcome with no repository effects")
+        if (case["fixture"] == "cleanup") != (case["skill"] == "banish"):
+            raise ValueError("banish pilot requires a focused cleanup validation fixture")
+        if case["fixture"] == "cleanup" and (case["expected_status"] not in {"cleanup-passed", "cleanup-failed", "cleanup-blocked", "cleanup-reused"}
+                                               or effects["product_files"] or effects["commit"]):
+            raise ValueError("cleanup fixture requires validation only")
         seen.add(case["id"])
     return data["cases"]
 
@@ -89,7 +98,16 @@ def file_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py')}
+LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py', 'cleanup_fixtures.py', 'ultima_fixtures.py')}
+
+
+def snapshot_runner_source(destination, delegated=False):
+    destination.mkdir()
+    names = list(LOADED_SOURCES) + ["cases.json", "response-schema.json"]
+    if delegated:
+        names += ["child_events.py", "delegated_review.py", "delegated-grading.json"]
+    for name in names:
+        shutil.copy2(HERE / name, destination / name)
 
 
 def product_state(work):
@@ -138,6 +156,8 @@ def prepare(case, base, skill_root=None):
         prepare_portal_fixture(case, work)
     if case["fixture"] == "build-parent":
         prepare_build_fixture(case, work)
+    if case["fixture"] == "cleanup":
+        prepare_cleanup_fixture(case, work)
     git(work, "init", "-q", "-b", "main")
     git(work, "config", "user.name", "Mana Fixture")
     git(work, "config", "user.email", "fixture@example.invalid")
@@ -146,6 +166,8 @@ def prepare(case, base, skill_root=None):
     git(work, "update-ref", "refs/remotes/origin/main", "HEAD")
     git(work, "switch", "-qc", "fixture-work")
     initial_head = git(work, "rev-parse", "HEAD")
+    if case["skill"] == "ultima":
+        prepare_ultima_fixture(work, initial_head)
     if case["fixture"] == "dirty":
         (work / "notes.txt").write_text("user staged notes\n")
         git(work, "add", "notes.txt")
@@ -404,6 +426,8 @@ def grade(case, work, baseline, response, events):
     failures += grade_review_fixture(case, work, response, commands)
     failures += grade_portal_fixture(case, work, baseline, response, commands)
     failures += grade_build_fixture(case, work, baseline, response, commands)
+    failures += grade_cleanup_fixture(case, work, response, commands, standalone_check)
+    failures += grade_ultima_fixture(case, work, response, events)
     return failures
 
 
@@ -413,6 +437,8 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium")
               "fixture_sha256": LOADED_SOURCES["review_fixtures.py"],
               "portal_fixture_sha256": LOADED_SOURCES["portal_fixtures.py"],
               "build_fixture_sha256": LOADED_SOURCES["build_fixtures.py"],
+              "cleanup_fixture_sha256": LOADED_SOURCES["cleanup_fixtures.py"],
+              "ultima_fixture_sha256": LOADED_SOURCES["ultima_fixtures.py"],
               "skill_root": str((skill_root or ROOT / "skills").resolve()),
               "execution": "setup_failed", "failures": [], "live": True}
     started = time.monotonic()
@@ -561,9 +587,7 @@ def main():
         destination.mkdir(exist_ok=True)
         out = Path(tempfile.mkdtemp(prefix='delegated-review-', dir=destination))
         source = out / 'runner-source'
-        source.mkdir()
-        for name in ('run.py', 'review_fixtures.py', 'cases.json', 'child_events.py', 'delegated_review.py', 'delegated-grading.json'):
-            shutil.copy2(HERE / name, source / name)
+        snapshot_runner_source(source, delegated=True)
         result = delegated_review.execute(out, args.skill_root, args.timeout, args.model, args.reasoning, args.case == ['delegated-heldout-review'])
         print(out)
         print(json.dumps({k: result[k] for k in ('execution', 'accepted_execution', 'failures', 'seconds')}))
@@ -578,9 +602,7 @@ def main():
     destination.mkdir(exist_ok=True)
     run = Path(tempfile.mkdtemp(prefix="workflows-", dir=destination))
     source = run / "runner-source"
-    source.mkdir()
-    for name in ("run.py", "review_fixtures.py", "portal_fixtures.py", "build_fixtures.py", "cases.json", "response-schema.json"):
-        shutil.copy2(HERE / name, source / name)
+    snapshot_runner_source(source)
     reports = []
     for case in selected:
         out = run / case["id"]

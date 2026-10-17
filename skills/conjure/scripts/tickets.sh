@@ -12,7 +12,7 @@
 #   body ID                                  print the raw issue body
 #   update-body ID [--expected-body PATH]    replace body on stdin, optionally guarded by a snapshot
 #   wire CHILD BLOCKER                        CHILD is blocked by BLOCKER
-#   blocked ID                                open blockers, one per line; exit 1 when none
+#   blocked ID                                open blockers, one per line; exit 1 when none, 2 when unknown
 #   next READY_LABEL [--claim]                oldest open, unassigned, unblocked issue;
 #                                             --claim assigns it only while it stays eligible
 #   claim ID                                  assign yourself; refuse if someone else holds it
@@ -57,7 +57,7 @@ usage: tickets.sh [--tracker github|linear|jira] [--project KEY] [--repo OWNER/R
                                          unblocked issue; empty when none. --claim assigns
                                          it, re-reads, and releases if it is no longer eligible
   claim ID                               assign yourself; exit 1 if someone else holds it
-  blocked ID                             open blockers, one id per line; exit 1 when none
+  blocked ID                             open blockers, one id per line; exit 1 when none, 2 when unknown
   label ID [--add L]... [--remove L]...  change labels
   comment ID                             body on stdin
   close ID                               close the issue
@@ -159,68 +159,79 @@ api_write() {
   [ "$ec" -eq 0 ]
 }
 
-# True (exit 0) when the issue has an open blocker via API or a Blocked by: line.
+# Exit 0: blocked, 1: all known blockers closed, 2: readiness cannot be verified.
 gh_is_blocked() {
-  local n="$1"
-  local raw body ids id st
-  if raw=$(gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
-    (if type == "array" then . else (.blocked_by // []) end)
-    | [.[] | select(.state == "open" or .state == "OPEN")]
-    | length
-  ' 2>/dev/null); then
-    [ "${raw:-0}" -gt 0 ]
-    return
-  fi
-  body=$(gh_body "$n")
-  ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
-  for id in $ids; do
-    [ -n "$id" ] || continue
-    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state 2>/dev/null || true)
-    if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
-      return 0
-    fi
-  done
-  return 1
+  gh_blocked "$1" >/dev/null
 }
 
+# Native and body edges coexist when a dependency write fell back.
 gh_blocked() {
   local n="$1"
-  local ids err
+  local native body ids err
   err=$(mktemp)
-  if ids=$(gh_open_blockers_from_api "$n" 2>"$err"); then
+  if native=$(gh_open_blockers_from_api "$n" 2>"$err"); then
     rm -f "$err"
   elif grep -qiE 'HTTP (404|410)|404 Not Found|410 Gone' "$err"; then
     rm -f "$err"
-    ids=$(gh_open_blockers_from_body "$n") || die "cannot read blockers for $n"
+    native=""
   else
     cat "$err" >&2
     rm -f "$err"
-    die "cannot read native blockers for $n"
+    echo "tickets.sh: cannot read native blockers for $n" >&2
+    return 2
   fi
+  body=$(gh_open_blockers_from_body "$n") || return 2
+  ids=$(printf '%s\n' "$native" "$body" | awk 'NF && !seen[$0]++')
   [ -n "$ids" ] || return 1
   printf '%s\n' "$ids"
 }
 
 gh_open_blockers_from_api() {
-  local n="$1"
-  gh api "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
-    (if type == "array" then . else (.blocked_by // []) end)
-    | .[] | select(.state == "open" or .state == "OPEN") | .number
-  ' | grep -E '^[0-9]+$' || [ "${PIPESTATUS[0]}" -eq 0 ]
+  local n="$1" rows id st
+  rows=$(gh api --paginate "repos/${OWNER}/${REPO}/issues/${n}/dependencies/blocked_by" --jq '
+    (if type == "array" then .
+     elif type == "object" and (.blocked_by | type) == "array" then .blocked_by
+     else error("invalid blocker response") end)
+    | .[] | [.number, (.state // "UNKNOWN")] | @tsv
+  ') || return 2
+  while IFS=$'\t' read -r id st; do
+    [ -n "$id$st" ] || continue
+    if [[ ! "$id" =~ ^[0-9]+$ ]]; then
+      echo "tickets.sh: invalid native blocker for $n" >&2
+      return 2
+    fi
+    case "$st" in
+      OPEN|open) printf '%s\n' "$id" ;;
+      CLOSED|closed) ;;
+      *) echo "tickets.sh: unknown native blocker state for $n: $st" >&2; return 2 ;;
+    esac
+  done <<< "$rows"
 }
 
 gh_open_blockers_from_body() {
   local n="$1"
-  local body ids id st
-  body=$(gh_body "$n") || die "cannot read $n"
-  ids=$(printf '%s\n' "$body" | sed -n '1,8p' | grep -E '^Blocked by:' | sed 's/[^0-9, ]//g' | tr ',' ' ')
+  local body lines residue ids id st
+  if ! body=$(gh_body "$n"); then
+    echo "tickets.sh: cannot read blocker body for $n" >&2
+    return 2
+  fi
+  lines=$(printf '%s\n' "$body" | grep '^Blocked by:' || true)
+  residue=$(printf '%s\n' "$lines" | sed 's/^Blocked by://; s/#[0-9][0-9]*//g; s/[[:space:],]//g')
+  if [ -n "$residue" ]; then
+    echo "tickets.sh: cannot parse blocker line for $n" >&2
+    return 2
+  fi
+  ids=$(printf '%s\n' "$lines" | grep -oE '#[0-9]+' | tr -d '#' | awk '!seen[$0]++' || true)
   for id in $ids; do
-    [ -n "$id" ] || continue
-    st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state) || die "cannot read blocker $id"
-    case "$st" in OPEN|open|CLOSED|closed) ;; *) die "unknown blocker state for $id" ;; esac
-    if [ "$st" = "OPEN" ] || [ "$st" = "open" ]; then
-      printf '%s\n' "$id"
+    if ! st=$(gh issue view --repo "$OWNER/$REPO" "$id" --json state --jq .state); then
+      echo "tickets.sh: cannot read blocker $id for $n" >&2
+      return 2
     fi
+    case "$st" in
+      OPEN|open) printf '%s\n' "$id" ;;
+      CLOSED|closed) ;;
+      *) echo "tickets.sh: unknown state for blocker $id of $n: $st" >&2; return 2 ;;
+    esac
   done
 }
 
@@ -548,25 +559,27 @@ gh_wire() {
 gh_still_ready() {
   local n="$1" label="$2" me="$3"
   local state body
-  state=$(gh issue view --repo "$OWNER/$REPO" "$n" --json state --jq .state)
+  state=$(gh issue view --repo "$OWNER/$REPO" "$n" --json state --jq .state) || return 2
   case "$state" in
     OPEN|open) ;;
     *) return 1 ;;
   esac
-  body=$(gh_body "$n") || return 1
+  body=$(gh_body "$n") || return 2
   gh_is_build_body "$body" && return 1
   gh issue view --repo "$OWNER/$REPO" "$n" --json labels --jq '.labels[].name' | grep -qxF "$label" || return 1
   gh issue view --repo "$OWNER/$REPO" "$n" --json assignees --jq '.assignees[].login' | grep -qxF "$me" || return 1
   [ -z "$(gh_assignees_except "$n" "$me")" ] || return 1
   if gh_is_blocked "$n"; then
     return 1
+  elif [ "$?" -ne 1 ]; then
+    return 2
   fi
   return 0
 }
 
 gh_unclaim() {
   local n="$1" me="$2"
-  gh issue edit --repo "$OWNER/$REPO" "$n" --remove-assignee "$me" >/dev/null 2>&1 || true
+  gh issue edit --repo "$OWNER/$REPO" "$n" --remove-assignee "$me" >/dev/null
 }
 
 gh_next() {
@@ -597,6 +610,8 @@ gh_next() {
     gh_is_build_body "$body" && continue
     if gh_is_blocked "$n"; then
       continue
+    elif [ "$?" -ne 1 ]; then
+      die "cannot determine readiness of $n"
     fi
     if [ "$do_claim" = "1" ]; then
       others=$(gh_assignees_except "$n" "$login")
@@ -611,9 +626,15 @@ gh_next() {
       if [ "$ec" -ne 0 ]; then
         continue
       fi
-      others=$(gh_assignees_except "$n" "$login")
-      if [ -n "$others" ] || ! gh_still_ready "$n" "$label" "$login"; then
-        gh_unclaim "$n" "$login"
+      if ! others=$(gh_assignees_except "$n" "$login"); then
+        gh_unclaim "$n" "$login" || die "cannot release claim on $n after failed ownership read"
+        die "cannot read ownership after claiming $n; released claim"
+      fi
+      ec=0
+      gh_still_ready "$n" "$label" "$login" || ec=$?
+      if [ -n "$others" ] || [ "$ec" -ne 0 ]; then
+        gh_unclaim "$n" "$login" || die "cannot release claim on $n after failed readiness check"
+        [ "$ec" -le 1 ] || die "cannot verify readiness after claiming $n; released claim"
         continue
       fi
     fi

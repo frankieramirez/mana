@@ -33,12 +33,12 @@ Follow these boundaries in order. References supply detail but never change the 
 3. Record metadata and announce the roster (Stage 3).
 4. Read `references/lens-template.md`, `references/candidates-schema.json`, and the selected lens files, then dispatch every lens and collect every one before merging (Stage 4).
 5. Read `references/finish-audit.md` and follow it to merge, reconcile, render, publish, and summarize (Stage 5). Never synthesize directly from raw lens artifacts.
-6. Ask what to do with the candidates, then do it (Stage 6). This is the one blocking question this skill asks.
+6. Follow the authorized action for the candidates (Stage 6). Ask only if a material choice remains unresolved.
 
 ## Operating principles
 
-- **Audit first, act second.** Nothing is edited, committed, or filed until Stage 6, and then only along the branch the user picks.
-- **One blocking question, at the end.** Do not stop to ask about scope, lenses, or which docs count. Infer them from the profile and the arguments, and note uncertainty in Coverage.
+- **Audit first, act second.** Deliver the report before any follow-up edit, commit, or tracker write. Stage 6 stays within the user's authorized actions and target.
+- **Resolve choices at the end.** Infer audit scope and lenses from the request and profile, and note uncertainty in Coverage. Ask about follow-up only when the current request and covered prior instructions leave a material choice open.
 - **Never switch branches.** The audit reads the current checkout. `path:` narrows what is read, never what may be mutated.
 - **Evidence fits the claim.** Repeated patterns need quoted instances. A single architecture flaw can qualify through a sourced invariant and a connected trace.
 - **The report is rendered by the script.** It embeds quoted repo code, and the script escapes it. Never hand-write the HTML.
@@ -49,7 +49,7 @@ Follow these boundaries in order. References supply detail but never change the 
 
 ## Arguments
 
-Parse for these tokens. Anything else is an error; say so and stop.
+Accept ordinary language for scope and follow-up, including instructions already given for this repository and target. These tokens are optional shorthand. Reject an unknown token or conflicting action tokens with a one-line reason before running; ordinary prose is not an unknown token. The user's explicit constraints, such as keeping a fix local, also apply when a shorthand token is present.
 
 | Token | Effect |
 |-------|--------|
@@ -57,9 +57,9 @@ Parse for these tokens. Anything else is an error; say so and stop.
 | `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, `security`, or `performance-delivery`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security and Performance & Delivery are opt-in through their category, `all`, or their lenses. |
 | `lens:<a,b>` | Override the recommended roster with named lenses from the table below. |
 | `since:<days>` | Churn window for hot spots. Default 90. |
-| `report` | Skip the Stage 6 question: the report is the deliverable. |
-| `tickets` | Skip the Stage 6 question: file one ticket per strong candidate. |
-| `fix` or `fix:<n>` | Skip the Stage 6 question: fix candidate `n` (default rank 1) on the current branch. |
+| `report` | Deliver the report and stop. |
+| `tickets` | Deliver the report, then file one ticket per strong candidate. |
+| `fix` or `fix:<n>` | Deliver the report, then fix candidate `n` (default rank 1) locally on the current branch. Commit only when authorized. |
 
 Two action tokens together, or an unknown category or lens name, stop with a one-line reason before anything runs.
 
@@ -127,17 +127,17 @@ Read `references/finish-audit.md` in full and follow it: merge pass 1, your reco
 
 ## Stage 6: Choose what happens next
 
-After Stage 5 delivers the report as a clickable link in a user-visible message, ask **one** question, unless `report`, `tickets`, or `fix` already answered it. Shell output and a path inside a code block do not deliver the report. Never defer the link until the user chooses **Report only**. Action tokens skip the question, but still receive the report link before the action starts.
+After Stage 5 delivers the report as a clickable link in a user-visible message, resolve the follow-up from the current request and covered prior authorization. Natural-language instructions and action tokens both count. Report-only ends here. An authorized action starts without another confirmation, within its repository, target, and action scope. Local-fix permission alone does not authorize staging, committing, pushing, opening a PR, or filing tickets. Shell output and a path inside a code block do not deliver the report; give the link before any follow-up action or question.
 
-Begin the question with "Review the [project audit report](<absolute report path>), then choose what happens next." Substitute the actual path and retain the link in the preceding message even if the question tool cannot render links. When Stage 5 recorded an `artifact_url`, add "or the [private Artifact](<artifact url>)" after the report link. The user must be able to open the report while the choice is pending.
+If a material follow-up choice remains open, begin one question with "Review the [project audit report](<absolute report path>), then choose what happens next." Substitute the actual path and retain the link in the preceding message even if the question tool cannot render links. When Stage 5 recorded an `artifact_url`, add "or the [private Artifact](<artifact url>)" after the report link. The user must be able to open the report while the choice is pending.
 
-Use the platform's blocking question tool (`AskUserQuestion` in Claude Code; call `ToolSearch` with `select:AskUserQuestion` first if the schema is not loaded) with these three options:
+Use a question tool only when the current host exposes it and permits it in this mode. Otherwise ask in ordinary assistant text and wait for the answer; do not invoke unavailable tools or choose an external write by default. Offer the applicable options:
 
 | Option | Behavior |
 |--------|----------|
 | **Report only** | Stop. The report is the deliverable. |
 | **File tickets** | One ticket per strong candidate, in rank order, through the bundled tracker script. See *File tickets* in `references/finish-audit.md`. |
-| **Fix one now** | Apply an eligible atomic fix on the current branch, validate, and commit when the tree was clean; plans become local briefs. See `references/fix-one.md`. The user may name a rank. |
+| **Fix one locally** | Apply and validate an eligible atomic fix on the current branch; plans become local briefs. Commit only when covered authorization permits it. See `references/fix-one.md`. The user may name a rank. |
 
 Offer **File tickets** only when the checkout has a tracker: `docs/agents/issue-tracker.md` exists, or `gh auth status` succeeds inside a GitHub remote. Otherwise offer the other two and say why the third is missing.
 

@@ -140,9 +140,22 @@ elif a and a[0] == 'api':
     elif endpoint.endswith('/dependencies/blocked_by'):
         n = re.search(r'issues/(\d+)', endpoint).group(1)
         if n in state.get('dependency_fail', []): fail('dependency read failed')
-        ids = [k for k in issue(n)['blocked_by'] if issue(k)['state'] == 'OPEN']
-        if 'length' in q: print(len(ids))
-        elif '.number' in q: print('\n'.join(ids))
+        dependencies = [(k, issue(k)['state']) for k in issue(n)['blocked_by']]
+        ids = [k for k, status in dependencies if status == 'OPEN']
+        normalized = ' '.join(q.split())
+        shape = '(if type == "array" then . elif type == "object" and (.blocked_by | type) == "array" then .blocked_by else error("invalid blocker response") end) | .[] | '
+        legacy = '(if type == "array" then . else (.blocked_by // []) end) | '
+        if normalized == shape + '[.number, (.state // "UNKNOWN")] | @tsv':
+            for k, status in dependencies:
+                value = 'UNKNOWN' if status is None or status is False else status
+                print(k + '\t' + str(value))
+        elif normalized == shape + 'if .state == "" then "UNKNOWN" else (.state // "UNKNOWN") end':
+            for _, status in dependencies:
+                print('UNKNOWN' if status is None or status is False or status == '' else status)
+        elif normalized == legacy + '[.[] | select(.state == "open" or .state == "OPEN")] | length':
+            print(len(ids))
+        elif normalized == legacy + '.[] | select(.state == "open" or .state == "OPEN") | .number':
+            print('\n'.join(ids))
         else: fail('unsupported blocker query')
     elif 'state=all' in endpoint:
         if 'Build parent:' in q:

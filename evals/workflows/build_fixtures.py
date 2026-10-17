@@ -399,6 +399,18 @@ def api_cmd(args):
         fail('unsupported API ' + method + ' ' + endpoint)
     if q is None:
         print(json.dumps(data, indent=2))
+    elif (m and m.group(2) == '/dependencies/blocked_by' and method == 'GET'
+          and ' '.join(q.split()) in (
+              '(if type == "array" then . elif type == "object" and (.blocked_by | type) == "array" then .blocked_by else error("invalid blocker response") end) | .[] | [.number, (.state // "UNKNOWN")] | @tsv',
+              '(if type == "array" then . elif type == "object" and (.blocked_by | type) == "array" then .blocked_by else error("invalid blocker response") end) | .[] | if .state == "" then "UNKNOWN" else (.state // "UNKNOWN") end')):
+        # Match the adapters' projections exactly; include closed/unknown states.
+        for r in data:
+            value = r.get('state')
+            value = 'UNKNOWN' if value is None or value is False else value
+            if '@tsv' in q:
+                print(str(r['number']) + '\t' + str(value))
+            else:
+                emit(['UNKNOWN' if value == '' else value])
     elif 'startswith("Build parent: [")' in q:
         url = re.search(r'endswith\("\]\(([^"]*)\)"\)', q).group(1)
         for r in data:
