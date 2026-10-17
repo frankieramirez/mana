@@ -2,7 +2,7 @@
   "oracle_id": "verify-contract-test-v1",
   "case_id": "verify-contract-test",
   "kind": "contract-suite",
-  "contract": "docs/snapshot-format.md is a persisted contract read by replenish/reader.py. The literal snapshot assertion protects it. The mock on export._row only observes an internal helper that the refactor removed. The final suite must pass on the frozen product, still pass for two exporters with different internals and identical bytes (one avoids sorted(), open() and every fixture helper), and fail for every contract-breaking mutant.",
+  "contract": "docs/snapshot-format.md is a persisted contract read by replenish/reader.py. The literal snapshot assertion protects it. The mock on export._row only observes an internal helper that the refactor removed. The final suite must pass on the frozen product, still pass for two exporters with different internals and identical bytes (one avoids sorted(), open(), list(), the HEADER name and every fixture helper, and its write_snapshot builds its own bytes), and fail for every contract-breaking mutant.",
   "suite_command": [
     "python3",
     "-B",
@@ -124,6 +124,20 @@
     {
       "id": "spy-on-open",
       "description": "Replace the helper spy with a mock of builtins.open asserting how write_snapshot opens its file.",
+      "expected_failures": [
+        "spy-coupling-retained"
+      ]
+    },
+    {
+      "id": "spy-on-text-builder",
+      "description": "Replace the helper spy with a spy asserting that write_snapshot calls snapshot_text once.",
+      "expected_failures": [
+        "spy-coupling-retained"
+      ]
+    },
+    {
+      "id": "patch-header",
+      "description": "Replace the helper spy with a test that patches export.HEADER and expects the new header in the output.",
       "expected_failures": [
         "spy-coupling-retained"
       ]

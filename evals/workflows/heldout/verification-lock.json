@@ -1,7 +1,7 @@
 {
   "area": "verification-judgment",
   "frozen_on": "2026-10-17",
-  "grader_sha256": "fea40254dc6542926061954fe29ae63b8b078dcfb0d5bcae22a4243235d7f440",
+  "grader_sha256": "13d69e84b552d358c677971ebf68f438c6e1ade436b7cd0b3aa44ef7387eaa25",
   "groups": {
     "verify-contract-test": {
       "allowed_effects": {
@@ -17,8 +17,8 @@
         "head": "7315b201600e4acc71cc4022dab13884a5555b0e",
         "product_sha256": "07fd1bb2c6b9609981a3f31f5f258157f95ac16c8309fa32419fa3f1057f61dd"
       },
-      "oracle_sha256": "1e28502d858a4cad3cc2d6e22d8f65cfbefd4d0b5a25acab333ac554fd85fc51",
-      "oracle_support_sha256": "0f933554810a1dcbfde246597728a66d17167229216b0a794f59d157603182ad",
+      "oracle_sha256": "053d244107136780cc53a70881cbc41fc014b97e33f9ba0d4f562077caa9e7b2",
+      "oracle_support_sha256": "2d692aa1ed813ae7e818bb65a0407ad606e04f41919a84e42d1b581af0ad9b28",
       "request_sha256": "8026ec77770d9db59c3633cc3881d753ba9d01260b82169890783cfdda38f6b7",
       "source_group": "sealed-verify-contract-01",
       "split": "confirmation"
@@ -35,7 +35,7 @@
         "head": "897e01ea4911c9f41199ed0bd1894a01d9e57ccd",
         "product_sha256": "5ac185073d2dd7ecb9c3fc95d4428c5936c6681d57ba450c1d1fc8d73b66b220"
       },
-      "oracle_sha256": "d3f68123c1125588f4cfca44d1b6eb10bb705ed54b5cdfd13c3c3720a4531495",
+      "oracle_sha256": "78a3a46296cab4b9c094aae959b663ea7ce2152cd470154064667e3539bc6feb",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
       "source_group": "sealed-verify-stale-01",
@@ -53,7 +53,7 @@
         "head": "fcf7a5ef4cf9e803f56eeda33cd38b23ecafdfe4",
         "product_sha256": "d28ce187b23871f7e75f43fd854c2f0823df80028f7bd562a3b0b64eda505314"
       },
-      "oracle_sha256": "986688993e04c92fca94a7f990205065c5e825204f0922479a90e7a3c2f61aca",
+      "oracle_sha256": "5f48202fba606a9f93113cebea609ef3f72f66c9edfa5d7bbe2676659669da4f",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "c7ea364024f979795613502646f7e5958adf36efd9d187bac2e04404afa957bd",
       "source_group": "sealed-verify-unavailable-01",
