@@ -19,7 +19,11 @@
 # cancel-sigterm and plan variants). Probes left out are not_run, which keeps exit 3.
 #
 # Exit 0 when every probe passes, 1 when one fails, 3 when one is blocked or not run and
-# none failed, 2 for usage, 4 when python3 is missing. Python standard library only.
+# none failed, 2 for usage, 4 when python3 is missing. SIGINT or SIGTERM stops in-flight
+# runs, removes worktrees and the listener, writes challenge.json marked interrupted, and
+# exits 130 or 143. A process is stopped only while its process group and start time still
+# match what was observed under the run, so a reused PID is left alone. Python standard
+# library only.
 
 set -euo pipefail
 
@@ -33,11 +37,21 @@ case "${1:-}" in
 esac
 command -v python3 >/dev/null 2>&1 || { echo "challenge.sh: python3 not found" >&2; exit 4; }
 
-python3 - "${BASH_SOURCE[0]}" "$@" <<'PY'
+# exec: a signal sent to challenge.sh reaches the Python process and its cleanup.
+exec python3 - "${BASH_SOURCE[0]}" "$@" <<'PY'
 import hashlib, json, os, re, shlex, shutil, signal, socket, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 
 SCRIPT = Path(sys.argv[1]).resolve()
+ACTIVE = set()  # Run sessions started and not yet finished, for cleanup on interruption.
+
+
+class Interrupted(BaseException):
+    """Raised by SIGINT or SIGTERM so every finally block runs before exit."""
+
+
+def interrupted(signum, _frame):
+    raise Interrupted(signal.Signals(signum).name)
 CONFORM = SCRIPT.parent / "conform.sh"
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 BUILTIN = ["static", "list", "describe", "unknown", "baseline", "break", "restore", "parallel", "cancel-sigint", "cancel-sigterm"]
@@ -151,11 +165,67 @@ def process_table():
     return table
 
 
-def live(pids):
-    table = process_table()
-    if table is None:
+def proc_identity(pid):
+    """(pgid, start time, zombie) of a PID now, or None when no such process exists.
+
+    The start time tells a reused PID apart from the process observed earlier."""
+    if os.path.exists("/proc/self/stat"):
+        try:
+            text = Path(f"/proc/{pid}/stat").read_text()
+        except OSError:
+            return None
+        fields = text.rsplit(")", 1)[1].split()
+        return int(fields[2]), fields[19], fields[0] == "Z"
+    try:
+        out = subprocess.run(["ps", "-o", "pgid=,stat=,lstart=", "-p", str(pid)], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
         return None
-    return sorted(pid for pid in pids if pid in table and not table[pid]["zombie"])
+    parts = out.stdout.split()
+    if out.returncode or len(parts) < 3 or not parts[0].isdigit():
+        return None
+    return int(parts[0]), " ".join(parts[2:]), parts[1].startswith("Z")
+
+
+def owned_alive(observed):
+    """PIDs whose current pgid and start time still match an identity recorded under the run."""
+    alive = []
+    for pid, identities in observed.items():
+        now = proc_identity(pid)
+        if now is not None and not now[2] and (now[0], now[1]) in identities:
+            alive.append(pid)
+    return sorted(alive)
+
+
+def kill_owned(pid, identities):
+    """SIGKILL a PID only while it is still the process that was observed."""
+    handle = None
+    try:
+        if hasattr(os, "pidfd_open") and hasattr(signal, "pidfd_send_signal"):
+            handle = os.pidfd_open(pid)  # Pins this process, so the check below cannot race a reuse.
+        now = proc_identity(pid)
+        if now is None or now[2] or (now[0], now[1]) not in identities:
+            return False
+        if handle is not None:
+            signal.pidfd_send_signal(handle, signal.SIGKILL)
+        else:
+            os.kill(pid, signal.SIGKILL)
+        return True
+    except (ProcessLookupError, OSError):
+        return False
+    finally:
+        if handle is not None:
+            os.close(handle)
+
+
+def reap_owned(observed, wait=3.0):
+    """Wait for observed processes to end, then stop any that are still the same processes."""
+    survivors = owned_alive(observed)
+    deadline = time.time() + wait
+    while survivors and time.time() < deadline:
+        time.sleep(0.05)
+        survivors = owned_alive(observed)
+    killed = [pid for pid in survivors if kill_owned(pid, observed[pid])]
+    return survivors, killed
 
 
 def parse_document(stdout):
@@ -186,6 +256,7 @@ class Run:
         self.done = threading.Event()
 
     def start(self):
+        ACTIVE.add(self)
         self.folder.mkdir(parents=True, exist_ok=True)
         self.out = open(self.folder / "stdout.txt", "wb")
         self.err = open(self.folder / "stderr.txt", "wb")
@@ -209,7 +280,9 @@ class Run:
                     continue
                 seen.add(pid)
                 if pid in table and not table[pid]["zombie"]:
-                    self.observed.setdefault(pid, table[pid]["pgid"])
+                    now = proc_identity(pid)
+                    if now is not None and not now[2]:
+                        self.observed.setdefault(pid, set()).add((now[0], now[1]))
                 frontier += [child for child, row in table.items() if row["ppid"] == pid]
             self.done.wait(0.05)
 
@@ -238,19 +311,9 @@ class Run:
         self.thread.join()
         self.out.close()
         self.err.close()
-        survivors = live(self.observed)
-        deadline = time.time() + 3
-        while survivors and time.time() < deadline:
-            time.sleep(0.05)
-            survivors = live(self.observed)
-        cleaned = []
-        for pid in survivors or []:
-            # These were started by this invocation; the challenger may clean them up.
-            try:
-                os.kill(pid, signal.SIGKILL)
-                cleaned.append(pid)
-            except ProcessLookupError:
-                pass
+        # Only processes that still match an identity seen under this run count or get stopped.
+        survivors, cleaned = reap_owned(self.observed)
+        ACTIVE.discard(self)
         stdout = (self.folder / "stdout.txt").read_text(errors="replace")
         code = self.proc.returncode
         # A package runner in the signalled group can die from the signal itself; a shell reports that as 128+N.
@@ -258,8 +321,28 @@ class Run:
         return {"argv": self.line, "exit": exit_code, "rawReturnCode": code, "timedOut": timed_out,
                 "ms": int((time.time() - self.started) * 1000), "stdout": stdout,
                 "stderr": (self.folder / "stderr.txt").read_text(errors="replace"),
-                "observedProcesses": sorted(self.observed), "survivors": survivors,
-                "ownershipVerified": self.monitor_ok and survivors is not None, "challengerKilled": cleaned}
+                "observedProcesses": sorted(self.observed), "observedIdentities": self.identities(), "survivors": survivors,
+                "ownershipVerified": self.monitor_ok, "challengerKilled": cleaned}
+
+    def identities(self):
+        return sorted([pid, pgid, start] for pid, seen in self.observed.items() for pgid, start in seen)
+
+    def abort(self):
+        """Stop an unfinished run: its CLI session first, then anything left that it started."""
+        self.signal_group(signal.SIGTERM)
+        try:
+            self.proc.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            self.signal_group(signal.SIGKILL)
+            self.proc.wait()
+        self.done.set()
+        self.thread.join()
+        self.out.close()
+        self.err.close()
+        survivors, killed = reap_owned(self.observed)
+        ACTIVE.discard(self)
+        return {"argv": self.line, "observedIdentities": self.identities(), "survivorsAfterSignal": survivors,
+                "challengerKilled": killed, "remaining": owned_alive(self.observed)}
 
 
 class Challenge:
@@ -320,10 +403,11 @@ class Challenge:
         report = parse_document(run["stdout"])
         record = {"argv": run["argv"], "exit": run["exit"], "ms": run["ms"], "stdout": str((folder / "stdout.txt").relative_to(self.evidence)),
                   "stderr": str((folder / "stderr.txt").relative_to(self.evidence)), "observedProcesses": run["observedProcesses"],
-                  "survivors": run["survivors"], "ownershipVerified": run["ownershipVerified"]}
+                  "observedIdentities": run["observedIdentities"], "survivors": run["survivors"],
+                  "ownershipVerified": run["ownershipVerified"]}
         if run["timedOut"]:
             problems.append(f"the command did not finish within {self.timeout}s")
-        if run["survivors"] is None or not run["ownershipVerified"]:
+        if not run["ownershipVerified"]:
             problems.append("blocked: no process table, so process cleanup is unverified")
         elif run["survivors"]:
             problems.append(f"processes started by the run outlived it: {run['survivors']}")
@@ -456,42 +540,52 @@ class Challenge:
         return static
 
     def run(self):
-        self.head = git(self.repo, "rev-parse", "--verify", "HEAD").stdout.decode().strip()
-        self.before = checkout_state(self.repo)
-        self.doc["source"] = {"head": self.head, "checkoutBefore": state_summary(self.before)}
-        if git(self.repo, "status", "--porcelain", check=False).stdout.strip():
-            self.doc["excludedChanges"] = "worktrees are built from HEAD; uncommitted changes in the checkout were not challenged"
-        if self.plan_path:
-            shutil.copyfile(self.plan_path, self.evidence / "plan.json")
-            self.doc["plan"] = {"path": str(self.plan_path), "sha256": sha256(Path(self.plan_path).read_bytes()), "retained": "plan.json"}
-        self.sentinel_token = "leyline-" + sha256(os.urandom(16))[:16]
-        self.sentinel = subprocess.Popen([sys.executable, "-c", SENTINEL, "leyline-challenge-sentinel", self.sentinel_token],
-                                         stdout=subprocess.PIPE, text=True, start_new_session=True)
-        self.sentinel_port = int(self.sentinel.stdout.readline().strip() or 0)
-        self.doc["sentinel"] = {"pid": self.sentinel.pid, "port": self.sentinel_port,
-                                "offeredAs": self.plan.get("occupiedPortEnv")}
+        self.before = self.sentinel = None
+        self.sentinel_port = 0
         try:
+            self.head = git(self.repo, "rev-parse", "--verify", "HEAD").stdout.decode().strip()
+            self.before = checkout_state(self.repo)
+            self.doc["source"] = {"head": self.head, "checkoutBefore": state_summary(self.before)}
+            if git(self.repo, "status", "--porcelain", check=False).stdout.strip():
+                self.doc["excludedChanges"] = "worktrees are built from HEAD; uncommitted changes in the checkout were not challenged"
+            if self.plan_path:
+                shutil.copyfile(self.plan_path, self.evidence / "plan.json")
+                self.doc["plan"] = {"path": str(self.plan_path), "sha256": sha256(Path(self.plan_path).read_bytes()), "retained": "plan.json"}
+            self.sentinel_token = "leyline-" + sha256(os.urandom(16))[:16]
+            self.sentinel = subprocess.Popen([sys.executable, "-c", SENTINEL, "leyline-challenge-sentinel", self.sentinel_token],
+                                             stdout=subprocess.PIPE, text=True, start_new_session=True)
+            self.sentinel_port = int(self.sentinel.stdout.readline().strip() or 0)
+            self.doc["sentinel"] = {"pid": self.sentinel.pid, "port": self.sentinel_port,
+                                    "offeredAs": self.plan.get("occupiedPortEnv")}
             self.body()
         finally:
+            # Cleanup must finish even if the signal that interrupted the challenge repeats.
+            for signum in (signal.SIGINT, signal.SIGTERM):
+                signal.signal(signum, signal.SIG_IGN)
+            aborted = [run.abort() for run in list(ACTIVE)]
+            if aborted:
+                self.doc["interruptedRuns"] = aborted
             for tree in list(self.trees):
                 self.drop_tree(tree)
-            alive_at_end = self.sentinel_ok()
-            self.doc["sentinel"]["aliveAtEnd"] = alive_at_end
-            if self.sentinel.poll() is None:
-                self.sentinel.terminate()
-                try:
-                    self.sentinel.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    self.sentinel.kill()
-                    self.sentinel.wait()
-            after = checkout_state(self.repo)
-            changes = state_diff(self.before, after, include_worktrees=True)
-            self.doc["source"]["checkoutAfter"] = state_summary(after)
-            self.doc["preservation"].append({"after": "cleanup", "unchanged": not changes, "changes": changes[:50]})
-            if changes:
-                self.probe("preservation", "failed", "the user's checkout differs after cleanup: " + ", ".join(changes[:10]))
-            if not alive_at_end:
-                self.probe("unknown-listener", "failed", "the unknown listener did not survive the challenge")
+            if self.sentinel is not None:
+                alive_at_end = self.sentinel_ok()
+                self.doc["sentinel"]["aliveAtEnd"] = alive_at_end
+                if self.sentinel.poll() is None:
+                    self.sentinel.terminate()
+                    try:
+                        self.sentinel.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        self.sentinel.kill()
+                        self.sentinel.wait()
+                if not alive_at_end:
+                    self.probe("unknown-listener", "failed", "the unknown listener did not survive the challenge")
+            if self.before is not None:
+                after = checkout_state(self.repo)
+                changes = state_diff(self.before, after, include_worktrees=True)
+                self.doc["source"]["checkoutAfter"] = state_summary(after)
+                self.doc["preservation"].append({"after": "cleanup", "unchanged": not changes, "changes": changes[:50]})
+                if changes:
+                    self.probe("preservation", "failed", "the user's checkout differs after cleanup: " + ", ".join(changes[:10]))
             shutil.rmtree(self.scratch, ignore_errors=True)
 
     def body(self):
@@ -624,7 +718,7 @@ class Challenge:
             "evidenceDir": a.get("evidenceDir") != b.get("evidenceDir"),
             "snapshot": (a.get("snapshot") or {}).get("path") != (b.get("snapshot") or {}).get("path"),
             "processGroups": bool(groups(a)) and bool(groups(b)) and not groups(a) & groups(b),
-            "observedProcesses": not set(records[0]["observedProcesses"]) & set(records[1]["observedProcesses"]),
+            "observedProcesses": not {(i[0], i[2]) for i in records[0]["observedIdentities"]} & {(i[0], i[2]) for i in records[1]["observedIdentities"]},
         }
         clash = [k for k, ok in distinct.items() if not ok]
         if clash:
@@ -818,10 +912,17 @@ def main(argv):
         usage("TMPDIR must be outside the checkout")
     challenge = Challenge(root, plan, Path(plan_path).resolve() if plan_path else None, feature,
                           timeout or int(plan.get("timeoutSeconds") or 900), evidence, only)
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(signum, interrupted)
+    stopped_by = None
     try:
         challenge.run()
     except RuntimeError as exc:
         challenge.probe("challenge", "blocked", str(exc))
+    except Interrupted as exc:
+        stopped_by = exc.args[0]
+        challenge.doc["interrupted"] = stopped_by
+        challenge.probe("challenge", "interrupted", f"the challenge received {stopped_by}; in-flight runs were stopped and cleanup ran")
     doc = challenge.doc
     (evidence / "challenge.json").write_text(json.dumps(doc, indent=2) + "\n")
     files = []
@@ -839,11 +940,14 @@ def main(argv):
     if mismatched or challenge.scratch.exists():
         challenge.probe("retention", "failed", "retained evidence did not verify after cleanup: " + ", ".join(mismatched[:10]))
     states = {p["status"] for p in doc["probes"]}
-    doc["outcome"] = "failed" if "failed" in states else "incomplete" if states - {"passed"} else "passed"
+    doc["outcome"] = "interrupted" if stopped_by else "failed" if "failed" in states else "incomplete" if states - {"passed"} else "passed"
     (evidence / "result.json").write_text(json.dumps(doc, indent=2) + "\n")
     print(json.dumps(doc, indent=2))
+    if stopped_by:
+        return 128 + getattr(signal, stopped_by)
     return 1 if "failed" in states else 3 if states - {"passed"} else 0
 
 
-raise SystemExit(main(sys.argv[2:]))
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[2:]))
 PY

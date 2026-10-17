@@ -36,6 +36,57 @@ def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def load_challenge():
+    """Execute challenge.sh's Python body as a module, without running its command line."""
+    text = Path(CHALLENGE).read_text()
+    source = text.split("<<'PY'\n", 1)[1].rsplit("\nPY\n", 1)[0]
+    namespace = {"__name__": "leyline_challenge_under_test"}
+    saved, sys.argv = sys.argv, ["python3", str(CHALLENGE)]
+    try:
+        exec(compile(source, str(CHALLENGE), "exec"), namespace)
+    finally:
+        sys.argv = saved
+    return namespace
+
+
+CHALLENGE_MODULE = load_challenge()
+
+
+def observed(record):
+    """Rebuild the challenger's observed identities from a retained run record."""
+    table = {}
+    for pid, pgid, start in record["observedIdentities"]:
+        table.setdefault(pid, set()).add((pgid, start))
+    return table
+
+
+class ProcessIdentityTests(unittest.TestCase):
+    def setUp(self):
+        self.proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], start_new_session=True)
+        self.addCleanup(lambda: self.proc.poll() is None and (self.proc.kill(), self.proc.wait()))
+        now = CHALLENGE_MODULE["proc_identity"](self.proc.pid)
+        self.assertIsNotNone(now)
+        self.pgid, self.start = now[0], now[1]
+
+    def test_a_reused_pid_is_left_alone(self):
+        # The same PID recorded for an earlier process: its start time differs from the live one.
+        reused = {self.proc.pid: {(self.pgid, "start time of an earlier process")}}
+        self.assertEqual(CHALLENGE_MODULE["owned_alive"](reused), [])
+        self.assertEqual(CHALLENGE_MODULE["reap_owned"](reused, wait=0), ([], []))
+        self.assertFalse(CHALLENGE_MODULE["kill_owned"](self.proc.pid, reused[self.proc.pid]))
+        # The same PID and start time under a different process group is not the observed process either.
+        regrouped = {self.proc.pid: {(self.pgid + 1, self.start)}}
+        self.assertEqual(CHALLENGE_MODULE["reap_owned"](regrouped, wait=0), ([], []))
+        time.sleep(0.2)
+        self.assertIsNone(self.proc.poll(), "a process that was never observed was signalled")
+
+    def test_the_observed_process_is_stopped(self):
+        seen = {self.proc.pid: {(self.pgid, self.start)}}
+        self.assertEqual(CHALLENGE_MODULE["reap_owned"](seen, wait=0), ([self.proc.pid], [self.proc.pid]))
+        self.assertEqual(self.proc.wait(timeout=5), -signal.SIGKILL)
+        self.assertEqual(CHALLENGE_MODULE["owned_alive"](seen), [])
+
+
 @unittest.skipUnless(shutil.which("node") and shutil.which("ps"), "Node 22.13+ and ps are needed")
 class ChallengeTests(unittest.TestCase):
     maxDiff = 6000
@@ -124,8 +175,7 @@ class ChallengeTests(unittest.TestCase):
             self.assertIn(ready["serverPid"], run["descendantsAtSignal"])
             self.assertIn(ready["runnerPid"], run["descendantsAtSignal"])
             self.assertEqual(run["survivors"], [])
-            for pid in run["observedProcesses"]:
-                self.assertFalse(alive(pid), f"{name} left process {pid}")
+            self.assertEqual(CHALLENGE_MODULE["owned_alive"](observed(run)), [], f"{name} left a process")
             self.assertFalse(Path(ready["tempPath"]).exists())
             self.assertTrue(report["snapshot"]["cleaned"])
 
@@ -227,6 +277,44 @@ class ChallengeTests(unittest.TestCase):
         probe = self.probes(doc)["teardown-failure"]
         self.assertEqual(probe["status"], "failed")
         self.assertIn("expected status incomplete, got 'failed'", probe["detail"])
+
+    def test_sigterm_stops_in_flight_runs_and_still_cleans_up(self):
+        hold = Path(self.temp.name) / "hold"
+        hold.mkdir()
+        # Every run waits at its handshake, so the baseline is in flight when the signal arrives.
+        self.fixture.plan_path.write_text(json.dumps({"feature": "briefing", "timeoutSeconds": 60,
+                                                      "env": {"LEYLINE_FIXTURE_SYNC_DIR": str(hold)}}))
+        self.dirty_user_files()
+        before = self.bytes_state()
+        proc = subprocess.Popen(["bash", str(CHALLENGE), str(self.repo), "--trust", "--plan", str(self.fixture.plan_path),
+                                 "--evidence", str(self.evidence)], cwd=self.repo, env=self.fixture.env,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        self.addCleanup(lambda: proc.poll() is None and (proc.kill(), proc.wait()))
+        deadline = time.monotonic() + 60
+        while not (hold / "ready").exists() and proc.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.05)
+        self.assertTrue((hold / "ready").exists(), "the baseline runner never reached its handshake")
+        ready = json.loads((hold / "ready").read_text())
+        proc.send_signal(signal.SIGTERM)
+        stdout, stderr = proc.communicate(timeout=60)
+        self.assertEqual(proc.returncode, 143, stderr[-3000:])
+        doc = json.loads((self.evidence / "challenge.json").read_text())
+        self.assertEqual(doc["interrupted"], "SIGTERM")
+        self.assertEqual(json.loads(stdout)["outcome"], "interrupted")
+        self.assertEqual(doc["probes"][-1]["status"], "interrupted")
+        self.assertNotIn("baseline", [p["probe"] for p in doc["probes"]])
+        [aborted] = doc["interruptedRuns"]
+        self.assertIn("feature briefing", aborted["argv"])
+        self.assertEqual(aborted["remaining"], [])
+        seen = {pid for pid, _, _ in aborted["observedIdentities"]}
+        self.assertTrue({ready["runnerPid"], ready["serverPid"]} <= seen, (ready, seen))
+        self.assertEqual(CHALLENGE_MODULE["owned_alive"](observed(aborted)), [])
+        self.assertFalse(alive(doc["sentinel"]["pid"]))
+        self.assertFalse(Path(ready["tempPath"]).exists())
+        self.assertEqual(self.bytes_state(), before)
+        self.assertEqual(len(self.fixture.git("worktree", "list", "--porcelain").stdout.split("worktree ")) - 1, 1)
+        self.assertTrue(doc["preservation"][-1]["unchanged"])
+        self.assertTrue(json.loads((self.evidence / "result.json").read_text())["retained"]["verifiedAfterCleanup"])
 
     def test_refusals(self):
         self.evidence.mkdir()

@@ -27,10 +27,10 @@ For one saved report from an ordinary run, use `conform.sh report <report.json> 
 After every probe the challenger also checks:
 
 - A listener the challenger owns, on a port the CLI did not open, still answers.
-- No process observed under the run outlives it. The challenger stops any it finds and fails the probe.
+- No process observed under the run outlives it. The challenger stops any it finds and fails the probe. It matches each PID's process group and start time against what it observed first, so a reused PID is left alone.
 - The user's HEAD, index bytes, tracked bytes and untracked bytes are unchanged.
 
-A probe whose prerequisite did not happen is `blocked`. A probe left out with `--only` is `not_run`. Both keep exit 3, so a partial challenge never reads as a pass.
+A probe whose prerequisite did not happen is `blocked`. A probe left out with `--only` is `not_run`. Both keep exit 3, so a partial challenge never reads as a pass. If the challenger itself receives SIGINT or SIGTERM, it stops the runs in flight, removes its worktrees and listener, retains what it has with `challenge.json` marked interrupted, and exits 130 or 143.
 
 ## Plan
 
