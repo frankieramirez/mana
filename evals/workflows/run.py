@@ -110,6 +110,8 @@ def file_hash(path):
 LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'conditions.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py', 'cleanup_fixtures.py', 'ultima_fixtures.py', 'debugging_fixtures.py')}
 STUDY_SOURCES = {**LOADED_SOURCES, **{name: file_hash(HERE / name) for name in (
     'cases.json', 'response-schema.json', 'archive_delegated.py')}}
+# Frozen studies seal and review attempts with the archived copies of these modules.
+STUDY_SOURCES.update({name: file_hash(HERE / name) for name in ('attempts.py', 'adjudication.py')})
 
 
 def snapshot_runner_source(destination, delegated=False):
@@ -672,6 +674,17 @@ def execute_study(study, slot):
             (study.root / 'results/STOP.json').write_bytes(conditions.encoded({
                 'slot': slot, 'execution': report['execution'], 'failures': report['failures'],
                 'reason': 'incomplete execution, containment/input/collection failure, publication attempt or unsupported tool operation'}))
+        try:
+            import attempts
+            sealed = attempts.seal(study, slot)
+            print(json.dumps({'sealed_attempt': sealed}))
+        except (OSError, ValueError) as exc:
+            report['passed'] = False
+            report['failures'].append('attempt seal failed: ' + str(exc))
+            if not (study.root / 'results/STOP.json').exists():
+                (study.root / 'results/STOP.json').write_bytes(conditions.encoded({
+                    'slot': slot, 'execution': report['execution'], 'failures': report['failures'],
+                    'reason': 'allocated attempt could not be sealed'}))
         study.release()
     print(out)
     print(json.dumps({k: report[k] for k in ('execution', 'passed', 'failures')}))
