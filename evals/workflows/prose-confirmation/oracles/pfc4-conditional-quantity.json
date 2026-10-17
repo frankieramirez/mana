@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "group": "pfc4-conditional-quantity",
+  "case_id": "pfc-bikeshare-pricing",
+  "group_kind": "conditional-quantity",
+  "evaluator_only": true,
+  "canary": "mana-confirmation-canary-c40d6a95-conditional-quantity",
+  "contract": "One short paragraph. The first 30 minutes are free only for annual members and only on classic bikes. E-bikes cost 15 cents a minute for everyone, members included, from the first minute. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes. The pricing is a pilot through September 30 and might change after that; the board has not decided. No other price, discount, cap or reason is added, and the uncertainty after September 30 stays uncertain.",
+  "source_statements": [
+    "Rides are free for the first 30 minutes, but only for annual members and only on classic bikes.",
+    "E-bikes are 15 cents a minute for everybody, starting from the first minute, members included.",
+    "Casual riders pay $1 to unlock any bike, plus 20 cents a minute on classic bikes.",
+    "This is pilot pricing through September 30; it might change after that, and the board hasn't decided anything yet."
+  ],
+  "legitimate_alternatives": [
+    "Say \"half hour\" for 30 minutes or \"non-electric\" for classic bikes.",
+    "Order the prices by rider type or by bike type.",
+    "Say \"no decision has been made\" or \"could change\" for the board's open decision."
+  ],
+  "checks": [
+    {
+      "id": "free-ride-conditions",
+      "kind": "preserve",
+      "failure": "broadened-condition",
+      "present_all": [
+        "\\bfree\\b",
+        "\\b30\\b|\\bthirty\\b|\\bhalf[- ]hour\\b",
+        "\\bmembers?\\b",
+        "\\bclassic\\b|\\bnon-?electric\\b|\\b(regular|standard|pedal)\\s+bikes?\\b|\\bexcept\\s+(on\\s+)?e-?bikes\\b"
+      ],
+      "contradict": [
+        "\\b(e-?bikes?|electric)\\b[^.!?\\n]*?(?<!not )(?<!n't )(?<!never )(?<!no )(?<!aren't )\\bfree\\b",
+        "\\bfree\\b{S}\\b(and|or)\\s+e-?bikes?\\b",
+        "\\b(every|all|any)\\s+rides?\\s+(is|are)\\s+free\\b",
+        "\\b(everyone|everybody|all\\s+riders|anyone)\\s+(rides?|gets?|can\\s+ride)\\s+(for\\s+)?free\\b",
+        "\\bfirst\\s+(30|thirty)\\s+minutes\\s+(are|is)\\s+(always\\s+)?free\\b(?![^.!?\\n]*\\b(members?|classic)\\b)"
+      ],
+      "review_question": "Is the free first 30 minutes still limited to annual members on classic bikes?"
+    },
+    {
+      "id": "ebike-rate",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "absent": "fail",
+      "present_all": [
+        "\\be-?bikes?\\b|\\belectric\\b",
+        "\\b15\\s*(cents|¢)|\\$0?\\.15\\b"
+      ],
+      "contradict": [
+        "\\b(e-?bikes?|electric)\\b{S}\\b(?!15\\b|20\\b)\\d+\\s*(cents|¢)"
+      ],
+      "review_question": "Do e-bikes still cost 15 cents a minute?"
+    },
+    {
+      "id": "ebike-applies-to-members",
+      "kind": "preserve",
+      "failure": "lost-condition",
+      "present_all": [
+        "\\b(every(one|body)|all\\s+riders|members\\s+(included|too|pay)|including\\s+members|any(one|body)|whoever)\\b"
+      ],
+      "review_question": "Does the paragraph keep that the e-bike rate applies to everyone, members included, from the first minute?"
+    },
+    {
+      "id": "casual-pricing",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "absent": "fail",
+      "present_all": [
+        "\\bcasual\\b|\\bnon-?members?\\b|\\bpay[- ]as[- ]you[- ]go\\b",
+        "\\$1\\b|\\$1\\.00\\b|\\bone\\s+dollar\\b",
+        "\\b20\\s*(cents|¢)|\\$0?\\.20\\b"
+      ],
+      "contradict": [
+        "\\$(?!1\\b|1\\.00\\b)\\d+(\\.\\d+)?\\s+(to\\s+unlock|unlock)"
+      ],
+      "review_question": "Do casual riders still pay $1 to unlock plus 20 cents a minute on classic bikes?"
+    },
+    {
+      "id": "no-other-rates",
+      "kind": "forbid",
+      "failure": "contradicted-fact",
+      "contradict": [
+        "\\b(?!15\\b|20\\b)\\d+\\s*(cents|¢)"
+      ],
+      "review_question": "Does the paragraph avoid per-minute rates other than 15 and 20 cents?"
+    },
+    {
+      "id": "pilot-dates",
+      "kind": "preserve",
+      "failure": "lost-condition",
+      "absent": "fail",
+      "present_all": [
+        "\\bseptember\\s+30|\\bsept?\\.?\\s+30\\b|\\b30\\s+september"
+      ],
+      "contradict": [
+        "\\bseptember\\s+(?!30\\b)\\d+"
+      ],
+      "review_question": "Does the paragraph keep the pilot end date of September 30?"
+    },
+    {
+      "id": "uncertainty-kept",
+      "kind": "preserve",
+      "failure": "certainty-added",
+      "present_all": [
+        "\\b(might|may|could|undecided|hasn't\\s+decided|has\\s+not\\s+decided|not\\s+(yet\\s+)?decided|no\\s+decision|subject\\s+to\\s+change|to\\s+be\\s+decided)\\b"
+      ],
+      "contradict": [
+        "\\bpermanent\\w*",
+        "\\bprices?\\s+will\\s+(go\\s+up|increase|rise|change|drop)\\b",
+        "\\b(after|from|beyond)\\s+(september|sept?\\.?)\\s+30\\b{S}\\b(will\\s+(change|go\\s+up|increase|end|rise)|goes\\s+up|ends|increases|rises|stays?\\s+the\\s+same|won't\\s+change|will\\s+not\\s+change)\\b"
+      ],
+      "review_question": "Does the paragraph keep that prices might change after September 30 and nothing is decided?"
+    },
+    {
+      "id": "no-invented-terms",
+      "kind": "forbid",
+      "failure": "invented-fact",
+      "contradict": [
+        "\\bcap(ped|s)?\\b",
+        "\\bmaximum\\b",
+        "\\bdaily\\b",
+        "\\bmonthly\\b",
+        "\\bstudents?\\b",
+        "\\bseniors?\\b",
+        "\\bdiscount",
+        "\\blate\\s+fee",
+        "\\bhelmets?\\b",
+        "\\bper\\s+hour\\b",
+        "\\bhalf\\s+off\\b",
+        "\\$\\d+(\\.\\d+)?\\s*(/|per|a)\\s*(year|month|hour)"
+      ],
+      "adjudicate": [
+        "\\bbecause\\b|\\bso\\s+that\\b|\\bto\\s+(encourage|promote|reward|cover|attract)\\b"
+      ],
+      "review_question": "Does the paragraph avoid prices, discounts, caps or reasons the notes do not state?"
+    }
+  ],
+  "examples": [
+    {
+      "id": "g1-plain",
+      "label": "valid",
+      "polished": false,
+      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone, members included, from the first minute. Casual riders pay $1 to unlock a bike plus 20 cents a minute on classic bikes. This is pilot pricing through September 30; it may change after that, and the board hasn't decided yet.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": ""
+    },
+    {
+      "id": "g2-by-bike",
+      "label": "valid",
+      "polished": false,
+      "text": "On classic bikes, annual members get the first half hour free and casual riders pay a $1 unlock fee plus 20 cents a minute. E-bikes are 15 cents a minute for all riders from the start, including members. These are pilot prices that run through September 30 and could change after that; no decision has been made.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": ""
+    },
+    {
+      "id": "b1-every-ride-free",
+      "label": "failing",
+      "polished": true,
+      "text": "Every ride is free for the first 30 minutes. After that, e-bikes cost 15 cents a minute and casual riders pay $1 to unlock plus 20 cents a minute. Pilot pricing runs through September 30 and may change after that.",
+      "screen": "screen_fail",
+      "failures": [
+        "broadened-condition"
+      ],
+      "note": "Drops both conditions on the free period."
+    },
+    {
+      "id": "b2-ebikes-free",
+      "label": "failing",
+      "polished": true,
+      "text": "Annual members ride free for the first 30 minutes on classic bikes and e-bikes. E-bikes otherwise cost 15 cents a minute for everyone. Casual riders pay $1 to unlock plus 20 cents a minute on classic bikes. Pilot pricing runs through September 30 and may change after that.",
+      "screen": "screen_fail",
+      "failures": [
+        "broadened-condition"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b3-prices-will-rise",
+      "label": "failing",
+      "polished": true,
+      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone. Casual riders pay $1 to unlock plus 20 cents a minute on classic bikes. Prices will go up after the pilot ends on September 30.",
+      "screen": "screen_fail",
+      "failures": [
+        "certainty-added"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b4-permanent",
+      "label": "failing",
+      "polished": false,
+      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone. Casual riders pay $1 to unlock plus 20 cents a minute on classic bikes. These prices are permanent from September 30.",
+      "screen": "screen_fail",
+      "failures": [
+        "certainty-added"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b5-invented-discount",
+      "label": "failing",
+      "polished": true,
+      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone. Casual riders pay $1 to unlock plus 20 cents a minute on classic bikes, and students get half off. This is pilot pricing through September 30 and may change after that.",
+      "screen": "screen_fail",
+      "failures": [
+        "invented-fact"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b6-wrong-rate",
+      "label": "failing",
+      "polished": false,
+      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 25 cents a minute for everyone. Casual riders pay $1 to unlock plus 20 cents a minute on classic bikes. This is pilot pricing through September 30 and may change after that.",
+      "screen": "screen_fail",
+      "failures": [
+        "contradicted-fact"
+      ],
+      "note": ""
+    }
+  ]
+}

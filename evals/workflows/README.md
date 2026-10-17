@@ -102,7 +102,7 @@ See `findings.md` for measured pilot outcomes and limits.
 
 For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study.
 
-The first prose instruction ablation has its own frozen dispel payloads and adapter in [Prose instruction-ablation payloads](prose-ablation.md).
+The first prose instruction ablation has its own frozen dispel payloads and adapter in [Prose instruction-ablation payloads](prose-ablation.md), and its six independent confirmation groups in [Prose-ablation confirmation cases](prose-confirmation.md).
 
 Use `--skill-root /absolute/baseline/skills` to install a saved baseline payload; omit it for the candidate. Each run records the installed file hashes and retains the runner sources beside the results. Keep baseline and candidate requests, model, reasoning, and tool configuration identical. Example:
 

@@ -2,7 +2,7 @@
 
 [Ticket 114](https://github.com/frankieramirez/mana/issues/114) freezes the three dispel payloads for the first experiment in the [instruction-ablation decision](../../docs/specs/instruction-ablations.md#first-experiment-prose-fidelity) and adds the adapter that runs them. The payloads are evaluation material only. Nothing under `skills/` changes, and the installed dispel skill keeps its current Fidelity section and self-check item 9.
 
-No model has run any of these payloads. The six confirmation source groups belong to [ticket 115](https://github.com/frankieramirez/mana/issues/115), which must be authored after this freeze; this change adds no confirmation case.
+No model has run any of these payloads. The six confirmation source groups belong to [ticket 115](https://github.com/frankieramirez/mana/issues/115), which must be authored after this freeze; this change adds no confirmation case. Those groups now live in [prose-ablation confirmation cases](prose-confirmation.md).
 
 ## The frozen payload set
 

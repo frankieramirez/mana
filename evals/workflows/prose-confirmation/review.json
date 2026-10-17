@@ -1,0 +1,20 @@
+{
+  "author": {
+    "agent": "claude-issue-115-case-author",
+    "date": "2026-10-17",
+    "edited_candidate_or_payloads": false,
+    "role": "independent evaluator and confirmation case author",
+    "session": "https://claude.ai/code/session_01E2tD7G1k2xo5VXu6LXgJfw",
+    "tuned_candidate": false
+  },
+  "freeze_sha256": "8035159964865f7cac5c84a7678ceefb62243de641f480d9745cdfa3c59609eb",
+  "second_review": {
+    "contested_groups": [],
+    "date": null,
+    "freeze_sha256": null,
+    "notes": null,
+    "reviewer": null,
+    "status": "pending"
+  },
+  "version": 1
+}

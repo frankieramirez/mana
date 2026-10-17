@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The evaluator holds six independent confirmation groups for the first prose instruction ablation, written after the payload freeze by an author who did not tune the candidate. Each group pairs a new raw source and ordinary request with an evaluator-only oracle that lists the statements to keep, the inventions to catch, legitimate alternative rewrites and labeled outputs, including a cleanly styled output that still fails on an invented fact. A lock pins the sources, requests, protected spans, oracle hashes, payload digests and the seeded 36-slot schedule. Offline checks reject drift, oracle leaks into anything a candidate sees, text reused from development material and an exposed group left in confirmation. The second review is pending, so no confirmation run can start.
+
 ## 0.43.1
 
 - The evaluator freezes the dispel payloads for the first prose instruction ablation. Beside the current Fidelity rules, one arm swaps in the narrow source-and-scope candidate and another removes the Fidelity section and its self-check item. Each arm is a complete standalone skill with a hashed file inventory, and each changed arm keeps its exact patch. A prose adapter freezes studies over those arms and archives the raw source, protected spans, final output and observed instruction reads for every attempt. Offline checks prove that only the two selected blocks differ between arms. The installed dispel skill does not change, and no confirmation cases or live runs are included.

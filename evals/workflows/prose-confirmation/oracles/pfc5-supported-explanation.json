@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "group": "pfc5-supported-explanation",
+  "case_id": "pfc-pool-closure",
+  "group_kind": "supported-explanation",
+  "evaluator_only": true,
+  "canary": "mana-confirmation-canary-8be7f210-supported-explanation",
+  "contract": "A shorter members email. It keeps the stated cause (the chlorine pump failed), the replacement part expected Thursday on the vendor's word, the county health inspector's sign-off before reopening, Saturday as a target that is not promised, and the kids' pool open as normal. A vaguer cause such as \"maintenance\" loses a supported fact. No other cause, consequence or date is added. The Ohio origin, Monday and the kids' pool separate pump are supported and may be kept or dropped.",
+  "source_statements": [
+    "The lap pool is closed this week.",
+    "The chlorine pump failed on Monday, and the replacement part has to ship from the manufacturer in Ohio.",
+    "The vendor says the part should arrive Thursday.",
+    "Once it is installed, the county health inspector has to sign off before the pool can reopen.",
+    "The target is Saturday, but it cannot be promised.",
+    "The kids' pool uses a separate pump and is open as normal."
+  ],
+  "legitimate_alternatives": [
+    "Keep the cause in one short clause.",
+    "Drop Ohio, Monday or the separate pump detail.",
+    "Phrase Saturday as \"aiming for\", \"hoping for\" or \"the target, not a promise\"."
+  ],
+  "checks": [
+    {
+      "id": "cause-kept",
+      "kind": "preserve",
+      "failure": "lost-supported-cause",
+      "present_all": [
+        "\\bpump\\b",
+        "\\b(fail\\w*|broke|broken|died|stopped\\s+working|out\\s+of\\s+(service|order))\\b"
+      ],
+      "review_question": "Does the email still say the lap pool is closed because the chlorine pump failed?"
+    },
+    {
+      "id": "cause-specific",
+      "kind": "preserve",
+      "failure": "lost-supported-cause",
+      "present_all": [
+        "\\bchlorin"
+      ],
+      "review_question": "Does the email still name the chlorine pump, not just a pump or equipment?"
+    },
+    {
+      "id": "no-vague-cause",
+      "kind": "forbid",
+      "failure": "lost-supported-cause",
+      "contradict": [
+        "\\b(routine|scheduled|planned|regular)\\s+(maintenance|cleaning|work)\\b",
+        "\\bfor\\s+maintenance\\b",
+        "\\b(technical|mechanical|equipment)\\s+(issues?|problems?|difficulties)\\b"
+      ],
+      "review_question": "Does the email avoid replacing the stated cause with a vaguer one?"
+    },
+    {
+      "id": "no-invented-cause",
+      "kind": "forbid",
+      "failure": "invented-cause",
+      "contradict": [
+        "\\b(old|aging|aged|worn|wear|overheat\\w*|power\\s+(outage|surge)|storm|lightning|leak\\w*|corrosion|vandal\\w*|contaminat\\w*|bacteria|algae)\\b",
+        "\\bunsafe\\b",
+        "\\bfor\\s+(your\\s+)?safety\\b",
+        "\\bhealth\\s+risk"
+      ],
+      "adjudicate": [
+        "\\bsafe(ty|ly)?\\b"
+      ],
+      "review_question": "Does the email avoid adding a cause for the failure or the closure?"
+    },
+    {
+      "id": "part-thursday",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "absent": "fail",
+      "present_all": [
+        "\\bpart\\b",
+        "\\bthursday\\b"
+      ],
+      "contradict": [
+        "\\bpart\\b{S}\\b(arrived|is\\s+here|came\\s+in|already)\\b",
+        "\\b(tuesday|wednesday|friday|sunday)\\b"
+      ],
+      "review_question": "Does the email still say the part is expected Thursday?"
+    },
+    {
+      "id": "part-hedged",
+      "kind": "preserve",
+      "failure": "certainty-added",
+      "present_all": [
+        "\\b(should|expect\\w*|vendor\\s+says|supposed\\s+to|due|estimated|hope\\w*|planned)\\b"
+      ],
+      "review_question": "Does the Thursday arrival stay the vendor's expectation, not a certainty?"
+    },
+    {
+      "id": "inspector-signoff",
+      "kind": "preserve",
+      "failure": "lost-condition",
+      "present_all": [
+        "\\binspect",
+        "\\b(sign\\w*\\s*-?\\s*off|approv\\w*|clear\\w*|pass\\w*|ok|okay)\\b"
+      ],
+      "contradict": [
+        "\\b(without|no\\s+need\\s+for|skip\\w*)\\b{S}\\binspect",
+        "\\bre-?open\\w*\\s+(as\\s+soon\\s+as|once|right\\s+after|the\\s+moment)\\s+(it.s|it\\s+is|the\\s+part\\s+is|the\\s+pump\\s+is)\\s+(installed|in|fixed|replaced)\\b",
+        "\\binspect\\w*{S}\\b(already|is\\s+booked)\\b"
+      ],
+      "review_question": "Does the email keep that the inspector must sign off before reopening?"
+    },
+    {
+      "id": "saturday-target",
+      "kind": "preserve",
+      "failure": "certainty-added",
+      "absent": "fail",
+      "present_all": [
+        "\\bsaturday\\b"
+      ],
+      "contradict": [
+        "\\b(will|we'll|we\\s+will)\\s+(definitely\\s+|be\\s+)?re-?open\\w*\\s+(on\\s+)?saturday\\b(?![^.!?\\n]*\\b(hope\\w*|aim\\w*|target|promise|tentative|if|might|may|could|earliest|unless)\\b)",
+        "\\bre-?opens\\s+(on\\s+)?saturday\\b(?![^.!?\\n]*\\b(hope\\w*|aim\\w*|target|promise|tentative|if|might|may|could|earliest|unless)\\b)",
+        "\\bback\\s+open\\s+(on\\s+)?saturday\\b(?![^.!?\\n]*\\b(hope\\w*|aim\\w*|target|promise|if|might|may|could)\\b)"
+      ],
+      "review_question": "Is Saturday still a target the club cannot promise?"
+    },
+    {
+      "id": "saturday-hedged",
+      "kind": "preserve",
+      "failure": "certainty-added",
+      "present_all": [
+        "\\bsaturday\\b[^.!?\\n]*\\b(hope\\w*|aim\\w*|target|goal|plan|expect\\w*|try|promis\\w*|tentative|if|might|may|could|luck|earliest)|\\b(hope\\w*|aim|aiming|target|goal|plan|expect|try|trying|promis\\w*|tentative|if|might|may|could|luck|earliest)\\b[^.!?\\n]*\\bsaturday\\b"
+      ],
+      "review_question": "Is the Saturday target hedged in the sentence that names it?"
+    },
+    {
+      "id": "kids-pool-open",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "present_all": [
+        "\\bkids'?|\\bchildren'?s?\\b",
+        "\\bopen\\b"
+      ],
+      "contradict": [
+        "\\b(kids'?|children'?s?)\\s+pool\\s+(is\\s+|are\\s+)?(also\\s+)?(closed|shut)\\b",
+        "\\b(both|all)\\s+pools\\s+(are\\s+)?(closed|shut)\\b"
+      ],
+      "review_question": "Does the email keep that the kids' pool is open as normal?"
+    },
+    {
+      "id": "no-invented-detail",
+      "kind": "forbid",
+      "failure": "invented-fact",
+      "contradict": [
+        "\\b(refund\\w*|credits?|prorat\\w*|discount\\w*|compensat\\w*|free\\s+(guest|pass|swim))\\b",
+        "\\b(lifeguards?|swim\\s+lessons?|team\\s+practice|lane\\s+reservations?)\\b"
+      ],
+      "review_question": "Does the email avoid consequences or offers the source does not state?"
+    }
+  ],
+  "examples": [
+    {
+      "id": "g1-plain",
+      "label": "valid",
+      "polished": false,
+      "text": "The lap pool is closed this week. The chlorine pump failed on Monday, and the replacement part is coming from the manufacturer in Ohio; the vendor expects it Thursday. After it is installed, the county health inspector has to sign off before we can reopen. We're aiming for Saturday, but we can't promise it. The kids' pool has its own pump and is open as usual. Thanks for your patience.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": ""
+    },
+    {
+      "id": "g2-short",
+      "label": "valid",
+      "polished": false,
+      "text": "Lap pool update: it's closed this week because the chlorine pump broke Monday. The replacement part should arrive Thursday, then the county health inspector needs to approve the repair before we reopen. Saturday is the target, not a promise. The kids' pool is open as normal.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": ""
+    },
+    {
+      "id": "g3-conditional-saturday",
+      "label": "valid",
+      "polished": false,
+      "text": "Quick update: the lap pool is closed this week. Its chlorine pump failed and the replacement part is due Thursday. Once it's in and the county health inspector signs off, we'll reopen, hopefully on Saturday. The kids' pool is open as normal.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": ""
+    },
+    {
+      "id": "b1-maintenance",
+      "label": "failing",
+      "polished": true,
+      "text": "The lap pool is closed this week for maintenance. We expect to reopen Saturday once the county health inspector signs off, but we can't promise that. The kids' pool is open as normal.",
+      "screen": "screen_fail",
+      "failures": [
+        "contradicted-fact",
+        "lost-supported-cause"
+      ],
+      "note": "Swaps the stated cause for a vaguer one and drops the Thursday part."
+    },
+    {
+      "id": "b2-aging-pump",
+      "label": "failing",
+      "polished": true,
+      "text": "The lap pool is closed this week because its aging chlorine pump failed on Monday. The vendor expects the replacement part Thursday, and the county health inspector has to sign off before we reopen. We are aiming for Saturday but can't promise it. The kids' pool is open as normal.",
+      "screen": "screen_fail",
+      "failures": [
+        "invented-cause"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b3-definite-saturday",
+      "label": "failing",
+      "polished": false,
+      "text": "The lap pool is closed this week because the chlorine pump failed. The replacement part should arrive Thursday and the county health inspector will sign off after it is installed. The lap pool will reopen Saturday. The kids' pool is open as normal.",
+      "screen": "screen_fail",
+      "failures": [
+        "certainty-added"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b4-both-closed",
+      "label": "failing",
+      "polished": false,
+      "text": "Both pools are closed this week because the chlorine pump failed. The vendor expects the part Thursday, and the county health inspector has to sign off before we reopen. We're aiming for Saturday.",
+      "screen": "screen_fail",
+      "failures": [
+        "contradicted-fact"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b5-credit",
+      "label": "failing",
+      "polished": true,
+      "text": "The lap pool is closed this week because the chlorine pump failed on Monday. The vendor expects the part Thursday, and the county health inspector has to sign off before we reopen; we are aiming for Saturday but can't promise it. The kids' pool is open as normal. Members will get a prorated credit for the week.",
+      "screen": "screen_fail",
+      "failures": [
+        "invented-fact"
+      ],
+      "note": ""
+    },
+    {
+      "id": "b6-no-inspection",
+      "label": "failing",
+      "polished": false,
+      "text": "The lap pool is closed this week because the chlorine pump failed. The replacement part should arrive Thursday and we'll reopen as soon as it's installed, hopefully Saturday. The kids' pool is open as normal.",
+      "screen": "screen_fail",
+      "failures": [
+        "lost-condition"
+      ],
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "exposures": [],
+  "rule": "A group is exposed when anyone who tunes, edits or selects a candidate instruction for this experiment reads its oracle, its labeled examples, or a confirmation output from it before the candidate is fixed. Record each exposure here with the group, the reader, the date and the reason, move every case in that group to the development split and refreeze. An exposed group never counts toward confirmation: author a new group of the same kind from new subject matter, freeze it, and have the second reviewer check it before any confirmation slot runs. The case author and the second reviewer are evaluators and do not expose a group by reading it.",
+  "version": 1
+}
