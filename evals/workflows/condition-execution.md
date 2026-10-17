@@ -2,7 +2,7 @@
 
 [Implementation ticket 91](https://github.com/frankieramirez/mana/issues/91) adds an opt-in condition layer to the existing focused runner. It installs actual, separately pinned Mana and reference payloads, or an empty instruction directory for `none`. Each condition receives the same ordinary request, fixture, tools and response envelope. The instruction-loading prefix names only that condition's entrypoint. Discovery, user configuration, integrations and delegation remain disabled.
 
-This is development infrastructure. It does not implement the twelve held-out source groups, comparative delegated collection, independent adjudication or human effort measurement in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md). No comparative model runs have been performed for this change. The existing host allowlist remains unchanged; a live attempt requires the exact frozen host and a fresh containment probe. The installed `0.159.0-alpha.3` host is not accepted.
+This is development infrastructure. It does not implement the twelve held-out source groups, independent adjudication or human effort measurement in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md). [Ticket 99](https://github.com/frankieramirez/mana/issues/99) adds the host registry and condition-aware delegated collection described [below](#host-validation-and-delegated-arms). No comparative model runs have been performed. A live attempt requires the exact frozen host and fresh containment. The `0.159.0-alpha.3` host has no evidence record and is not accepted.
 
 ## Supported fixtures
 
@@ -104,3 +104,50 @@ python3 -B -m unittest discover -s evals/workflows -p test_conditions.py
 ```
 
 Those checks establish fixture and adapter behavior only. A successful check is not a live containment probe, proof of reference capability equivalence, held-out effectiveness evidence, or evidence of reviewer time saved.
+
+## Host validation and delegated arms
+
+`hosts.py` decides which host may run, from the JSON records in `host-evidence/`. Each record names one exact version string and platform. Every capability carries a status (`verified`, `failed` or `unavailable`), at least one evidence reference and an observation time. A capability with no record is unknown, and unknown fails closed. A later observation of the same capability replaces an earlier one, so a failed probe revokes an older pass. Adding a version string without probe results changes nothing.
+
+| Mode | Required verified capabilities |
+|---|---|
+| `focused` | installation, outside reads denied, protected writes denied, fixture writes allowed, network denied, command events, completion detection |
+| `delegated` | focused, plus descendant collection, thread attribution and per-child containment |
+| `comparative-delegated` | delegated, plus usage events, the active-thread cap and process-family termination, each observed within 30 days |
+
+The 0.155.1 and 0.159.2 records restate the earlier pilot evidence and cite the record holding it. Version 0.159.2 therefore keeps its focused and delegated acceptance. It has no comparative acceptance: its thread cap was configured but never challenged, and no recorded probe shows that a timeout ends every descendant process. The 2026-10-17 Claude Code record holds an installation observation only, because the evaluator has no adapter for that host.
+
+Frozen controls copy the evidence records into `runner-source/host-evidence/`, so a study runs against the registry it was frozen with. The registry decision, the record names and digests, and the observation times are saved in every attempt's `result.json` and `evaluation.json`.
+
+### Recording new evidence
+
+```bash
+python3 -B evals/workflows/run.py --probe-host --out /absolute/new-probe \
+  --model gpt-6.1-sol --timeout 120
+```
+
+The probe needs an installed, logged in Codex CLI. It runs the containment probe through `codex sandbox`, then runs a sandboxed process that leaves its session and checks that the timeout sweep killed it. If containment fails, it stops without a model call. Otherwise it makes one bounded `codex exec` call that asks for a parent probe and two child probes, collects descendant history through the app-server, and records each capability it observed. The active-thread cap counts as verified only when persisted turns carry timing that shows the peak stayed within the configured limit; without timing it stays unknown. Model selection compares the requested name with the host-reported thread metadata. The backend model identity stays null. Review `host-evidence.json` in the output directory, then copy it into `host-evidence/` to change acceptance. Local paths are replaced with `<probe-dir>`.
+
+### Delegated studies
+
+A manifest can add one `delegation` block, for example `{"max_active_threads": 4, "max_children": 10, "nested": false}`. Freezing then requires `comparative-delegated` acceptance for the manifest host, permits timeouts up to 900 seconds, and stores the limits in controls. Every arm receives the same host configuration (`features.multi_agent`, `agents.max_threads`, the same disabled integrations) and the same delegation text. Only the instruction-loading prefix and the installed payload differ. Delegated attempts keep their saved session so descendants can be read after the parent exits.
+
+Before launch, the runner repeats the sandbox preflight, which now also checks that the tool-double mount is read-only. It then writes `bin/probe.py` with a fresh nonce, a private outside canary and the port of a live local listener. The parent and every child must run that probe themselves. A thread passes only when its own persisted command shows the matching nonce, denied outside reads, denied writes to `installed/` and `bin/`, an allowed fixture write whose artifact the evaluator finds afterwards, and denied network. Any connection that reaches the evaluator's listener during the run is also a failure. Probe labels must be unique per thread.
+
+After the parent exits, the runner reads every descendant through `child_events.py` and saves `threads.json` and `attributed-events.jsonl` in the slot directory. These attempts become `collection_failed`, or stay `timeout`, and stop the schedule: no parent identity, a reader error, a child referenced by the parent but absent from the listing, a thread identity in the parent's event stream that was never collected, an incomplete turn, a missing final message, a missing or failed per-thread probe, more children than the limit, any nested child, or host-reported model metadata that differs from the request. An arm that chooses not to delegate is valid; the parent history is still required. Grading uses the attributed parent and child commands.
+
+### Timeouts and cancellation
+
+Every live invocation runs through `process_family.py`. The runner marks itself a Linux child subreaper, so a tool process that double-forks or calls `setsid` is reparented to the runner instead of escaping. On timeout, on SIGTERM or Ctrl-C, and after a normal exit, it kills the host's session, process group and subtree, plus any process adopted during the run, and rescans until none remain. The record (`outcome`, signalled and surviving process IDs, start and end times) is saved as `process_family` in the result. A timeout, a cancellation or a surviving process stops the schedule. A timeout keeps the `timeout` status even when its descendant history is also incomplete. The attempt directory and archive are kept in every case.
+
+### Recorded fields
+
+Attempt records keep `requested_model`, `reported_model` (host metadata, null when absent) and `actual_model` (always null) separate. Missing parent usage is null, not an empty list; child usage and family totals stay null. The additive `evaluation.json` fields are `reported_model`, `host`, `host_capability`, `started_at`, `ended_at`, `process_family`, `isolation`, `delegation_observed` and `delegation_limits`.
+
+`fake_host.py` stands in for the Codex CLI in offline tests. Under `enforced` it applies the declared permission table and network flag to Python commands through an audit hook, so probe results come from real attempted reads, writes and connections; under `leaky` it applies nothing. It also emulates `exec --json`, saved threads and the app-server read path, and can hang with a session-escaping grandchild:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_host_validation.py
+```
+
+These tests show that the evaluator detects each failure. They do not validate any real host. In the 2026-10-17 delivery container, Codex CLI was not installed, so no live probe ran and no host was newly accepted.

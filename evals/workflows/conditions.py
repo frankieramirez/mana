@@ -1,5 +1,7 @@
 """Frozen, opt-in conditions for the existing focused workflow runner."""
+import delegation
 import hashlib
+import hosts
 import json
 from pathlib import Path, PurePosixPath
 import random
@@ -66,12 +68,16 @@ def keys(value, required, label):
 
 
 def checked_manifest(data, cases, supported_hosts):
-    keys(data, ('version', 'study', 'host', 'model', 'reasoning', 'seed',
-                'repetitions', 'conditions', 'cases'), 'study manifest')
+    required = ('version', 'study', 'host', 'model', 'reasoning', 'seed', 'repetitions', 'conditions', 'cases')
+    # Delegation is optional and, when present, applies identically to every arm.
+    keys(data, required + (('delegation',) if isinstance(data, dict) and 'delegation' in data else ()), 'study manifest')
     if data['version'] != 1 or not isinstance(data['study'], str) or not IDENTIFIER.fullmatch(data['study']):
         raise ValueError('invalid study identity')
     if data['host'] not in supported_hosts:
         raise ValueError('unvalidated study host')
+    limits = delegation.checked(data['delegation']) if 'delegation' in data else None
+    if limits is not None:
+        hosts.require(data['host'], 'comparative-delegated')
     if (not isinstance(data['model'], str) or not data['model'].strip()
             or data['reasoning'] not in ('low', 'medium', 'high')):
         raise ValueError('model and reasoning must be explicit')
@@ -99,12 +105,14 @@ def checked_manifest(data, cases, supported_hosts):
             raise ValueError('existing cases are development sources only')
         if not isinstance(item['request'], str) or not item['request'].strip():
             raise ValueError('ordinary request is required for every condition')
-        if type(item['timeout_seconds']) is not int or not 1 <= item['timeout_seconds'] <= 300:
-            raise ValueError('focused condition timeout must be 1..300 seconds')
+        ceiling = 900 if limits else 300
+        if type(item['timeout_seconds']) is not int or not 1 <= item['timeout_seconds'] <= ceiling:
+            raise ValueError('condition timeout must be 1..%d seconds' % ceiling)
         frozen = dict(case)
         frozen['request'] = item['request']
         selected.append({'definition': frozen, 'source_group': item['source_group'],
-                         'split': item['split'], 'timeout_seconds': item['timeout_seconds']})
+                         'split': item['split'], 'timeout_seconds': item['timeout_seconds'],
+                         **({'delegation_allowed': True} if limits else {})})
         seen.add(item['id'])
     for kind in ('mana', 'reference'):
         condition = data['conditions'][kind]
@@ -166,6 +174,7 @@ def freeze(manifest_path, destination, cases, source_dir, source_names, supporte
     source = destination / 'runner-source'
     source.mkdir()
     for name in sorted(set(source_names) | {'cases.json', 'response-schema.json', 'archive_delegated.py'}):
+        (source / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_dir / name, source / name)
         if name in source_names and digest((source / name).read_bytes()) != source_names[name]:
             raise ValueError('evaluator source changed during freeze: ' + name)
@@ -179,7 +188,8 @@ def freeze(manifest_path, destination, cases, source_dir, source_names, supporte
                              'condition': kind, 'repetition': repetition})
     (destination / 'schedule.json').write_bytes(encoded(schedule))
     controls = {k: data[k] for k in ('version', 'study', 'host', 'model', 'reasoning', 'seed', 'repetitions')}
-    controls.update({'cases': selected, 'conditions': conditions, 'delegation': False,
+    controls.update({'cases': selected, 'conditions': conditions,
+                     'delegation': delegation.checked(data['delegation']) if 'delegation' in data else False,
                      'schedule_sha256': digest(encoded(schedule)),
                      'fixture_inventory': inventory(fixture_source),
                      'runner_inventory': inventory(source)})
@@ -251,7 +261,8 @@ class FrozenStudy:
         payload = self.controls['conditions'][cell['condition']]
         condition = {'kind': cell['condition'], 'root': self.root / 'payloads' / cell['condition'],
                      'inventory': payload['inventory'], 'revision': payload['revision'],
-                     'entrypoint': payload['entrypoints'].get(cell['case'])}
+                     'entrypoint': payload['entrypoints'].get(cell['case']),
+                     'delegation': self.controls.get('delegation') or None}
         return cell, case, condition
 
     def claim(self, slot):
@@ -305,7 +316,9 @@ def evaluation_metadata(study, slot):
             'runner_hashes': study.controls['runner_inventory'],
             'allowed_effects': case['definition']['allowed_effects'],
             'requested_model': study.controls['model'], 'actual_model': None,
-            'timeout_seconds': case['timeout_seconds'], 'delegation_allowed': False,
+            'timeout_seconds': case['timeout_seconds'],
+            'delegation_allowed': bool(study.controls.get('delegation')),
+            'delegation_limits': study.controls.get('delegation') or None,
             'retry_attempts': 0, 'human_review': {'active_seconds': None, 'censored': None},
             'judgments': [], 'regrades': []}
 
@@ -359,7 +372,9 @@ def prompt(case, work, condition):
     prefix = ''
     if condition['kind'] != 'none':
         prefix = 'Use the instructions at ' + str(work / 'installed' / 'payload' / condition['entrypoint']) + '.\n'
+    # Delegation text depends only on the study's shared limits, never on the condition.
     return (prefix + case['request'] + '\n\nAll workspace files are synthetic fixtures. '
-            'Do not delegate. Keep the normal report inside the response schema\'s report field. '
+            + delegation.bounds_text(condition.get('delegation')) +
+            'Keep the normal report inside the response schema\'s report field. '
             'List checks actually attempted or left unverified in checks. '
             'Do not change fixture checks or installed instructions. Use artifacts/ for temporary evidence.')

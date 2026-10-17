@@ -43,4 +43,6 @@ Independent branches may run in parallel. Each implementation ticket should name
 
 The planning session inspected the installed host as `codex-cli 0.159.0-alpha.3`. The existing workflow adapter validates other specific versions and fails closed on this one. No live model trial was run by this planning/repair batch. Revalidate containment and the event contract before enabling this host, or run on an already supported host with a fresh probe.
 
+Host acceptance now comes from recorded probe evidence ([issue 99](https://github.com/frankieramirez/mana/issues/99)). Version 0.159.2 keeps its focused and delegated records. No host has comparative delegated acceptance, because no record shows a challenged thread cap or a process-family termination probe. The issue 99 container had no Codex CLI, so `run.py --probe-host` has not run against a real host.
+
 The large comparative study, discovery observations, consumer rollout and new ablations are downstream work. Preserve this distinction in issue closeout and release notes. A merged fix or a completed protocol is useful evidence for its own scope; neither supplies the missing comparative results.

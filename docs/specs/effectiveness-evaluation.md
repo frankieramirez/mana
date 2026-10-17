@@ -1,7 +1,7 @@
 # Workflow effectiveness evaluation
 
 Decision: [Specify a fair benchmark for workflow effectiveness and review effort](https://github.com/frankieramirez/mana/issues/82), under [Improve mana's reliability and measured effectiveness](https://github.com/frankieramirez/mana/issues/72).
-Status: protocol settled on 2026-10-17; the focused condition adapter ships in mana 0.43.0. Held-out fixtures, comparative delegation and host validation remain pending; live runs are unstarted.
+Status: protocol settled on 2026-10-17; the focused condition adapter ships in mana 0.43.0. The evidence-backed host registry, shared delegation limits, per-thread probes and process-family termination are implemented and tested offline ([host validation](../../evals/workflows/condition-execution.md#host-validation-and-delegated-arms)). No host is validated for comparative delegated runs yet. Held-out fixtures remain pending; live runs are unstarted.
 
 ## Decision and evidence
 

@@ -121,6 +121,8 @@ def execute(out, skill_root, timeout, model, reasoning, heldout=False):
         result['host']=subprocess.check_output([str(exe),'--version'],text=True).strip()
         if result['host'] != run.SUPPORTED_HOST:
             raise ValueError('delegated adapter is validated only for '+run.SUPPORTED_HOST)
+        # The registry must also hold verified delegated evidence for this exact version.
+        result['host_capability']=run.capability_summary(run.hosts.require(result['host'],'delegated'))
         case,work,baseline=prepare(out,skill_root,heldout)
         result['baseline']=baseline
         config=run.permission_config(work,exe)

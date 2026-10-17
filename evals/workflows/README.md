@@ -15,7 +15,7 @@ These validate fixtures and graders. They do not execute an agent. Each syntheti
 
 ## Actual agent runs
 
-The adapter supports Linux and Codex CLI 0.155.1 or 0.159.2, with an existing host login. Version 0.159.2 passed a fresh containment probe and a live command-event, usage, and structured-response check during package C. Other versions and hosts are unvalidated and fail closed. Revalidate isolation and the event contract before changing the supported version. Python's standard library is sufficient for the harness itself.
+The adapter supports Linux and Codex CLI 0.155.1 or 0.159.2, with an existing host login. Version 0.159.2 passed a fresh containment probe and a live command-event, usage, and structured-response check during package C. Accepted versions come from the evidence records in `host-evidence/`, read by `hosts.py`; see [host validation](condition-execution.md#host-validation-and-delegated-arms). Other versions and hosts are unvalidated and fail closed. Revalidate isolation and the event contract with `--probe-host` before adding a record. Python's standard library is sufficient for the harness itself.
 
 ```bash
 python3 -B evals/workflows/run.py --live \

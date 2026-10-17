@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The workflow evaluator accepts a host only from recorded probe evidence in `evals/workflows/host-evidence/`, per exact version and mode. Comparative delegated studies need fresh evidence for family termination and the thread cap, so Codex CLI 0.159.2 stays limited to its focused and delegated record until a new probe passes. Frozen studies can declare one delegation limit for every arm. Each thread runs its own containment probe, missing child history stops the schedule, and a timeout or cancellation kills the whole process family. `run.py --probe-host` records candidate evidence with at most one model call. Offline tests use a fake host. No live host was validated: Codex CLI is not installed in the delivery container.
+
 ## 0.43.0
 
 - Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.
