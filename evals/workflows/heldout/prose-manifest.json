@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; second review pending; reference package inventory unresolved",
+  "status": "frozen; payload inventories verified; second review requested changes",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -16,9 +16,9 @@
       "source": "https://github.com/cursor/plugins",
       "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
       "root": "pstack",
-      "inventory_sha256": null,
-      "inventory_status": "unresolved",
-      "evidence": "Entrypoint bytes fetched from raw.githubusercontent.com at the revision; the file names no supporting files. The package inventory could not be listed from the authoring session. A sibling fixture author reported d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc over 170 files; that value is unverified here and is not frozen."
+      "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+      "inventory_status": "verified",
+      "evidence": "Entrypoint bytes fetched from raw.githubusercontent.com at the revision; the file names no supporting files. Inventory digest supplied by the parent session from a read-only checkout of cursor/plugins at the revision, then recomputed by the second reviewer on 2026-10-17: git archive of pstack/ at the revision and the checkout working tree both give conditions.inventory_digest d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc over 170 files, and skills/unslop/SKILL.md hashes to the frozen entrypoint SHA-256."
     },
     "none": {}
   },
@@ -120,5 +120,5 @@
     }
   ],
   "exposure": [],
-  "freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee"
+  "freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba"
 }

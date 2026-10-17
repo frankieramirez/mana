@@ -119,7 +119,8 @@ class FreezeIntegrity(unittest.TestCase):
             'unknown product path': lambda m, r: m['cases'][0]['allowed_effects']['product_paths'].append('README.md'),
             'delegation': lambda m, r: m['cases'][2].update(delegation_allowed=True),
             'shared group': lambda m, r: m['cases'][1].update(source_group=m['cases'][0]['source_group']),
-            'unverified digest claimed': lambda m, r: m['conditions']['reference'].update(inventory_sha256='a' * 64),
+            'unverified digest claimed': lambda m, r: m['conditions']['reference'].update(inventory_sha256='a' * 64,
+                                                                                             inventory_status='unresolved'),
             'oracle swapped': lambda m, r: m['cases'][0].update(oracle_id='oracle-prose-scope-01'),
         }
         original = {n: (self.root / n).read_bytes() for n in (hp.MANIFEST_NAME, hp.REVIEW_NAME)}
