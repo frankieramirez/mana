@@ -185,6 +185,8 @@ Keep grading criteria outside candidate context. Use repository state and actual
 
 An external-stack comparison is optional later research. It requires equivalent host capabilities and documented differences in installed dependencies. It is not a release prerequisite for repairing demonstrated internal contradictions.
 
+The October 17 decision map settles the next evaluation contracts in [workflow effectiveness](../specs/effectiveness-evaluation.md), [discovery and host capabilities](../specs/discovery-and-hosts.md), and [instruction ablations](../specs/instruction-ablations.md). They preserve this runner and its historical records, define separate bounded studies, and distinguish planned fixtures from observed outcomes. Their adapter work and live runs remain delivery tasks; the decision documents do not add a comparative performance claim.
+
 ## Validation and release
 
 - Run the smallest relevant deterministic tests while implementing each package.
