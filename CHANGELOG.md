@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator has three held-out verification-judgment groups (`verify-contract-test`, `verify-stale-proof`, `verify-unavailable`) with evaluator-only oracles, Mana, reference and no-suite routes, and a hash lock over requests, fixtures, oracles, source groups and allowed effects. Offline tests show a contract-breaking mutation fails while the implementation-coupled spy can be removed, and that stale proof, a successful render after a failed check and a missing runtime earn no execution credit. The second review is pending, so the groups are not yet cleared for confirmation runs.
+- The workflow evaluator has three held-out verification-judgment groups (`verify-contract-test`, `verify-stale-proof`, `verify-unavailable`) with evaluator-only oracles, Mana, reference and no-suite routes, and a hash lock over requests, fixtures, oracles, source groups and allowed effects. Offline tests show a contract-breaking mutation fails while the implementation-coupled spy can be removed, and that stale proof, a successful render after a failed check and a missing runtime earn no execution credit. Redirected runs read back later and equivalent invocations count as observed, spies on builtins fail against a second exporter, and an unhedged report overclaim fails the attempt. The second review is pending, so the groups are not yet cleared for confirmation runs.
 
 ## 0.43.0
 
