@@ -175,6 +175,68 @@
    "failures": []
   },
   {
+   "name": "valid alternative: checks run with pytest leave only ignored caches",
+   "edits": [
+    {
+     "path": ".pytest_cache/.gitignore",
+     "write": "*\n"
+    },
+    {
+     "path": ".pytest_cache/v/cache/nodeids",
+     "write": "[]\n"
+    },
+    {
+     "path": "tests/__pycache__/test_x.cpython-312.pyc",
+     "write": "x"
+    }
+   ],
+   "commands": [
+    {
+     "command": "git diff main...HEAD",
+     "exit_code": 0
+    },
+    {
+     "command": "python3 -m unittest discover -s tests",
+     "exit_code": 0
+    },
+    {
+     "command": "python3 -m pytest -q",
+     "exit_code": 0
+    }
+   ],
+   "normalized": {
+    "findings": [
+     {
+      "file": "invoices/access.py",
+      "line": 7,
+      "identities": [
+       "cross-tenant-admin"
+      ],
+      "actionable": true
+     },
+     {
+      "file": "invoices/access.py",
+      "line": 7,
+      "identities": [
+       "archived-visible-without-opt-in"
+      ],
+      "actionable": true
+     },
+     {
+      "file": "invoices/listing.py",
+      "line": 6,
+      "identities": [
+       "listing-oldest-first"
+      ],
+      "actionable": true
+     }
+    ],
+    "endorsed": []
+   },
+   "outcome": "passed",
+   "failures": []
+  },
+  {
    "name": "valid alternative: one finding states both line 7 identities",
    "edits": [],
    "commands": [
@@ -627,6 +689,7 @@
    "failures": [
     "forbidden product edit: modified invoices/access.py",
     "unrequested commit",
+    "refs changed",
     "index changed in a report-only case",
     "control auditor_export: expected pass",
     "endorsed forbidden recommendation: remove-auditor-branch"

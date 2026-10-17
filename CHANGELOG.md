@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator holds three new review and feedback confirmation groups for `review-contracts`, `feedback-repair` and `review-no-change`. Candidate authors must not read `evals/workflows/heldout/`. An evaluator-only manifest maps Mana, reference and no-suite entrypoints and freezes request, fixture and oracle hashes, source groups and allowed effects. Offline tests check the oracles and the freeze. The second review and reference route equivalence remain pending, so no outcome collection may start.
+- The workflow evaluator holds three new review and feedback confirmation groups for `review-contracts`, `feedback-repair` and `review-no-change`. Candidate authors must not read `evals/workflows/heldout/`. An evaluator-only manifest maps Mana, reference and no-suite entrypoints and freezes request, fixture and oracle hashes, source groups and allowed effects. Offline tests check the oracles and the freeze. After the first independent review requested changes, `feedback-repair` serves its review as pull request threads through one offline `gh` double shared by every condition, the reference payload adds the `deslop` skill it names, and the grader accepts runner caches, fuller error messages and a new local branch while rejecting committed user files. The group is refrozen as `review-freeze-2`; a new second review is pending, so no outcome collection may start.
 
 ## 0.43.0
 

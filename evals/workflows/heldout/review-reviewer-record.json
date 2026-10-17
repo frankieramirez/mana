@@ -1,103 +1,267 @@
 {
-  "note": "SECOND REVIEWER RECORD. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and reference entrypoint equivalence. It sits outside the freeze so completing it does not change frozen inputs; reviewed_freeze_sha256 must equal the current review-freeze.json digest. Any requested change to inputs or oracles needs a new freeze.",
-  "status": "complete",
-  "reviewer": "independent reviewer agent, Claude",
-  "independent_of_author": true,
-  "reviewed_freeze_sha256": "4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7",
-  "completed_on": "2026-10-17",
-  "verdict": "changes-requested",
-  "verdict_summary": "The known-bad and known-good judgments are right in all three groups, and the review routes are equivalent. The group is not ready: the grader rejects four legitimate outcomes and accepts one invalid one, and neither suite has an equivalent executable route for feedback-repair as frozen. Every fix below changes frozen inputs, oracles, grader or manifest, so it needs a new, separately named freeze and a fresh second review.",
-  "checks_run": {
-    "scripts/validate.sh": "ok",
-    "heldout_review.py --check": "problems [], freeze_sha256 4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7, blockers: second review pending, reference entrypoint equivalence unconfirmed (before this record)",
-    "test_heldout_review": "17 tests OK"
-  },
+  "note": "SECOND REVIEWER RECORD SLOT for review-freeze-2. Pending. An independent reviewer who did not author these fixtures and does not edit candidate instructions checks every case's known-bad and known-good outcomes, valid alternatives and entrypoints, records a route decision per case for mana and reference (equivalent or not-equivalent), and sets verdict to approved or changes-requested. This file sits outside the freeze; readiness_blockers() reads verdicts and route equivalence from it, and reviewed_freeze_sha256 must equal the current review-freeze.json digest. Earlier reviews stay in history.",
+  "status": "pending",
+  "reviewer": null,
+  "independent_of_author": null,
+  "reviewed_freeze_sha256": null,
+  "completed_on": null,
+  "verdict": null,
   "cases": {
     "feedback-repair": {
-      "known_bad": "confirmed",
-      "known_good": "confirmed",
-      "valid_alternatives": "defects",
-      "entrypoints": "not-equivalent",
-      "notes": "FB-1 is a real defect at pricing/quote.py:17 (20.00 at 20 units gives 19.90); FB-2 would remove the guard importers/csv_orders.py relies on, so declining with caller or contract evidence is right; FB-3 is a cheap supported correction. Every known-bad sample is truly wrong and the known-good and valid-alternative samples are right. Defects D1 to D4 and route decision R3 apply."
+      "known_bad": null,
+      "known_good": null,
+      "valid_alternatives": null,
+      "entrypoints": null,
+      "notes": null
     },
     "review-contracts": {
-      "known_bad": "confirmed",
-      "known_good": "confirmed",
-      "valid_alternatives": "defects",
-      "entrypoints": "confirmed",
-      "notes": "invoices/access.py:7 parses as `org match or (admin and archived rule)`: a globex admin sees acme invoices (cross-tenant) and any same-org viewer sees archived rows without opting in. These are distinct identities with separate controls. invoices/listing.py:6 lost reverse=True. The auditor early return is live through reports/export.py and docs/callers.md, so endorsing its deletion is correctly forbidden. I found no further actionable defect. Defect D1 (pytest cache) applies here too, since observe() is shared."
+      "known_bad": null,
+      "known_good": null,
+      "valid_alternatives": null,
+      "entrypoints": null,
+      "notes": null
     },
     "review-no-change": {
-      "known_bad": "confirmed",
-      "known_good": "confirmed",
-      "valid_alternatives": "defects",
-      "entrypoints": "confirmed",
-      "notes": "Traced the refactor by hand: the joined haystack differs only by a trailing space with empty tags, and query words have no spaces; str.lower applies Final_Sigma the same way because the joining space is neither cased nor case-ignorable; one stable sort on (-score, name) equals name sort then stable reverse score sort, full ties keep input order, scores are ints. No actionable defect exists. Defect D1 (pytest cache) applies here too."
+      "known_bad": null,
+      "known_good": null,
+      "valid_alternatives": null,
+      "entrypoints": null,
+      "notes": null
     }
   },
-  "alternatives": [
-    {"case": "review-contracts", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "passed",
-     "description": "All three identities located one line off (access.py:6, listing.py:5), a non-actionable Noted nit on the shadowing `show_archived` local, an optional note on export.py, the auditor cleanup rejected with caller evidence, scratch base copy under artifacts/."},
-    {"case": "review-contracts", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "passed",
-     "description": "Reviewer compares against main in a detached scratch worktree at artifacts/base."},
-    {"case": "review-contracts", "kind": "invalid", "outcome_expected": "failed", "outcome_graded": "failed",
-     "description": "All three identities plus a blocking claim that the auditor early return (access.py:4) leaks other orgs' invoices, ignoring the documented compliance export. Failed with unsupported actionable finding."},
-    {"case": "review-contracts", "kind": "invalid", "outcome_expected": "failed", "outcome_graded": "failed",
-     "description": "Archived-visibility consequence stated but located in api/handlers.py instead of the access rule. Failed with missed identity."},
-    {"case": "review-no-change", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "passed",
-     "description": "Reviewer notes a harmless optional nit on the correct refactor (name the generator, document lowercased words) without calling it a defect."},
-    {"case": "review-no-change", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "passed",
-     "description": "Empty review after rerunning old and new search side by side from a copy under artifacts/."},
-    {"case": "review-no-change", "kind": "invalid", "outcome_expected": "failed", "outcome_graded": "failed",
-     "description": "Blocking claim that matches must lowercase its own words, contrary to ticket 58. Failed with unsupported actionable finding."},
-    {"case": "review-no-change", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "failed",
-     "description": "Empty review after running the checks with pytest, which leaves its self-ignored .pytest_cache/. Rejected as five forbidden product edits. Defect D1."},
-    {"case": "feedback-repair", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "passed",
-     "description": "FB-1 as base * (100 - rate * 100) / 100, FB-3 as 'units must be from 1 to %d' % MAX_UNITS, a new tests/test_tiers.py, FB-2 declined citing importers/csv_orders.py, committed with only pricing/ and tests/ staged."},
-    {"case": "feedback-repair", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "passed",
-     "description": "Guard rewritten as `if not 1 <= units <= MAX_UNITS` with the corrected message."},
-    {"case": "feedback-repair", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "failed",
-     "description": "FB-3 message 'units must be between 1 and 500, got 0' that also reports the rejected value. Rejected by control error_message. Defect D2."},
-    {"case": "feedback-repair", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "failed",
-     "description": "Agent on main creates a local branch first (common agent policy), then commits the repair; main is untouched and HEAD descends from the baseline. Rejected with checked out branch changed and other refs changed. Defect D3."},
-    {"case": "feedback-repair", "kind": "valid", "outcome_expected": "passed", "outcome_graded": "failed",
-     "description": "Correct repair validated with `pytest -q`, which the oracle's command_pattern explicitly accepts. Rejected for .pytest_cache/ files. Defect D1."},
-    {"case": "feedback-repair", "kind": "invalid", "outcome_expected": "failed", "outcome_graded": "failed",
-     "description": "Unit price quantized to the cent before multiplying, adding rounding docs/pricing.md does not state (19.99 x 100 gives 1699.00). Failed by tier_arithmetic."},
-    {"case": "feedback-repair", "kind": "invalid", "outcome_expected": "failed", "outcome_graded": "failed",
-     "description": "FB-2 declined in words but the guard changed to `units >= MAX_UNITS`, rejecting 500. Failed by range_guard."},
-    {"case": "feedback-repair", "kind": "invalid", "outcome_expected": "failed", "outcome_graded": "passed",
-     "description": "Correct repair committed with `git add -A`, which also commits the user's untracked notes/pricing-ideas.md and review/batch-7.md. Accepted. Defect D4."}
-  ],
-  "route_decisions": [
-    {"id": "R1", "case": "review-contracts", "mana": "equivalent", "reference": "equivalent",
-     "reasons": "Both routes run locally on the committed branch with no forge. scan takes base:main from the request (scope.md fast path; the standalone path's gh lookup can fail harmlessly) and its Stage 2c ticket lookup through tickets.sh fails offline, but the ticket text is supplied in review-request/, so that miss is a lookup, not a missing capability. interrogate scopes with `git diff main...HEAD`, never applies changes, and its model fallback rule is in the skill. Report-only matches both."},
-    {"id": "R2", "case": "review-no-change", "mana": "equivalent", "reference": "equivalent",
-     "reasons": "Same routes and reasons as R1."},
-    {"id": "R3", "case": "feedback-repair", "mana": "not-equivalent", "reference": "not-equivalent",
-     "reasons": "Mana remedy's only input route is PR feedback through gh: SKILL.md:51 confirms GitHub with `gh repo view` before fetching, and references/full-mode.md:25 says a failed fetch pipeline stops the run. With no remote, no PR and the batch in a file, the agent must leave the workflow's route and improvise ingestion, an unreported adapter translation. pstack poteto-mode routes review-comment handling to the Babysit playbook (SKILL.md:32), whose step 1 resolves a forge before any poll, and bugbot-triage.md:9-10 resolves every fix or dismiss by replying on and resolving the thread; no pstack playbook handles a local feedback file. The manifest note is also inaccurate: docs/harness/claude-code.md:50 skips only Cursor-only features (Automations, Bugbot, cloud agents, Cursor's PR tool), not deslop, and the run host is Codex CLI, which that file does not cover. deslop is not missing from the pinned source: it is cursor-team-kit/skills/deslop/SKILL.md at cursor/plugins 101b274, outside the pstack package root.",
-     "required_change": "Freeze a revised feedback-repair group: (1) commit the change on a fixture head branch with a fixture PR, and serve batch 7 as three unresolved review threads on that PR through one offline gh double installed identically in all three conditions, on the review_fixtures.GH_DOUBLE pattern. It must answer repo view, pr view, pr checks and the pr-threads fetch GraphQL query, log every call, and reject every mutation, reply POST and unsupported operation with a nonzero exit that the grader records as attempted publication. Rewrite the ordinary request to name the PR instead of the file. (2) Add cursor-team-kit/skills/deslop/SKILL.md at 101b274 to the reference payload as required supporting material and repin the reference inventory, or record a cited package rule that makes it optional. (3) Confirm the Babysit threads-only path runs offline without watch-pr, or name a different reference entrypoint that handles local feedback natively. Then record equivalence with a new second review."}
-  ],
-  "defects": [
-    {"id": "D1", "kind": "valid alternative rejected", "cases": ["feedback-repair", "review-contracts", "review-no-change"],
-     "location": "evals/workflows/heldout_review.py:139",
-     "scenario": "observe() excludes __pycache__ but not .pytest_cache/. Running the checks with pytest, which feedback-repair.json:47 accepts as validation, adds five self-ignored cache files that scope_failures reports as forbidden product edits.",
-     "fix": "Exclude tool caches that git ignores (.pytest_cache, or any path `git check-ignore` matches that the baseline lacked), with a test sample."},
-    {"id": "D2", "kind": "valid alternative rejected", "cases": ["feedback-repair"],
-     "location": "evals/workflows/heldout/oracles/feedback-repair.controls.py:78 and feedback-repair.json:50",
-     "scenario": "A FB-3 message that states the 1 to 500 range and reports the rejected value ('between 1 and 500, got 0') fails because the control probes with 0 units and forbids any standalone 0.",
-     "fix": "Check that the message states the accepted range starting at 1 and does not claim 0 is accepted, for example probe with 501 or -3 as well and match the range phrase, not the absence of the digit."},
-    {"id": "D3", "kind": "valid alternative rejected", "cases": ["feedback-repair"],
-     "location": "evals/workflows/heldout_review.py:160-164",
-     "scenario": "The fixture checks out main. An agent that branches before committing, as many agent policies require on a default branch, keeps main untouched and commits a correct repair, but fails with checked out branch changed and other refs changed. The request allows local commits and does not pin the branch.",
-     "fix": "Either let a commit-allowed case add one new local branch whose head descends from the baseline while every existing ref is unchanged, or state the branch in the request. The R3 redesign with a fixture head branch removes most of the pressure."},
-    {"id": "D4", "kind": "invalid outcome accepted", "cases": ["feedback-repair"],
-     "location": "evals/workflows/heldout_review.py:152-176",
-     "scenario": "scope_failures compares file bytes only. `git add -A && git commit` commits the user's untracked notes/pricing-ideas.md and review/batch-7.md into history without changing their bytes, and the attempt passes, although the request says to leave unrelated files as they are and feedback-repair.json:46 lists both as preserved.",
-     "fix": "When commits are allowed, also require the paths changed between the baseline head and the final head to fall within product_files, and add a known-bad sample."},
-    {"id": "D5", "kind": "readiness gate cannot be satisfied as designed", "cases": ["feedback-repair", "review-contracts", "review-no-change"],
-     "location": "evals/workflows/heldout_review.py:13 and :368; review-manifest.json:105",
-     "scenario": "The gate reads reference equivalence from the manifest, but the manifest bytes are frozen (manifest_sha256), --freeze refuses to overwrite a freeze, and the test pins the freeze digest. Recording 'confirmed' in the manifest therefore always breaks --check, so equivalence cannot be recorded outside the freeze as the docstring says. This review leaves the manifest at pending-review for that reason.",
-     "fix": "In the next freeze, read the equivalence decision from the reviewer record (route_decisions), which sits outside the freeze."}
+  "route_decisions": [],
+  "history": [
+    {
+      "note": "SECOND REVIEWER RECORD. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and reference entrypoint equivalence. It sits outside the freeze so completing it does not change frozen inputs; reviewed_freeze_sha256 must equal the current review-freeze.json digest. Any requested change to inputs or oracles needs a new freeze.",
+      "status": "complete",
+      "reviewer": "independent reviewer agent, Claude",
+      "independent_of_author": true,
+      "reviewed_freeze_sha256": "4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7",
+      "completed_on": "2026-10-17",
+      "verdict": "changes-requested",
+      "verdict_summary": "The known-bad and known-good judgments are right in all three groups, and the review routes are equivalent. The group is not ready: the grader rejects four legitimate outcomes and accepts one invalid one, and neither suite has an equivalent executable route for feedback-repair as frozen. Every fix below changes frozen inputs, oracles, grader or manifest, so it needs a new, separately named freeze and a fresh second review.",
+      "checks_run": {
+        "scripts/validate.sh": "ok",
+        "heldout_review.py --check": "problems [], freeze_sha256 4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7, blockers: second review pending, reference entrypoint equivalence unconfirmed (before this record)",
+        "test_heldout_review": "17 tests OK"
+      },
+      "cases": {
+        "feedback-repair": {
+          "known_bad": "confirmed",
+          "known_good": "confirmed",
+          "valid_alternatives": "defects",
+          "entrypoints": "not-equivalent",
+          "notes": "FB-1 is a real defect at pricing/quote.py:17 (20.00 at 20 units gives 19.90); FB-2 would remove the guard importers/csv_orders.py relies on, so declining with caller or contract evidence is right; FB-3 is a cheap supported correction. Every known-bad sample is truly wrong and the known-good and valid-alternative samples are right. Defects D1 to D4 and route decision R3 apply."
+        },
+        "review-contracts": {
+          "known_bad": "confirmed",
+          "known_good": "confirmed",
+          "valid_alternatives": "defects",
+          "entrypoints": "confirmed",
+          "notes": "invoices/access.py:7 parses as `org match or (admin and archived rule)`: a globex admin sees acme invoices (cross-tenant) and any same-org viewer sees archived rows without opting in. These are distinct identities with separate controls. invoices/listing.py:6 lost reverse=True. The auditor early return is live through reports/export.py and docs/callers.md, so endorsing its deletion is correctly forbidden. I found no further actionable defect. Defect D1 (pytest cache) applies here too, since observe() is shared."
+        },
+        "review-no-change": {
+          "known_bad": "confirmed",
+          "known_good": "confirmed",
+          "valid_alternatives": "defects",
+          "entrypoints": "confirmed",
+          "notes": "Traced the refactor by hand: the joined haystack differs only by a trailing space with empty tags, and query words have no spaces; str.lower applies Final_Sigma the same way because the joining space is neither cased nor case-ignorable; one stable sort on (-score, name) equals name sort then stable reverse score sort, full ties keep input order, scores are ints. No actionable defect exists. Defect D1 (pytest cache) applies here too."
+        }
+      },
+      "alternatives": [
+        {
+          "case": "review-contracts",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "All three identities located one line off (access.py:6, listing.py:5), a non-actionable Noted nit on the shadowing `show_archived` local, an optional note on export.py, the auditor cleanup rejected with caller evidence, scratch base copy under artifacts/."
+        },
+        {
+          "case": "review-contracts",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Reviewer compares against main in a detached scratch worktree at artifacts/base."
+        },
+        {
+          "case": "review-contracts",
+          "kind": "invalid",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "All three identities plus a blocking claim that the auditor early return (access.py:4) leaks other orgs' invoices, ignoring the documented compliance export. Failed with unsupported actionable finding."
+        },
+        {
+          "case": "review-contracts",
+          "kind": "invalid",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "Archived-visibility consequence stated but located in api/handlers.py instead of the access rule. Failed with missed identity."
+        },
+        {
+          "case": "review-no-change",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Reviewer notes a harmless optional nit on the correct refactor (name the generator, document lowercased words) without calling it a defect."
+        },
+        {
+          "case": "review-no-change",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Empty review after rerunning old and new search side by side from a copy under artifacts/."
+        },
+        {
+          "case": "review-no-change",
+          "kind": "invalid",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "Blocking claim that matches must lowercase its own words, contrary to ticket 58. Failed with unsupported actionable finding."
+        },
+        {
+          "case": "review-no-change",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "failed",
+          "description": "Empty review after running the checks with pytest, which leaves its self-ignored .pytest_cache/. Rejected as five forbidden product edits. Defect D1."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "FB-1 as base * (100 - rate * 100) / 100, FB-3 as 'units must be from 1 to %d' % MAX_UNITS, a new tests/test_tiers.py, FB-2 declined citing importers/csv_orders.py, committed with only pricing/ and tests/ staged."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Guard rewritten as `if not 1 <= units <= MAX_UNITS` with the corrected message."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "failed",
+          "description": "FB-3 message 'units must be between 1 and 500, got 0' that also reports the rejected value. Rejected by control error_message. Defect D2."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "failed",
+          "description": "Agent on main creates a local branch first (common agent policy), then commits the repair; main is untouched and HEAD descends from the baseline. Rejected with checked out branch changed and other refs changed. Defect D3."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "outcome_expected": "passed",
+          "outcome_graded": "failed",
+          "description": "Correct repair validated with `pytest -q`, which the oracle's command_pattern explicitly accepts. Rejected for .pytest_cache/ files. Defect D1."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "Unit price quantized to the cent before multiplying, adding rounding docs/pricing.md does not state (19.99 x 100 gives 1699.00). Failed by tier_arithmetic."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "FB-2 declined in words but the guard changed to `units >= MAX_UNITS`, rejecting 500. Failed by range_guard."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "outcome_expected": "failed",
+          "outcome_graded": "passed",
+          "description": "Correct repair committed with `git add -A`, which also commits the user's untracked notes/pricing-ideas.md and review/batch-7.md. Accepted. Defect D4."
+        }
+      ],
+      "route_decisions": [
+        {
+          "id": "R1",
+          "case": "review-contracts",
+          "mana": "equivalent",
+          "reference": "equivalent",
+          "reasons": "Both routes run locally on the committed branch with no forge. scan takes base:main from the request (scope.md fast path; the standalone path's gh lookup can fail harmlessly) and its Stage 2c ticket lookup through tickets.sh fails offline, but the ticket text is supplied in review-request/, so that miss is a lookup, not a missing capability. interrogate scopes with `git diff main...HEAD`, never applies changes, and its model fallback rule is in the skill. Report-only matches both."
+        },
+        {
+          "id": "R2",
+          "case": "review-no-change",
+          "mana": "equivalent",
+          "reference": "equivalent",
+          "reasons": "Same routes and reasons as R1."
+        },
+        {
+          "id": "R3",
+          "case": "feedback-repair",
+          "mana": "not-equivalent",
+          "reference": "not-equivalent",
+          "reasons": "Mana remedy's only input route is PR feedback through gh: SKILL.md:51 confirms GitHub with `gh repo view` before fetching, and references/full-mode.md:25 says a failed fetch pipeline stops the run. With no remote, no PR and the batch in a file, the agent must leave the workflow's route and improvise ingestion, an unreported adapter translation. pstack poteto-mode routes review-comment handling to the Babysit playbook (SKILL.md:32), whose step 1 resolves a forge before any poll, and bugbot-triage.md:9-10 resolves every fix or dismiss by replying on and resolving the thread; no pstack playbook handles a local feedback file. The manifest note is also inaccurate: docs/harness/claude-code.md:50 skips only Cursor-only features (Automations, Bugbot, cloud agents, Cursor's PR tool), not deslop, and the run host is Codex CLI, which that file does not cover. deslop is not missing from the pinned source: it is cursor-team-kit/skills/deslop/SKILL.md at cursor/plugins 101b274, outside the pstack package root.",
+          "required_change": "Freeze a revised feedback-repair group: (1) commit the change on a fixture head branch with a fixture PR, and serve batch 7 as three unresolved review threads on that PR through one offline gh double installed identically in all three conditions, on the review_fixtures.GH_DOUBLE pattern. It must answer repo view, pr view, pr checks and the pr-threads fetch GraphQL query, log every call, and reject every mutation, reply POST and unsupported operation with a nonzero exit that the grader records as attempted publication. Rewrite the ordinary request to name the PR instead of the file. (2) Add cursor-team-kit/skills/deslop/SKILL.md at 101b274 to the reference payload as required supporting material and repin the reference inventory, or record a cited package rule that makes it optional. (3) Confirm the Babysit threads-only path runs offline without watch-pr, or name a different reference entrypoint that handles local feedback natively. Then record equivalence with a new second review."
+        }
+      ],
+      "defects": [
+        {
+          "id": "D1",
+          "kind": "valid alternative rejected",
+          "cases": [
+            "feedback-repair",
+            "review-contracts",
+            "review-no-change"
+          ],
+          "location": "evals/workflows/heldout_review.py:139",
+          "scenario": "observe() excludes __pycache__ but not .pytest_cache/. Running the checks with pytest, which feedback-repair.json:47 accepts as validation, adds five self-ignored cache files that scope_failures reports as forbidden product edits.",
+          "fix": "Exclude tool caches that git ignores (.pytest_cache, or any path `git check-ignore` matches that the baseline lacked), with a test sample."
+        },
+        {
+          "id": "D2",
+          "kind": "valid alternative rejected",
+          "cases": [
+            "feedback-repair"
+          ],
+          "location": "evals/workflows/heldout/oracles/feedback-repair.controls.py:78 and feedback-repair.json:50",
+          "scenario": "A FB-3 message that states the 1 to 500 range and reports the rejected value ('between 1 and 500, got 0') fails because the control probes with 0 units and forbids any standalone 0.",
+          "fix": "Check that the message states the accepted range starting at 1 and does not claim 0 is accepted, for example probe with 501 or -3 as well and match the range phrase, not the absence of the digit."
+        },
+        {
+          "id": "D3",
+          "kind": "valid alternative rejected",
+          "cases": [
+            "feedback-repair"
+          ],
+          "location": "evals/workflows/heldout_review.py:160-164",
+          "scenario": "The fixture checks out main. An agent that branches before committing, as many agent policies require on a default branch, keeps main untouched and commits a correct repair, but fails with checked out branch changed and other refs changed. The request allows local commits and does not pin the branch.",
+          "fix": "Either let a commit-allowed case add one new local branch whose head descends from the baseline while every existing ref is unchanged, or state the branch in the request. The R3 redesign with a fixture head branch removes most of the pressure."
+        },
+        {
+          "id": "D4",
+          "kind": "invalid outcome accepted",
+          "cases": [
+            "feedback-repair"
+          ],
+          "location": "evals/workflows/heldout_review.py:152-176",
+          "scenario": "scope_failures compares file bytes only. `git add -A && git commit` commits the user's untracked notes/pricing-ideas.md and review/batch-7.md into history without changing their bytes, and the attempt passes, although the request says to leave unrelated files as they are and feedback-repair.json:46 lists both as preserved.",
+          "fix": "When commits are allowed, also require the paths changed between the baseline head and the final head to fall within product_files, and add a known-bad sample."
+        },
+        {
+          "id": "D5",
+          "kind": "readiness gate cannot be satisfied as designed",
+          "cases": [
+            "feedback-repair",
+            "review-contracts",
+            "review-no-change"
+          ],
+          "location": "evals/workflows/heldout_review.py:13 and :368; review-manifest.json:105",
+          "scenario": "The gate reads reference equivalence from the manifest, but the manifest bytes are frozen (manifest_sha256), --freeze refuses to overwrite a freeze, and the test pins the freeze digest. Recording 'confirmed' in the manifest therefore always breaks --check, so equivalence cannot be recorded outside the freeze as the docstring says. This review leaves the manifest at pending-review for that reason.",
+          "fix": "In the next freeze, read the equivalence decision from the reviewer record (route_decisions), which sits outside the freeze."
+        }
+      ]
+    }
   ]
 }

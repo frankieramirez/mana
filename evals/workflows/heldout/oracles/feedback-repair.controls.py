@@ -67,15 +67,19 @@ def cart_unchanged():
 
 
 def error_message():
-    """FB-3 applied: the message states the accepted range starting at 1."""
-    try:
-        line_total(Decimal("1.00"), 0)
-    except ValueError as exc:
-        message = str(exc)
-    else:
-        raise AssertionError("no error for 0 units")
-    assert re.search(r"\b1\b", message) and "500" in message, "message lacks 1..500: %r" % message
-    assert not re.search(r"\b0\b", message), "message still names 0: %r" % message
+    """FB-3 applied: the message states the accepted range 1 to 500 and never a range from 0.
+
+    Reporting the rejected value as well, such as "between 1 and 500, got 0", is valid.
+    """
+    for units in (0, 501, -3):
+        try:
+            line_total(Decimal("1.00"), units)
+        except ValueError as exc:
+            message = str(exc)
+        else:
+            raise AssertionError("no error for %d units" % units)
+        assert re.search(r"(?<![\d.-])1\D{0,16}(?<!\d)500\b", message), "message lacks the 1 to 500 range: %r" % message
+        assert not re.search(r"(?<![\d.-])0\D{0,16}(?<!\d)500\b", message), "message states a range from 0: %r" % message
 
 
 CONTROLS = (tier_arithmetic, half_up_rounding, range_guard, upload_rejects_bad_rows,

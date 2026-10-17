@@ -93,6 +93,43 @@
    "failures": []
   },
   {
+   "name": "known good: empty review after running the checks with pytest",
+   "edits": [
+    {
+     "path": ".pytest_cache/.gitignore",
+     "write": "*\n"
+    },
+    {
+     "path": ".pytest_cache/v/cache/nodeids",
+     "write": "[]\n"
+    },
+    {
+     "path": "tests/__pycache__/test_x.cpython-312.pyc",
+     "write": "x"
+    }
+   ],
+   "commands": [
+    {
+     "command": "git diff main...HEAD",
+     "exit_code": 0
+    },
+    {
+     "command": "python3 -m unittest discover -s tests",
+     "exit_code": 0
+    },
+    {
+     "command": "python3 -m pytest -q",
+     "exit_code": 0
+    }
+   ],
+   "normalized": {
+    "findings": [],
+    "endorsed": []
+   },
+   "outcome": "passed",
+   "failures": []
+  },
+  {
    "name": "known good: an empty review",
    "edits": [],
    "commands": [
@@ -262,6 +299,7 @@
    "failures": [
     "forbidden product edit: modified tests/test_search.py",
     "unrequested commit",
+    "refs changed",
     "index changed in a report-only case"
    ]
   }

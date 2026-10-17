@@ -22,15 +22,15 @@
       "condition_entrypoints": {
         "mana": "remedy/SKILL.md",
         "none": null,
-        "reference": "skills/poteto-mode/SKILL.md"
+        "reference": "pstack/skills/poteto-mode/SKILL.md"
       },
       "delegation_allowed": true,
-      "fixture_sha256": "6ce782e3f08d1b99db5724111c3c28cf45ac9a68ebf43c627a4ef2c51509626a",
+      "fixture_sha256": "e991e58b0989b40599c5dd49983712e917c2db181dc3261949805a102b411a3b",
       "id": "feedback-repair",
       "job": "review-and-feedback",
-      "oracle_id": "review/feedback-repair/oracle-1",
+      "oracle_id": "review/feedback-repair/oracle-2",
       "request_path": "inputs/feedback-repair/request.md",
-      "request_sha256": "c382bc1f5bdef33fcc2ee53ccca547e5521e99149aab4e13234d84c5d6a96f5a",
+      "request_sha256": "eab3ff400a85a9700da7a694685ec88aa56b93926260171fc98e78e4f987ce19",
       "source_group": "sealed-feedback-repair-01",
       "split": "confirmation",
       "timeout_seconds": 900
@@ -45,7 +45,7 @@
       "condition_entrypoints": {
         "mana": "scan/SKILL.md",
         "none": null,
-        "reference": "skills/interrogate/SKILL.md"
+        "reference": "pstack/skills/interrogate/SKILL.md"
       },
       "delegation_allowed": true,
       "fixture_sha256": "68cb036f22d174b359902339539a05d582d4b3dcc7a78c6aff468a029cb5ee72",
@@ -68,7 +68,7 @@
       "condition_entrypoints": {
         "mana": "scan/SKILL.md",
         "none": null,
-        "reference": "skills/interrogate/SKILL.md"
+        "reference": "pstack/skills/interrogate/SKILL.md"
       },
       "delegation_allowed": true,
       "fixture_sha256": "836d661c1f1067ca470c9dc22e3929ceff9b0f8c1f072f5de1b424ab88e8aa23",
@@ -86,7 +86,7 @@
     "mana": {
       "adapter_notes": [
         "Review cases load scan/SKILL.md with the ordinary report-only request; scan may dispatch reviewer subagents within the protocol delegation cap.",
-        "feedback-repair loads remedy/SKILL.md. Remedy retrieves feedback through scripts/pr-threads and gh, while this request supplies the batch as a local file and the workspace has no forge. The second reviewer decides whether remedy reaches an equivalent executable route from the file, or whether both suites need the same offline gh double serving the batch, which would be a new freeze."
+        "feedback-repair loads remedy/SKILL.md. Remedy confirms GitHub with gh repo view and fetches threads with scripts/pr-threads fetch; the offline double serves both for pull request 23, and the offline tests run the pinned pr-threads against it. Remedy pushes by default, which the request forbids; resolve calls are GraphQL mutations the double rejects as publication."
       ],
       "file_count": 181,
       "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
@@ -98,16 +98,20 @@
     "none": {},
     "reference": {
       "adapter_notes": [
-        "Review cases load skills/interrogate/SKILL.md, a report-only adversarial review that never applies changes. It fans out one read-only reviewer per configured model through the host task tool. With user configuration disabled its table defaults apply; the host may refuse those model slugs, and its fallback rule then runs reviewers on the closest accepted model. Reviewer fan-out shares the protocol delegation cap.",
-        "feedback-repair loads skills/poteto-mode/SKILL.md, whose routing sends review-automation comments to references/bugbot-triage.md for fix, dismiss or ask. Its babysit playbook polls a forge and has no local equivalent; the request supplies the batch as a file. poteto-mode also names deslop from cursor-team-kit, outside this package; docs/harness/claude-code.md says to skip a missing tool and continue. The second reviewer decides whether this is an equivalent executable route. If not, the protocol fails preparation for this case and the group needs a revised design.",
+        "Review cases load pstack/skills/interrogate/SKILL.md, a report-only adversarial review that never applies changes. It fans out one read-only reviewer per configured model through the host task tool; with user configuration disabled its table defaults and its in-skill fallback rule apply. Reviewer fan-out shares the protocol delegation cap.",
+        "feedback-repair loads pstack/skills/poteto-mode/SKILL.md, which routes review comments to the Babysit playbook. Its threads-only mode answers review comments and touches nothing else; it resolves the forge with gh, which the offline double serves for pull request 23. Its fix or dismiss steps reply on threads, which the request forbids and the double rejects as publication. The watcher scripts/watch-pr/watch-pr needs bun and installs dependencies on first run, so it cannot run in the offline sandbox; threads-only mode needs thread reads, not the merge watcher, and an attempted watcher call is recorded as an unsupported operation for the protocol stop rule. The second reviewer decides whether this route is equivalent.",
+        "poteto-mode names the deslop skill from cursor-team-kit before commit. It is included at cursor-team-kit/skills/deslop/SKILL.md from the same pin. docs/harness/claude-code.md covers Cursor-only features under Claude Code and is not relied on here.",
         "interrogate output uses Act on, Consider, Noted and Dismissed buckets. Graders normalize only Act on as actionable, the same rule applied to Mana blocking findings."
       ],
-      "equivalence": "pending-review",
-      "file_count": 170,
-      "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
-      "package_root": "pstack",
+      "file_count": 171,
+      "inventory_sha256": "b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd",
+      "package_paths": [
+        "pstack",
+        "cursor-team-kit/skills/deslop"
+      ],
+      "package_root": ".",
       "repository": "cursor/plugins",
-      "resolved_from": "shallow fetch of the pinned commit; matches run.py --payload-inventory over git archive of pstack/",
+      "resolved_from": "git objects of the pinned commit for pstack/ and cursor-team-kit/skills/deslop/, keys relative to the repository root; same digest as run.py --payload-inventory over a git archive of those two paths",
       "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
     }
   },
@@ -117,6 +121,36 @@
     "events": [],
     "rule": "If anyone tuning a candidate reads a request, fixture, oracle, sample or this manifest, record the event here, set that case split to development and author an untouched replacement group (suffix -02) under a new freeze before confirmation."
   },
+  "freeze_name": "review-freeze-2",
+  "history": [
+    {
+      "date": "2026-10-17",
+      "event": "first freeze by the author (PR 135 head 1c4b809)",
+      "freeze_name": "review-freeze-1",
+      "freeze_sha256": "4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7"
+    },
+    {
+      "date": "2026-10-17",
+      "event": "independent second review: changes requested (reviewer record commit b6d30e8). Known-good and known-bad judgments confirmed in all three groups; review routes equivalent; feedback-repair routes not equivalent; grader defects D1 to D5.",
+      "freeze_name": "review-freeze-1",
+      "freeze_sha256": "4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7"
+    },
+    {
+      "changes": [
+        "R3: feedback-repair now commits the change on volume-tiers-23 over main and serves the three review comments as unresolved threads on pull request 23 through one evaluator-owned offline gh double, installed identically in every condition; the request names the pull request instead of a file.",
+        "R3: the reference payload adds cursor-team-kit/skills/deslop at the same pin; payload root is the repository root, so reference entrypoints gain the pstack/ prefix.",
+        "D1: runner caches (.pytest_cache, __pycache__, .mypy_cache, .ruff_cache) are not product state.",
+        "D2: the message control accepts any wording that states the 1 to 500 range, including the rejected value.",
+        "D3: a commit-allowed case may commit on one new local branch made from the checkout.",
+        "D4: paths committed between the baseline and final heads must fall inside the allowed product files.",
+        "D5: review verdicts and route equivalence are read from the unfrozen reviewer record."
+      ],
+      "date": "2026-10-17",
+      "event": "oracle repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Review inputs are unchanged.",
+      "freeze_name": "review-freeze-2",
+      "freeze_sha256": null
+    }
+  ],
   "job": "review-and-feedback",
   "version": 1
 }

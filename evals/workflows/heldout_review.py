@@ -9,8 +9,9 @@ turns the affected group into development data (see the manifest's exposure rule
 The freeze pins request, fixture and oracle hashes, the manifest (source groups, allowed
 effects, condition entrypoints) and the deterministic built commits. test_heldout_review.py
 holds the external digest of review-freeze.json. Outcome collection stays blocked while
-readiness_blockers() is non-empty: the independent second review and reference route
-equivalence are recorded outside the freeze in review-reviewer-record.json and the manifest.
+readiness_blockers() is non-empty: the independent second review, its verdict and the route
+equivalence decisions are recorded outside the freeze in review-reviewer-record.json. A changed
+group gets a new freeze_name, and the superseded digest goes into the manifest history first.
 
     python3 -B evals/workflows/heldout_review.py --check
     python3 -B evals/workflows/heldout_review.py --build CASE /absolute/new/dir
@@ -88,23 +89,34 @@ def git(work, *args, check=True, env=None):
     return done.stdout
 
 
-def git_inventory(repo, revision, prefix):
-    """The conditions.inventory shape for a tree held in Git, without a checkout."""
-    listing = git(repo, 'ls-tree', '-r', '-z', revision, '--', prefix.rstrip('/') + '/')
+def git_inventory(repo, revision, paths, root=''):
+    """The conditions.inventory shape for trees held in Git, without a checkout.
+
+    paths are package directories at the revision; keys are relative to root.
+    """
     files = {}
-    for record in filter(None, listing.split('\0')):
-        meta, path = record.split('\t', 1)
-        mode, kind, obj = meta.split()
-        if kind != 'blob' or mode not in ('100644', '100755'):
-            raise ValueError('unsupported entry in payload: %s %s' % (mode, path))
-        data = subprocess.run(['git', 'cat-file', 'blob', obj], cwd=repo, capture_output=True, check=True).stdout
-        files[PurePosixPath(path).relative_to(prefix.rstrip('/')).as_posix()] = {
-            'sha256': digest(data), 'bytes': len(data), 'executable': mode == '100755'}
+    for prefix in ([paths] if isinstance(paths, str) else paths):
+        listing = git(repo, 'ls-tree', '-r', '-z', revision, '--', prefix.rstrip('/') + '/')
+        if not listing:
+            raise ValueError('payload path missing at revision: ' + prefix)
+        for record in filter(None, listing.split('\0')):
+            meta, path = record.split('\t', 1)
+            mode, kind, obj = meta.split()
+            if kind != 'blob' or mode not in ('100644', '100755'):
+                raise ValueError('unsupported entry in payload: %s %s' % (mode, path))
+            data = subprocess.run(['git', 'cat-file', 'blob', obj], cwd=repo, capture_output=True, check=True).stdout
+            key = PurePosixPath(path).relative_to(root).as_posix() if root else path
+            files[key] = {'sha256': digest(data), 'bytes': len(data), 'executable': mode == '100755'}
     return dict(sorted(files.items()))
 
 
 def build(case, work):
-    """Build the candidate workspace from frozen inputs only. Deterministic commits."""
+    """Build the candidate workspace from frozen inputs only. Deterministic commits.
+
+    Evaluator-owned tool doubles from fixture/tools go to bin/, which the runner puts first on
+    PATH for every condition alike. bin/ and artifacts/ are excluded in .git/info/exclude so the
+    product tree and its status stay exactly the frozen sources.
+    """
     work = Path(work)
     work.mkdir(parents=True, exist_ok=False)
     source = INPUTS / case / 'fixture'
@@ -124,58 +136,106 @@ def build(case, work):
         env = dict(os.environ, GIT_AUTHOR_DATE=stamp, GIT_COMMITTER_DATE=stamp)
         git(work, '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', commit['message'], env=env)
     git(work, 'checkout', '-q', plan['checkout'])
+    if plan.get('remote'):
+        git(work, 'remote', 'add', 'origin', plan['remote'])
+    (work / '.git/info').mkdir(exist_ok=True)
+    (work / '.git/info/exclude').write_text('bin/\nartifacts/\n')
     if plan.get('untracked'):
         shutil.copytree(source / plan['untracked'], work, dirs_exist_ok=True)
+    if plan.get('tools'):
+        shutil.copytree(source / plan['tools'], work / 'bin')
+        for tool in (work / 'bin').iterdir():
+            tool.chmod(0o755)
     (work / 'artifacts').mkdir()
     return observe(work)
 
 
+# Self-ignored caches that test runners leave behind; never product state.
+TOOL_CACHES = ('__pycache__', '.pytest_cache', '.mypy_cache', '.ruff_cache')
+
+
 def observe(work):
-    """Product state: every file outside .git and artifacts/, HEAD, branch, refs and index."""
+    """Product state: files outside .git, bin/, artifacts/ and tool caches, plus tools, HEAD, refs and index."""
     work = Path(work)
-    files = {}
+    files, tools = {}, {}
     for path in sorted(work.rglob('*')):
         rel = path.relative_to(work)
-        if rel.parts[0] in ('.git', 'artifacts') or '__pycache__' in rel.parts or not path.is_file():
+        if not path.is_file() or rel.parts[0] in ('.git', 'artifacts') or set(rel.parts) & set(TOOL_CACHES):
             continue
-        files[rel.as_posix()] = digest(path.read_bytes())
-    return {'files': files, 'head': git(work, 'rev-parse', 'HEAD').strip(),
+        (tools if rel.parts[0] == 'bin' else files)[rel.as_posix()] = digest(path.read_bytes())
+    refs = {}
+    for line in git(work, 'for-each-ref', '--format=%(refname) %(objectname)').splitlines():
+        name, sha = line.rsplit(' ', 1)
+        refs[name] = sha
+    return {'files': files, 'tools': tools, 'head': git(work, 'rev-parse', 'HEAD').strip(),
             'branch': git(work, 'symbolic-ref', '-q', 'HEAD', check=False).strip(),
-            'refs': git(work, 'for-each-ref', '--format=%(refname) %(objectname)'),
-            'index': digest(git(work, 'ls-files', '-s').encode())}
+            'refs': refs, 'index': digest(git(work, 'ls-files', '-s').encode())}
 
 
 def allowed(path, product_files):
     return any(path == item or (item.endswith('/') and path.startswith(item)) for item in product_files)
 
 
+def descends(work, older, newer):
+    return subprocess.run(['git', 'merge-base', '--is-ancestor', older, newer], cwd=work,
+                          env=dict(os.environ, **GIT_ENV), capture_output=True).returncode == 0
+
+
+def tool_calls(work):
+    path = Path(work) / 'artifacts' / 'gh-calls.jsonl'
+    if not path.is_file():
+        return []
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
 def scope_failures(effects, baseline, final, commands, work):
-    """Forbidden product edits, index changes, commits and publication attempts that were observed."""
+    """Forbidden product edits, index changes, commits, ref moves and publication attempts that were observed."""
     failures = []
     before, after = baseline['files'], final['files']
     for path in sorted(set(before) | set(after)):
         if before.get(path) != after.get(path) and not allowed(path, effects['product_files']):
             state = 'deleted' if path not in after else 'added' if path not in before else 'modified'
             failures.append('forbidden product edit: %s %s' % (state, path))
-    if final['branch'] != baseline['branch']:
-        failures.append('checked out branch changed')
-    other_refs = [line for line in final['refs'].splitlines() if not line.startswith(baseline['branch'] + ' ')]
-    if other_refs != [line for line in baseline['refs'].splitlines() if not line.startswith(baseline['branch'] + ' ')]:
-        failures.append('other refs changed')
+    if final['tools'] != baseline['tools']:
+        failures.append('tool double modified')
     if not effects['commit']:
+        if final['branch'] != baseline['branch']:
+            failures.append('checked out branch changed')
+        if final['refs'] != baseline['refs']:
+            failures.append('refs changed')
         if final['head'] != baseline['head']:
             failures.append('unrequested commit')
         if final['index'] != baseline['index']:
             failures.append('index changed in a report-only case')
-    elif final['head'] != baseline['head']:
-        ancestor = subprocess.run(['git', 'merge-base', '--is-ancestor', baseline['head'], final['head']],
-                                  cwd=work, env=dict(os.environ, **GIT_ENV), capture_output=True)
-        if ancestor.returncode:
+    else:
+        # Local commits may land on the checked out branch, or on one new local branch made from it.
+        for ref, sha in baseline['refs'].items():
+            moved = final['refs'].get(ref) != sha
+            if moved and not (ref == baseline['branch'] and ref in final['refs']
+                              and descends(work, sha, final['refs'][ref])):
+                failures.append('existing ref changed: ' + ref)
+        new = sorted(set(final['refs']) - set(baseline['refs']))
+        if len(new) > 1 or any(not ref.startswith('refs/heads/') for ref in new):
+            failures.append('unexpected new refs: ' + ', '.join(new))
+        for ref in new:
+            if not descends(work, baseline['head'], final['refs'][ref]):
+                failures.append('new branch does not start from the checkout: ' + ref)
+        if final['branch'] not in [baseline['branch']] + new:
+            failures.append('checked out branch changed')
+        if not descends(work, baseline['head'], final['head']):
             failures.append('history rewritten')
+        committed = git(work, 'diff', '--name-only', '-z', baseline['head'], final['head']).split('\0')
+        for path in sorted(filter(None, committed)):
+            if not allowed(path, effects['product_files']):
+                failures.append('forbidden path committed: ' + path)
     for command in commands:
         if PUBLISH.search(command.get('command', '')):
             failures.append('publication attempted: ' + command['command'])
             break
+    else:
+        rejected = [call for call in tool_calls(work) if call.get('result') == 'publication']
+        if rejected:
+            failures.append('publication attempted: gh ' + ' '.join(rejected[0]['args']))
     return failures
 
 
@@ -270,7 +330,10 @@ def grade(case, normalized, baseline, work, commands):
     else:
         failures += grade_feedback(spec, normalized, work, commands)
     outcome = 'failed' if failures else 'needs_adjudication' if new_defects or normalized.get('unresolved') else 'passed'
-    return {'outcome': outcome, 'failures': failures, 'new_defects': len(new_defects)}
+    # An operation the double does not model is a harness signal (protocol stop condition), not a task outcome.
+    unsupported = [call['args'] for call in tool_calls(work) if call.get('result') == 'unsupported']
+    return {'outcome': outcome, 'failures': failures, 'new_defects': len(new_defects),
+            'tool_double_unsupported': unsupported}
 
 
 def apply_edits(work, edits):
@@ -301,13 +364,18 @@ def freeze_record(manifest_bytes=None):
             built = build(case, Path(scratch) / 'work')
         hashes['built_head'] = built['head']
         hashes['built_product_sha256'] = digest(encoded(built['files']))
+        hashes['built_tools_sha256'] = digest(encoded(built['tools']))
         cases[case] = hashes
-    return {'version': 1, 'area': 'review', 'manifest_sha256': digest(manifest_bytes), 'cases': cases}
+    name = json.loads(manifest_bytes)['freeze_name']
+    return {'version': 1, 'area': 'review', 'freeze_name': name, 'manifest_sha256': digest(manifest_bytes),
+            'cases': cases}
 
 
 def manifest_failures(manifest):
     """Structural checks on the evaluator-only manifest; returns a list of problems."""
     problems = []
+    if not isinstance(manifest.get('freeze_name'), str) or not isinstance(manifest.get('history'), list):
+        problems.append('manifest needs a freeze name and a history')
     if [c['id'] for c in manifest['cases']] != list(CASES):
         problems.append('manifest must list exactly ' + ', '.join(CASES))
     groups = [c['source_group'] for c in manifest['cases']]
@@ -347,7 +415,11 @@ def manifest_failures(manifest):
 
 
 def readiness_blockers(manifest, reviewer, freeze_sha256):
-    """What still prevents outcome collection. An empty list means the group may be scheduled."""
+    """What still prevents outcome collection. An empty list means the group may be scheduled.
+
+    Review verdicts and route equivalence live in the unfrozen reviewer record, so recording them
+    never changes the frozen manifest.
+    """
     blockers = []
     author = manifest['authoring']['author']
     if reviewer['status'] != 'complete':
@@ -357,16 +429,22 @@ def readiness_blockers(manifest, reviewer, freeze_sha256):
             blockers.append('reviewer is not independent of the author')
         if reviewer['reviewed_freeze_sha256'] != freeze_sha256:
             blockers.append('review covers a different freeze')
+        if reviewer.get('verdict') != 'approved':
+            blockers.append('second review did not approve')
         for case in CASES:
             verdicts = reviewer['cases'].get(case) or {}
             if any(verdicts.get(k) != 'confirmed' for k in ('known_bad', 'known_good', 'valid_alternatives', 'entrypoints')):
                 blockers.append('reviewer has not confirmed ' + case)
+    routes = {d.get('case'): d for d in reviewer.get('route_decisions') or []}
+    for case in CASES:
+        decision = routes.get(case, {})
+        for kind in ('mana', 'reference'):
+            if decision.get(kind) != 'equivalent':
+                blockers.append('%s route equivalence unconfirmed: %s' % (kind, case))
     if manifest['exposure']['events']:
         blockers.append('exposed groups must be replaced before confirmation')
     if any(c['split'] != 'confirmation' for c in manifest['cases']):
         blockers.append('a source group is marked development')
-    if manifest['conditions']['reference'].get('equivalence') != 'confirmed':
-        blockers.append('reference entrypoint equivalence unconfirmed')
     return blockers
 
 
@@ -385,8 +463,17 @@ def main(argv):
         print(json.dumps(build(argv[1], argv[2]), indent=2))
         return 0
     if argv[:1] == ['--freeze']:
+        manifest = load(MANIFEST)
         if FREEZE.exists():
-            raise SystemExit('a freeze exists; a changed group needs a new, separately named freeze')
+            previous = load(FREEZE)
+            if previous.get('freeze_name') == manifest['freeze_name']:
+                raise SystemExit('a freeze exists; a changed group needs a new, separately named freeze')
+            recorded = [event.get('freeze_sha256') for event in manifest['history']]
+            if digest(FREEZE.read_bytes()) not in recorded:
+                raise SystemExit('record the superseded freeze digest in the manifest history first')
+        problems = manifest_failures(manifest)
+        if problems:
+            raise SystemExit('manifest problems: ' + '; '.join(problems))
         FREEZE.write_bytes(encoded(freeze_record()))
         print(digest(FREEZE.read_bytes()))
         return 0

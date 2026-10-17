@@ -1,7 +1,10 @@
 {
   "commits": [
-    {"tree": "base", "branch": "main", "message": "Volume pricing for order lines"}
+    {"tree": "base", "branch": "main", "message": "Price order lines"},
+    {"tree": "change", "branch": "volume-tiers-23", "message": "Volume tiers for order lines (#23)"}
   ],
-  "checkout": "main",
-  "untracked": "untracked"
+  "checkout": "volume-tiers-23",
+  "untracked": "untracked",
+  "tools": "tools",
+  "remote": "https://github.com/fixture-shop/pricing.git"
 }
