@@ -1,0 +1,43 @@
+{
+  "area": "review",
+  "cases": {
+    "feedback-repair": {
+      "built_head": "0caf68ac3e37726f392d7fcd155af575663f284a",
+      "built_product_sha256": "9228d709e4cf4c96dab7604e98294959836d2086f9d8803bf48f9996d55e3298",
+      "fixture_sha256": "6ce782e3f08d1b99db5724111c3c28cf45ac9a68ebf43c627a4ef2c51509626a",
+      "oracle_files": {
+        "feedback-repair.controls.py": "08d484ef575bdd49b63b8d369ed978a6f9c0b0e8ac85e178349402f7133baf9a",
+        "feedback-repair.json": "5fa8ba72fceeaed2117f0894f7c7c9c7db79a36475aac78e779a140fb0d88794",
+        "feedback-repair.samples.json": "3f8e39f87a4248097760c5951a80300fbf4f7e5b62bf6a2898259f98b49d806d"
+      },
+      "oracle_sha256": "018e64c7a347543fd5273ee6fc319393e6d19457ebaacba5f0f029d78a23ec58",
+      "request_sha256": "c382bc1f5bdef33fcc2ee53ccca547e5521e99149aab4e13234d84c5d6a96f5a"
+    },
+    "review-contracts": {
+      "built_head": "e3df722d9b11bcb9a9b3418a0785a78b2c7da92b",
+      "built_product_sha256": "ca9064610651e1ca0cbb81ebfea997ee3e1bac44e24bc8c41f0e089c181b7c93",
+      "fixture_sha256": "68cb036f22d174b359902339539a05d582d4b3dcc7a78c6aff468a029cb5ee72",
+      "oracle_files": {
+        "review-contracts.controls.py": "67b06b1272bc73952cf3433488fb71b439c771347c110c58b4d3ce8e2ef2646b",
+        "review-contracts.json": "0ba8a1525cf626738877b3d49411b6aa7faa79b1b5e68bf34a0b755a8506397d",
+        "review-contracts.samples.json": "502fc91be54d54ebf1fc1474f1a05ca238d0bef00aa0fa20f77bfb93e3e96e57"
+      },
+      "oracle_sha256": "6124adbd260302ff9b26954191941fb9f176549bf48b7a1c308b26f6ff7042f3",
+      "request_sha256": "6937d4ab35cb4480c472de6584a6ba0d2cf3104cf6acd122d7996049758725ca"
+    },
+    "review-no-change": {
+      "built_head": "0f860e58f6a8cbdfbf9798d83d1455d2e2e0fb0e",
+      "built_product_sha256": "3c1aa1d8f179841cc7526685635a4df8d9d3272d294a016b605e47de55dd7e0e",
+      "fixture_sha256": "836d661c1f1067ca470c9dc22e3929ceff9b0f8c1f072f5de1b424ab88e8aa23",
+      "oracle_files": {
+        "review-no-change.controls.py": "6863bd3cd4e3fe2f0e65a94b80fa21d3ed7eae4dde593b51829b0790ac455d5d",
+        "review-no-change.json": "9450aea2a38f88efc168e9e07e9181b0298858d4742371e843d90894db8fb5c8",
+        "review-no-change.samples.json": "471b8c67d364d4c2ed5f1e2c6c128778595ae28e68852abd03491e1373dc537c"
+      },
+      "oracle_sha256": "d363559f836c7e36c17f60fdbd151ee4b93a96e73136a5663095b1face68a1ba",
+      "request_sha256": "6e362028fe20a8c6d4f6c43063d4e6b1bd22c8f0fe66cba0b403a6f84a2cb6dd"
+    }
+  },
+  "manifest_sha256": "fdf8bbd25782e6160a9301753c677c1e02b1f6e0f0d352f2c841bf8a2457630a",
+  "version": 1
+}

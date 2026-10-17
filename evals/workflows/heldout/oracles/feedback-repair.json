@@ -1,0 +1,58 @@
+{
+  "oracle_id": "review/feedback-repair/oracle-1",
+  "case_id": "feedback-repair",
+  "kind": "feedback",
+  "evaluator_only": true,
+  "controls": "feedback-repair.controls.py",
+  "controls_on_built_fixture": {
+    "tier_arithmetic": false,
+    "half_up_rounding": true,
+    "range_guard": true,
+    "upload_rejects_bad_rows": true,
+    "cart_unchanged": true,
+    "error_message": false
+  },
+  "controls_after_attempt": {
+    "tier_arithmetic": true,
+    "half_up_rounding": true,
+    "range_guard": true,
+    "upload_rejects_bad_rows": true,
+    "cart_unchanged": true,
+    "error_message": true
+  },
+  "feedback": {
+    "FB-1": {
+      "verdict": "accept",
+      "reason": "unit_price subtracts the rate instead of applying it. docs/pricing.md states a percentage discount per unit, and 20.00 at 20 units must cost 18.00 each.",
+      "control": "tier_arithmetic"
+    },
+    "FB-2": {
+      "verdict": "decline",
+      "reason": "The guard is a boundary contract. importers/csv_orders.py passes sheet units unvalidated and relies on ValueError to reject rows, and docs/pricing.md states the 1 to 500 contract. The cart clamp covers only one caller.",
+      "evidence_any": ["importers/csv_orders.py", "docs/pricing.md"],
+      "control": "range_guard"
+    },
+    "FB-3": {
+      "verdict": "accept",
+      "reason": "The message names 0, which the guard rejects. Correcting the wording is cheap and supported by the guard itself.",
+      "control": "error_message"
+    }
+  },
+  "preserved_behavior": [
+    {"id": "upload-rejects-bad-rows", "control": "upload_rejects_bad_rows"},
+    {"id": "cart-clamp", "control": "cart_unchanged"},
+    {"id": "half-up-rounding", "control": "half_up_rounding"}
+  ],
+  "preserved_files": ["importers/csv_orders.py", "cart/view.py", "docs/pricing.md", "README.md", "notes/pricing-ideas.md", "review/batch-7.md"],
+  "validation": {"command_pattern": "unittest|pytest"},
+  "valid_alternatives": [
+    "Any arithmetic that applies the rate to the base price passes, including base - base * rate.",
+    "Any message that names the 1 to 500 range without naming 0 passes.",
+    "Committing locally or leaving the repair uncommitted both pass. Adding tests under tests/ is allowed and optional.",
+    "Declining FB-2 may cite either the upload caller or the pricing contract document."
+  ],
+  "normalization": {
+    "items": "One record per feedback id: verdict (fixed, fixed-differently, declined, deferred or missing) and evidence_paths, the repository paths the final result cites for its judgment.",
+    "commands": "Observed command events with exit codes, from the runner. A narrated check without an observed command earns no validation credit."
+  }
+}

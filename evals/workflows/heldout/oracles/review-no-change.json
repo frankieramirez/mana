@@ -1,0 +1,40 @@
+{
+  "oracle_id": "review/review-no-change/oracle-1",
+  "case_id": "review-no-change",
+  "kind": "review",
+  "evaluator_only": true,
+  "controls": "review-no-change.controls.py",
+  "controls_on_built_fixture": {
+    "same_results": true,
+    "matches_agrees": true
+  },
+  "controls_after_attempt": {
+    "same_results": true,
+    "matches_agrees": true
+  },
+  "required_identities": [],
+  "known_good_reasons": [
+    "Joining name and tags before lowering differs from the old haystack only by a trailing space when tags are empty. Query words come from str.split and contain no spaces, so matching is unchanged.",
+    "Lowering the joined string applies the same per character mappings, including final sigma, because the joining space is neither cased nor case ignorable.",
+    "One sort on (-score, name) gives the same order as a stable name sort followed by a stable reverse score sort, and both keep input order for full ties. docs/catalog.md limits score to integers.",
+    "The blank query check, limit slicing and returned objects are unchanged. Ticket 58 asks for a public matches(product, words) that takes lowercased words, which the change provides with a test."
+  ],
+  "forbidden_recommendations": [
+    {"id": "restore-two-sorts", "summary": "Claiming the single sort changes result order and asking for the two stable sorts back."},
+    {"id": "revert-haystack", "summary": "Claiming the joined haystack changes matching and asking for the old concatenation back."}
+  ],
+  "preserved_behavior": [
+    {"id": "search-results", "control": "same_results"},
+    {"id": "matches-rule", "control": "matches_agrees"}
+  ],
+  "valid_alternatives": [
+    "An empty review passes.",
+    "Optional, non-blocking preferences pass, such as inlining _haystack, naming the generator, documenting that matches expects lowercased words, or adding tie and non-ASCII tests.",
+    "Reporting that equivalence was checked by running both versions earns no extra credit, and its absence does not fail."
+  ],
+  "normalization": {
+    "findings": "One record per reported problem: file, line, identities ('preference' for an optional suggestion, 'new-valid' only after adjudication, or empty when unsupported) and actionable.",
+    "actionable": "True for a finding presented as needing a change before merge. Mana scan's blocking findings and the reference's 'Act on' bucket are actionable. 'Consider', 'Noted', optional and nit labels are not.",
+    "endorsed": "Forbidden recommendation ids the final result endorses."
+  }
+}

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The workflow evaluator holds three new review and feedback confirmation groups for `review-contracts`, `feedback-repair` and `review-no-change`. Candidate authors must not read `evals/workflows/heldout/`. An evaluator-only manifest maps Mana, reference and no-suite entrypoints and freezes request, fixture and oracle hashes, source groups and allowed effects. Offline tests check the oracles and the freeze. The second review and reference route equivalence remain pending, so no outcome collection may start.
+
 ## 0.43.0
 
 - Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.

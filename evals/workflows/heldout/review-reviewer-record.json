@@ -1,0 +1,13 @@
+{
+  "note": "SECOND REVIEWER RECORD SLOT. Pending. An independent reviewer who did not author these fixtures and does not edit candidate instructions checks every case's known-bad and known-good outcomes, valid alternatives and reference entrypoint equivalence, then fills this file. It sits outside the freeze so completing it does not change frozen inputs; reviewed_freeze_sha256 must equal the current review-freeze.json digest. Any requested change to inputs or oracles needs a new freeze.",
+  "status": "pending",
+  "reviewer": null,
+  "independent_of_author": null,
+  "reviewed_freeze_sha256": null,
+  "completed_on": null,
+  "cases": {
+    "feedback-repair": {"known_bad": null, "known_good": null, "valid_alternatives": null, "entrypoints": null, "notes": null},
+    "review-contracts": {"known_bad": null, "known_good": null, "valid_alternatives": null, "entrypoints": null, "notes": null},
+    "review-no-change": {"known_bad": null, "known_good": null, "valid_alternatives": null, "entrypoints": null, "notes": null}
+  }
+}
