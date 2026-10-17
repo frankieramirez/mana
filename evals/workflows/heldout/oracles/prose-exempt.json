@@ -112,8 +112,9 @@
       ],
       "contradict": [
         "(?:^|[.;]){N}(restart|reboot|\\bboot){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|reload)\\w*",
-        "(?:^|[.;]){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist)\\w*{N}\\b(restart|reboot|boot)",
-        "(not|n't|never)\\s+(start|begin)\\w*\\s+(out\\s+)?(cold|empty)"
+        "(?:^|[.;]){N}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|surviv|retain|keeps?\\s+(its\\s+)?(thumbnails|contents|entries))\\w*{N}\\b(restart|reboot|boot)",
+        "(not|n't|never|no\\s+longer)\\s+(be\\s+|stay\\w*\\s+|remain\\w*\\s+|start\\w*\\s+(out\\s+|up\\s+)?|begin\\w*\\s+|come\\w*\\s+up\\s+|boot\\w*\\s+(up\\s+)?)?(cold|empty)\\b",
+        "(not|n't|never|no\\s+longer)\\s+(empt|clear|wip|reset|flush|purg|drop)\\w*\\s+(out\\s+)?(the\\s+)?(image\\s+)?cache"
       ],
       "review_question": "Does the prose still say the cache starts cold after a restart, with nothing contradicting that?"
     },

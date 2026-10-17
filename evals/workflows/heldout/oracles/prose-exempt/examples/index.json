@@ -200,5 +200,45 @@
       "contradicted-fact"
     ],
     "note": "Guard for the negation repair: negating the stated fact still fails."
+  },
+  {
+    "id": "r7-isnt-cold",
+    "label": "known-bad",
+    "output": "r7-isnt-cold.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Re-review defect 1: contracted negation of the cold start."
+  },
+  {
+    "id": "r8-not-empty",
+    "label": "known-bad",
+    "output": "r8-not-empty.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Re-review defect 1: negated rephrasing with \"empty\"."
+  },
+  {
+    "id": "r9-doesnt-start-out-cold",
+    "label": "known-bad",
+    "output": "r9-doesnt-start-out-cold.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Re-review defect 1: contracted \"start out\" negation."
+  },
+  {
+    "id": "r10-restart-keeps-thumbnails",
+    "label": "known-bad",
+    "output": "r10-restart-keeps-thumbnails.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Re-review defect 1: rephrased as thumbnails surviving a restart."
   }
 ]

@@ -192,5 +192,34 @@
       "version-onward"
     ],
     "note": "Release-note phrasing that may or may not carry \"and later\". A reviewer decides."
+  },
+  {
+    "id": "r7-future-date-included",
+    "label": "known-bad",
+    "output": "r7-future-date-included.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Re-review defect 2: places the failing example inside the success scope."
+  },
+  {
+    "id": "r8-future-date-passes",
+    "label": "known-bad",
+    "output": "r8-future-date-passes.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Re-review defect 2: says the failing example passes."
+  },
+  {
+    "id": "r9-failing-example-included",
+    "label": "valid-alternative",
+    "output": "r9-failing-example-included.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Guard for the repair: \"including\" inside the failing clause stays faithful."
   }
 ]

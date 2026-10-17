@@ -63,7 +63,9 @@
         ]
       ],
       "contradict": [
-        "posted_on{S}\\b(past|today|missing|empty|blank)\\b"
+        "posted_on{S}\\b(past|today|missing|empty|blank)\\b",
+        "(?:^|[.;]){N}\\b(pass\\w*|import\\w*|brings?\\s+in|accept\\w*|succeed\\w*|valid)\\b(?:(?!\\bfail|\\breject|\\binvalid|\\bexclud|\\bskip)[^.;\\n])*\\b(includ\\w*|even|along\\s+with|as\\s+well\\s+as)\\b{S}posted_on",
+        "posted_on{N}\\b(pass\\w*|valid|succeed\\w*|(is|are|gets?)\\s+(also\\s+)?(imported|accepted|brought\\s+in))\\b"
       ],
       "review_question": "Does the reply still say a record with a future posted_on date fails validation?"
     },

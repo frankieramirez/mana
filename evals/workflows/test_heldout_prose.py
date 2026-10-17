@@ -257,14 +257,18 @@ class Oracles(unittest.TestCase):
                         self.assertEqual([a['check'] for a in result['adjudication']], example['expected_adjudication'])
 
     def test_review_defects_have_regression_examples(self):
-        """Each defect from review history entry 1 keeps a labeled example with the corrected verdict."""
+        """Each defect from the first review (r1 to r6) and the re-review (r7 onward) keeps a labeled example."""
         expected = {
             'prose-exempt': {'r1-list-without-periods': 'passed', 'r2-negated-stop': 'passed',
                              'r3-negated-persist': 'passed', 'r4-inferred-sweep-purpose': 'failed',
-                             'r5-sweep-frees-full-cache': 'failed', 'r6-negated-cold-start': 'failed'},
+                             'r5-sweep-frees-full-cache': 'failed', 'r6-negated-cold-start': 'failed',
+                             'r7-isnt-cold': 'failed', 'r8-not-empty': 'failed',
+                             'r9-doesnt-start-out-cold': 'failed', 'r10-restart-keeps-thumbnails': 'failed'},
             'prose-scope': {'r1-meets-the-schema': 'passed', 'r2-before-version': 'failed',
                             'r3-version-only': 'failed', 'r4-report-destination': 'failed',
-                            'r5-version-last': 'passed', 'r6-version-without-onward': 'needs_adjudication'},
+                            'r5-version-last': 'passed', 'r6-version-without-onward': 'needs_adjudication',
+                            'r7-future-date-included': 'failed', 'r8-future-date-passes': 'failed',
+                            'r9-failing-example-included': 'passed'},
         }
         for case, rows in expected.items():
             labeled = {e['id']: e for e in hp.examples(hp.HELDOUT, case)}

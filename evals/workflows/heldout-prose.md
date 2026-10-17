@@ -2,7 +2,7 @@
 
 [Ticket 108](https://github.com/frankieramirez/mana/issues/108) instantiates the three prose rows of the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md): `prose-exempt`, `prose-scope` and `prose-verbatim`. Each is its own source group (`sealed-prose-exempt-01`, `sealed-prose-scope-01`, `sealed-prose-verbatim-01`), split `confirmation`, with new inputs that share no sentence of 30 or more characters with the public prose evals, the semantic pilot or the focused workflow cases.
 
-Status: frozen, with both payload inventories verified. The first second review requested changes. The author repaired the oracles before any outcome existed and refroze, and a re-review is pending, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
+Status: frozen, with both payload inventories verified. The first review and the re-review each requested changes. The author repaired the oracles both times before any outcome existed and refroze. The current freeze still needs a new review, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
 
 ## Layout
 
@@ -52,7 +52,7 @@ Changing any input, oracle, example or manifest field needs a deliberate refreez
 
 ## Review record
 
-`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. The first review requested changes against freeze `a9689245…9eba`; its eight defects now have regression examples (`r1` to `r6` in `prose-exempt` and `prose-scope`), and its record is history entry 1.
+`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. The first review requested changes against freeze `a9689245…9eba`; its eight defects now have regression examples (`r1` to `r6` in `prose-exempt` and `prose-scope`), and its record is history entry 1. The re-review of freeze `9f40b4cc…5ecc` requested changes for negated cold-start statements and for a failing example placed inside the success scope. Its record stays in the `second_review` slot, and examples `r7` onward reproduce both defects.
 
 ## Limits
 

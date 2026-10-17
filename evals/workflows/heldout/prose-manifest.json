@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; second review pending after oracle repair",
+  "status": "frozen; payload inventories verified; oracles repaired after the re-review, which requested changes; a new review of this freeze is needed",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -54,7 +54,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-exempt-01",
-      "oracle_sha256": "f3089c034b959e56b7cdb38eee910e2360641633d535aba9b69ac3894d1800e0"
+      "oracle_sha256": "cd2c2fe87b7c028169cc9b4e09fe16db1759bfa062215037416ffabf77876a3e"
     },
     {
       "id": "prose-scope",
@@ -85,7 +85,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-scope-01",
-      "oracle_sha256": "1a939d916c4036a9d6dd37bb79d5be9445ad59145de2d7ce906588d71f37c018"
+      "oracle_sha256": "c0b52d3f585648cbb8829866385262096445787c6a45e18d2134918197f79f9a"
     },
     {
       "id": "prose-verbatim",
@@ -120,7 +120,7 @@
     }
   ],
   "exposure": [],
-  "freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+  "freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
   "history": [
     {
       "date": "2026-10-17",
@@ -142,6 +142,13 @@
       "previous_freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
       "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
       "change": "Oracle repair after review history entry 1, before any outcome: sentence spans stop at line breaks; negation-aware contradictions for full-cache rendering and cold start; meets-the-schema and instead-of-imported wording accepted; version split into version-named and version-onward; new inferred-purpose screen for prose-exempt; report-destination inference for prose-scope; regression examples r1 to r6 added in both groups."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+      "previous_freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Oracle repair after the re-review of freeze 9f40b4cc, before any outcome: cold-after-restart contradictions cover contracted and rephrased negations (isn't cold, not empty, doesn't start out cold, survives a restart, doesn't empty the cache); example-retained fails when the future posted_on record is placed inside the success scope or said to pass; regression examples r7 to r10 (prose-exempt) and r7 to r9 (prose-scope) added."
     }
   ]
 }
