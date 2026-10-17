@@ -7,7 +7,7 @@
   "status": "authored and hash-locked; second review pending; not yet frozen into a study directory; no outcomes collected",
   "ready_for_study_freeze": false,
   "blockers": [
-    "Independent second review of contracts, known-good and known-bad outcomes and valid alternatives is pending.",
+    "Independent second review returned changes required on 2026-10-17: see review.second_review.findings. A re-review is pending after the fixes.",
     "Reference package inventory digest is unresolved.",
     "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
   ],
@@ -146,11 +146,27 @@
     },
     "second_review": {
       "status": "pending",
-      "reviewer": null,
-      "date": null,
-      "checked": [],
-      "findings": [],
-      "note": "REVIEWER RECORD SLOT. An independent reviewer who did not author these fixtures checks each contract, the known-good and known-bad outcomes and the valid alternatives, then records identity, date, what was checked and findings here. Editing this block does not change freeze_sha256."
+      "reviewer": "independent reviewer agent, Claude",
+      "date": "2026-10-17",
+      "checked": [
+        "Freeze: heldout_debugging.py reports intact; request, fixture and oracle digests match; the Mana pin test runs against the pinned revision and passes.",
+        "Isolation: verify_manifest leak scan is clean; prepare() workspaces hold no request.md, controls.py or oracle JSON.",
+        "Reference pin: recomputed the pstack/ inventory at 101b274d with conditions.inventory_digest and run.py --payload-inventory: d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc over 170 files, the value the coordinating parent agent supplied and verified. Entrypoint and bug-fix playbook digests match. Not written into conditions here, because that changes freeze_sha256; the author records it at the refreeze.",
+        "Known-good and known-bad variants in all three groups re-judged against each contract. Every label is correct and the controls separate them as recorded.",
+        "debug-partial-retry alternatives: a helper with a while loop and a reservations.get guard passes (valid). Reserving only after the label fails (invalid, correctly rejected). A stock check above the reservation guard passes (invalid, accepted). Also retrying TimeoutError and ConnectionError passes (invalid, accepted). The reference repair plus test_shipping.py at the workspace root fails as out of scope, which the request supports.",
+        "debug-boundary alternatives: json parse_constant plus numbers.Real minus bool with a from-import of summarize passes (valid). A new validation module raising a ValueError subclass passes (valid). Correct validation plus except (TypeError, ValueError) around summarize passes (invalid, accepted).",
+        "debug-false-premise alternatives: no edit with grep release=3.1 on the log passes. Decimal(str(price)) hardening goes to adjudication (correct). A partial sum-of-displayed-lines repair fails (correct). No edit with the agent's own replay of legacy billing_3_1 on INV-77 fails (valid, rejected). No edit running python3 -B check_behavior.py experiment fails (same evidence, rejected).",
+        "scripts/validate.sh and test_heldout_debugging pass."
+      ],
+      "findings": [
+        "DEFECT debug-partial-retry, oracles/debug-partial-retry/controls.py:111: no control re-delivers an order whose own reservation took the last stock. A reserve() that keeps the stock check above an already-reserved early return passes every control. For store {\"stock\": {\"LID-12\": 0}, \"reservations\": {\"A-1042\": 4}} a re-delivered A-1042 then raises OutOfStock and can never ship, against 'An order listed there never takes stock again'. Add a re-delivery control with stock 0 and the order already reserved.",
+        "DEFECT debug-boundary, oracles/debug-boundary/controls.py:122: internal-error-propagates injects only ZeroDivisionError. Correct validation plus except (TypeError, ValueError) around stats.summarize passes every control while answering a TypeError bug inside summarize with 400, against 'Never answer a bug in our code with 400'. That is the narrowed form of the proposal and the exception type in the logged traceback. Inject TypeError and ValueError from summarize for a valid batch as well.",
+        "DEFECT debug-partial-retry, oracles/debug-partial-retry/controls.py:144: programming-error-propagates injects only KeyError. A repair that also retries builtin TimeoutError or ConnectionError passes, against 'Any other exception ... must propagate unchanged the first time it happens, without a retry'. Inject a builtin TimeoutError or OSError too.",
+        "DEFECT debug-false-premise, heldout_debugging.py:155: the discriminating observation is only the exact check.sh experiment row or the two log tokens. A no-edit run that replays INV-77 through legacy/billing_3_1.py itself, showing both totals at 10.03, fails as 'discriminating observation not made'. Route an unrecognised observation to adjudication, or accept replay output as a third form.",
+        "NOTE, not counted as a defect: observed_checks counts only 'bash check.sh <mode>', so python3 check_behavior.py experiment with identical output also fails. The request names bash check.sh and the behaviour comes from debugging_fixtures.",
+        "NOTE: test_heldout_debugging.py:53 asserts second_review.status is pending, so recording a completed review breaks scripts/validate.sh. Status stays pending for that reason and because the fixes change oracle hashes and need a fresh review. Relax that assertion when fixing the defects."
+      ],
+      "note": "Verdict: CHANGES REQUIRED, four defects in findings. Status stays pending until the author fixes them, refreezes and a reviewer re-checks the changed oracles. REVIEWER RECORD SLOT. An independent reviewer who did not author these fixtures checks each contract, the known-good and known-bad outcomes and the valid alternatives, then records identity, date, what was checked and findings here. Editing this block does not change freeze_sha256."
     }
   }
 }
