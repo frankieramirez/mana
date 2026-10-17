@@ -8,6 +8,12 @@
       ]
     },
     {
+      "source": "skills/banish/references/comment-validation.md",
+      "destinations": [
+        "skills/cast/references/comment-validation.md"
+      ]
+    },
+    {
       "source": "skills/reveal/references/capture.md",
       "destinations": [
         "skills/cast/references/capture.md"

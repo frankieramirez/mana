@@ -76,7 +76,7 @@ For each, name how it breaks, the `file:line`, how likely it is, and how bad it 
 
 ### 5. Prove the fact
 
-Read `references/proof.md` now. Write a script that runs the real code, run it, and paste what happened. If a cheap proof is impossible (it needs infrastructure, secrets, a device, or an hour), say so and stop at the highest rung reached. Do not substitute a paragraph for the run.
+Read `references/proof.md` now. Resolve the exact reviewed commit, or capture the current tracked and untracked source for a local review. Run the proving script in that isolated snapshot with the bundled helper and retain its source digest and execution report. A successful run from another checkout cannot prove this change. Write a script that runs the real code and paste what happened. If a cheap proof is impossible (it needs infrastructure, secrets, a device, or an hour), say so and stop at the highest rung reached. Do not substitute a paragraph for the run.
 
 ### 6. Widen for a large change
 

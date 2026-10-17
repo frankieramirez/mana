@@ -27,16 +27,26 @@
       "required": [
         "SKILL.md",
         "references/archmage.md",
-        "references/proof.md"
+        "references/proof.md",
+        "scripts/prove.sh"
       ],
-      "smoke": [],
+      "smoke": [
+        {
+          "script": "scripts/prove.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        }
+      ],
       "project_links": {}
     },
     "banish": {
       "required": [
         "SKILL.md",
         "references/archmage.md",
-        "references/comment-reaper.md"
+        "references/comment-reaper.md",
+        "references/comment-validation.md"
       ],
       "smoke": [],
       "project_links": {}
@@ -52,6 +62,7 @@
         "references/capture.md",
         "references/comment-cleanup.md",
         "references/comment-reaper.md",
+        "references/comment-validation.md",
         "references/spec-check.md",
         "references/tdd.md",
         "scripts/open-pr.sh",

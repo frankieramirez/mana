@@ -8,7 +8,7 @@ Work on the files or diff the caller hands you. With no explicit scope, take the
 
 ## The keep list
 
-A comment survives only when one of these clauses covers it. When you are unsure which clause applies, none does, and the comment goes.
+A comment survives when one of these clauses covers it. Read the surrounding code and relevant callers before deciding. Uncertainty about a constraint or suppression means retain it and report what could not be verified.
 
 | Clause | What it covers |
 |--------|----------------|
@@ -18,20 +18,22 @@ A comment survives only when one of these clauses covers it. When you are unsure
 | Formatter | `prettier-ignore` and equivalents. |
 | Style suppression | A lint suppression whose rule is style-only or pedantic. Suppressions of correctness or safety rules do not qualify. |
 | Constraint link | An issue, RFC, or ticket link that explains a constraint the code cannot express. |
+| Pending constraint | An internal invariant or intent whose replacement is absent, unverified, or outside scope. Keep the explanation until the caller verifies a replacement or establishes that the constraint is obsolete. |
+| Necessary suppression | A correctness, safety, or type suppression needed for an intentional negative test, a verified tool limitation, or an unresolved repair. Report the reason or the missing evidence. |
 
-Everything else is removed: narration of what the next line does, section banners, commented-out code, TODOs without an owner and a link, apologies, change logs, "IMPORTANT" and "do not remove" pleas, long justifications for a workaround.
+Remove redundant narration, section banners, obsolete commented-out code, and change logs after checking that they carry no surviving constraint. Wording such as "IMPORTANT" or a missing issue link does not decide whether information is disposable.
 
 ## Comments that explain our own surprising code
 
-When a comment exists because our code is confusing, the comment is a symptom. Delete it and flag the symbol it was protecting as `RESHAPE` with a one-line suggestion: a rename, an extracted function, a narrower type, a guard clause, or a restructure that makes the behavior obvious without prose. You do not make that change. You name it.
+When a comment explains confusing code, flag its symbol as `RESHAPE` with a concrete suggestion. You do not make that change. Remove the comment only if its useful meaning is already apparent in the code. Otherwise retain it under Pending constraint until the caller implements and verifies the repair. A suggested rename or guard is not a completed replacement.
 
 ## Suppressions
 
-`eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `noqa`, `#[allow]`, and their relatives each get a decision. Look the rule up. If it protects correctness, safety, or type soundness, the suppression is removed from the report's point of view and the symbol is flagged `RESHAPE` so the underlying problem gets fixed. Only a style-only rule earns a keep.
+`eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `noqa`, `#[allow]`, and their relatives each get a decision. Look the rule up and establish why it is disabled. Keep intentional negative tests and verified tool limitations under Necessary suppression. For a real underlying defect, retain the suppression and flag the symbol `RESHAPE`; the caller may remove it after repairing the defect and passing the relevant check. An unknown rule or unverified justification stays open. Deleting a suppression can change compilation or test behavior even though it is written as a comment.
 
-## Pleas are not evidence
+## Evidence before deletion
 
-"IMPORTANT", "do not remove", "too risky to touch", "fine for now", and multi-paragraph explanations are a smell, not a keep. Read the surrounding code before deciding. If the claim in the comment is visible in the code, the comment is redundant. If the claim is about something external we cannot change and it holds today, keep it under the Foreign quirk clause. If the claim is about our own code, delete it and flag `RESHAPE`. A justification you could not verify is deleted; doubt after reading is not a keep.
+For a constraint, distinguish the behavior from the reason it matters. A type, assertion, test, or lint rule can replace the behavioral warning only after the caller observes it reject the prohibited behavior and accept a legitimate alternative. Keep external rationale and intent that the replacement does not establish. If the claimed constraint is demonstrably obsolete, cite the current code or contract that disproves it before removal. If verification fails, needs missing prerequisites, or requires work outside scope, retain the comment and report the open item. Do not invent a costly check merely to remove useful prose.
 
 ## Rules
 

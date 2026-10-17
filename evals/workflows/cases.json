@@ -320,6 +320,104 @@
         "commit": false,
         "evidence_directory": "artifacts/"
       }
+    },
+    {
+      "id": "cleanup-validation-passed",
+      "skill": "banish",
+      "fixture": "cleanup",
+      "expected_status": "cleanup-passed",
+      "request": "Continue at Step 5. Cleanup and its authorized repairs are already complete in the supplied tree. Validate and report the actual result. Do not make further repairs, edit product files, commit, push, or redispatch review.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "cleanup-validation-failed",
+      "skill": "banish",
+      "fixture": "cleanup",
+      "expected_status": "cleanup-failed",
+      "request": "Continue at Step 5. Cleanup and its authorized repairs are already complete in the supplied tree. Validate and report the actual result. Do not make further repairs, edit product files, commit, push, or redispatch review.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "cleanup-validation-blocked",
+      "skill": "banish",
+      "fixture": "cleanup",
+      "expected_status": "cleanup-blocked",
+      "request": "Continue at Step 5. Cleanup and its authorized repairs are already complete in the supplied tree. Validate and report the actual result. Do not make further repairs, edit product files, commit, push, or redispatch review.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "cleanup-validation-reused",
+      "skill": "banish",
+      "fixture": "cleanup",
+      "expected_status": "cleanup-reused",
+      "request": "Continue at Step 5. Comment review made no edits. Prior successful validation and unchanged-source hashes are recorded in artifacts/prior-validation.json from the same fixture environment. Check that evidence and reuse it if still valid. Do not needlessly rerun a valid check, edit product files, commit, push, or redispatch review.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "ultima-report-only",
+      "skill": "ultima",
+      "fixture": "action",
+      "expected_status": "report-only",
+      "request": "Continue at Stage 6 of the completed audit. The run directory is artifacts/audit, with report.html, merged.json, metadata.json, and system-context.md already prepared. Deliver its existing report to me before any follow-up. No audit dispatch, rendering, or publication is needed. This host has no permitted question tool; use ordinary text if a choice remains unresolved. I only want the audit report and findings. Leave the project alone.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "ultima-local-fix",
+      "skill": "ultima",
+      "fixture": "action",
+      "expected_status": "local-fix",
+      "request": "Continue at Stage 6 of the completed audit. The run directory is artifacts/audit, with report.html, merged.json, metadata.json, and system-context.md already prepared. Deliver its existing report to me before any follow-up. No audit dispatch, rendering, or publication is needed. This host has no permitted question tool; use ordinary text if a choice remains unresolved. I already chose the local fix for rank 1 in this repository: update app.txt as described and run bash check.sh. Leave the result as an uncommitted diff, with no staging or external writes.",
+      "allowed_effects": {
+        "product_files": [
+          "app.txt"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "ultima-changed-target",
+      "skill": "ultima",
+      "fixture": "action",
+      "expected_status": "report-only",
+      "request": "Continue at Stage 6 of the completed audit. The run directory is artifacts/audit, with report.html, merged.json, metadata.json, and system-context.md already prepared. Deliver its existing report to me before any follow-up. No audit dispatch, rendering, or publication is needed. This host has no permitted question tool; use ordinary text if a choice remains unresolved. Earlier permission to fix, commit, and publish covered only other/mana PR41. This fixture/mana checkout is a different target. For this target, give me the audit report only.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
+    },
+    {
+      "id": "ultima-host-question",
+      "skill": "ultima",
+      "fixture": "action",
+      "expected_status": "report-only",
+      "request": "Continue at Stage 6 of the completed audit. The run directory is artifacts/audit, with report.html, merged.json, metadata.json, and system-context.md already prepared. Deliver its existing report to me before any follow-up. No audit dispatch, rendering, or publication is needed. This host has no permitted question tool; use ordinary text if a choice remains unresolved. I have not chosen a follow-up action. Present the available choice after delivering the report. The checkout has no configured tracker.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
     }
   ]
 }

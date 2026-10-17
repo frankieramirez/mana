@@ -38,6 +38,14 @@ Four additional scenarios cover the authority and recovery changes:
 
 Live evaluation of the changed-target scenario has not run. Its offline scope checks establish fixture and grader behavior only.
 
+Four cleanup scenarios use `cleanup_fixtures.py` at standalone cleanup's validation stage. `cleanup-validation-failed` supplies a rename with a real `NameError`; `cleanup-validation-passed` checks the corrected function against populated and empty inputs. `cleanup-validation-blocked` reports a missing runtime with exit 127. `cleanup-validation-reused` records a successful check during fixture setup and supplies its source hashes for a no-edit continuation. The grader compares check reports with command outcomes and final repository state, rejects masked command exits, and preserves the starting index. These cases do not exercise reviewer dispatch or measure comment-retention judgment.
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_cleanup.py
+```
+
+The tests execute fixture checks and supply synthetic agent records to establish grader behavior. Live cleanup runs have not been performed. On a validated host, use `--live --case cleanup-validation-failed --case cleanup-validation-passed --case cleanup-validation-blocked --case cleanup-validation-reused --limit 4 --timeout 180` for the bounded agent trial. A final narrative that contradicts its structured check records still needs semantic review.
+
 The focused-case loader limits the added review skills to these stages. Delegation stays disabled for focused cases; these cases do not test finding quality, reviewer orchestration, or a full feedback cycle. Human review must also check that the agent did not ask again for an action already supplied and that its report accurately explains any recovery. The command-pattern checks detect selected prohibited attempts, not every possible shell encoding. Final repository state supplies the primary scope oracle.
 
 ## Isolation
@@ -152,3 +160,18 @@ python3 -B evals/workflows/run.py --live \
   --case scry-build-leftover --case conjure-build-leftover \
   --case scry-build-leftover-read-only --limit 3 --timeout 300
 ```
+
+
+## Ultima follow-up authority
+
+Four focused cases start from a completed audit with its existing report and one eligible candidate. `ultima-report-only` and `ultima-changed-target` require report delivery without changing the project. `ultima-local-fix` requires the already selected edit and successful verification while preserving HEAD and the index. `ultima-host-question` leaves the action unresolved on a host without a permitted question tool, so the report precedes an ordinary-text choice. None authorizes publication.
+
+`ultima_fixtures.py` checks assistant report-link events, their ordering against observed shell edits or native patch events, unnecessary repeat questions in these bounded prompts, unsupported question calls, and attempted writes. The shared grader checks actual file contents, validation events, HEAD and the index. These checks use known fixture language and supported host event shapes; they do not establish a general semantic detector for every question or arbitrary write mechanism.
+
+The synthetic grader tests cover both accepted and rejected outcomes:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_ultima_followup.py
+```
+
+No live agent execution of these cases is recorded. The tests establish fixture and grader behavior, while the instruction change still needs a supported-host live comparison before making reliability claims.
