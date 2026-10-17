@@ -4,6 +4,7 @@ Every host here is fake_host.py. No model is invoked.
 """
 import copy
 import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -122,6 +123,27 @@ class Registry(unittest.TestCase):
         for host in ('codex-cli 0.159.0-alpha.3', 'codex-cli 9.0.0-unrecorded', '2.1.302 (Claude Code)'):
             with self.subTest(host=host), self.assertRaisesRegex(ValueError, 'unvalidated host'):
                 hosts.require(host, 'focused')
+
+    def test_live_codex_0163_record_supports_delegated_but_not_comparative_runs(self):
+        # Recorded by run.py --probe-host on a real Codex CLI 0.163.0 host with one model call.
+        path = hosts.EVIDENCE / '2026-10-17-codex-cli-0.163.0.json'
+        self.assertEqual('907fb1372fa49bcf5f6baaf6ebb6a74a1718d7b38149ce5ef15a6206e9529460',
+                         hashlib.sha256(path.read_bytes()).hexdigest())
+        record = json.loads(path.read_text())
+        self.assertEqual(1, record['model_invocations'])
+        host, at = 'codex-cli 0.163.0', hosts.parse_time(record['recorded_at']) + datetime.timedelta(days=1)
+        for mode in ('focused', 'delegated'):
+            with self.subTest(mode=mode):
+                self.assertTrue(hosts.assess(host, mode, at=at)['accepted'])
+                hosts.require(host, mode, at=at)
+        result = hosts.assess(host, 'comparative-delegated', at=at)
+        self.assertFalse(result['accepted'])
+        self.assertEqual(['active_thread_cap=unknown'], result['missing'])
+        self.assertEqual([], result['stale'])
+        self.assertEqual('verified', result['capabilities']['process_family_termination']['status'])
+        with self.assertRaisesRegex(ValueError, 'unvalidated host'):
+            hosts.require(host, 'comparative-delegated', at=at)
+        self.assertNotIn(host, hosts.accepted_versions('comparative-delegated', at=at))
 
     def test_a_version_without_evidence_is_never_accepted(self):
         record = verified_record()

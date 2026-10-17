@@ -15,7 +15,7 @@ These validate fixtures and graders. They do not execute an agent. Each syntheti
 
 ## Actual agent runs
 
-The adapter supports Linux and an existing Codex CLI login. It accepts exactly the versions whose committed evidence records in `host-evidence/` verify the capabilities a mode needs, as read by `hosts.py`; see [host validation](condition-execution.md#host-validation-and-delegated-arms). The first records restate the 0.155.1 pilot and the 0.159.2 package C probe. Versions without a record are unvalidated and fail closed. Revalidate isolation and the event contract with `--probe-host` before adding a record. Python's standard library is sufficient for the harness itself.
+The adapter supports Linux and an existing Codex CLI login. It accepts exactly the versions whose committed evidence records in `host-evidence/` verify the capabilities a mode needs, as read by `hosts.py`; see [host validation](condition-execution.md#host-validation-and-delegated-arms). The first records restate the 0.155.1 pilot and the 0.159.2 package C probe. The 0.163.0 record comes from a live `--probe-host` run and supports focused and delegated attempts; its thread cap stays unknown, so it does not support comparative delegated studies. Versions without a record are unvalidated and fail closed. Revalidate isolation and the event contract with `--probe-host` before adding a record. Python's standard library is sufficient for the harness itself.
 
 ```bash
 python3 -B evals/workflows/run.py --live \

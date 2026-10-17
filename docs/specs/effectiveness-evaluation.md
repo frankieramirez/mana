@@ -1,7 +1,7 @@
 # Workflow effectiveness evaluation
 
 Decision: [Specify a fair benchmark for workflow effectiveness and review effort](https://github.com/frankieramirez/mana/issues/82), under [Improve mana's reliability and measured effectiveness](https://github.com/frankieramirez/mana/issues/72).
-Status: protocol settled on 2026-10-17; the focused condition adapter ships in mana 0.43.0. Sealed attempt records, blinded review packets and append-only judgments are implemented offline. The evidence-backed host registry, shared delegation limits, per-thread probes and process-family termination are implemented and tested offline ([host validation](../../evals/workflows/condition-execution.md#host-validation-and-delegated-arms)). No host is validated for comparative delegated runs yet. Held-out fixtures remain pending; live runs and human review are unstarted.
+Status: protocol settled on 2026-10-17; the focused condition adapter ships in mana 0.43.0. Sealed attempt records, blinded review packets and append-only judgments are implemented offline. The evidence-backed host registry, shared delegation limits, per-thread probes and process-family termination are implemented and tested offline ([host validation](../../evals/workflows/condition-execution.md#host-validation-and-delegated-arms)). Codex CLI 0.163.0 has live evidence for focused and delegated attempts. No host is validated for comparative delegated runs yet, because its thread cap was never challenged. Held-out fixtures remain pending; live runs and human review are unstarted.
 
 ## Decision and evidence
 

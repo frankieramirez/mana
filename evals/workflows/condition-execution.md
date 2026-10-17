@@ -115,7 +115,7 @@ Those checks establish fixture and adapter behavior only. A successful check is 
 | `delegated` | focused, plus descendant collection, thread attribution and per-child containment |
 | `comparative-delegated` | delegated, plus usage events, the active-thread cap and process-family termination, each observed within 30 days |
 
-The 0.155.1 and 0.159.2 records restate the earlier pilot evidence and cite the record holding it. Version 0.159.2 therefore keeps its focused and delegated acceptance. It has no comparative acceptance: its thread cap was configured but never challenged, and no recorded probe shows that a timeout ends every descendant process. The 2026-10-17 Claude Code record holds an installation observation only, because the evaluator has no adapter for that host.
+The 0.155.1 and 0.159.2 records restate the earlier pilot evidence and cite the record holding it. Version 0.159.2 therefore keeps its focused and delegated acceptance. It has no comparative acceptance: its thread cap was configured but never challenged, and no recorded probe shows that a timeout ends every descendant process. Version 0.163.0 has a live record from one `--probe-host` run on 2026-10-17 with one model call. Every capability verified, including process-family termination, except the active-thread cap. That run set `agents.max_threads=2` and asked for three children at once, but only two children ran and no spawn was refused, so the cap was never challenged and stays unknown. Version 0.163.0 is therefore accepted for focused and delegated attempts and is not accepted for comparative delegated studies. The 2026-10-17 Claude Code record holds an installation observation only, because the evaluator has no adapter for that host.
 
 Frozen controls copy the evidence records into `runner-source/host-evidence/`, so a study runs against the registry it was frozen with. The registry decision, the record names and digests, and the observation times are saved in every attempt's `result.json` and `evaluation.json`.
 
@@ -152,7 +152,7 @@ Attempt records keep `requested_model`, `reported_model` (host metadata, null wh
 python3 -B -m unittest discover -s evals/workflows -p test_host_validation.py
 ```
 
-These tests show that the evaluator detects each failure. They do not validate any real host. In the 2026-10-17 delivery container, Codex CLI was not installed, so no live probe ran and no host was newly accepted.
+These tests show that the evaluator detects each failure. They do not validate any real host. The only live evidence is the 0.163.0 record above, recorded on the maintainer's machine because the delivery container had no Codex CLI. A test loads that committed file and checks that the registry reaches the same conclusion.
 
 ## Sealed attempts and blinded review
 
