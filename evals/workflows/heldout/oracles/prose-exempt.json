@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "oracle_id": "oracle-prose-exempt-01",
+  "case_id": "prose-exempt",
+  "evaluator_only": true,
+  "canary": "mana-heldout-canary-7c1e0f52-prose-exempt",
+  "graded_text": {
+    "source": "file",
+    "path": "docs/image-cache.md"
+  },
+  "contract": "Rewrite the prose of docs/image-cache.md in place. The fenced YAML sample and config/image-cache.yaml keep their exact bytes. Every fact the prose states survives. Facts that appear only in the sample (entry limit, eviction age, sweep schedule, the reason in the cron comment, the boot setting) stay out of the prose, as does any eviction mechanism or consequence the prose never states.",
+  "exact": [
+    {
+      "id": "yaml-sample-bytes",
+      "kind": "protected_span",
+      "failure": "protected-bytes-changed",
+      "span": {
+        "path": "docs/image-cache.md",
+        "start": "```yaml\n",
+        "end": "```\n",
+        "include_start": true,
+        "include_end": true
+      },
+      "expected_sha256": "a34cb681102d4f1ef4f3324887f3c50ede0da0cd76a3a487b190c814c7bb051b"
+    },
+    {
+      "id": "config-file-bytes",
+      "kind": "unchanged_file",
+      "path": "config/image-cache.yaml",
+      "failure": "protected-bytes-changed"
+    },
+    {
+      "id": "doc-edited",
+      "kind": "changed_file",
+      "path": "docs/image-cache.md",
+      "failure": "not-edited"
+    }
+  ],
+  "facts": [
+    {
+      "id": "cache-holds-thumbnails",
+      "kind": "preserve",
+      "failure": "lost-fact",
+      "present_all": [
+        [
+          "thumbnail"
+        ]
+      ],
+      "review_question": "Does the prose still say the cache keeps thumbnails close to (or for) the renderer?"
+    },
+    {
+      "id": "periodic-sweep-removes-old",
+      "kind": "preserve",
+      "failure": "lost-fact",
+      "present_all": [
+        [
+          "sweep|background\\s+(job|task|process|pass)"
+        ],
+        [
+          "\\bold|stale|aged|expired|outdated"
+        ],
+        [
+          "periodic|regular|from\\s+time\\s+to\\s+time|on\\s+a\\s+schedule|scheduled|every\\s+so\\s+often|now\\s+and\\s+then"
+        ]
+      ],
+      "review_question": "Does the prose still say a background sweep periodically removes old thumbnails?"
+    },
+    {
+      "id": "full-still-renders-not-stored",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "present_all": [
+        [
+          "\\bfull\\b|fills?\\s+up|at\\s+capacity|reaches\\s+(its\\s+)?(limit|capacity)"
+        ],
+        [
+          "still\\s+render|keeps?\\s+rendering|continues?\\s+to\\s+render|render\\w*\\s+(anyway|normally|as\\s+usual)"
+        ],
+        [
+          "(not|n't|never)\\s+(get\\s+|be\\s+|being\\s+)?(stored|cached|saved|kept|added)|without\\s+being\\s+(stored|cached|saved)|skip\\w*\\s+(the\\s+)?(cache|stor\\w*)"
+        ]
+      ],
+      "contradict": [
+        "\\bfull\\b{S}\\b(fail|error|block|wait|stop)\\w*{S}render",
+        "\\bfull\\b{S}\\b(do\\s+not|don't|doesn't|does\\s+not|won't|cannot|can't)\\s+render"
+      ],
+      "review_question": "When the cache is full, does the prose still say new thumbnails render but are not stored, with nothing contradicting that?"
+    },
+    {
+      "id": "no-full-eviction-mechanism",
+      "kind": "forbid",
+      "failure": "invented-mechanism",
+      "contradict": [
+        "\\b(full|capacity|limit)\\b{S}\\b(evict|replac|drop|remov|discard|delet|push\\w*\\s+out|make\\s+room|overwrit)\\w*",
+        "least[- ]recently|\\bLRU\\b|\\bFIFO\\b|first[- ]in"
+      ],
+      "review_question": "Does the prose avoid inventing what happens to stored thumbnails when the cache is full?"
+    },
+    {
+      "id": "cold-after-restart",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "present_all": [
+        [
+          "\\bcold\\b|\\bempty\\b|from\\s+scratch|nothing\\s+(cached|in\\s+it|in\\s+the\\s+cache)|starts?\\s+(over|fresh|clean)"
+        ],
+        [
+          "restart|reboot|\\bboot|start\\s*-?up|redeploy|relaunch"
+        ]
+      ],
+      "contradict": [
+        "(restart|reboot|\\bboot){S}\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist|reload)\\w*",
+        "\\b(warm(?!_on_boot)|pre-?(load|fill|populat)|restor|persist)\\w*{S}\\b(restart|reboot|boot)"
+      ],
+      "review_question": "Does the prose still say the cache starts cold after a restart, with nothing contradicting that?"
+    },
+    {
+      "id": "no-sample-numbers",
+      "kind": "forbid",
+      "failure": "inferred-number",
+      "contradict": [
+        "\\b5,?000\\b|five\\s+thousand|\\b36\\b|thirty[- ]six|day\\s+and\\s+a\\s+half|1\\.5\\s+days|\\bsix\\s+hours|\\b6\\s*(h|hrs?|hours?)\\b|every\\s+(6|six)\\b|quarter\\s+past|:15\\b|\\b15\\s+(minutes\\s+)?past|four\\s+times\\s+(a|per)\\s+day|\\b4\\s*(x|times)\\s+(a|per)\\s+day"
+      ],
+      "adjudicate": [
+        "\\d"
+      ],
+      "review_question": "Does the prose avoid numbers that appear only in the YAML sample (entries, hours, schedule)?"
+    },
+    {
+      "id": "no-sample-reason",
+      "kind": "forbid",
+      "failure": "inferred-reason",
+      "contradict": [
+        "(on|off|top\\s+of)\\s+the\\s+hour|hourly\\s+(jobs?|tasks?|work|runs?|batch)|collid|collision|contention|stagger|clear\\s+of|\\b(avoid|dodge|miss)\\w*{S}\\b(jobs?|tasks?|load|peak|spike)"
+      ],
+      "adjudicate": [
+        "\\bbecause\\b|\\bdue\\s+to\\b|warm_on_boot|max_entries|evict_after_hours|sweep_cron"
+      ],
+      "review_question": "Does the prose avoid giving a reason for the sweep timing or any setting that the prose never stated?"
+    },
+    {
+      "id": "no-inferred-consequence",
+      "kind": "forbid",
+      "failure": "inferred-consequence",
+      "contradict": [
+        "\\b(first|initial)\\s+(gallery\\s+)?(load|view|request|render|visit)\\w*{S}\\b(slow|longer|wait|miss|lag)\\w*",
+        "\\b(slow|slower|latency|delay|lag)\\w*{S}\\b(first|initial)\\b",
+        "cache\\s+miss"
+      ],
+      "adjudicate": [
+        "faster|\\bspeed|performance|latency"
+      ],
+      "review_question": "Does the prose avoid adding consequences such as slower first loads or performance effects?"
+    }
+  ]
+}

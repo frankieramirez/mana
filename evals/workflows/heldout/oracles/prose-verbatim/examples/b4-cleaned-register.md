@@ -1,0 +1,1 @@
+Honestly, I want to be clear: this is a scheduling problem. The batch sat in the queue for three to five hours because the window moved and nobody updated the trigger. We will fix the trigger, the alerting and the runbook before the next cycle.

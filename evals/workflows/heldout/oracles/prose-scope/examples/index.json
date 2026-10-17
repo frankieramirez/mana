@@ -1,0 +1,137 @@
+[
+  {
+    "id": "g1-plain",
+    "label": "known-good",
+    "output": "g1-plain.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Keeps scope, version, exclusion, report, example and no-modification."
+  },
+  {
+    "id": "g2-sloppy-style",
+    "label": "known-good",
+    "output": "g2-sloppy-style.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Faithful and shorter, with dashes and filler left in. Style is outside this oracle."
+  },
+  {
+    "id": "g3-other-order",
+    "label": "valid-alternative",
+    "output": "g3-other-order.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Different wording for every fact."
+  },
+  {
+    "id": "g4-unforeseen-wording",
+    "label": "valid-alternative",
+    "output": "g4-unforeseen-wording.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "example-retained"
+    ],
+    "note": "Names the example without the field name. A reviewer decides; the screen does not fail it."
+  },
+  {
+    "id": "b1-lost-scope",
+    "label": "known-bad",
+    "output": "b1-lost-scope.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "lost-scope"
+    ],
+    "note": "Turns the validation-limited guarantee into a universal one."
+  },
+  {
+    "id": "b2-exhaustive-example",
+    "label": "known-bad",
+    "output": "b2-exhaustive-example.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "example-made-exhaustive",
+      "lost-scope"
+    ],
+    "note": "Presents the one example as the only rejection case."
+  },
+  {
+    "id": "b3-inferred-recovery",
+    "label": "known-bad",
+    "output": "b3-inferred-recovery.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "inferred-fact"
+    ],
+    "note": "Adds a recovery path the paragraph never states."
+  },
+  {
+    "id": "b4-lost-version",
+    "label": "known-bad",
+    "output": "b4-lost-version.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "lost-condition"
+    ],
+    "note": "Drops the version 4.2 condition."
+  },
+  {
+    "id": "b5-lost-no-modification",
+    "label": "known-bad",
+    "output": "b5-lost-no-modification.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "records-not-modified"
+    ],
+    "note": "Drops a stated fact. Held for review, never passed."
+  },
+  {
+    "id": "b6-invalid-imported",
+    "label": "known-bad",
+    "output": "b6-invalid-imported.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Contradicts the exclusion of failing records."
+  },
+  {
+    "id": "b7-not-shortened",
+    "label": "known-bad",
+    "output": "b7-not-shortened.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "not-shortened"
+    ],
+    "note": "Returns the paragraph unchanged. Its facts pass; the requested shortening did not happen."
+  },
+  {
+    "id": "b8-file-edited",
+    "label": "known-bad",
+    "output": "b8-file-edited.md",
+    "file_overrides": {
+      "notes/importer-draft.md": "b8-file-edited.importer-draft.md"
+    },
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "protected-bytes-changed",
+      "scope-violation"
+    ],
+    "note": "Edits the notes file the request said to leave."
+  },
+  {
+    "id": "b9-preface",
+    "label": "known-bad",
+    "output": "b9-preface.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "reply-only"
+    ],
+    "note": "Adds a preface. Held for review."
+  }
+]

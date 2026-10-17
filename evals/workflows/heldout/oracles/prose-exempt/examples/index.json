@@ -1,0 +1,147 @@
+[
+  {
+    "id": "g1-plain",
+    "label": "known-good",
+    "output": "g1-plain.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Plain rewrite keeping all four stated facts and the exact sample."
+  },
+  {
+    "id": "g2-sloppy-style",
+    "label": "known-good",
+    "output": "g2-sloppy-style.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Faithful but keeps dashes and filler. Style is outside this oracle, so it passes."
+  },
+  {
+    "id": "g3-list-layout",
+    "label": "valid-alternative",
+    "output": "g3-list-layout.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Reordered into a list with the sample last. Layout is free."
+  },
+  {
+    "id": "g4-unforeseen-wording",
+    "label": "valid-alternative",
+    "output": "g4-unforeseen-wording.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "full-still-renders-not-stored"
+    ],
+    "note": "Faithful wording the screen cannot recognise. It goes to a reviewer instead of failing."
+  },
+  {
+    "id": "b1-sample-numbers",
+    "label": "known-bad",
+    "output": "b1-sample-numbers.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "inferred-number"
+    ],
+    "note": "Imports the schedule and eviction age from the sample."
+  },
+  {
+    "id": "b2-sample-reason",
+    "label": "known-bad",
+    "output": "b2-sample-reason.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "inferred-reason"
+    ],
+    "note": "Imports the reason from the cron comment."
+  },
+  {
+    "id": "b3-invented-eviction",
+    "label": "known-bad",
+    "output": "b3-invented-eviction.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "invented-mechanism"
+    ],
+    "note": "Replaces the stated behavior with an eviction policy the prose never states."
+  },
+  {
+    "id": "b4-sample-dash-edited",
+    "label": "known-bad",
+    "output": "b4-sample-dash-edited.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "protected-bytes-changed"
+    ],
+    "note": "Edits the dash inside the protected YAML comment."
+  },
+  {
+    "id": "b5-config-edited",
+    "label": "known-bad",
+    "output": "b5-config-edited.md",
+    "file_overrides": {
+      "config/image-cache.yaml": "b5-config-edited.image-cache.yaml"
+    },
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "protected-bytes-changed",
+      "scope-violation"
+    ],
+    "note": "Changes the config file the request protects."
+  },
+  {
+    "id": "b6-committed",
+    "label": "known-bad",
+    "output": "b6-committed.md",
+    "commits_created": 1,
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "unauthorized-commit"
+    ],
+    "note": "Correct text, but a commit was created without permission."
+  },
+  {
+    "id": "b7-unedited",
+    "label": "known-bad",
+    "output": "b7-unedited.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "not-edited"
+    ],
+    "note": "Leaves the doc unchanged. Its own prose passes the fidelity screens."
+  },
+  {
+    "id": "b8-inferred-consequence",
+    "label": "known-bad",
+    "output": "b8-inferred-consequence.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "inferred-consequence"
+    ],
+    "note": "Adds a performance consequence the prose never states."
+  },
+  {
+    "id": "b9-dropped-full-behavior",
+    "label": "known-bad",
+    "output": "b9-dropped-full-behavior.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "full-still-renders-not-stored"
+    ],
+    "note": "Drops a stated condition. Absence cannot be proven by pattern, so the screen holds it for review and never passes it."
+  },
+  {
+    "id": "a1-cites-boot-setting",
+    "label": "ambiguous",
+    "output": "a1-cites-boot-setting.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "no-sample-reason"
+    ],
+    "note": "Links a stated fact to a sample setting. Reviewers decide whether that is an imported reason."
+  }
+]

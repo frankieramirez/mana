@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The workflow evaluator holds three new prose-fidelity source groups for protected config bytes, quantified scope and exact quotation. Candidate inputs sit apart from evaluator-only oracles, labeled outcomes and a manifest that freezes request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite routes. Offline tests check byte-exact oracles, fact screens that ignore style, prompt isolation and freeze tampering. The second review and the reference package inventory are pending, so no confirmation run can start.
+
 ## 0.43.0
 
 - Sift and Cast load a shared debugging procedure for unexplained behavior defects. Focused fixtures distinguish valid boundary handling from producer failures, preserve existing edits when a hypothesis fails, and reject stale or unavailable execution evidence. Independent behavioral rechecks require verified containment.

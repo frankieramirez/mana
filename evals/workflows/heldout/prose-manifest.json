@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "study": "effectiveness-pilot-1",
+  "job": "prose-fidelity",
+  "status": "frozen; second review pending; reference package inventory unresolved",
+  "conditions": {
+    "mana": {
+      "source": "https://github.com/frankieramirez/mana",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+      "root": "skills",
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "inventory_status": "verified",
+      "evidence": "git archive of skills/ at the revision, then conditions.inventory_digest over 181 files; entrypoint hash from git show."
+    },
+    "reference": {
+      "source": "https://github.com/cursor/plugins",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+      "root": "pstack",
+      "inventory_sha256": null,
+      "inventory_status": "unresolved",
+      "evidence": "Entrypoint bytes fetched from raw.githubusercontent.com at the revision; the file names no supporting files. The package inventory could not be listed from the authoring session. A sibling fixture author reported d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc over 170 files; that value is unverified here and is not frozen."
+    },
+    "none": {}
+  },
+  "cases": [
+    {
+      "id": "prose-exempt",
+      "source_group": "sealed-prose-exempt-01",
+      "job": "prose-fidelity",
+      "split": "confirmation",
+      "fixture_path": "inputs/prose-exempt/fixture",
+      "fixture_sha256": "aa48c6ea106d40c8131f308f1ba98e9e680c53312fe0ea9b3a8b55c7d225b466",
+      "request_path": "inputs/prose-exempt/request.md",
+      "request_sha256": "ee410f4448c6fa0c2d39c6a2398870baa4288971951ffc10fbffad4d7bb5d82c",
+      "allowed_effects": {
+        "product_paths": [
+          "docs/image-cache.md"
+        ],
+        "local_commit": false,
+        "artifact_dir": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "reference": {
+          "path": "skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        },
+        "none": null
+      },
+      "timeout_seconds": 180,
+      "delegation_allowed": false,
+      "oracle_id": "oracle-prose-exempt-01",
+      "oracle_sha256": "e436b3ea65bc7ed7a76b6ab10bfd8a5390228e1cff3415dd0b5fb5eb87337309"
+    },
+    {
+      "id": "prose-scope",
+      "source_group": "sealed-prose-scope-01",
+      "job": "prose-fidelity",
+      "split": "confirmation",
+      "fixture_path": "inputs/prose-scope/fixture",
+      "fixture_sha256": "1c4a6c59026e2d3e813f1d0b558d82aa9acf7b85deb9bb17f36f54891c15ffa9",
+      "request_path": "inputs/prose-scope/request.md",
+      "request_sha256": "e30b7d5e202f1f4d9c18475c44ec9d22852ca154e31505b86945e8db48e4ea7d",
+      "allowed_effects": {
+        "product_paths": [],
+        "local_commit": false,
+        "artifact_dir": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "reference": {
+          "path": "skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        },
+        "none": null
+      },
+      "timeout_seconds": 180,
+      "delegation_allowed": false,
+      "oracle_id": "oracle-prose-scope-01",
+      "oracle_sha256": "6bc2d026f0c2bf12b376167f3a01e346da61154a2c8f9769e4d889852064810a"
+    },
+    {
+      "id": "prose-verbatim",
+      "source_group": "sealed-prose-verbatim-01",
+      "job": "prose-fidelity",
+      "split": "confirmation",
+      "fixture_path": "inputs/prose-verbatim/fixture",
+      "fixture_sha256": "f06e62f2c253a91dae6402c8d4595812fce19c8d93e55c718568f694a883333f",
+      "request_path": "inputs/prose-verbatim/request.md",
+      "request_sha256": "d0a7d08ce0e3c660322c13e97d3089a7578519e53e626fcfe380013141773dc9",
+      "allowed_effects": {
+        "product_paths": [],
+        "local_commit": false,
+        "artifact_dir": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "reference": {
+          "path": "skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        },
+        "none": null
+      },
+      "timeout_seconds": 180,
+      "delegation_allowed": false,
+      "oracle_id": "oracle-prose-verbatim-01",
+      "oracle_sha256": "55981cbd3659ce260bc4982556f03da53219865cbd2b36531c9c87a85b232b9b"
+    }
+  ],
+  "exposure": [],
+  "freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee"
+}

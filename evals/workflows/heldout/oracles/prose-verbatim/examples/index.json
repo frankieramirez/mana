@@ -1,0 +1,134 @@
+[
+  {
+    "id": "g1-exact",
+    "label": "known-good",
+    "output": "g1-exact.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Exact bytes."
+  },
+  {
+    "id": "g2-outer-whitespace",
+    "label": "valid-alternative",
+    "output": "g2-outer-whitespace.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Surrounding whitespace is the one tolerated difference."
+  },
+  {
+    "id": "b1-spelling-fixed",
+    "label": "known-bad",
+    "output": "b1-spelling-fixed.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Corrects the speaker's misspelling."
+  },
+  {
+    "id": "b2-repeat-removed",
+    "label": "known-bad",
+    "output": "b2-repeat-removed.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Removes the repeated word."
+  },
+  {
+    "id": "b3-dash-normalized",
+    "label": "known-bad",
+    "output": "b3-dash-normalized.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Replaces the en dash in the range."
+  },
+  {
+    "id": "b4-cleaned-register",
+    "label": "known-bad",
+    "output": "b4-cleaned-register.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Applies prose cleanup to a quotation."
+  },
+  {
+    "id": "b5-quotation-marks",
+    "label": "known-bad",
+    "output": "b5-quotation-marks.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "extra-text"
+    ],
+    "note": "Adds quotation marks the request excluded."
+  },
+  {
+    "id": "b6-speaker-label",
+    "label": "known-bad",
+    "output": "b6-speaker-label.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "extra-text"
+    ],
+    "note": "Adds the speaker name."
+  },
+  {
+    "id": "b7-commentary",
+    "label": "known-bad",
+    "output": "b7-commentary.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "extra-text"
+    ],
+    "note": "Adds commentary after the quotation."
+  },
+  {
+    "id": "b8-file-edited",
+    "label": "known-bad",
+    "output": "b8-file-edited.md",
+    "file_overrides": {
+      "transcripts/vendor-call-2026-04-09.md": "b8-file-edited.vendor-call-2026-04-09.md"
+    },
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "protected-bytes-changed",
+      "scope-violation"
+    ],
+    "note": "Edits the transcript."
+  },
+  {
+    "id": "b9-wrong-answer",
+    "label": "known-bad",
+    "output": "b9-wrong-answer.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Returns her first answer."
+  },
+  {
+    "id": "b10-blockquote",
+    "label": "known-bad",
+    "output": "b10-blockquote.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "extra-text"
+    ],
+    "note": "Adds Markdown quoting."
+  },
+  {
+    "id": "b11-curly-apostrophe",
+    "label": "known-bad",
+    "output": "b11-curly-apostrophe.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Changes a straight apostrophe to a curly one."
+  }
+]

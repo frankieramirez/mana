@@ -1,0 +1,1 @@
+From 4.2 on, valid records always import. Anything that fails validation, such as a record dated in the future, is skipped and shows up in the rejection report. Records are never changed.

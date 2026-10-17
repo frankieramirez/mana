@@ -1,0 +1,1 @@
+Sure. Short version, the batch ran late.

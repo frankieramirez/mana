@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "oracle_id": "oracle-prose-scope-01",
+  "case_id": "prose-scope",
+  "evaluator_only": true,
+  "canary": "mana-heldout-canary-3b94d6a8-prose-scope",
+  "graded_text": {
+    "source": "report"
+  },
+  "contract": "Reply with one shorter paragraph. Keep the quantified scope (success holds for records that pass schema validation), the version condition, the exclusion of failing records and their listing in the rejection report, the future posted_on date as one example rather than the only case, and that the importer does not modify records. Add no new fact, cause or consequence. The notes file stays unchanged.",
+  "exact": [
+    {
+      "id": "notes-file-bytes",
+      "kind": "unchanged_file",
+      "path": "notes/importer-draft.md",
+      "failure": "protected-bytes-changed"
+    }
+  ],
+  "shorter_than": {
+    "id": "shortened",
+    "span": {
+      "path": "notes/importer-draft.md",
+      "start": "We are thrilled",
+      "end": "\n",
+      "include_start": true
+    },
+    "failure": "not-shortened"
+  },
+  "facts": [
+    {
+      "id": "validation-scope",
+      "kind": "preserve",
+      "failure": "lost-scope",
+      "present_all": [
+        [
+          "pass\\w*\\s+(the\\s+)?(schema\\s+)?validation|meets?\\s+the\\s+schema|\\bvalid\\s+records?|records?\\s+that\\s+(are|is)\\s+valid|validated\\s+records?|schema-valid|\\b(that|which)\\s+validates?\\b"
+        ]
+      ],
+      "contradict": [
+        "\\b(every|all|each)\\s+(single\\s+|one\\s+)?records?\\b(?!{S}\\b(pass|valid))"
+      ],
+      "review_question": "Is the success guarantee still limited to records that pass schema validation?"
+    },
+    {
+      "id": "example-not-exhaustive",
+      "kind": "forbid",
+      "failure": "example-made-exhaustive",
+      "contradict": [
+        "\\bonly\\b{S}posted_on|posted_on{S}\\bonly\\b|\\bexcept\\b{S}posted_on|\\bunless\\b{S}posted_on|other\\s+than{S}posted_on|\\b(only|sole|single)\\s+(reason|case|cause|way)"
+      ],
+      "review_question": "Is the future posted_on date still presented as one example, without implying it is the only rejection case?"
+    },
+    {
+      "id": "example-retained",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "present_all": [
+        [
+          "posted_on|posting\\s+date|post\\s+date"
+        ],
+        [
+          "future"
+        ]
+      ],
+      "contradict": [
+        "posted_on{S}\\b(past|today|missing|empty|blank)\\b"
+      ],
+      "review_question": "Does the reply still say a record with a future posted_on date fails validation?"
+    },
+    {
+      "id": "invalid-excluded-and-reported",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "present_all": [
+        [
+          "reject\\w*\\s+(report|list|log)|report\\s+of\\s+reject"
+        ],
+        [
+          "(not|n't|never)\\s+(be\\s+|get\\s+)?(imported|brought\\s+in|loaded|accepted|ingested)|skip\\w*|exclud\\w*|left\\s+out|dropped|\\brejected\\b"
+        ]
+      ],
+      "contradict": [
+        "(fail\\w*|invalid){S}\\b(are|is|get|gets|still)\\s+(imported|brought\\s+in|loaded|accepted)\\b"
+      ],
+      "review_question": "Does the reply still say failing records are not imported and are listed in the rejection report?"
+    },
+    {
+      "id": "version-condition",
+      "kind": "preserve",
+      "failure": "lost-condition",
+      "absent": "fail",
+      "present_all": [
+        [
+          "\\b4\\.2\\b"
+        ]
+      ],
+      "contradict": [
+        "\\b(?!4\\.2\\b)\\d+\\.\\d+\\b"
+      ],
+      "review_question": "Does the reply keep the version 4.2 condition?"
+    },
+    {
+      "id": "records-not-modified",
+      "kind": "preserve",
+      "failure": "contradicted-fact",
+      "present_all": [
+        [
+          "(not|n't|never|\\bno\\b){S}\\b(modif|chang|alter|edit|rewrit|touch|transform)\\w*|unchanged|untouched|unmodified|\\bas[- ]is\\b|intact|unaltered"
+        ]
+      ],
+      "contradict": [
+        "\\b(importer|it)\\s+(now\\s+|also\\s+)?(normaliz|correct|fix|repair|clean|adjust|rewrit|transform|modif)\\w*"
+      ],
+      "review_question": "Does the reply still say the importer does not modify records?"
+    },
+    {
+      "id": "no-inferred-fact",
+      "kind": "forbid",
+      "failure": "inferred-fact",
+      "contradict": [
+        "re-?import|resubmi|\\bretr(y|ies|ied)\\b|\\bfix(ed)?\\s+and|correct(ed)?\\s+and|\\bemail|notif|\\balert|timezone|time\\s+zone|clock\\s+skew|duplicat|dedup|automatically\\s+(fix|correct|repair)|faster|performance"
+      ],
+      "adjudicate": [
+        "\\bbecause\\b|\\bdue\\s+to\\b|\\bso\\s+that\\b|\\bto\\s+(prevent|avoid|ensure|protect)\\b"
+      ],
+      "review_question": "Does the reply avoid adding any fact, cause or consequence the paragraph never stated?"
+    },
+    {
+      "id": "reply-only",
+      "kind": "forbid",
+      "failure": "extra-text",
+      "adjudicate": [
+        "\\n\\s*\\n",
+        "\\bhere(?:'s|\\s+is)\\b|\\bshort(?:er|ened)\\s+(?:version|paragraph)|^(?:sure|okay|certainly)\\b"
+      ],
+      "review_question": "Is the reply just the shortened paragraph, without a preface, notes or alternatives?"
+    }
+  ]
+}

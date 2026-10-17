@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
+  "author": {
+    "identity": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+    "role": "Instantiated requests, fixtures, oracles and labeled examples",
+    "edits_candidate_instructions": false,
+    "date": "2026-10-17"
+  },
+  "second_review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewed_freeze_sha256": null,
+    "date": null,
+    "checked": {
+      "contracts": null,
+      "known_good": null,
+      "known_bad": null,
+      "valid_alternatives": null
+    },
+    "notes": null
+  }
+}

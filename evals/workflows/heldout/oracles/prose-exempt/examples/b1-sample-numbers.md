@@ -1,0 +1,13 @@
+# Image cache
+
+The image cache keeps thumbnails close to the renderer. A background sweep runs every six hours and removes thumbnails older than 36 hours.
+
+```yaml
+image_cache:
+  max_entries: 5000
+  evict_after_hours: 36
+  sweep_cron: "15 */6 * * *"  # quarter past, every 6h — stay clear of the hourly jobs
+  warm_on_boot: false
+```
+
+When the cache is full, new thumbnails still render but aren't stored. The cache starts cold after a restart.
