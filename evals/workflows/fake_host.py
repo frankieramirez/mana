@@ -135,6 +135,46 @@ def emit(event):
     print(json.dumps(event), flush=True)
 
 
+def catalog(work):
+    """What a discovering host would list from the workspace skill folder: name, description, explicit flag."""
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, PLAN['evaluator_dir'])
+    from discovery import frontmatter
+    found = []
+    for path in sorted(Path(work, '.agents', 'skills').glob('*/SKILL.md')):
+        meta, _, _ = frontmatter(path.read_text())
+        policy = path.parent / 'agents' / 'openai.yaml'
+        explicit = (meta.get('disable-model-invocation') == 'true'
+                    or (policy.is_file() and 'allow_implicit_invocation: false' in policy.read_text()))
+        found.append({'name': meta.get('name'), 'description': meta.get('description', ''),
+                      'explicit': explicit, 'path': path.relative_to(work).as_posix()})
+    return found
+
+
+def resolve(token, listed):
+    """A listed skill by exact name, else the first whose description holds the phrase."""
+    return next((s for s in listed if s['name'] == token), None) or next(
+        (s for s in listed if token in s['description']), None)
+
+
+def words(text):
+    return {w for w in re.findall(r'[a-z]+', text.lower()) if len(w) >= 4}
+
+
+def dummy_selection(prompt, listed):
+    """An offline keyword selector over listed descriptions. It is a fixture, never a model observation."""
+    named = [s for s in listed if re.search(r'(?<![\w-])' + re.escape(s['name']) + r'(?![\w-])', prompt, re.I)]
+    if named:
+        return named[0]
+    honored = PLAN.get('honor_explicit_only', True)
+    candidates = [s for s in listed if not (honored and s['explicit'])]
+    scored = sorted(((len(words(prompt) & words(s['description'])), s['name']) for s in candidates), reverse=True)
+    threshold = PLAN.get('selector_threshold', 2)
+    if scored and scored[0][0] >= threshold:
+        return next(s for s in listed if s['name'] == scored[0][1])
+    return None
+
+
 def execute(argv):
     opts = options(argv)
     prompt = sys.stdin.read()
@@ -142,6 +182,10 @@ def execute(argv):
     calls = sorted(STATE.glob('exec-*.json'))
     (STATE / ('exec-%03d.json' % len(calls))).write_text(json.dumps({'argv': argv, 'prompt': prompt, 'options': opts}))
     work = opts['cwd']
+    # Discovery is on unless the evaluator passed the skip flag, as the real host's setting reads.
+    discovering = 'features.skip_host_skill_discovery=true' not in opts['configs']
+    listed = catalog(work) if discovering and work else []
+    (STATE / ('catalog-%03d.json' % len(calls))).write_text(json.dumps({'discovering': discovering, 'listed': listed}))
     if PLAN.get('hang'):
         daemonize(PLAN['daemon_pidfile'])
         sleeper = subprocess.Popen(['/bin/sleep', '600'])
@@ -155,7 +199,20 @@ def execute(argv):
     threads = {}
     parent_items = []
     parent_started = time.time()
-    for index, command in enumerate(PLAN.get('parent', {}).get('commands', [])):
+    # `@skill:PHRASE@` stands for the path of the listed skill that resolve() finds, for randomly named skills.
+    commands = [re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], command)
+                for command in PLAN.get('parent', {}).get('commands', [])]
+    if PLAN.get('selector') == 'keyword' and listed:
+        chosen = dummy_selection(prompt, listed)
+        if chosen:
+            commands.insert(0, 'cat ' + chosen['path'])
+    for index, text in enumerate(PLAN.get('reasoning', [])):
+        text = re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], text)
+        emit({'type': 'item.completed', 'item': {'id': 'reasoning-%d' % index, 'type': 'reasoning', 'text': text}})
+    for index, change in enumerate(PLAN.get('file_changes', [])):
+        emit({'type': 'item.completed', 'item': {'id': 'patch-%d' % index, 'type': 'file_change', 'status': 'failed',
+                                                  'changes': [{'path': change, 'kind': 'update'}]}})
+    for index, command in enumerate(commands):
         output, code = run_command(command, opts['configs'], work)
         item = {'id': 'item-%d' % index, 'type': 'command_execution', 'command': command,
                 'aggregated_output': output, 'exit_code': code, 'status': 'completed' if code == 0 else 'failed'}
@@ -225,7 +282,12 @@ def execute(argv):
     if not PLAN.get('omit_usage'):
         emit({'type': 'turn.completed', 'usage': {'input_tokens': 10, 'output_tokens': 2}})
     if opts['output'] and 'response' in PLAN:
-        Path(opts['output']).write_text(json.dumps(PLAN['response']))
+        response = dict(PLAN['response'])
+        # A host that injects skill text without any recorded event, so the load is invisible.
+        for token in PLAN.get('hidden_load', []):
+            if discovering:
+                response['report'] = response.get('report', '') + '\n' + Path(work, resolve(token, listed)['path']).read_text()
+        Path(opts['output']).write_text(json.dumps(response))
     return PLAN.get('exit_code', 0)
 
 

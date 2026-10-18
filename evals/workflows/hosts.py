@@ -17,7 +17,7 @@ CAPABILITIES = (
     'installation', 'outside_read_denied', 'protected_write_denied', 'fixture_write_allowed',
     'network_denied', 'command_events', 'usage_events', 'completion_detection', 'model_selection',
     'descendant_collection', 'thread_attribution', 'active_thread_cap', 'child_containment',
-    'process_family_termination', 'question_support', 'skill_discovery',
+    'process_family_termination', 'question_support', 'skill_discovery', 'explicit_only_honored',
 )
 FOCUSED = ('installation', 'outside_read_denied', 'protected_write_denied', 'fixture_write_allowed',
            'network_denied', 'command_events', 'completion_detection')
@@ -28,6 +28,10 @@ MODES = {
     # Comparative arms share one thread cap, so the cap itself must be observed,
     # along with family termination and fresh evidence.
     'comparative-delegated': DELEGATED + ('usage_events', 'active_thread_cap', 'process_family_termination'),
+    # Natural selection needs focused containment plus a probe that saw the host expose the
+    # installed catalog and record the entrypoint load as an event. explicit_only_honored is
+    # recorded beside it and changes how loads are judged, not whether the host is accepted.
+    'discovery': FOCUSED + ('skill_discovery',),
 }
 FRESHNESS_DAYS = {'comparative-delegated': 30}
 

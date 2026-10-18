@@ -800,6 +800,58 @@ def regrade(directory):
     return 0 if all(r["passed"] for r in reports) else 1
 
 
+def discovery_main(parser, args):
+    """Selection-only discovery operations. Each live operation makes at most one model call."""
+    import discovery
+    given = [token.split('=')[0] for token in sys.argv[1:] if token.startswith('--')]
+    if sum((args.discovery_check, args.probe_discovery, args.discover)) != 1:
+        parser.error('choose one of --discovery-check, --probe-discovery and --discover')
+    if args.discovery_check:
+        if given != ['--discovery-check']:
+            parser.error('--discovery-check takes no other options')
+        data = discovery.load_cases()
+        discovery.check_catalog(data, discovery.snapshot(ROOT / 'skills'))
+        kinds = {}
+        for case in data['cases']:
+            kinds[case['kind']] = kinds.get(case['kind'], 0) + 1
+        print(json.dumps({'study': data['study'], 'cases': len(data['cases']), 'kinds': kinds,
+                          'routes_sha256': discovery.routes_digest(),
+                          'first_live_group': discovery.schedule(data['first_live_group']), 'agent_executed': False}, indent=2))
+        return 0
+    executable = shutil.which('codex')
+    if args.probe_discovery:
+        allowed = {'--probe-discovery', '--out', '--model', '--timeout', '--reasoning'}
+        if any(token not in allowed for token in given) or not args.out or not args.model:
+            parser.error('--probe-discovery takes only --out, --model, --timeout and --reasoning, with --out and --model required')
+        if not 1 <= args.timeout <= discovery.TIMEOUT:
+            parser.error('discovery probe timeout must be 1..120 seconds')
+        if not executable:
+            parser.error('Codex CLI is unavailable; no probe was run')
+        import discovery_probe
+        record = discovery_probe.probe(executable, args.out, args.model, args.reasoning, args.timeout)
+        print(json.dumps({'host': record['host'], 'model_invocations': record['model_invocations'],
+                          'capabilities': {k: v['status'] for k, v in record['capabilities'].items()},
+                          'unknown': record['unknown'], 'evidence': str(args.out / 'host-evidence.json')}, indent=2))
+        return 0 if all(v['status'] == 'verified' for v in record['capabilities'].values()) else 1
+    allowed = {'--discover', '--live', '--case', '--routes-sha256', '--model', '--reasoning'}
+    if (any(token not in allowed for token in given) or not args.live or len(args.case) != 1
+            or not args.routes_sha256 or not args.model):
+        parser.error('--discover needs --live, exactly one --case, --routes-sha256 and --model, and nothing else')
+    if not executable:
+        parser.error('Codex CLI is unavailable; nothing was run')
+    case = next((c for c in discovery.load_cases()['cases'] if c['id'] == args.case[0]), None)
+    if case is None:
+        parser.error('unknown discovery case id')
+    destination = ROOT / 'evals/results'
+    destination.mkdir(exist_ok=True)
+    run = Path(tempfile.mkdtemp(prefix='discovery-', dir=destination))
+    result = discovery.run_case(case, run / case['id'], executable, args.model, args.reasoning, live=True,
+                                routes_sha256=args.routes_sha256)
+    print(run)
+    print(json.dumps({k: result.get(k) for k in ('observation_kind', 'execution', 'judgment', 'failures')}, indent=2))
+    return 0 if 'judgment' in result and not result['failures'] else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="validate cases without invoking an agent")
@@ -820,7 +872,16 @@ def main():
     parser.add_argument('--slot', type=int, help='one allocated slot in the frozen schedule')
     parser.add_argument('--probe-host', action='store_true',
                         help='record candidate host capability evidence; at most one bounded model call')
+    parser.add_argument('--discovery-check', action='store_true',
+                        help='validate preregistered discovery routes against the catalog; no agent')
+    parser.add_argument('--probe-discovery', action='store_true',
+                        help='record candidate skill discovery evidence; at most one bounded model call')
+    parser.add_argument('--discover', action='store_true',
+                        help='one selection-only discovery invocation of the real host; needs --live')
+    parser.add_argument('--routes-sha256', help='digest of discovery-cases.json printed by --discovery-check')
     args = parser.parse_args()
+    if args.discovery_check or args.probe_discovery or args.discover:
+        return discovery_main(parser, args)
     if args.probe_host:
         allowed = {'--probe-host', '--out', '--model', '--timeout', '--reasoning'}
         given = [token.split('=')[0] for token in sys.argv[1:] if token.startswith('--')]
