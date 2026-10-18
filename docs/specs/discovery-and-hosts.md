@@ -1,7 +1,7 @@
 # Skill discovery and host capability evaluation
 
 Decision: [Evaluate natural-language skill selection and host compatibility separately](https://github.com/frankieramirez/mana/issues/83), following the [workflow effectiveness protocol](effectiveness-evaluation.md).
-Status: matrix settled on 2026-10-17; live discovery and capability runs unstarted.
+Status: matrix settled on 2026-10-17. The selection-only adapter, preregistered routes and activation probe exist and pass offline against the fake host ([issue 100](https://github.com/frankieramirez/mana/issues/100)); live discovery and capability runs unstarted.
 
 ## Decision
 
@@ -76,7 +76,7 @@ The catalog can have several acceptable routes. Lock the allowed set before resu
 | Linux Codex CLI 0.163.0, focused and delegated execution | Live `--probe-host` record on 2026-10-17, one model call: containment, events, usage, descendant collection, per-thread probes and process-family termination verified | Accepted for focused and delegated attempts |
 | Linux Codex CLI 0.163.0, comparative delegated execution | Same record; only two children ran against `agents.max_threads=2`, so the cap was never challenged | Not accepted; the active-thread cap stays unknown |
 | Delivery container for issue 99, Claude Code 2.1.302 | `claude --version` on 2026-10-17; Codex CLI absent | Installation only; no evaluator adapter, containment unexercised, no live probe run |
-| Any Codex CLI version, natural discovery | Existing runner skips host skill discovery and explicitly loads a skill | Unvalidated; requires a discovery adapter and activation-event probe |
+| Any Codex CLI version, natural discovery | Existing runner skips host skill discovery and explicitly loads a skill. `discovery.py` and `run.py --probe-discovery` exist, tested only against the fake host | Unvalidated; no host record verifies `skill_discovery` until a live activation probe is reviewed |
 | Claude Code, installed plugin | Manifests and optional host validator exist; prose outputs were supplied instructions in a separate experiment | No comparative discovery/host-control result established by these artifacts |
 | Cursor, Copilot or other skill hosts | Standalone package contract targets portability | Untested for this matrix; packaging does not establish runtime behavior |
 
