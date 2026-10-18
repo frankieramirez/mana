@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Discovery results and probe records keep only a count of entries in each host skill folder, because the folder names describe the operator's machine and the records are committed. The outside-load check still reads each skill's name and description in memory. The workflow evaluator records a live Codex CLI 0.163.0 discovery probe: the automatic canary was read directly from the installed catalog with no outside loads, so 0.163.0 is accepted for discovery runs. `explicit_only_honored` stays unknown, because the explicit canary was read in the same command as a search hit.
+
 ## 0.43.14
 
 - The workflow evaluator freezes the complete `effectiveness-pilot-1` matrix in `evals/workflows/pilot.py`: 12 held-out source groups, three conditions, two repetitions, per-job time limits, no retries and the seeded 72-slot schedule. One complete reference package holds every route, and each case's digests cover only its own inputs and oracles. `pilot.py --prepare` freezes a study directory only while every gate is open, and `run.py --study` runs held-out slots through the contained runner. Changed installed payloads, changed tool doubles and pushes into the evaluator-owned origin stop the schedule, even when collection raised. Collection never grades a held-out attempt. Code tasks now get the shared delegation limits in every condition, and prose tasks are told not to delegate. The study refuses to start, claiming no slot, until a host record proves delegated parity and the resource authorization and human-effort records are filled in. Today the host gate is closed because the active-thread cap is unknown.

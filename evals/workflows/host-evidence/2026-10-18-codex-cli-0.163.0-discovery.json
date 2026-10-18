@@ -1,0 +1,101 @@
+{
+  "actual_model": null,
+  "canaries": {
+    "alpha": "probe-4d5b3879",
+    "beta": "probe-9bc86d17"
+  },
+  "capabilities": {
+    "installation": {
+      "evidence": [
+        "codex --version: codex-cli 0.163.0"
+      ],
+      "observed_at": "2026-10-18T04:36:20.710+00:00",
+      "status": "verified"
+    },
+    "skill_discovery": {
+      "evidence": [
+        "automatic canary read directly from the installed catalog: alpha direct, beta ambiguous, outside loads 0, event failures 0, outcome completed"
+      ],
+      "notes": "one observation; a load is a recorded command that printed the canary SKILL.md",
+      "observed_at": "2026-10-18T04:36:32.396+00:00",
+      "status": "verified"
+    }
+  },
+  "host": "codex-cli 0.163.0",
+  "host_skill_folders": {
+    "/etc/codex/skills": null,
+    "~/.agents/skills": 7,
+    "~/.codex/skills": 3
+  },
+  "model_invocations": 1,
+  "platform": "linux",
+  "probes": [
+    {
+      "name": "selection-containment",
+      "observation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-18T04:36:20.775+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      }
+    },
+    {
+      "catalog_scans": [],
+      "completed_items": 6,
+      "event_failures": [],
+      "invocation": {
+        "ended_at": "2026-10-18T04:36:32.391+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4109803,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-18T04:36:20.775+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "loads": {
+        "probe-4d5b3879": {
+          "command": "/usr/bin/bash -lc 'cat .agents/skills/probe-4d5b3879/SKILL.md'",
+          "first": true,
+          "index": 1,
+          "skill": "probe-4d5b3879",
+          "via": "direct"
+        },
+        "probe-9bc86d17": {
+          "command": "/usr/bin/bash -lc 'cat .agents/skills/probe-9bc86d17/SKILL.md .agents/skills/probe-9bc86d17/agents/openai.yaml README.md'",
+          "first": true,
+          "index": 4,
+          "skill": "probe-9bc86d17",
+          "via": "search"
+        }
+      },
+      "name": "activation",
+      "outside_loads": [],
+      "product_changed": false,
+      "verdicts": {
+        "alpha": "direct",
+        "beta": "ambiguous"
+      }
+    }
+  ],
+  "recorded_at": "2026-10-18T04:36:32.396+00:00",
+  "redacted": "host_skill_folders listed folder names when recorded (sha256 9b3c52c38173b48fcfe0ae68484917693402e6e0605ab46292d0a8fe5282e519); they were replaced with counts before commit",
+  "reported_model": null,
+  "requested_model": "gpt-6.1-sol",
+  "schema_version": 1,
+  "skills_dir": ".agents/skills",
+  "source": "run.py --probe-discovery",
+  "timeout_seconds": 120,
+  "unknown": [
+    "explicit_only_honored: alpha direct, beta ambiguous, outside loads 0, event failures 0, outcome completed"
+  ]
+}
