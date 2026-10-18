@@ -26,11 +26,11 @@
   ],
   "second_review": {
     "contested_groups": [],
-    "date": null,
-    "freeze_sha256": null,
-    "notes": null,
-    "reviewer": null,
-    "status": "pending"
+    "date": "2026-10-18",
+    "freeze_sha256": "23172dec8b42797eaeeb6a5b1dd3d79d2d7cc32bea264a42cf22a030dc5e6500",
+    "notes": "Approved for this freeze. An earlier pass on freeze e983e1d7 asked for changes and was never recorded here: failing examples listed fewer failures than the oracle's own questions gave them, and three questions overlapped. Those questions are now gone (pfc4 no-other-rates, pfc5 no-vague-cause, pfc6 directive-explained, with pfc6 b8). Each failing example now names one `shows` question and is not claimed to be complete. I read every input and checked each label myself. Each `shows` is a question its example really fails, and every valid example meets its contract and every remaining question. Example texts, contracts and fact lists are byte-identical to the previous freeze apart from the deleted b8. Borderline cases for the adjudicator: pfc5 g3 'due Thursday' under part-hedged, and pfc6 g3 'under /var/log/kiosk/' under path-scope (the glob does not recurse). No automated prose judgement remains. Grading checks protected spans byte for byte through protected_span_checks. --grade exits 1 on a lost span: a changed value, a tab indent and a dropped space each failed, and the intact bytes passed. I recomputed the freeze independently with hashlib and every input, request, span offset, oracle, cases.json and exposures digest matches.",
+    "reviewer": "claude-pr-140-second-reviewer-2",
+    "status": "complete"
   },
   "version": 1
 }

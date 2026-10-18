@@ -2,7 +2,7 @@
 
 [Ticket 115](https://github.com/frankieramirez/mana/issues/115) adds the six confirmation source groups that the [instruction-ablation decision](../../docs/specs/instruction-ablations.md#first-experiment-prose-fidelity) requires for the first prose experiment. They were written after the [payload freeze](prose-ablation.md) by an evaluator who did not tune the candidate, and they are frozen against that exact payload set.
 
-Status: refrozen by the case author after the first second review, and a fresh second review is pending. The first review contested `pfc2-adjacent-config` and `pfc4-conditional-quantity` on one mislabeled valid output each. Both labels are fixed, and `review.json` keeps that review and its resolution in `history`. `--check` reports the open gate, and `--manifest` refuses to write a runnable study until it closes. No model has seen these inputs.
+Status: second review complete for the current freeze, with no contested group. The first review contested `pfc2-adjacent-config` and `pfc4-conditional-quantity` on one mislabeled valid output each. Both labels were fixed, and `review.json` keeps that review and its resolution in `history`. `--check` now reports no open gate. No model has seen these inputs, and no confirmation slot has run.
 
 ## The six groups
 

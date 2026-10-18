@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 import conditions
 import prose_ablation as pa
@@ -216,8 +217,12 @@ class AdapterTests(Workspace):
                     pc.check_frozen_study(self.root / ('bad-' + name))
 
     def test_manifest_is_refused_while_any_gate_is_open(self):
+        case_set = self.copy_set()
+        self.set_review(case_set)
+        verify = pc.verify
         out = self.root / 'manifest.json'
-        self.assertEqual(pc.main(['--manifest', str(out), '--model', 'gpt-6.1-sol']), 2)
+        with mock.patch.object(pc, 'verify', lambda: verify(case_set=case_set)):
+            self.assertEqual(pc.main(['--manifest', str(out), '--model', 'gpt-6.1-sol']), 2)
         self.assertFalse(out.exists())
 
 

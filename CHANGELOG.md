@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. The second review is pending.
+- The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. An independent second review approved all six groups.
 
 ## 0.43.2
 
