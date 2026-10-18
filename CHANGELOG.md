@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `run.py --probe-host` now challenges the thread cap in its one model call. Every child waits at a gate that the evaluator releases only after the spawn attempts are over. The cap is verified only when the host explicitly refuses a spawn while the gate holds the cap's worth of children, and it fails when more children are held than the cap. A staggered run stays unknown. Failed items count as refusals only when the host recorded a refused `spawn_agent` call. The docs now say that no runner uses the Codex CLI 0.163.0 delegated acceptance yet, because the delegated review path pins 0.159.2.
+
 ## 0.43.5
 
 - The workflow evaluator accepts a host only from recorded probe evidence in `evals/workflows/host-evidence/`, per exact version and mode. Comparative delegated studies need fresh evidence for family termination and the thread cap, so Codex CLI 0.159.2 stays limited to its focused and delegated record until a new probe passes. Frozen studies can declare one delegation limit for every arm. Each thread runs its own containment probe, missing child history stops the schedule, and a timeout or cancellation kills the whole process family. `run.py --probe-host` records candidate evidence with at most one model call; it challenges the thread cap with one child more than the cap allows and records whether the host's setting counts the parent, which delegated runs then translate. Offline tests use a fake host. A live probe of Codex CLI 0.163.0 adds a record that supports focused and delegated attempts, including verified process-family termination. It does not support comparative delegated studies, because only two children ran against a cap of two and the cap stays unknown.

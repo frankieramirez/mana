@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import threading
 import time
 
 PLAN = json.loads(Path(os.environ['MANA_FAKE_HOST_PLAN']).read_text())
@@ -154,52 +155,102 @@ def execute(argv):
     emit({'type': 'turn.started'})
     threads = {}
     parent_items = []
+    rollout = []
+    workers = []
     parent_started = time.time()
-    for index, command in enumerate(PLAN.get('parent', {}).get('commands', [])):
+    # agents.max_threads modelling. No cap_mode runs every child. `children` refuses spawns once
+    # the configured number of children is open, `including_parent` also counts the parent,
+    # `queue` makes later children wait for a free slot without a refusal, and `ignore` opens all.
+    configured = next((int(v.split('=', 1)[1]) for v in opts['configs'] if v.startswith('agents.max_threads=')), None)
+    mode = PLAN.get('cap_mode')
+    specs = PLAN.get('children', [])
+    allowed = len(specs)
+    if configured is not None and mode in ('children', 'including_parent'):
+        allowed = max(0, configured - (1 if mode == 'including_parent' else 0))
+    slots = threading.Semaphore(configured if mode == 'queue' and configured else max(1, len(specs)))
+    records = set(PLAN.get('refusal_records', ['stream', 'history', 'rollout']))
+
+    def run_child(identity, child):
+        with slots:
+            turn = threads[identity]['turns'][0]
+            turn['startedAt'] = time.time()
+            for index, command in enumerate(child.get('commands', [])):
+                output, code = run_command(command, opts['configs'], work)
+                turn['items'].append({'type': 'commandExecution', 'id': 'item-%d' % index, 'command': command,
+                                      'aggregatedOutput': output, 'exitCode': code,
+                                      'status': 'completed' if code == 0 else 'failed'})
+            turn['items'].append({'type': 'agentMessage', 'phase': 'final_answer', 'text': 'child done'})
+            turn['completedAt'] = time.time()
+
+    def spawn_children():
+        for number, child in enumerate(specs):
+            identity = child.get('id', 'thread-child-%d' % number)
+            owner = child.get('parent', parent)
+            call = 'call-spawn-%d' % number
+            rollout.append({'type': 'response_item', 'payload': {'type': 'function_call', 'name': 'spawn_agent',
+                                                                 'call_id': call, 'arguments': '{}'}})
+            if number >= allowed:
+                rollout.append({'type': 'response_item', 'payload': {
+                    'type': 'function_call_output', 'call_id': call,
+                    'output': 'agent thread limit reached (max %d)' % configured if 'rollout' in records else 'failed'}})
+                if 'stream' in records:
+                    emit({'type': 'item.completed', 'item': {
+                        'id': 'spawn-%d' % number, 'type': 'collab_tool_call', 'tool': 'spawn_agent',
+                        'sender_thread_id': parent, 'receiver_thread_ids': [], 'prompt': None,
+                        'agents_states': {}, 'status': 'failed'}})
+                if 'history' in records:
+                    parent_items.append({'type': 'collabAgentToolCall', 'id': call, 'tool': 'spawnAgent',
+                                         'status': 'failed', 'senderThreadId': parent, 'receiverThreadIds': []})
+                continue
+            rollout.append({'type': 'response_item', 'payload': {'type': 'function_call_output', 'call_id': call,
+                                                                 'output': json.dumps({'agent_id': identity})}})
+            threads[identity] = {'id': identity, 'parentThreadId': owner, 'cwd': work, 'model': child.get('model', model),
+                                 'reasoningEffort': 'medium', 'cliVersion': PLAN['version'], 'source': 'subAgent',
+                                 'turns': [{'id': 'turn-1', 'status': child.get('turn_status', 'completed'),
+                                            'itemsView': 'full', 'items': []}],
+                                 'drop': child.get('drop')}
+            activity = {'type': 'subAgentActivity', 'id': call, 'agentThreadId': identity, 'kind': 'started'}
+            if owner == parent:
+                parent_items.append(activity)
+            elif owner in threads:
+                threads[owner]['turns'][0]['items'].insert(0, activity)
+            if child.get('stream_reference'):
+                emit({'type': 'item.completed', 'item': {'id': 'spawn-%d' % number, 'type': 'collab_tool_call',
+                                                          'receiver_thread_ids': [identity]}})
+            worker = threading.Thread(target=run_child, args=(identity, child))
+            worker.start()
+            workers.append(worker)
+
+    for noise in PLAN.get('noise_items', []):
+        if noise.get('where') == 'stream':
+            emit({'type': 'item.completed', 'item': noise['item']})
+        elif noise.get('where') == 'history':
+            parent_items.append(noise['item'])
+        else:
+            rollout.append({'type': 'response_item', 'payload': noise['item']})
+    commands = PLAN.get('parent', {}).get('commands', [])
+    if '@spawn' not in commands:
+        commands = commands + ['@spawn']
+    for index, command in enumerate(commands):
+        if command == '@spawn':
+            spawn_children()
+            continue
         output, code = run_command(command, opts['configs'], work)
         item = {'id': 'item-%d' % index, 'type': 'command_execution', 'command': command,
                 'aggregated_output': output, 'exit_code': code, 'status': 'completed' if code == 0 else 'failed'}
         emit({'type': 'item.completed', 'item': item})
         parent_items.append({'type': 'commandExecution', 'id': item['id'], 'command': command,
                              'aggregatedOutput': output, 'exitCode': code, 'status': item['status']})
-    # Children run one after another for real; their recorded timing models the host's
-    # agents.max_threads scheduling. `children` counts only child threads, `including_parent`
-    # also counts the parent, and `ignore` lets every child open at once.
-    configured = next((int(v.split('=', 1)[1]) for v in opts['configs'] if v.startswith('agents.max_threads=')), None)
-    mode = PLAN.get('cap_mode', 'children')
-    slots = len(PLAN.get('children', [])) or 1
-    if configured is not None and mode != 'ignore':
-        slots = max(1, configured - (1 if mode == 'including_parent' else 0))
-    for number, child in enumerate(PLAN.get('children', [])):
-        identity = child.get('id', 'thread-child-%d' % number)
-        owner = child.get('parent', parent)
-        items = []
-        child_started = parent_started + 1 + (number // slots) * 10
-        for index, command in enumerate(child.get('commands', [])):
-            output, code = run_command(command, opts['configs'], work)
-            items.append({'type': 'commandExecution', 'id': 'item-%d' % index, 'command': command,
-                          'aggregatedOutput': output, 'exitCode': code, 'status': 'completed' if code == 0 else 'failed'})
-        items.append({'type': 'agentMessage', 'phase': 'final_answer', 'text': 'child done'})
-        threads[identity] = {'id': identity, 'parentThreadId': owner, 'cwd': work, 'model': child.get('model', model),
-                             'reasoningEffort': 'medium', 'cliVersion': PLAN['version'], 'source': 'subAgent',
-                             'turns': [{'id': 'turn-1', 'status': child.get('turn_status', 'completed'),
-                                        'itemsView': 'full', 'items': items,
-                                        'startedAt': child_started, 'completedAt': child_started + 9}],
-                             'drop': child.get('drop')}
-        activity = {'type': 'subAgentActivity', 'agentThreadId': identity, 'kind': 'started'}
-        if owner == parent:
-            parent_items.append(activity)
-        elif owner in threads:
-            threads[owner]['turns'][0]['items'].insert(0, activity)
-        if child.get('stream_reference'):
-            emit({'type': 'item.completed', 'item': {'id': 'spawn-%d' % number, 'type': 'collab_tool_call',
-                                                      'receiver_thread_ids': [identity]}})
+    for worker in workers:
+        worker.join()
     parent_items.append({'type': 'agentMessage', 'phase': 'final_answer', 'text': 'parent done'})
+    path = STATE / ('rollout-%s.jsonl' % parent)
     threads[parent] = {'id': parent, 'parentThreadId': None, 'cwd': work, 'model': model, 'reasoningEffort': 'medium',
-                       'cliVersion': PLAN['version'], 'source': 'exec',
+                       'cliVersion': PLAN['version'], 'source': 'exec', 'path': str(path),
                        'turns': [{'id': 'turn-1', 'status': 'completed', 'itemsView': 'full', 'items': parent_items,
-                                  'startedAt': parent_started,
-                                  'completedAt': parent_started + 2 + (len(PLAN.get('children', [])) // slots + 1) * 10}]}
+                                  'startedAt': parent_started, 'completedAt': time.time()}]}
+    if not opts['ephemeral']:
+        path.write_text(''.join(json.dumps(entry) + '\n' for entry in rollout))
     if not opts['ephemeral']:
         (STATE / 'threads.json').write_text(json.dumps(threads))
     if not PLAN.get('omit_usage'):

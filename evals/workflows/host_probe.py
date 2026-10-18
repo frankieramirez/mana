@@ -6,7 +6,9 @@ unobserved capability stays failed or unknown; nothing is inferred.
 """
 import json
 from pathlib import Path
+import re
 import subprocess
+import threading
 import time
 
 import conditions
@@ -30,13 +32,44 @@ if os.fork() == 0:
     os._exit(0)
 time.sleep(300)
 '''
-# The model probe asks for one child more than agents.max_threads allows, so the cap is challenged.
+# The model probe asks for one child more than agents.max_threads allows and holds every child
+# open at a gate that the evaluator releases only after the spawn attempts are over. The run then
+# shows either more children open at once than the cap or a refused spawn. Anything else stays unknown.
 CAP = 2
 PROMPT = '''This is a host capability probe. All files are synthetic fixtures.
 1. Run exactly: python3 bin/probe.py parent
-2. Start exactly %(children)d child agents at the same time, without waiting for any of them first. Tell each child to run exactly python3 bin/probe.py child-N, with N its number starting at 1, and then report the output. Children must not start other children. If the host refuses a child, report the refusal and continue.
-3. Wait for every child, then return the response schema with report set to "probe complete" and checks listing each probe command and its exit code.
+2. Spawn %(children)d child agents, one spawn call per child. Issue all %(children)d spawn calls before you wait on any child. Give child N, for N from 1 to %(children)d, these instructions: "Run exactly python3 bin/probe.py child-N. Then run exactly python3 bin/gate.py child-N with a command timeout of at least 120 seconds. It blocks until the evaluator releases it. If it ends without printing MANA-GATE released, run it again. Do not start other agents. Then report both outputs." If the host refuses a spawn, do not retry it.
+3. When every spawn call has returned, run exactly: python3 bin/gate.py spawned
+4. Wait for every child that started. Then return the response schema with report set to "probe complete" and checks listing each command you ran with its exit code, plus one entry for each refused spawn.
 Do not run any other command and do not edit files.'''
+GATE = '''import pathlib, re, sys, time
+NONCE = %(nonce)r
+LIMIT = %(limit)d
+label = sys.argv[1] if len(sys.argv) == 2 else ''
+if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,39}', label):
+    sys.exit('usage: python3 bin/gate.py LABEL')
+root = pathlib.Path('artifacts')
+if label == 'spawned':
+    (root / ('gate-spawned-' + NONCE)).write_text('spawned')
+    print('MANA-GATE spawned', flush=True)
+    sys.exit(0)
+beat = root / ('gate-held-' + label + '-' + NONCE)
+release = root / ('gate-release-' + NONCE)
+deadline = time.time() + LIMIT
+count = 0
+while time.time() < deadline:
+    if release.exists():
+        (root / ('gate-left-' + label + '-' + NONCE)).write_text('left')
+        print('MANA-GATE released ' + label, flush=True)
+        sys.exit(0)
+    count += 1
+    beat.write_text(str(count))
+    time.sleep(0.2)
+print('MANA-GATE timeout ' + label, flush=True)
+sys.exit(3)
+'''
+# Rollout outputs count as a refusal only when the host's text names the limit.
+REFUSAL_TEXT = re.compile(r'(agent|thread)[^\n]{0,40}limit|limit[^\n]{0,40}(agent|thread)|max_threads', re.I)
 
 
 def cap(status, evidence, notes=None, **fields):
@@ -70,58 +103,164 @@ def heartbeat(path):
         return None
 
 
-def child_peak(threads, parent):
-    """Peak count of concurrently open child threads from persisted turn timing; None when timing is absent."""
-    spans = []
-    for identity, thread in threads.items():
-        if identity == parent:
+class Gate:
+    """Watch the children's gate heartbeats and release them once the spawn attempts are over.
+
+    A child counts as held while its heartbeat file keeps changing and it has not left.
+    Release happens when more children are held than the cap, when the parent signalled that
+    every spawn call returned and the held set stayed the same for `settle` seconds, or at
+    `deadline` seconds after start.
+    """
+
+    def __init__(self, work, nonce, cap, settle=20.0, deadline=75.0, poll=0.2, fresh=1.5):
+        self.root = Path(work) / 'artifacts'
+        self.nonce, self.cap = nonce, cap
+        self.settle, self.deadline, self.poll, self.fresh = settle, deadline, poll, fresh
+        self.beats = {}
+        self.entered = set()
+        self.peak, self.peak_labels = 0, []
+        self.result = None
+        self.stopping = threading.Event()
+        self.thread = threading.Thread(target=self.run, daemon=True)
+
+    def install(self, work, limit):
+        path = Path(work) / 'bin' / 'gate.py'
+        path.write_text(GATE % {'nonce': self.nonce, 'limit': limit})
+        path.chmod(0o555)
+        return path
+
+    def held(self, now):
+        found = set()
+        suffix = '-' + self.nonce
+        for path in self.root.glob('gate-held-*' + suffix):
+            label = path.name[len('gate-held-'):-len(suffix)]
+            try:
+                value = path.read_text()
+            except OSError:
+                continue
+            if self.beats.get(label, (None,))[0] != value:
+                self.beats[label] = (value, now)
+            self.entered.add(label)
+            left = (self.root / ('gate-left-' + label + suffix)).exists()
+            if not left and now - self.beats[label][1] <= self.fresh:
+                found.add(label)
+        return found
+
+    def run(self):
+        started = time.monotonic()
+        previous, since = None, started
+        while not self.stopping.is_set():
+            now = time.monotonic()
+            held = self.held(now)
+            if len(held) > self.peak:
+                self.peak, self.peak_labels = len(held), sorted(held)
+            if held != previous:
+                previous, since = held, now
+            spawned = (self.root / ('gate-spawned-' + self.nonce)).exists()
+            if len(held) > self.cap:
+                return self.release('more children held at once than the cap', held, spawned, started)
+            if spawned and now - since >= self.settle:
+                return self.release('every spawn call returned and the held set settled', held, spawned, started)
+            if now - started >= self.deadline:
+                return self.release('deadline', held, spawned, started)
+            self.stopping.wait(self.poll)
+
+    def release(self, reason, held, spawned, started):
+        (self.root / ('gate-release-' + self.nonce)).write_text('release')
+        self.result = {'reason': reason, 'released_after_seconds': round(time.monotonic() - started, 1),
+                       'held_at_release': sorted(held), 'spawned_signal': spawned}
+
+    def start(self):
+        self.thread.start()
+
+    def stop(self):
+        self.stopping.set()
+        self.thread.join()
+        if self.result is None:
+            self.release('host exited before release', set(), (self.root / ('gate-spawned-' + self.nonce)).exists(),
+                         time.monotonic())
+        return dict(self.result, peak_held=self.peak, peak_labels=self.peak_labels, entered=sorted(self.entered))
+
+
+def rollout_spawns(path):
+    """spawn_agent calls and their outputs from the host's own rollout file for the parent thread."""
+    calls, outputs = {}, {}
+    try:
+        lines = Path(path).read_text().splitlines()
+    except (OSError, TypeError, ValueError):
+        return None
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except ValueError:
             continue
-        starts, ends = [], []
-        for turn in thread.get('turns', []):
-            start = turn.get('startedAt', turn.get('createdAt'))
-            end = turn.get('completedAt', turn.get('updatedAt'))
-            if not isinstance(start, (int, float)) or not isinstance(end, (int, float)):
-                return None
-            starts.append(start)
-            ends.append(end)
-        if not starts:
-            return None
-        spans.append((min(starts), max(ends)))
-    # At equal times a closing thread is counted before an opening one.
-    points = sorted([(s, 1) for s, _ in spans] + [(e, -1) for _, e in spans])
-    active = peak = 0
-    for _, step in points:
-        active += step
-        peak = max(peak, active)
-    return peak
+        payload = entry.get('payload') if isinstance(entry, dict) and entry.get('type') == 'response_item' else entry
+        if not isinstance(payload, dict):
+            continue
+        if payload.get('type') == 'function_call' and payload.get('name') == 'spawn_agent':
+            calls[payload.get('call_id')] = True
+        elif payload.get('type') == 'function_call_output':
+            output = payload.get('output')
+            if isinstance(output, dict):
+                output = output.get('content') if isinstance(output.get('content'), str) else json.dumps(output)
+            outputs[payload.get('call_id')] = output if isinstance(output, str) else json.dumps(output)
+    return [{'call_id': call, 'output': outputs.get(call)} for call in calls]
 
 
-def refused_spawns(events, threads, parent):
-    """Failed agent-spawn items in the parent's stream or persisted history."""
-    items = [e.get('item') for e in events if e.get('type') == 'item.completed']
-    items += [item for turn in threads.get(parent, {}).get('turns', []) for item in turn.get('items', [])]
-    return sum(1 for item in items if isinstance(item, dict)
-               and any(word in str(item.get('type', '')).lower() for word in ('agent', 'collab', 'spawn'))
-               and (item.get('status') == 'failed' or item.get('error')))
+def spawn_refusals(events, threads, parent):
+    """Count refused spawns from explicit host records only. Returns (count, evidence by source).
+
+    Sources: a failed `collab_tool_call` with tool `spawn_agent` in the CLI stream, a failed
+    `collabAgentToolCall` with tool `spawnAgent` in the parent's persisted turns, and a
+    `spawn_agent` call in the parent's rollout whose output names an agent or thread limit.
+    Other failed items, whatever their type mentions, never count.
+    """
+    found = {'stream': [], 'history': [], 'rollout': []}
+    for event in events:
+        item = event.get('item') if isinstance(event, dict) and event.get('type') == 'item.completed' else None
+        if (isinstance(item, dict) and item.get('type') == 'collab_tool_call' and item.get('tool') == 'spawn_agent'
+                and item.get('status') == 'failed' and not item.get('receiver_thread_ids')):
+            found['stream'].append(item.get('id'))
+    thread = threads.get(parent, {})
+    for turn in thread.get('turns', []):
+        for item in turn.get('items', []):
+            if (isinstance(item, dict) and item.get('type') == 'collabAgentToolCall'
+                    and item.get('tool') in ('spawnAgent', 'spawn_agent') and item.get('status') == 'failed'
+                    and not item.get('receiverThreadIds')):
+                found['history'].append(item.get('id'))
+    spawns = rollout_spawns(thread.get('path')) if thread.get('path') else None
+    children = {identity for identity in threads if identity != parent}
+    for call in spawns or []:
+        output = call['output'] or ''
+        if REFUSAL_TEXT.search(output) and not any(identity in output for identity in children):
+            found['rollout'].append(call['call_id'])
+    # The same refusal can appear in several records, so the largest single source is the count.
+    shown = None if spawns is None else [{'call_id': c['call_id'], 'output': (c['output'] or '')[:300]} for c in spawns]
+    return max(len(ids) for ids in found.values()), {'by_source': found, 'rollout_spawn_calls': shown}
 
 
-def thread_cap(peak, collected, refused, configured):
-    """Judge agents.max_threads only when the probe pushed past it. Returns (capability or None, detail)."""
-    detail = ('configured agents.max_threads=%d; requested %d children at once; collected %d; '
-              'peak concurrent children %s; refused spawns %d' % (configured, configured + 1, collected, peak, refused))
+def thread_cap(peak, held, collected, refused, configured):
+    """Judge agents.max_threads only from a decisive gate run. Returns (capability or None, detail)."""
+    detail = ('configured agents.max_threads=%d; asked for %d children held open at once; peak children held at '
+              'the gate %s; held at release %s; collected %d; explicit spawn refusals %d' % (
+                  configured, configured + 1, peak, held, collected, refused))
     if peak is None:
-        return None, detail + '; persisted turns carry no timing'
+        return None, detail + '; no gate observation'
     if peak > configured:
         return cap('failed', detail + '; children exceeded the configured cap'), detail
-    if peak == configured and (collected > configured or refused):
-        return cap('verified', detail + '; the cap counts child threads only', counts='children'), detail
-    if peak == configured - 1 and refused:
-        return cap('verified', detail + '; the cap also counts the parent', counts='including_parent'), detail
+    if refused and peak == held == collected == configured:
+        return cap('verified', detail + '; the host refused a spawn with the cap full of children, '
+                   'so the cap counts child threads only', counts='children'), detail
+    if refused and peak == held == collected == configured - 1:
+        return cap('verified', detail + '; the host refused a spawn with one child open, '
+                   'so the cap also counts the parent', counts='including_parent'), detail
+    if collected > peak:
+        return None, detail + '; children ran staggered without a recorded refusal, so the cap stays unknown'
     return None, detail + '; the cap was not challenged, so its meaning stays unknown'
 
 
 def probe(executable, out, model, reasoning='medium', timeout=120, prepare=None, permission_config=None,
-          config_args=None, case=None):
+          config_args=None, case=None, settle=20.0):
     """Probe one host executable. `prepare`, `permission_config` and `config_args` come from run.py."""
     out = Path(out)
     out.mkdir(parents=False, exist_ok=False)
@@ -195,9 +334,16 @@ def probe(executable, out, model, reasoning='medium', timeout=120, prepare=None,
                    '-o', str(out / 'response.json'), '-']
         prompt = PROMPT % {'children': CAP + 1}
         (out / 'prompt.txt').write_text(prompt)
+        # Children wait at the gate for at most the run's own timeout; the evaluator releases them sooner.
+        gate = Gate(work, nonce, CAP, settle=settle, deadline=max(settle + 5, timeout * 0.6))
+        gate.install(work, int(timeout))
         record['model_invocations'] = 1
-        with (out / 'events.jsonl').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
-            invocation = process_family.run_bounded(command, prompt, stdout, stderr, timeout)
+        gate.start()
+        try:
+            with (out / 'events.jsonl').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
+                invocation = process_family.run_bounded(command, prompt, stdout, stderr, timeout)
+        finally:
+            observation = gate.stop()
         events, event_failures = conditions.parse_events((out / 'events.jsonl').read_text())
         parent_commands = [e['item'] for e in events if e.get('type') == 'item.completed'
                            and e.get('item', {}).get('type') == 'command_execution']
@@ -239,11 +385,13 @@ def probe(executable, out, model, reasoning='medium', timeout=120, prepare=None,
                                           'host-reported metadata only; backend identity unresolved')
         threads_path = out / 'threads.json'
         threads = json.loads(threads_path.read_text()) if threads_path.is_file() else {}
-        peak = child_peak(threads, family['parent_thread']) if threads else None
-        refused = refused_spawns(events, threads, family['parent_thread'])
-        verdict, detail = thread_cap(peak, children, refused, CAP)
-        record['probes'].append({'name': 'thread-cap', 'detail': detail, 'peak_children': peak,
-                                 'collected_children': children, 'refused_spawns': refused})
+        refused, refusals = spawn_refusals(events, threads, family['parent_thread'])
+        held = len(observation['held_at_release'])
+        verdict, detail = thread_cap(observation['peak_held'], held, children, refused, CAP)
+        if family['failures'] and verdict is not None and verdict['status'] == 'verified':
+            verdict, detail = None, detail + '; descendant collection failed, so the run cannot verify the cap'
+        record['probes'].append({'name': 'thread-cap', 'detail': detail, 'gate': observation,
+                                 'collected_children': children, 'refused_spawns': refused, 'refusals': refusals})
         if verdict is None:
             record['unknown'].append('active_thread_cap: ' + detail)
         else:
