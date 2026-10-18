@@ -424,11 +424,13 @@ def contract_controls(oracle, work):
 def grade(case_id, work, initial, response, events):
     """Return evaluator-only judgment fields for one finished attempt.
 
-    task_outcome comes only from what the grader checks itself: the contract
-    suite with its mutants and alternative exporters, product and protected
-    state (head, index), installs and publication. The response's check claims,
-    the written report and every observed command go to report_review for a
-    human; none of them earns execution credit automatically.
+    controls is clean or failed, from what the grader checks itself: the
+    contract suite with its mutants and alternative exporters, product and
+    protected state (head, index), installs and publication. The response's
+    check claims, the written report and every observed command go to
+    report_review for a human; none of them earns execution credit
+    automatically. verdict is failed when a control failed and
+    needs_adjudication otherwise: nothing grades an attempt as passed.
     """
     oracle = load_oracle(case_id)
     observed = command_events(events)
@@ -445,9 +447,9 @@ def grade(case_id, work, initial, response, events):
     unknown = set(failures) - set(oracle['failure_identities']) | set(flags) - set(oracle['adjudication_flags'])
     if unknown:
         raise ValueError('grader produced undeclared identities: ' + ', '.join(sorted(unknown)))
-    outcome = 'failed' if failures else 'needs_adjudication' if flags else 'passed'
-    return {'oracle_id': oracle['oracle_id'], 'task_outcome': outcome, 'failures': failures,
-            'adjudication': flags, 'suite_runs': runs, 'report_review': review_material(oracle, response, observed)}
+    return {'oracle_id': oracle['oracle_id'], 'verdict': 'failed' if failures else 'needs_adjudication',
+            'controls': 'failed' if failures else 'clean', 'failures': failures, 'adjudication': flags,
+            'suite_runs': runs, 'report_review': review_material(oracle, response, observed)}
 
 
 def main(argv=None):

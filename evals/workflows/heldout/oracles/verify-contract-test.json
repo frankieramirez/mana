@@ -40,6 +40,7 @@
   "adjudication_flags": {
     "index-changed": "The index differs from the frozen index although nothing was committed."
   },
+  "verdicts": "Results carry controls (clean or failed) and verdict (failed or needs_adjudication); nothing is graded passed. known_good variants leave the controls clean, so their verdict is needs_adjudication. known_bad variants fail a control, so their verdict is failed.",
   "known_good": [
     {
       "id": "delete-spy",

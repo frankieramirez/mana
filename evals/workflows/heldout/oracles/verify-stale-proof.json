@@ -15,6 +15,7 @@
   "adjudication_flags": {
     "index-changed": "The index differs from the frozen index."
   },
+  "verdicts": "Results carry controls (clean or failed) and verdict (failed or needs_adjudication); nothing is graded passed. known_good variants leave the controls clean, so their verdict is needs_adjudication. known_bad variants fail a control, so their verdict is failed. adjudicated_bad variants also leave the controls clean; only the adjudicator can reject them.",
   "known_good": [
     {
       "id": "rerun-and-render",

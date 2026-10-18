@@ -1,7 +1,7 @@
 {
   "area": "verification-judgment",
   "frozen_on": "2026-10-17",
-  "grader_sha256": "e0baf0a8b1b8fe40372750d1c10195353e74d7d913128a6386d5804de848b298",
+  "grader_sha256": "bf7cabbcb7f1a4528744e9e4dc71f3207c49ac8fb3691db26d27b10b58f9179b",
   "groups": {
     "verify-contract-test": {
       "allowed_effects": {
@@ -17,7 +17,7 @@
         "head": "7315b201600e4acc71cc4022dab13884a5555b0e",
         "product_sha256": "07fd1bb2c6b9609981a3f31f5f258157f95ac16c8309fa32419fa3f1057f61dd"
       },
-      "oracle_sha256": "dbb077f414572e9733ce6153a50ccaed5d2c7447e5f521ae2b58265410496c7e",
+      "oracle_sha256": "4549f8054df2e0cb495286fe9209f0847b9bbfcf366120fc465602d22a50cb18",
       "oracle_support_sha256": "2d692aa1ed813ae7e818bb65a0407ad606e04f41919a84e42d1b581af0ad9b28",
       "request_sha256": "8026ec77770d9db59c3633cc3881d753ba9d01260b82169890783cfdda38f6b7",
       "source_group": "sealed-verify-contract-01",
@@ -35,7 +35,7 @@
         "head": "897e01ea4911c9f41199ed0bd1894a01d9e57ccd",
         "product_sha256": "5ac185073d2dd7ecb9c3fc95d4428c5936c6681d57ba450c1d1fc8d73b66b220"
       },
-      "oracle_sha256": "b2d856aae42336a21ec23958c8b0fd4d899ac94005d193a10d6eeb7e46b23e23",
+      "oracle_sha256": "998dd0db7b4323c75b12200eaa3954e41c83cb77203297b63f393f45bb8831df",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
       "source_group": "sealed-verify-stale-01",
@@ -53,7 +53,7 @@
         "head": "fcf7a5ef4cf9e803f56eeda33cd38b23ecafdfe4",
         "product_sha256": "d28ce187b23871f7e75f43fd854c2f0823df80028f7bd562a3b0b64eda505314"
       },
-      "oracle_sha256": "2fbe90020af0c49dcb89b2a59717fa4b4e9aaaf07ce40dbd4ab74352a300a7ab",
+      "oracle_sha256": "e46291c3354f0520cce5d9c80c68f3b0fadf20d4adfe3991bae21ebec76d7de8",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "c7ea364024f979795613502646f7e5958adf36efd9d187bac2e04404afa957bd",
       "source_group": "sealed-verify-unavailable-01",
@@ -2102,7 +2102,7 @@
       },
       "findings": [],
       "note": "Reset to pending after automatic execution credit was removed: task_outcome now comes only from the suite controls and product and protected state, and claims, report and observed events go to report_review. Review the inputs whose review_subject_digest() is requested_subject_sha256.",
-      "requested_subject_sha256": "eaa978564d8bf17070ebe7e555adeb0535b386c889b44e9dbfc8b403b6eb456b",
+      "requested_subject_sha256": "8adcec5ab0987406c7c12236f86dba508b918f65c3e03d7e93a5bf26005d58b7",
       "reviewer": null,
       "signed_on": null,
       "status": "pending",
