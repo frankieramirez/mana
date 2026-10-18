@@ -389,7 +389,12 @@ def run_suite(oracle, work, replacement=None):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(work / key, target, follow_symlinks=False)
         if replacement is not None:
-            shutil.copy2(ORACLES / replacement, copy / oracle['replaced_path'])
+            target = copy / oracle['replaced_path']
+            # A candidate's link at the target or its folder would have the grader write through it.
+            if target.is_symlink() or target.parent.resolve() != copy.resolve() / Path(oracle['replaced_path']).parent:
+                return {'exit': None, 'ran': 0, 'timeout': False}
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ORACLES / replacement, target)
         env = clean_env(copy)
         command = list(oracle['suite_command'])
         if command[0] == 'python3':

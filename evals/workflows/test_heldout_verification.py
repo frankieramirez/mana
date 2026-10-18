@@ -402,6 +402,22 @@ class ContractOracle(unittest.TestCase):
             (ws.work / 'tests' / 'fixtures').symlink_to('../shelf')
             self.assertGreater(ws.grade()['suite_runs']['frozen']['ran'], 0)
 
+    def test_replacement_runs_never_write_through_a_candidate_link(self):
+        for linked in ('shelf/export.py', 'shelf'):
+            with self.subTest(linked=linked), Workspace('verify-contract-test') as ws, \
+                    tempfile.TemporaryDirectory() as outside:
+                outside = Path(outside)
+                (outside / 'shelf').mkdir()
+                (outside / 'shelf' / 'export.py').write_text('outside\n')
+                (outside / 'export.py').write_text('outside\n')
+                path = ws.work / linked
+                shutil.rmtree(path) if path.is_dir() else path.unlink()
+                path.symlink_to(outside / ('shelf' if linked == 'shelf' else 'export.py'))
+                result = ws.grade()
+                self.assertEqual((outside / 'export.py').read_text(), 'outside\n')
+                self.assertEqual((outside / 'shelf' / 'export.py').read_text(), 'outside\n')
+                self.assertEqual(result['verdict'], 'failed')
+
     def test_every_preregistered_outcome_has_an_executed_variant(self):
         declared = {item['id'] for item in self.oracle['known_good'] + self.oracle['known_bad']}
         self.assertEqual(declared, set(CONTRACT_VARIANTS))
