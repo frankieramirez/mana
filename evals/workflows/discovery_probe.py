@@ -32,7 +32,6 @@ CANARIES = {
     'alpha': ('automatic', 'Gives the alpha probe word. Use when the user asks for the alpha probe word.'),
     'beta': ('explicit', 'Gives the beta probe word. Use when the user asks for the beta probe word.'),
 }
-MODEL_TEXT = ('agent_message', 'reasoning')
 OPENAI_POLICY = 'policy:\n  allow_implicit_invocation: false\n'
 PROMPT = ('This is a host capability probe. All files are synthetic fixtures.\n'
           'What are the alpha probe word and the beta probe word? Put each word you found in the report field '
@@ -130,8 +129,8 @@ def probe(executable, out, model, reasoning='medium', timeout=120):
         load = loads.get(names[word])
         cut = load['index'] if load else len(items)
         # Tool items only: the model's own reply and reasoning repeat a secret it was given, invisibly or not.
-        outputs_before = '\n'.join(discovery.item_text(item) for item in items[:cut] if item.get('type') not in MODEL_TEXT)
-        outputs = '\n'.join(discovery.item_text(item) for item in items if item.get('type') not in MODEL_TEXT)
+        outputs_before = '\n'.join(discovery.item_text(item) for item in items[:cut] if item.get('type') not in discovery.MODEL_TEXT)
+        outputs = '\n'.join(discovery.item_text(item) for item in items if item.get('type') not in discovery.MODEL_TEXT)
         verdicts[word] = judge(load, outputs_before, outputs, report, nonces[word])
     record['probes'].append({'name': 'activation', 'invocation': invocation, 'event_failures': failures,
                              'loads': loads, 'outside_loads': observation['outside_loads'],

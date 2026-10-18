@@ -206,6 +206,9 @@ def execute(argv):
         chosen = dummy_selection(prompt, listed)
         if chosen:
             commands.insert(0, 'cat ' + chosen['path'])
+    for index, text in enumerate(PLAN.get('reasoning', [])):
+        text = re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], text)
+        emit({'type': 'item.completed', 'item': {'id': 'reasoning-%d' % index, 'type': 'reasoning', 'text': text}})
     for index, change in enumerate(PLAN.get('file_changes', [])):
         emit({'type': 'item.completed', 'item': {'id': 'patch-%d' % index, 'type': 'file_change', 'status': 'failed',
                                                   'changes': [{'path': change, 'kind': 'update'}]}})

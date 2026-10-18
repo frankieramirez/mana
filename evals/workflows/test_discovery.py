@@ -271,7 +271,11 @@ class Transport(unittest.TestCase):
             with self.subTest(name):
                 found, _ = self.run_case('dispel-positive', {'parent': {'commands': commands}}, name=name.replace(' ', '-'))
                 self.assertEqual([(l['skill'], l['via']) for l in found['observation']['loads']], [('dispel', 'search')])
-        # Any earlier item counts, not only command output: here a file_change item named the folder first.
+        # Reasoning that names the folder is model text, so the read stays direct.
+        thought, _ = self.run_case('dispel-positive', {'reasoning': ['I will read .agents/skills/dispel/SKILL.md.'],
+                                                       'parent': {'commands': ['cat .agents/skills/dispel/SKILL.md']}}, name='thought')
+        self.assertEqual([(l['skill'], l['via']) for l in thought['observation']['loads']], [('dispel', 'direct')])
+        # Any earlier tool item counts, not only command output: here a file_change item named the folder first.
         patched, _ = self.run_case('dispel-positive', {'file_changes': ['.agents/skills/dispel/notes.md'],
                                                        'parent': {'commands': ['cat .agents/skills/dispel/SKILL.md']}}, name='item')
         self.assertEqual([(l['skill'], l['via']) for l in patched['observation']['loads']], [('dispel', 'search')])
@@ -441,6 +445,10 @@ class ActivationProbe(unittest.TestCase):
             'lost': ({'parent': {'commands': ['cat ' + ALPHA]}, 'malformed_event_after': 'item.completed'}, {}),
             'beta searched': ({'parent': {'commands': ['cat ' + ALPHA, 'grep -rh "beta probe word is" .agents']}},
                               {'skill_discovery': 'verified'}),
+            # Model text naming the folder points to the host listing, so the read after it stays direct.
+            'reasoning first': ({'reasoning': ['The skill list shows %s; I will read it.' % ALPHA],
+                                 'parent': {'commands': ['cat ' + ALPHA]}},
+                                {'skill_discovery': 'verified', 'explicit_only_honored': 'verified'}),
             # Load indexes count every completed item, so an earlier file_change item cannot shift them.
             'item first': ({'file_changes': ['notes.txt'], 'parent': {'commands': ['cat ' + ALPHA]}},
                            {'skill_discovery': 'verified', 'explicit_only_honored': 'verified'}),

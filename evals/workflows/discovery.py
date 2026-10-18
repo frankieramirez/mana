@@ -486,6 +486,11 @@ def direct_read(command, name, work):
     return len(paths) == 1 and paths[0] in wanted
 
 
+# The model's own text. It can name a randomly named folder only from the host's skill list or from a
+# tool output, and tool outputs are already counted, so model text never turns a read into a search.
+MODEL_TEXT = ('agent_message', 'reasoning')
+
+
 def completed_items(events):
     return [event.get('item') or {} for event in events if event.get('type') == 'item.completed']
 
@@ -507,8 +512,9 @@ def observe(events, catalog, work, external=()):
     for item in completed_items(events):
         index += 1
         kind = item.get('type')
-        text, seen_before = item_text(item), seen
-        seen += '\n' + text
+        seen_before = seen
+        if kind not in MODEL_TEXT:
+            seen += '\n' + item_text(item)
         if kind == 'file_change':
             paths = [change.get('path') for change in item.get('changes', []) if isinstance(change, dict)]
             actions.append({'index': index, 'action': 'write', 'via': 'file_change', 'paths': paths, 'status': item.get('status')})
