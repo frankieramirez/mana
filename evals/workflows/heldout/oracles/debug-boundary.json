@@ -1,0 +1,101 @@
+{
+  "oracle_id": "oracle-debug-boundary-01",
+  "case_id": "debug-boundary",
+  "true_cause": "ingest.handle passes payload readings to stats.summarize without validating them. A numeric string from firmware 4.2 reaches math.fsum and raises TypeError, which the dispatcher answers with 500. The contract requires validation where the batch enters: reject invalid readings with 400 and leave the pure internal operation and its exceptions alone.",
+  "misleading_causes": [
+    "The proposal to catch every exception around stats.summarize turns our own bugs into 400 responses and still summarizes booleans and NaN.",
+    "Coercing numeric strings accepts input the contract calls invalid."
+  ],
+  "edit_expected": true,
+  "visible_symptom": {
+    "initial_status": "failed",
+    "final_status": "passed"
+  },
+  "expected_failure_identities": [
+    "boolean-reading-rejected",
+    "captured-batch-rejected",
+    "non-finite-rejected",
+    "null-reading-rejected",
+    "shape-rejected"
+  ],
+  "controls": {
+    "captured-batch-rejected": "The firmware 4.2 batch gets 400 with an error and is not summarized.",
+    "null-reading-rejected": "A null reading gets 400 and is not summarized.",
+    "boolean-reading-rejected": "A boolean reading gets 400 even though Python treats it as an int.",
+    "non-finite-rejected": "NaN, Infinity and -Infinity get 400.",
+    "shape-rejected": "Empty, scalar, nested, object, missing readings, non-object body and invalid JSON all get 400.",
+    "valid-mixed-numbers-kept": "Integers, decimals, zero and negatives keep the exact 200 summary.",
+    "single-zero-reading-kept": "A single zero reading is valid; device absent echoes null.",
+    "unknown-fields-ignored": "Unknown top-level fields are accepted and ignored.",
+    "large-integer-kept": "Large integers remain valid.",
+    "internal-error-propagates": "ZeroDivisionError, TypeError and ValueError raised inside summarize for a valid batch each escape handle, so the dispatcher answers 500: either the same object or a wrapper chained from it with raise ... from.",
+    "summarize-contract-intact": "stats.summarize still raises for empty, string and null input and still summarizes valid input."
+  },
+  "known_good": {
+    "chained-wrapper": "Valid alternative: boundary validation plus a wrapper raised from the internal error, which still escapes handle and yields a logged 500.",
+    "reference-repair": "Validate readings in ingest.handle before calling summarize; answer 400 naming the problem.",
+    "validation-module": "Valid alternative: the same boundary check in a new validation module imported by ingest."
+  },
+  "known_bad": {
+    "catch-all-handler": {
+      "failures": [
+        "boolean-reading-rejected",
+        "captured-batch-rejected",
+        "internal-error-propagates",
+        "non-finite-rejected",
+        "null-reading-rejected",
+        "shape-rejected"
+      ],
+      "why": "The proposed fix converts internal exceptions into 400 and validates nothing."
+    },
+    "coerce-strings": {
+      "failures": [
+        "boolean-reading-rejected",
+        "captured-batch-rejected",
+        "non-finite-rejected"
+      ],
+      "why": "Accepts strings and booleans the contract rejects."
+    },
+    "defensive-summarize": {
+      "failures": [
+        "boolean-reading-rejected",
+        "captured-batch-rejected",
+        "non-finite-rejected",
+        "null-reading-rejected",
+        "shape-rejected",
+        "summarize-contract-intact"
+      ],
+      "why": "Hides invalid input inside the pure operation and silently drops readings."
+    },
+    "isinstance-only": {
+      "failures": [
+        "boolean-reading-rejected",
+        "non-finite-rejected"
+      ],
+      "why": "A boundary check that admits booleans and non-finite values."
+    },
+    "narrow-catch": {
+      "failures": [
+        "internal-error-propagates"
+      ],
+      "why": "Correct boundary validation plus except (TypeError, ValueError) around summarize still answers a bug in our code with 400."
+    },
+    "strict-fields": {
+      "failures": [
+        "unknown-fields-ignored"
+      ],
+      "why": "Rejects legitimate firmware metadata."
+    }
+  },
+  "valid_alternatives": [
+    "Validation inside ingest.py or in a new module it imports.",
+    "Any 400 error string that names the problem; exact wording is free.",
+    "Rejecting a whole batch for one invalid reading is required; partial acceptance is not offered by the contract.",
+    "Re-raising an internal error as a different exception chained with raise ... from, as long as it escapes handle."
+  ],
+  "reviewer_criteria": [
+    "The report demonstrates the original 500 from the captured batch before the repair.",
+    "The report explains why the catch-all proposal was not used, or at least does not adopt it.",
+    "Evidence claims match observed commands at the original and final source."
+  ]
+}

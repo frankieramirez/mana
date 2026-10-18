@@ -1,8 +1,32 @@
 # Changelog
 
-## Unreleased
+## 0.43.9
 
 - The workflow evaluator holds three new review and feedback confirmation groups for `review-contracts`, `feedback-repair` and `review-no-change`. Candidate authors must not read `evals/workflows/heldout/`. An evaluator-only manifest maps Mana, reference and no-suite entrypoints and freezes request, fixture and oracle hashes, source groups and allowed effects. Offline tests check the oracles and the freeze. After the first independent review requested changes, `feedback-repair` serves its review as pull request threads through one offline `gh` double shared by every condition, the reference payload adds the `deslop` skill it names, and the grader accepts runner caches, fuller error messages and a new local branch while rejecting committed user files. After the re-review, the `gh` double answers any read about the pull request the way `gh` does, with placeholders, every `--json` field and a standard-library `--jq`, and a read it cannot answer gets a `gh`-style error instead of stopping the study. Its call log moved out of the candidate's reach, the message check accepts the bounds in any order, and every new commit is checked, not only the net diff. The study notes record that the review area's reference payload has 171 files. After the third, fourth and fifth reviews, publication is graded by evidence strength: a push that lands in the evaluator-owned bare origin, a command that exits 97, the double's tag or its log fails the attempt, while command text that may name a write, such as any `git` push or any `gh api` field flag, sends it to a reviewer. The shape no evidence reaches is disclosed. The group is refrozen as `review-freeze-6`; a new second review is pending, so no outcome collection may start.
+
+## 0.43.8
+
+- `run.py --probe-host` reads refused spawns from the parent's Codex rollout file, where Codex 0.163.0 records a refused `spawn_agent` call as tool output starting with `collab spawn failed: agent thread limit reached`. The rollout is the only refusal source, and it must belong to the parent thread by file name or `session_meta` id. A spawn that failed for any other reason, and any model text, does not count. This depends on Codex's on-disk session format. A refusal with the cap full of children verifies the cap; more children open than the cap marks it failed. The cap counts the parent only when a refusal came while the run's single child was open. Everything else, including two children at the cap with no refusal or a staggered run, stays unknown. The docs now say that no runner uses the Codex CLI 0.163.0 delegated acceptance yet, because the delegated review path pins 0.159.2.
+
+## 0.43.7
+
+- The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. An independent second review approved all six groups.
+
+## 0.43.6
+
+- The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. A re-review of the revised oracles and runner integration are still pending.
+
+## 0.43.5
+
+- The workflow evaluator accepts a host only from recorded probe evidence in `evals/workflows/host-evidence/`, per exact version and mode. Comparative delegated studies need fresh evidence for family termination and the thread cap, so Codex CLI 0.159.2 stays limited to its focused and delegated record until a new probe passes. Frozen studies can declare one delegation limit for every arm. Each thread runs its own containment probe, missing child history stops the schedule, and a timeout or cancellation kills the whole process family. `run.py --probe-host` records candidate evidence with at most one model call; it challenges the thread cap with one child more than the cap allows and records whether the host's setting counts the parent, which delegated runs then translate. Offline tests use a fake host. A live probe of Codex CLI 0.163.0 adds a record that supports focused and delegated attempts, including verified process-family termination. It does not support comparative delegated studies, because only two children ran against a cap of two and the cap stays unknown.
+
+## 0.43.4
+
+- Leyline gains a challenge stage. `challenge.sh` runs an installed control from committed bytes in disposable worktrees through baseline, declared break, restore, concurrent runs, SIGINT and SIGTERM cancellation, and plan-declared faults such as a missing browser, zero executed cases, source mutation and teardown failure. Each probe checks that an unknown listener survives, that no started process outlives its run, and that HEAD, index, tracked and untracked bytes are unchanged. Reports and control evidence are retained outside the checkout with a SHA-256 manifest that is checked again after cleanup. The generated Node control adds prerequisite probes, owned process verification, artifact digests, and treats suite errors such as a failed teardown as incomplete while keeping failed assertions. A synthetic acceptance fixture exercises every path; no consumer conformance is claimed.
+
+## 0.43.3
+
+- Leyline's dynamic conformance check keeps the reports it judged. Each feature probe records its run id, and the checker copies every report with its SHA-256 into a retained folder (`--out`) before it removes the worktree. An incomplete run under the break patch now blocks the `break` probe instead of failing the checker. A probe that does not pass keeps the tail of stdout as well as stderr, and every probe appears with a reason when it never ran. The report check rejects a report with no `source.identity.head`. Regressions for all five cases from the Ultima refresh are in `scripts/test-leyline.sh`.
 
 ## 0.43.2
 

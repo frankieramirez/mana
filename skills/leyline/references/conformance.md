@@ -53,6 +53,10 @@ Runs the project's own CLI, so it needs the user's agreement first; say what wil
 | `restore` | Reverting the patch passes again |
 | `parallel` | Two concurrent runs both pass with distinct run ids |
 
-A probe is `blocked` when something it depends on did not happen, such as an incomplete baseline. Blocked is not passed; report what blocked it. Uncommitted changes are not in the worktree, and the output says so under `excludedChanges`.
+A probe is `blocked` when something it depends on did not happen, such as an incomplete baseline. An incomplete run under the break patch also blocks `break`, because it says nothing about the scenario. Blocked is not passed; report what blocked it. Every probe appears in the output, with a reason when it never ran. A probe that does not pass keeps the last 2000 characters of stderr, and of stdout unless its report was retained, so a failed `Prepare:` still names its cause. Uncommitted changes are not in the worktree, and the output says so under `excludedChanges`.
+
+Each feature probe lists its `runs`: the run id, the exit code, the report path, and the report's SHA-256. The checker copies each report it judged into the folder named by `retained` before it removes the worktree. Pass `--out <dir>` to choose that folder; it must be empty or absent. Without it the checker makes a new temporary folder. Link those reports as the challenge evidence.
 
 Pick a feature whose run is affordable. A feature run in a large project can take many minutes, and dynamic mode runs it five times. `--timeout` bounds each command.
+
+Dynamic mode is a quick probe. The challenge in [references/challenge.md](references/challenge.md) adds cancellation, declared fault variants, process ownership and checkout preservation, and retains every report outside the checkout.
