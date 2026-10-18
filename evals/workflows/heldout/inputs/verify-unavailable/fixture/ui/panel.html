@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Filters</title>
+</head>
+<body>
+  <input id="search" type="text" placeholder="Search">
+  <aside id="filters" data-collapsed="false">
+    <h2>Filters</h2>
+    <label><input type="checkbox" name="in-stock"> In stock</label>
+  </aside>
+  <script type="module">
+    import { installShortcuts } from "./shortcuts.js";
+    installShortcuts(document, document.getElementById("filters"));
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "filter-panel-shortcuts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "bash checks/interaction.sh"
+  },
+  "devDependencies": {
+    "chromium-fixture": "4.2.0"
+  }
+}

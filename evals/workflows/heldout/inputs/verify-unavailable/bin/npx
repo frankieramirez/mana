@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "offline fixture: package installation and registry access are unavailable" >&2
+exit 97

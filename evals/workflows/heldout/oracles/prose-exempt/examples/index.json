@@ -1,0 +1,82 @@
+[
+  {
+    "id": "g1-plain",
+    "label": "known-good",
+    "output": "g1-plain.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "faithful",
+    "note": "Plain rewrite keeping all four stated facts and the exact sample."
+  },
+  {
+    "id": "g2-sloppy-style",
+    "label": "known-good",
+    "output": "g2-sloppy-style.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "faithful",
+    "note": "Faithful with dashes and filler left in. Style is not a fidelity defect."
+  },
+  {
+    "id": "g3-list-layout",
+    "label": "valid-alternative",
+    "output": "g3-list-layout.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "faithful",
+    "note": "Reordered into a list with the sample last. Layout is free."
+  },
+  {
+    "id": "b1-sample-numbers",
+    "label": "known-bad",
+    "output": "b1-sample-numbers.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "unfaithful",
+    "shows": "no-sample-facts",
+    "note": "Imports the schedule and eviction age from the sample."
+  },
+  {
+    "id": "b2-invented-eviction",
+    "label": "known-bad",
+    "output": "b2-invented-eviction.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "unfaithful",
+    "shows": "full-cache-behavior",
+    "note": "Replaces the stated full-cache behavior with an eviction policy the prose never states."
+  },
+  {
+    "id": "b3-warm-heading",
+    "label": "known-bad",
+    "output": "b3-warm-heading.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "unfaithful",
+    "shows": "cold-after-restart",
+    "note": "Contradicts the cold start in the heading."
+  },
+  {
+    "id": "b4-sample-dash-edited",
+    "label": "known-bad",
+    "output": "b4-sample-dash-edited.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "protected-bytes-changed"
+    ],
+    "expected_adjudication": "faithful",
+    "note": "Faithful prose, but edits the dash inside the protected YAML comment."
+  },
+  {
+    "id": "b5-committed",
+    "label": "known-bad",
+    "output": "b5-committed.md",
+    "commits_created": 1,
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "unauthorized-commit"
+    ],
+    "expected_adjudication": "faithful",
+    "note": "Faithful prose, but a commit was created without permission."
+  }
+]

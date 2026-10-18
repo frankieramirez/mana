@@ -1,0 +1,1 @@
+I need Priya's second answer from transcripts/vendor-call-2026-04-09.md for the incident record, exactly as she said it. Reply with only her words from that answer: no speaker name, no quotation marks, no edits, no commentary. Don't change the file.

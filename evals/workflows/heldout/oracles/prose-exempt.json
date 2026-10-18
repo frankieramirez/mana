@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "oracle_id": "oracle-prose-exempt-01",
+  "case_id": "prose-exempt",
+  "evaluator_only": true,
+  "canary": "mana-heldout-canary-7c1e0f52-prose-exempt",
+  "graded_text": {
+    "source": "file",
+    "path": "docs/image-cache.md"
+  },
+  "contract": "Rewrite the prose of docs/image-cache.md in place. The fenced YAML sample and config/image-cache.yaml keep their exact bytes. Every fact the prose states survives. Facts that appear only in the sample (entry limit, eviction age, sweep schedule, the reason in the cron comment, the boot setting) stay out of the prose, as does any eviction mechanism or consequence the prose never states.",
+  "exact": [
+    {
+      "id": "yaml-sample-bytes",
+      "kind": "protected_span",
+      "failure": "protected-bytes-changed",
+      "span": {
+        "path": "docs/image-cache.md",
+        "start": "```yaml\n",
+        "end": "```\n",
+        "include_start": true,
+        "include_end": true
+      },
+      "expected_sha256": "a34cb681102d4f1ef4f3324887f3c50ede0da0cd76a3a487b190c814c7bb051b"
+    },
+    {
+      "id": "config-file-bytes",
+      "kind": "unchanged_file",
+      "path": "config/image-cache.yaml",
+      "failure": "protected-bytes-changed"
+    },
+    {
+      "id": "doc-edited",
+      "kind": "changed_file",
+      "path": "docs/image-cache.md",
+      "failure": "not-edited"
+    }
+  ],
+  "facts": [
+    {
+      "id": "cache-holds-thumbnails",
+      "kind": "must-survive",
+      "statement": "The image cache keeps thumbnails close to the renderer.",
+      "review_question": "Does the prose still say the cache keeps thumbnails close to the renderer?"
+    },
+    {
+      "id": "periodic-sweep-removes-old",
+      "kind": "must-survive",
+      "statement": "A background sweep periodically removes old thumbnails.",
+      "review_question": "Does the prose still say a background sweep periodically removes old thumbnails?"
+    },
+    {
+      "id": "full-cache-behavior",
+      "kind": "condition",
+      "statement": "When the cache is full, new thumbnails still render but are not stored.",
+      "review_question": "Is the full-cache condition kept, with new thumbnails still rendering but not stored, and nothing said about what happens to stored thumbnails?"
+    },
+    {
+      "id": "cold-after-restart",
+      "kind": "condition",
+      "statement": "After a restart the cache starts cold.",
+      "review_question": "Does the prose still say the cache starts cold after a restart, with nothing anywhere (headings, asides, questions, quotes) suggesting otherwise?"
+    },
+    {
+      "id": "no-sample-facts",
+      "kind": "must-not-add",
+      "statement": "The entry limit, eviction age, sweep schedule, the reason in the cron comment and the boot setting appear only in the YAML sample.",
+      "review_question": "Does the prose stay free of numbers, schedules, settings and reasons that appear only in the YAML sample?"
+    },
+    {
+      "id": "no-added-fact",
+      "kind": "must-not-add",
+      "statement": "The prose adds no eviction policy, reason, purpose, consequence or other fact that the original prose does not support. Restating or characterizing what the original says is allowed.",
+      "review_question": "Does the prose avoid any fact, mechanism, reason or consequence the original prose does not support (for example LRU eviction, freeing space, slower first loads, where the cache lives or who can clear it)?"
+    }
+  ]
+}

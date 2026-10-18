@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "oracle_id": "oracle-prose-scope-01",
+  "case_id": "prose-scope",
+  "evaluator_only": true,
+  "canary": "mana-heldout-canary-3b94d6a8-prose-scope",
+  "graded_text": {
+    "source": "report"
+  },
+  "contract": "Reply with one paragraph, shorter than the source. Keep the quantified scope (success holds for records that pass schema validation), the version condition, the exclusion of failing records and their listing in the rejection report, the future posted_on date as one example rather than the only case, and that the importer does not modify records. Add no new fact, cause or consequence. The notes file stays unchanged.",
+  "exact": [
+    {
+      "id": "notes-file-bytes",
+      "kind": "unchanged_file",
+      "path": "notes/importer-draft.md",
+      "failure": "protected-bytes-changed"
+    }
+  ],
+  "facts": [
+    {
+      "id": "validation-scope",
+      "kind": "condition",
+      "statement": "Success holds for records that pass schema validation, not for every record.",
+      "review_question": "Is the success guarantee still limited to records that pass schema validation?"
+    },
+    {
+      "id": "version-onward",
+      "kind": "condition",
+      "statement": "The guarantee holds from version 4.2 onward.",
+      "review_question": "Does the reply say the guarantee holds from version 4.2 onward, not before it and not only in 4.2?"
+    },
+    {
+      "id": "invalid-excluded-and-reported",
+      "kind": "must-survive",
+      "statement": "Records that fail validation are left out of the import and listed in the rejection report.",
+      "review_question": "Does the reply still say failing records are not imported and are listed in the rejection report?"
+    },
+    {
+      "id": "example-not-exhaustive",
+      "kind": "condition",
+      "statement": "A future posted_on date is one example of a record that fails validation, not the only case.",
+      "review_question": "Does the reply keep the future posted_on date as one failing example rather than the only case, and never place it among records that pass?"
+    },
+    {
+      "id": "records-not-modified",
+      "kind": "must-survive",
+      "statement": "The importer leaves records unmodified.",
+      "review_question": "Does the reply still state, as a statement and not a question, that the importer does not modify records?"
+    },
+    {
+      "id": "no-added-fact",
+      "kind": "must-not-add",
+      "statement": "The reply adds no fact, cause or consequence the paragraph does not support, such as a recovery path, a report recipient or a schedule.",
+      "review_question": "Does the reply avoid adding any fact, cause or consequence the paragraph does not support?"
+    },
+    {
+      "id": "shorter-than-source",
+      "kind": "request",
+      "statement": "The reply is shorter than the source paragraph.",
+      "review_question": "Is the reply clearly shorter than the source paragraph?"
+    },
+    {
+      "id": "reply-only",
+      "kind": "request",
+      "statement": "The reply holds only the shortened paragraph, with no preface, notes or alternatives.",
+      "review_question": "Is the reply just the shortened paragraph, without a preface, notes or alternatives?"
+    }
+  ]
+}

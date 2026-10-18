@@ -135,6 +135,46 @@ def emit(event):
     print(json.dumps(event), flush=True)
 
 
+def catalog(work):
+    """What a discovering host would list from the workspace skill folder: name, description, explicit flag."""
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, PLAN['evaluator_dir'])
+    from discovery import frontmatter
+    found = []
+    for path in sorted(Path(work, '.agents', 'skills').glob('*/SKILL.md')):
+        meta, _, _ = frontmatter(path.read_text())
+        policy = path.parent / 'agents' / 'openai.yaml'
+        explicit = (meta.get('disable-model-invocation') == 'true'
+                    or (policy.is_file() and 'allow_implicit_invocation: false' in policy.read_text()))
+        found.append({'name': meta.get('name'), 'description': meta.get('description', ''),
+                      'explicit': explicit, 'path': path.relative_to(work).as_posix()})
+    return found
+
+
+def resolve(token, listed):
+    """A listed skill by exact name, else the first whose description holds the phrase."""
+    return next((s for s in listed if s['name'] == token), None) or next(
+        (s for s in listed if token in s['description']), None)
+
+
+def words(text):
+    return {w for w in re.findall(r'[a-z]+', text.lower()) if len(w) >= 4}
+
+
+def dummy_selection(prompt, listed):
+    """An offline keyword selector over listed descriptions. It is a fixture, never a model observation."""
+    named = [s for s in listed if re.search(r'(?<![\w-])' + re.escape(s['name']) + r'(?![\w-])', prompt, re.I)]
+    if named:
+        return named[0]
+    honored = PLAN.get('honor_explicit_only', True)
+    candidates = [s for s in listed if not (honored and s['explicit'])]
+    scored = sorted(((len(words(prompt) & words(s['description'])), s['name']) for s in candidates), reverse=True)
+    threshold = PLAN.get('selector_threshold', 2)
+    if scored and scored[0][0] >= threshold:
+        return next(s for s in listed if s['name'] == scored[0][1])
+    return None
+
+
 def execute(argv):
     opts = options(argv)
     prompt = sys.stdin.read()
@@ -142,6 +182,10 @@ def execute(argv):
     calls = sorted(STATE.glob('exec-*.json'))
     (STATE / ('exec-%03d.json' % len(calls))).write_text(json.dumps({'argv': argv, 'prompt': prompt, 'options': opts}))
     work = opts['cwd']
+    # Discovery is on unless the evaluator passed the skip flag, as the real host's setting reads.
+    discovering = 'features.skip_host_skill_discovery=true' not in opts['configs']
+    listed = catalog(work) if discovering and work else []
+    (STATE / ('catalog-%03d.json' % len(calls))).write_text(json.dumps({'discovering': discovering, 'listed': listed}))
     if PLAN.get('hang'):
         daemonize(PLAN['daemon_pidfile'])
         sleeper = subprocess.Popen(['/bin/sleep', '600'])
@@ -155,7 +199,20 @@ def execute(argv):
     threads = {}
     parent_items = []
     parent_started = time.time()
-    for index, command in enumerate(PLAN.get('parent', {}).get('commands', [])):
+    # `@skill:PHRASE@` stands for the path of the listed skill that resolve() finds, for randomly named skills.
+    commands = [re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], command)
+                for command in PLAN.get('parent', {}).get('commands', [])]
+    if PLAN.get('selector') == 'keyword' and listed:
+        chosen = dummy_selection(prompt, listed)
+        if chosen:
+            commands.insert(0, 'cat ' + chosen['path'])
+    for index, text in enumerate(PLAN.get('reasoning', [])):
+        text = re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], text)
+        emit({'type': 'item.completed', 'item': {'id': 'reasoning-%d' % index, 'type': 'reasoning', 'text': text}})
+    for index, change in enumerate(PLAN.get('file_changes', [])):
+        emit({'type': 'item.completed', 'item': {'id': 'patch-%d' % index, 'type': 'file_change', 'status': 'failed',
+                                                  'changes': [{'path': change, 'kind': 'update'}]}})
+    for index, command in enumerate(commands):
         output, code = run_command(command, opts['configs'], work)
         item = {'id': 'item-%d' % index, 'type': 'command_execution', 'command': command,
                 'aggregated_output': output, 'exit_code': code, 'status': 'completed' if code == 0 else 'failed'}
@@ -163,16 +220,34 @@ def execute(argv):
         parent_items.append({'type': 'commandExecution', 'id': item['id'], 'command': command,
                              'aggregatedOutput': output, 'exitCode': code, 'status': item['status']})
     # Children run one after another for real; their recorded timing models the host's
-    # agents.max_threads scheduling. `children` counts only child threads, `including_parent`
-    # also counts the parent, and `ignore` lets every child open at once.
+    # agents.max_threads scheduling. `children` refuses spawns once the cap's worth of children
+    # is open, `including_parent` also counts the parent, `queue` starts later children when a
+    # slot frees without refusing, and `ignore` lets every child open at once. Like Codex 0.163.0,
+    # a refusal is written only to the rollout file; `refusal_output` null writes no output at all.
     configured = next((int(v.split('=', 1)[1]) for v in opts['configs'] if v.startswith('agents.max_threads=')), None)
-    mode = PLAN.get('cap_mode', 'children')
-    slots = len(PLAN.get('children', [])) or 1
+    mode = PLAN.get('cap_mode', 'queue')
+    specs = PLAN.get('children', [])
+    slots = allowed = len(specs) or 1
     if configured is not None and mode != 'ignore':
         slots = max(1, configured - (1 if mode == 'including_parent' else 0))
-    for number, child in enumerate(PLAN.get('children', [])):
+        if mode != 'queue':
+            allowed = slots
+    refusal = PLAN.get('refusal_output', 'collab spawn failed: agent thread limit reached')
+    rollout = [{'type': 'session_meta', 'payload': {'id': PLAN.get('rollout_session', parent)}}]
+    rollout += [{'type': 'response_item', 'payload': noise} for noise in PLAN.get('rollout_noise', [])]
+    for number, child in enumerate(specs):
         identity = child.get('id', 'thread-child-%d' % number)
         owner = child.get('parent', parent)
+        call = 'call-spawn-%d' % number
+        rollout.append({'type': 'response_item', 'payload': {'type': 'function_call', 'name': 'spawn_agent',
+                                                             'call_id': call, 'arguments': '{}'}})
+        if number >= allowed:
+            if refusal is not None:
+                rollout.append({'type': 'response_item', 'payload': {
+                    'type': 'function_call_output', 'call_id': call, 'output': refusal}})
+            continue
+        rollout.append({'type': 'response_item', 'payload': {'type': 'function_call_output', 'call_id': call,
+                                                             'output': json.dumps({'agent_id': identity})}})
         items = []
         child_started = parent_started + 1 + (number // slots) * 10
         for index, command in enumerate(child.get('commands', [])):
@@ -195,17 +270,24 @@ def execute(argv):
             emit({'type': 'item.completed', 'item': {'id': 'spawn-%d' % number, 'type': 'collab_tool_call',
                                                       'receiver_thread_ids': [identity]}})
     parent_items.append({'type': 'agentMessage', 'phase': 'final_answer', 'text': 'parent done'})
+    path = STATE / PLAN.get('rollout_name', 'rollout-%s.jsonl' % parent)
     threads[parent] = {'id': parent, 'parentThreadId': None, 'cwd': work, 'model': model, 'reasoningEffort': 'medium',
-                       'cliVersion': PLAN['version'], 'source': 'exec',
+                       'cliVersion': PLAN['version'], 'source': 'exec', 'path': str(path),
                        'turns': [{'id': 'turn-1', 'status': 'completed', 'itemsView': 'full', 'items': parent_items,
                                   'startedAt': parent_started,
                                   'completedAt': parent_started + 2 + (len(PLAN.get('children', [])) // slots + 1) * 10}]}
     if not opts['ephemeral']:
         (STATE / 'threads.json').write_text(json.dumps(threads))
+        path.write_text(''.join(json.dumps(entry) + '\n' for entry in rollout))
     if not PLAN.get('omit_usage'):
         emit({'type': 'turn.completed', 'usage': {'input_tokens': 10, 'output_tokens': 2}})
     if opts['output'] and 'response' in PLAN:
-        Path(opts['output']).write_text(json.dumps(PLAN['response']))
+        response = dict(PLAN['response'])
+        # A host that injects skill text without any recorded event, so the load is invisible.
+        for token in PLAN.get('hidden_load', []):
+            if discovering:
+                response['report'] = response.get('report', '') + '\n' + Path(work, resolve(token, listed)['path']).read_text()
+        Path(opts['output']).write_text(json.dumps(response))
     return PLAN.get('exit_code', 0)
 
 

@@ -1,0 +1,1113 @@
+{
+  "version": 1,
+  "study": "discovery-selection-v1",
+  "source_revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+  "activation": {
+    "attune": "automatic",
+    "augur": "automatic",
+    "banish": "explicit",
+    "cast": "explicit",
+    "conjure": "explicit",
+    "dispel": "automatic",
+    "leyline": "automatic",
+    "mend": "automatic",
+    "mimic": "automatic",
+    "portal": "explicit",
+    "remedy": "automatic",
+    "reveal": "automatic",
+    "scan": "automatic",
+    "scry": "explicit",
+    "setup-mana": "explicit",
+    "sift": "explicit",
+    "ultima": "automatic",
+    "vision": "explicit",
+    "ward": "automatic"
+  },
+  "first_live_group": [
+    "attune-positive",
+    "dispel-positive",
+    "mend-positive",
+    "remedy-positive",
+    "scan-positive",
+    "ultima-positive",
+    "dispel-negative",
+    "ordinary-explicit-only",
+    "review-or-audit",
+    "vague-bug",
+    "missing-sibling",
+    "changed-target"
+  ],
+  "cases": [
+    {
+      "id": "attune-positive",
+      "kind": "positive",
+      "skill": "attune",
+      "invocation": "ordinary",
+      "request": "Set this repo's validation command to python3 -m unittest.",
+      "routes": {
+        "accepted": [
+          "skill:attune"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "AGENTS.md": "## Agent skills\n\nValidation: none recorded\n"
+        }
+      }
+    },
+    {
+      "id": "attune-negative",
+      "kind": "negative",
+      "skill": "attune",
+      "invocation": "ordinary",
+      "request": "Run the existing validation once.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "AGENTS.md": "## Agent skills\n\nValidation: python3 -m unittest\n"
+        }
+      }
+    },
+    {
+      "id": "augur-positive",
+      "kind": "positive",
+      "skill": "augur",
+      "invocation": "ordinary",
+      "request": "What could this small protocol change break? Prove the safety assumption.",
+      "routes": {
+        "accepted": [
+          "skill:augur"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "protocol.py": "VERSION = 1\n\ndef encode(message):\n    return \"%d:%s\" % (VERSION, message)\n\ndef decode(frame):\n    version, _, body = frame.partition(\":\")\n    assert int(version) == VERSION\n    return body\n"
+        },
+        "dirty_files": {
+          "protocol.py": "VERSION = 2\n\ndef encode(message):\n    return \"%d:%s\" % (VERSION, message)\n\ndef decode(frame):\n    version, _, body = frame.partition(\":\")\n    assert int(version) == VERSION\n    return body\n"
+        }
+      }
+    },
+    {
+      "id": "augur-negative",
+      "kind": "negative",
+      "skill": "augur",
+      "invocation": "ordinary",
+      "request": "Summarize this patch without running code.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "change.patch": "--- a/app.py\n+++ b/app.py\n@@ -1,2 +1,2 @@\n def total(items):\n-    return sum(item[\"price\"] for item in items)\n+    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        }
+      }
+    },
+    {
+      "id": "banish-positive",
+      "kind": "positive",
+      "skill": "banish",
+      "invocation": "direct",
+      "request": "Use banish on these files.",
+      "routes": {
+        "accepted": [
+          "skill:banish"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "cart.py": "# This function adds an item to the cart\ndef add(cart, item):\n    # append the item\n    cart.append(item)  # now the cart has the item\n    return cart\n"
+        }
+      }
+    },
+    {
+      "id": "banish-negative",
+      "kind": "negative",
+      "skill": "banish",
+      "invocation": "ordinary",
+      "request": "Explain what this comment means.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "cart.py": "def add(cart, item):\n    # Keep insertion order: receipts list items in the order they were scanned.\n    cart.append(item)\n    return cart\n"
+        }
+      }
+    },
+    {
+      "id": "cast-positive",
+      "kind": "positive",
+      "skill": "cast",
+      "invocation": "direct",
+      "request": "Use cast on this ready ticket, no-pr.",
+      "routes": {
+        "accepted": [
+          "skill:cast"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "TICKET.md": "# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "cast-negative",
+      "kind": "negative",
+      "skill": "cast",
+      "invocation": "ordinary",
+      "request": "Estimate the work in this ticket.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "TICKET.md": "# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "conjure-positive",
+      "kind": "positive",
+      "skill": "conjure",
+      "invocation": "direct",
+      "request": "Use conjure to file this finished spec as build tickets; you pick the slices.",
+      "routes": {
+        "accepted": [
+          "skill:conjure"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [],
+      "setup": {
+        "files": {
+          "spec.md": "# Spec: gift cards\n\nStatus: finished\n\nShoppers can pay part of an order with a gift card.\n\n## Decisions\n\n- Balances are stored in cents.\n- A card can be used on several orders until empty.\n\n## Open questions\n\n- Do expired cards keep their balance?\n- Who can issue a card?\n",
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n"
+        }
+      }
+    },
+    {
+      "id": "conjure-negative",
+      "kind": "negative",
+      "skill": "conjure",
+      "invocation": "ordinary",
+      "request": "Summarize the spec's unresolved questions.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "spec.md": "# Spec: gift cards\n\nStatus: finished\n\nShoppers can pay part of an order with a gift card.\n\n## Decisions\n\n- Balances are stored in cents.\n- A card can be used on several orders until empty.\n\n## Open questions\n\n- Do expired cards keep their balance?\n- Who can issue a card?\n"
+        }
+      }
+    },
+    {
+      "id": "dispel-positive",
+      "kind": "positive",
+      "skill": "dispel",
+      "invocation": "ordinary",
+      "request": "Rewrite this release note in plain language.",
+      "routes": {
+        "accepted": [
+          "skill:dispel"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "RELEASE_NOTE.md": "We are thrilled to unveil a game-changing evolution of checkout: it is not just faster, it is a whole new way to shop, seamless, intuitive, and delightful.\n"
+        }
+      }
+    },
+    {
+      "id": "dispel-negative",
+      "kind": "negative",
+      "skill": "dispel",
+      "invocation": "ordinary",
+      "request": "Return this quoted text byte for byte.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "quote.txt": "\"It is not just faster; it is a whole new way to shop.\"\n"
+        }
+      }
+    },
+    {
+      "id": "leyline-positive",
+      "kind": "positive",
+      "skill": "leyline",
+      "invocation": "ordinary",
+      "request": "Audit whether this control CLI and feature map let an agent verify the app.",
+      "routes": {
+        "accepted": [
+          "skill:leyline"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "control.sh": "#!/bin/sh\ncase \"$1\" in\n  run) python3 -m unittest ;;\n  *) echo \"usage: control.sh run\" ;;\nesac\n",
+          "features.json": "{\"features\": [{\"id\": \"totals\", \"files\": [\"app.py\"], \"check\": \"./control.sh run\"}]}\n"
+        }
+      }
+    },
+    {
+      "id": "leyline-negative",
+      "kind": "negative",
+      "skill": "leyline",
+      "invocation": "ordinary",
+      "request": "Run the app's documented unit tests.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "README.md": "# Fixture shop\n\nRun the unit tests with: python3 -m unittest\n"
+        }
+      }
+    },
+    {
+      "id": "mend-positive",
+      "kind": "positive",
+      "skill": "mend",
+      "invocation": "ordinary",
+      "request": "Resolve this in-progress cherry-pick conflict.",
+      "routes": {
+        "accepted": [
+          "skill:mend"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "git": "cherry-pick-conflict"
+      }
+    },
+    {
+      "id": "mend-negative",
+      "kind": "negative",
+      "skill": "mend",
+      "invocation": "ordinary",
+      "request": "Review this resolved merge commit.",
+      "routes": {
+        "accepted": [
+          "ordinary",
+          "skill:scan"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "git": "merge-commit"
+      }
+    },
+    {
+      "id": "mimic-positive",
+      "kind": "positive",
+      "skill": "mimic",
+      "invocation": "ordinary",
+      "request": "Draft a reply as me using these writing samples.",
+      "routes": {
+        "accepted": [
+          "skill:mimic"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "message.txt": "From Sam: can you take the Friday release?\n",
+          "samples/one.txt": "yep on it. will ping when done\n",
+          "samples/two.txt": "cant do thurs, fri works tho\n"
+        }
+      }
+    },
+    {
+      "id": "mimic-negative",
+      "kind": "negative",
+      "skill": "mimic",
+      "invocation": "ordinary",
+      "request": "Explain the facts in this email.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "email.txt": "From: billing@example.invalid\nYour invoice 1182 for 40 dollars is due on the 3rd. Late fees start after 10 days.\n"
+        }
+      }
+    },
+    {
+      "id": "portal-positive",
+      "kind": "positive",
+      "skill": "portal",
+      "invocation": "direct",
+      "request": "Use portal run on this named effort; finish its ready units locally.",
+      "routes": {
+        "accepted": [
+          "skill:portal"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n",
+          ".scratch/issues/7-quantity-totals.md": "# Build: quantity totals\n\nLabels: build\n\n- [ ] #8 Count quantities in total()\n",
+          ".scratch/issues/8-count-quantities.md": "# Count quantities in total()\n\nLabels: ready-for-agent\nParent: #7\n\n# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "portal-negative",
+      "kind": "negative",
+      "skill": "portal",
+      "invocation": "ordinary",
+      "request": "Give me a list of possible next projects.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {}
+    },
+    {
+      "id": "remedy-positive",
+      "kind": "positive",
+      "skill": "remedy",
+      "invocation": "ordinary",
+      "request": "Fix this PR's valid feedback locally, keep threads open, no push.",
+      "routes": {
+        "accepted": [
+          "skill:remedy"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "files": {
+          "review-comments.md": "# PR 12 review\n\n1. app.py: items without qty should count once; please add a test.\n2. Nit: rename total to order_total. (Author disagreed; unresolved.)\n"
+        }
+      }
+    },
+    {
+      "id": "remedy-negative",
+      "kind": "negative",
+      "skill": "remedy",
+      "invocation": "ordinary",
+      "request": "Review this branch for new defects.",
+      "routes": {
+        "accepted": [
+          "skill:scan",
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        }
+      }
+    },
+    {
+      "id": "reveal-positive",
+      "kind": "positive",
+      "skill": "reveal",
+      "invocation": "ordinary",
+      "request": "Open a draft PR for these changes with the supplied evidence.",
+      "routes": {
+        "accepted": [
+          "skill:reveal"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "files": {
+          "evidence/test-output.txt": "Ran 1 test in 0.001s\n\nOK\n"
+        }
+      }
+    },
+    {
+      "id": "reveal-negative",
+      "kind": "negative",
+      "skill": "reveal",
+      "invocation": "ordinary",
+      "request": "Draft a PR description here without publishing.",
+      "routes": {
+        "accepted": [
+          "ordinary",
+          "skill:dispel"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        }
+      }
+    },
+    {
+      "id": "scan-positive",
+      "kind": "positive",
+      "skill": "scan",
+      "invocation": "ordinary",
+      "request": "Review this branch against its ticket. Report only.",
+      "routes": {
+        "accepted": [
+          "skill:scan"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "files": {
+          "TICKET.md": "# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "scan-negative",
+      "kind": "negative",
+      "skill": "scan",
+      "invocation": "ordinary",
+      "request": "Explain this function.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {}
+    },
+    {
+      "id": "scry-positive",
+      "kind": "positive",
+      "skill": "scry",
+      "invocation": "direct",
+      "request": "Use scry to resolve this map's next decision; make the routine choices.",
+      "routes": {
+        "accepted": [
+          "skill:scry"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n",
+          ".scratch/issues/3-map-gift-cards.md": "# Map: gift cards\n\nLabels: map\n\n- [ ] #4 Decide where balances live\n",
+          ".scratch/issues/4-balances.md": "# Decide where balances live\n\nLabels: decision\nParent: #3\n\nOptions: orders table, separate ledger.\n"
+        }
+      }
+    },
+    {
+      "id": "scry-negative",
+      "kind": "negative",
+      "skill": "scry",
+      "invocation": "ordinary",
+      "request": "Implement this already ready ticket.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "TICKET.md": "# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "setup-mana-positive",
+      "kind": "positive",
+      "skill": "setup-mana",
+      "invocation": "direct",
+      "request": "Use setup-mana with the local tracker.",
+      "routes": {
+        "accepted": [
+          "skill:setup-mana"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {}
+    },
+    {
+      "id": "setup-mana-negative",
+      "kind": "negative",
+      "skill": "setup-mana",
+      "invocation": "ordinary",
+      "request": "Show the current tracker setting.",
+      "routes": {
+        "accepted": [
+          "ordinary",
+          "skill:attune"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n"
+        }
+      }
+    },
+    {
+      "id": "sift-positive",
+      "kind": "positive",
+      "skill": "sift",
+      "invocation": "direct",
+      "request": "Use sift on the inbox; you pick.",
+      "routes": {
+        "accepted": [
+          "skill:sift"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n",
+          ".scratch/issues/9-slow-cart.md": "# Cart is slow with many items\n\nLabels: needs-triage\n\nReported by a shopper.\n"
+        }
+      }
+    },
+    {
+      "id": "sift-negative",
+      "kind": "negative",
+      "skill": "sift",
+      "invocation": "ordinary",
+      "request": "Implement this assigned issue.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "ISSUE.md": "# Issue 15: totals ignore qty\n\nAssigned to you. Labels: ready-for-agent\n\n# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "ultima-positive",
+      "kind": "positive",
+      "skill": "ultima",
+      "invocation": "ordinary",
+      "request": "Audit the project's architecture and data integrity; report only.",
+      "routes": {
+        "accepted": [
+          "skill:ultima"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "filler": 6
+      }
+    },
+    {
+      "id": "ultima-negative",
+      "kind": "negative",
+      "skill": "ultima",
+      "invocation": "ordinary",
+      "request": "Review only this PR diff.",
+      "routes": {
+        "accepted": [
+          "skill:scan",
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "filler": 6
+      }
+    },
+    {
+      "id": "vision-positive",
+      "kind": "positive",
+      "skill": "vision",
+      "invocation": "direct",
+      "request": "Use vision to report roadmap progress; no writes.",
+      "routes": {
+        "accepted": [
+          "skill:vision"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "docs/roadmap.md": "# Roadmap\n\n- [x] Milestone 1: checkout\n- [ ] Milestone 2: gift cards\n"
+        }
+      }
+    },
+    {
+      "id": "vision-negative",
+      "kind": "negative",
+      "skill": "vision",
+      "invocation": "ordinary",
+      "request": "Change this button label.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "ui/button.html": "<button id=\"buy\">Purchase now</button>\n"
+        }
+      }
+    },
+    {
+      "id": "ward-positive",
+      "kind": "positive",
+      "skill": "ward",
+      "invocation": "ordinary",
+      "request": "Keep attending this PR's checks and feedback until it closes.",
+      "routes": {
+        "accepted": [
+          "skill:ward"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "files": {
+          "PR.md": "PR 12 on fixture-work: checks pending, one unresolved review thread.\n"
+        }
+      }
+    },
+    {
+      "id": "ward-negative",
+      "kind": "negative",
+      "skill": "ward",
+      "invocation": "ordinary",
+      "request": "Check the PR's current status once.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "PR.md": "PR 12 on fixture-work: checks pending, one unresolved review thread.\n"
+        }
+      }
+    },
+    {
+      "id": "ordinary-explicit-only",
+      "kind": "overlap",
+      "skill": null,
+      "invocation": "ordinary",
+      "request": "Implement this small ready issue locally.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "ISSUE.md": "# Issue 16: totals ignore qty\n\nLabels: ready-for-agent\n\n# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "review-or-audit",
+      "kind": "overlap",
+      "skill": null,
+      "invocation": "ordinary",
+      "request": "Review the authorization changes in PR 7 only; report.",
+      "routes": {
+        "accepted": [
+          "skill:scan"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "auth.py": "def can_delete(user, record):\n    return user.get(\"admin\") or record[\"owner\"] == user.get(\"id\")\n"
+        },
+        "filler": 40,
+        "files": {
+          "auth.py": "def can_delete(user, record):\n    return user.get(\"admin\", False)\n",
+          "PR-7.md": "PR 7 is fixture-work against main. It changes auth.py only.\n"
+        }
+      }
+    },
+    {
+      "id": "vague-bug",
+      "kind": "overlap",
+      "skill": null,
+      "invocation": "ordinary",
+      "request": "Checkout is flaky. Figure out why.",
+      "routes": {
+        "accepted": [
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "checkout.py": "import random\n\n\ndef reserve(stock, item):\n    if random.random() < 0.1:\n        return False\n    return stock.get(item, 0) > 0\n"
+        }
+      }
+    },
+    {
+      "id": "resume-owned-effort",
+      "kind": "overlap",
+      "skill": "portal",
+      "invocation": "direct",
+      "request": "Use portal run on the quantity-totals effort again; this time keep it local, no push.",
+      "routes": {
+        "accepted": [
+          "skill:portal"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "files": {
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n",
+          ".scratch/issues/7-quantity-totals.md": "# Build: quantity totals\n\nLabels: build\n\n- [ ] #8 Count quantities in total()\n\nEarlier run approved: open PRs and push.\n",
+          ".scratch/issues/8-count-quantities.md": "# Count quantities in total()\n\nLabels: in-progress\nParent: #7\n\n# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        },
+        "dirty_files": {
+          "app.py": "def total(items):\n    # work in progress from the earlier run\n    return sum(item[\"price\"] for item in items)\n"
+        }
+      }
+    },
+    {
+      "id": "missing-sibling",
+      "kind": "overlap",
+      "skill": "portal",
+      "invocation": "direct",
+      "request": "Use portal run on the quantity-totals effort; implement its ready unit locally.",
+      "routes": {
+        "accepted": [
+          "skill:portal"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "exclude_skills": [
+          "cast"
+        ],
+        "files": {
+          "docs/agents/issue-tracker.md": "# Issue tracker\n\nLocal files under .scratch/issues/. Adapter flags: --tracker local\n",
+          ".scratch/issues/7-quantity-totals.md": "# Build: quantity totals\n\nLabels: build\n\n- [ ] #8 Count quantities in total()\n",
+          ".scratch/issues/8-count-quantities.md": "# Count quantities in total()\n\nLabels: ready-for-agent\nParent: #7\n\n# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    },
+    {
+      "id": "supplied-followup",
+      "kind": "overlap",
+      "skill": "ultima",
+      "invocation": "direct",
+      "request": "The Ultima report is done and I already chose finding 2. Apply that fix locally.",
+      "routes": {
+        "accepted": [
+          "skill:ultima",
+          "ordinary"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "publish"
+      ],
+      "setup": {
+        "unavailable": [
+          "question_tool"
+        ],
+        "files": {
+          "reports/ultima-report.md": "# Audit report\n\n1. Architecture: services import each other in a cycle.\n2. Data: total() ignores qty, so orders undercharge. Eligible local fix.\n"
+        }
+      }
+    },
+    {
+      "id": "changed-target",
+      "kind": "overlap",
+      "skill": null,
+      "invocation": "ordinary",
+      "request": "Review this branch here. Report only.",
+      "routes": {
+        "accepted": [
+          "skill:scan"
+        ],
+        "fallback": [
+          "ordinary"
+        ]
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "files": {
+          "prior-authorization.md": "Earlier today: approved to fix and push review findings on other-org/other-repo PR 31.\n"
+        }
+      }
+    },
+    {
+      "id": "no-delegation",
+      "kind": "overlap",
+      "skill": "scan",
+      "invocation": "direct",
+      "request": "Use scan on this branch; report only.",
+      "routes": {
+        "accepted": [
+          "skill:scan"
+        ],
+        "fallback": []
+      },
+      "forbidden_actions": [
+        "write",
+        "git-write",
+        "publish",
+        "delegate"
+      ],
+      "setup": {
+        "branch_files": {
+          "app.py": "def total(items):\n    return sum(item[\"price\"] * item.get(\"qty\", 1) for item in items)\n"
+        },
+        "unavailable": [
+          "children"
+        ],
+        "files": {
+          "TICKET.md": "# Ticket 41: Count item quantities in totals\n\nStatus: ready-for-agent\n\ntotal() ignores the qty field. Multiply each price by qty, defaulting to 1.\n\n## Acceptance criteria\n\n- [ ] total([{\"price\": 2, \"qty\": 3}]) returns 6\n- [ ] Items without qty count once\n"
+        }
+      }
+    }
+  ]
+}

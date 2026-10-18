@@ -1,0 +1,1 @@
+Clean up the prose in docs/image-cache.md, it reads like AI wrote it. Don't change what it says. The YAML sample has to stay exactly as it is, byte for byte, and leave config/image-cache.yaml alone. Edit the doc in place. Don't commit or publish anything.
