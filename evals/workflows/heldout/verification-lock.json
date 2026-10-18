@@ -1,7 +1,7 @@
 {
   "area": "verification-judgment",
   "frozen_on": "2026-10-17",
-  "grader_sha256": "bf7cabbcb7f1a4528744e9e4dc71f3207c49ac8fb3691db26d27b10b58f9179b",
+  "grader_sha256": "2d80c72d7d0665ba2f40d5de0d319b2084f4074e2c2f1bfef5fbf29ec29d8267",
   "groups": {
     "verify-contract-test": {
       "allowed_effects": {

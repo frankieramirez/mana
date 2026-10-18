@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.43.10
+- The verification freeze review signs only its own three cases, so another freeze adding cases to the shared held-out folders no longer voids its approval.
 
 - The workflow evaluator has three frozen held-out verification groups (`verify-contract-test`, `verify-stale-proof`, `verify-unavailable`). Offline tests show a contract-breaking mutation fails while the coupled spy can be removed, and that stale proof, a render after a failed check and a missing runtime earn no execution credit. Nothing earns execution credit automatically: the grader checks its own suite controls and product and protected state, never grades an attempt passed, and lists the claims, the report and every observed command for a human. The second review is pending.
 

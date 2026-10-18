@@ -228,9 +228,14 @@ def check_manifest(manifest):
 
 
 def review_subject_digest():
-    """What the second reviewer signs: manifest, inputs, oracles and grader."""
+    """What the second reviewer signs: manifest, this freeze's inputs and oracles, and grader.
+
+    Other freezes keep their cases in the same heldout folders, so only CASE_IDS count.
+    """
     return digest(encoded({'manifest': digest(MANIFEST.read_bytes()),
-                           'inputs': inventory(INPUTS), 'oracles': inventory(ORACLES),
+                           'inputs': {case: inventory(INPUTS / case) for case in CASE_IDS},
+                           'oracles': {case: [digest(oracle_path(case).read_bytes()),
+                                              oracle_support_digest(case)] for case in CASE_IDS},
                            'grader': grader_digest()}))
 
 

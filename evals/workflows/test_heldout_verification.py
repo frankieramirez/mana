@@ -195,6 +195,15 @@ class FreezeIntegrity(unittest.TestCase):
         self.write_lock(lock)
         self.assertIn('the fixture author must not edit candidate instructions', hv.check_lock())
 
+    def test_review_subject_ignores_other_freezes_cases(self):
+        before = hv.review_subject_digest()
+        (self.root / 'inputs' / 'other-freeze').mkdir()
+        (self.root / 'inputs' / 'other-freeze' / 'request.md').write_text('another freeze\n')
+        (self.root / 'oracles' / 'other-freeze.json').write_text('{}\n')
+        self.assertEqual(hv.review_subject_digest(), before)
+        (self.root / 'inputs' / hv.CASE_IDS[0] / 'request.md').write_text('changed\n')
+        self.assertNotEqual(hv.review_subject_digest(), before)
+
     def test_mana_routes_match_the_pinned_revision(self):
         probe = subprocess.run(['git', '-C', str(REPO), 'cat-file', '-e', MANA_PIN + '^{commit}'],
                                capture_output=True)
