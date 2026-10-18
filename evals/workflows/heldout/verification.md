@@ -2,7 +2,7 @@
 
 [Ticket 107](https://github.com/frankieramirez/mana/issues/107) instantiates the three verification rows of the [effectiveness protocol](../../../docs/specs/effectiveness-evaluation.md). Everything in this note, the oracles and the grader is evaluator-only. A candidate sees one request and one built workspace, nothing else.
 
-Status: frozen by the fixture author on 2026-10-17. After five second-review rounds the grader no longer awards execution credit automatically: it checks only the controls it runs itself and the product and protected state, never grades an attempt as passed, and lists everything else for a human. The earlier review records are kept in `provenance.review_history`, and the second review is pending again for the new inputs, so `ready_for_study()` refuses the groups until an independent reviewer approves them. No model has run against them.
+Status: frozen by the fixture author on 2026-10-17. After six second-review rounds the grader no longer awards execution credit automatically: it checks only the controls it runs itself and the product and protected state, never grades an attempt as passed, and lists everything else for a human. The earlier review records are kept in `provenance.review_history`. An independent reviewer approved the current inputs, so `ready_for_study()` accepts the groups. No model has run against them.
 
 ## Files
 

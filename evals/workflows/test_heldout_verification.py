@@ -397,6 +397,11 @@ class ContractOracle(unittest.TestCase):
             self.assertTrue(all(v['exit'] != 0 for v in mutants.values()), mutants)
             self.assertEqual((result['verdict'], result['controls']), ('needs_adjudication', 'clean'))
 
+    def test_a_directory_symlink_under_tests_is_graded(self):
+        with Workspace('verify-contract-test') as ws:
+            (ws.work / 'tests' / 'fixtures').symlink_to('../shelf')
+            self.assertGreater(ws.grade()['suite_runs']['frozen']['ran'], 0)
+
     def test_every_preregistered_outcome_has_an_executed_variant(self):
         declared = {item['id'] for item in self.oracle['known_good'] + self.oracle['known_bad']}
         self.assertEqual(declared, set(CONTRACT_VARIANTS))

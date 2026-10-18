@@ -387,7 +387,7 @@ def run_suite(oracle, work, replacement=None):
         for key in product_state(work):
             target = copy / key
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(work / key, target)
+            shutil.copy2(work / key, target, follow_symlinks=False)
         if replacement is not None:
             shutil.copy2(ORACLES / replacement, copy / oracle['replaced_path'])
         env = clean_env(copy)
