@@ -42,6 +42,16 @@ def rewrite(root, mutate, refreeze=False):
     (root / hp.REVIEW_NAME).write_text(json.dumps(review, indent=2) + '\n')
 
 
+def reset_review(root):
+    """Put the copied review slot back to pending, so a recorded review of the committed freeze cannot
+    block a test that refreezes the copy."""
+    def pending(manifest, review):
+        review['second_review'] = {'status': 'pending', 'reviewer': None, 'reviewed_freeze_sha256': None,
+                                   'date': None, 'checked': {k: None for k in sorted(hp.REVIEW_CHECKS)},
+                                   'notes': None}
+    rewrite(root, pending)
+
+
 def flip_byte(path):
     data = bytearray(path.read_bytes())
     data[len(data) // 2] ^= 0x01
@@ -135,6 +145,7 @@ class FreezeIntegrity(unittest.TestCase):
                     (self.root / n).write_bytes(data)
 
     def test_exposed_group_becomes_development(self):
+        reset_review(self.root)
         exposure = {'source_group': 'sealed-prose-scope-01', 'reader': 'candidate author', 'date': '2026-10-18',
                     'reason': 'read while tuning'}
         rewrite(self.root, lambda m, r: m['exposure'].append(dict(exposure)), refreeze=True)
@@ -197,6 +208,7 @@ class FreezeIntegrity(unittest.TestCase):
         self.assertIn('freeze history must chain to the current freeze_sha256', hp.verify(self.root))
 
     def test_refreeze_records_history(self):
+        reset_review(self.root)
         before, _ = hp.load(self.root)
         with self.assertRaises(ValueError):
             hp.refreeze(self.root, 'author', 'no change', '2026-10-18')
