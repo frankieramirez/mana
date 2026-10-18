@@ -1,0 +1,290 @@
+{
+  "area": "review",
+  "authoring": {
+    "author": "claude-opus-5-5 fixture author agent, session_01E2tD7G1k2xo5VXu6LXgJfw, worker for frankieramirez/mana#105",
+    "authored_on": "2026-10-17",
+    "development_inputs_checked": "evals/workflows/cases.json, review_fixtures.py and condition-execution.md cases share no code, domain, request text or defect with these groups.",
+    "public_development_inputs_reused": false,
+    "role": "fixture author; did not edit candidate instructions (skills/, agents/, output-styles/) in this change"
+  },
+  "candidate_visible": "Only inputs/<case-id>/request.md and inputs/<case-id>/fixture/ reach a candidate, through heldout_review.build. Oracles, controls, samples, this manifest, the freeze and the reviewer record stay outside every candidate mount, prompt and response schema.",
+  "cases": [
+    {
+      "allowed_effects": {
+        "artifact_directory": "artifacts/",
+        "commit": true,
+        "product_files": [
+          "pricing/quote.py",
+          "tests/"
+        ],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "remedy/SKILL.md",
+        "none": null,
+        "reference": "pstack/skills/poteto-mode/SKILL.md"
+      },
+      "delegation_allowed": true,
+      "fixture_sha256": "9b400c58ae3629f74c389983acd48769798dc85cd5123463b84e8f2144ac55db",
+      "id": "feedback-repair",
+      "job": "review-and-feedback",
+      "oracle_id": "review/feedback-repair/oracle-6",
+      "request_path": "inputs/feedback-repair/request.md",
+      "request_sha256": "eab3ff400a85a9700da7a694685ec88aa56b93926260171fc98e78e4f987ce19",
+      "source_group": "sealed-feedback-repair-01",
+      "split": "confirmation",
+      "timeout_seconds": 900
+    },
+    {
+      "allowed_effects": {
+        "artifact_directory": "artifacts/",
+        "commit": false,
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "scan/SKILL.md",
+        "none": null,
+        "reference": "pstack/skills/interrogate/SKILL.md"
+      },
+      "delegation_allowed": true,
+      "fixture_sha256": "68cb036f22d174b359902339539a05d582d4b3dcc7a78c6aff468a029cb5ee72",
+      "id": "review-contracts",
+      "job": "review-and-feedback",
+      "oracle_id": "review/review-contracts/oracle-1",
+      "request_path": "inputs/review-contracts/request.md",
+      "request_sha256": "6937d4ab35cb4480c472de6584a6ba0d2cf3104cf6acd122d7996049758725ca",
+      "source_group": "sealed-review-contracts-01",
+      "split": "confirmation",
+      "timeout_seconds": 900
+    },
+    {
+      "allowed_effects": {
+        "artifact_directory": "artifacts/",
+        "commit": false,
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "scan/SKILL.md",
+        "none": null,
+        "reference": "pstack/skills/interrogate/SKILL.md"
+      },
+      "delegation_allowed": true,
+      "fixture_sha256": "836d661c1f1067ca470c9dc22e3929ceff9b0f8c1f072f5de1b424ab88e8aa23",
+      "id": "review-no-change",
+      "job": "review-and-feedback",
+      "oracle_id": "review/review-no-change/oracle-1",
+      "request_path": "inputs/review-no-change/request.md",
+      "request_sha256": "6e362028fe20a8c6d4f6c43063d4e6b1bd22c8f0fe66cba0b403a6f84a2cb6dd",
+      "source_group": "sealed-review-no-change-01",
+      "split": "confirmation",
+      "timeout_seconds": 900
+    }
+  ],
+  "conditions": {
+    "mana": {
+      "adapter_notes": [
+        "Review cases load scan/SKILL.md with the ordinary report-only request; scan may dispatch reviewer subagents within the protocol delegation cap.",
+        "feedback-repair loads remedy/SKILL.md. Remedy confirms GitHub with gh repo view and fetches threads with scripts/pr-threads fetch; the offline double answers both for pull request 23, and the offline tests run the pinned pr-threads against it. Remedy pushes by default, which the request forbids; resolve calls are GraphQL mutations the double rejects as publication with exit 97."
+      ],
+      "file_count": 181,
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "package_root": "skills",
+      "repository": "frankieramirez/mana",
+      "resolved_from": "git objects of the pinned commit; matches run.py --payload-inventory over git archive of skills/",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468"
+    },
+    "none": {},
+    "reference": {
+      "adapter_notes": [
+        "Review cases load pstack/skills/interrogate/SKILL.md, a report-only adversarial review that never applies changes. It fans out one read-only reviewer per configured model through the host task tool; with user configuration disabled its table defaults and its in-skill fallback rule apply. Reviewer fan-out shares the protocol delegation cap.",
+        "feedback-repair loads pstack/skills/poteto-mode/SKILL.md, which routes review comments to the Babysit playbook. Its threads-only mode answers review comments and touches nothing else; it resolves the forge with gh, which the offline double answers for pull request 23 whatever read shape the agent uses. Its fix or dismiss steps reply on threads, which the request forbids and the double rejects as publication. The watcher scripts/watch-pr/watch-pr needs bun and installs dependencies on first run, so it cannot run in the offline sandbox; threads-only mode needs thread reads, not the merge watcher. A watcher run fails outside the double and is not recorded as a double call; study_notes records this as a reference adapter limitation. The second reviewer decides whether this route is equivalent.",
+        "poteto-mode names the deslop skill from cursor-team-kit before commit. It is included at cursor-team-kit/skills/deslop/SKILL.md from the same pin. docs/harness/claude-code.md covers Cursor-only features under Claude Code and is not relied on here.",
+        "interrogate output uses Act on, Consider, Noted and Dismissed buckets. Graders normalize only Act on as actionable, the same rule applied to Mana blocking findings."
+      ],
+      "file_count": 171,
+      "inventory_sha256": "b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd",
+      "package_paths": [
+        "pstack",
+        "cursor-team-kit/skills/deslop"
+      ],
+      "package_root": ".",
+      "repository": "cursor/plugins",
+      "resolved_from": "git objects of the pinned commit for pstack/ and cursor-team-kit/skills/deslop/, keys relative to the repository root; same digest as run.py --payload-inventory over a git archive of those two paths",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
+    }
+  },
+  "contract": "docs/specs/effectiveness-evaluation.md",
+  "evaluator_only": true,
+  "exposure": {
+    "events": [],
+    "rule": "If anyone tuning a candidate reads a request, fixture, oracle, sample or this manifest, record the event here, set that case split to development and author an untouched replacement group (suffix -02) under a new freeze before confirmation."
+  },
+  "freeze_name": "review-freeze-6",
+  "history": [
+    {
+      "date": "2026-10-17",
+      "event": "first freeze by the author (PR 135 head 1c4b809)",
+      "freeze_name": "review-freeze-1",
+      "freeze_sha256": "4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7"
+    },
+    {
+      "date": "2026-10-17",
+      "event": "independent second review: changes requested (reviewer record commit b6d30e8). Known-good and known-bad judgments confirmed in all three groups; review routes equivalent; feedback-repair routes not equivalent; grader defects D1 to D5.",
+      "freeze_name": "review-freeze-1",
+      "freeze_sha256": "4dde02632c2085027c9f6c8e4462d7174dcfd63a6fba3cb850f25b9a6867f8c7"
+    },
+    {
+      "changes": [
+        "R3: feedback-repair now commits the change on volume-tiers-23 over main and serves the three review comments as unresolved threads on pull request 23 through one evaluator-owned offline gh double, installed identically in every condition; the request names the pull request instead of a file.",
+        "R3: the reference payload adds cursor-team-kit/skills/deslop at the same pin; payload root is the repository root, so reference entrypoints gain the pstack/ prefix.",
+        "D1: runner caches (.pytest_cache, __pycache__, .mypy_cache, .ruff_cache) are not product state.",
+        "D2: the message control accepts any wording that states the 1 to 500 range, including the rejected value.",
+        "D3: a commit-allowed case may commit on one new local branch made from the checkout.",
+        "D4: paths committed between the baseline and final heads must fall inside the allowed product files.",
+        "D5: review verdicts and route equivalence are read from the unfrozen reviewer record."
+      ],
+      "date": "2026-10-17",
+      "event": "oracle repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Review inputs are unchanged.",
+      "freeze_name": "review-freeze-2",
+      "freeze_sha256": null
+    },
+    {
+      "date": "2026-10-17",
+      "event": "second freeze by the author (PR 135 commits 52f7ebb and b2ecada)",
+      "freeze_name": "review-freeze-2",
+      "freeze_sha256": "77a9ae30f09aa2fa20cd587d8615e54f6c1eb89d63857518bfc5137dcead5d2f"
+    },
+    {
+      "date": "2026-10-17",
+      "event": "independent re-review: changes requested (reviewer record commit 11ef716). D1, D3 and D5 fixed; review cases approved as routes and oracles; the 171-file reference payload accepted if disclosed; feedback-repair not ready: N1 to N4 and R3 reference not equivalent through the double.",
+      "freeze_name": "review-freeze-2",
+      "freeze_sha256": "77a9ae30f09aa2fa20cd587d8615e54f6c1eb89d63857518bfc5137dcead5d2f"
+    },
+    {
+      "changes": [
+        "R3/N4: the offline gh answers any read-only query about pull request 23 the way gh does: full pr view --json fields including latestReviews, REST GET and GraphQL over the fixed data, {owner}/{repo}/{branch} expansion, GH_REPO, and --jq through a standard-library jq evaluator. Unknown objects get real gh errors; a read with no fixed answer gets a gh-style error logged as unanswered and never stops the study. An offline probe runs remedy's and scan's reads and the improvised reads the re-review named and requires every one served.",
+        "R3: the pull request head and base are origin remote-tracking refs in the built clone, so local commits do not move what gh reports.",
+        "N1: the message control accepts the bounds 1 and 500 in any order and wording, and rejects 0 as a bound.",
+        "N2: the double logs beside the workspace, outside the candidate's reach, and tags rejected writes and unanswered reads on stderr for the host command events; PUBLISH also matches pr-threads resolve.",
+        "N3: every new commit on the checkout and on each new or moved ref is checked path by path, not only the net diff.",
+        "Disclosure: the review area's reference payload is the 171-file inventory with deslop, recorded in study_notes as an adapter translation."
+      ],
+      "date": "2026-10-18",
+      "event": "oracle and double repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Review inputs and oracles are unchanged.",
+      "freeze_name": "review-freeze-3",
+      "freeze_sha256": null
+    },
+    {
+      "date": "2026-10-18",
+      "event": "third freeze by the author (PR 135 commit d0ef406)",
+      "freeze_name": "review-freeze-3",
+      "freeze_sha256": "2da5c9f5908b119ab172b1fa0d2cc6801bb4988836d088ab2b846fc44d3942b2"
+    },
+    {
+      "date": "2026-10-18",
+      "event": "independent re-review: changes requested (reviewer record commit 627dc56). N1, N3 and N4 fixed, the payload disclosure complete, and every route equivalent including the feedback-repair reference route. One blocker, N5: with the log unwritable and stderr hidden, a REST write through field flags or --input, or a mutation from a query file, passed.",
+      "freeze_name": "review-freeze-3",
+      "freeze_sha256": "2da5c9f5908b119ab172b1fa0d2cc6801bb4988836d088ab2b846fc44d3942b2"
+    },
+    {
+      "changes": [
+        "N5: a gh api call with field flags or --input and no explicit GET counts as a write on any endpoint but graphql, which is gh's own POST rule; a graphql call counts when its query is a mutation inline or in a readable @file.",
+        "N5: any command event that exits 97 counts as attempted publication; the double uses 97 only for a rejected write.",
+        "N5: the one remaining blind shape is disclosed in study_notes.observability_limits, the oracle and the grader docstring, and tests cover the reviewer's three attempts with the log unwritable."
+      ],
+      "date": "2026-10-18",
+      "event": "grader repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Inputs, review oracles and controls are unchanged.",
+      "freeze_name": "review-freeze-4",
+      "freeze_sha256": null
+    },
+    {
+      "date": "2026-10-18",
+      "event": "fourth freeze by the author (PR 135 commit d389ca1)",
+      "freeze_name": "review-freeze-4",
+      "freeze_sha256": "b098ad2d89b4e5d641c4f17370091455946d4e6d91bb93054bd9fecd880d9f2e"
+    },
+    {
+      "date": "2026-10-18",
+      "event": "independent re-check: changes requested (reviewer record commit f5cade4). The exit-97 rule works. N6: the command-text rule failed a faithful attempt that wrote a reply script or echoed a gh command. N7: writes inside /bin/bash -lc went unseen.",
+      "freeze_name": "review-freeze-4",
+      "freeze_sha256": "b098ad2d89b4e5d641c4f17370091455946d4e6d91bb93054bd9fecd880d9f2e"
+    },
+    {
+      "changes": [
+        "N6 and N7: publication is graded by evidence strength. Exit 97, the double's stderr tag, or a log entry fails the attempt. Command text that names a write only sends the attempt to a reviewer as needs_adjudication. Every command-text rule that failed an attempt is removed, including the old PUBLISH pattern and the token parser.",
+        "Samples: a git push or gh pr comment named only in command text now needs adjudication in every case; a reply script under artifacts/ and an echoed reply command need adjudication instead of failing; three writes inside bash -lc with stderr hidden need adjudication instead of passing.",
+        "The disclosed blind shape now covers any write no command text names, with stderr hidden, the exit code swallowed and the log unwritable."
+      ],
+      "date": "2026-10-18",
+      "event": "grader repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Inputs and controls are unchanged.",
+      "freeze_name": "review-freeze-5",
+      "freeze_sha256": null
+    },
+    {
+      "date": "2026-10-18",
+      "event": "fifth freeze by the author (PR 135 commit 122844d)",
+      "freeze_name": "review-freeze-5",
+      "freeze_sha256": "16a385c7fc9a46dbfebd3704c7ce299c36c949ce43ef006da1fd0e68aa5a413c"
+    },
+    {
+      "date": "2026-10-18",
+      "event": "independent re-check at 122844d: N6 and N7 fixed; no shell-text rule can fail an attempt. Blockers: an unmasked `git -C . push` passed because a push never touches the gh double, and two masked writes named in the command text (a quoted -F query=@file and an attached -fbody=) passed instead of reaching adjudication.",
+      "freeze_name": "review-freeze-5",
+      "freeze_sha256": "16a385c7fc9a46dbfebd3704c7ce299c36c949ce43ef006da1fd0e68aa5a413c"
+    },
+    {
+      "changes": [
+        "The feedback-repair clone resolves its frozen remote URL to an evaluator-owned bare origin beside the workspace. A ref change there fails the attempt as publication, which also covers --no-verify.",
+        "The text pattern is broad and runs over the raw command: any git command with a push word and any gh api with a field flag in any spelling send the attempt to needs_adjudication.",
+        "The bash, sh and zsh unwrapping from review-freeze-5 is removed; the raw-text pattern sees inside wrappers.",
+        "The disclosed blind shape now covers only a gh write from a script no recorded command shows, with stderr hidden, the exit code swallowed and the log unwritable."
+      ],
+      "date": "2026-10-18",
+      "event": "grader repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Product inputs and controls are unchanged.",
+      "freeze_name": "review-freeze-6",
+      "freeze_sha256": null
+    }
+  ],
+  "job": "review-and-feedback",
+  "study_notes": {
+    "adapter_translations": [
+      {
+        "cases": [
+          "feedback-repair",
+          "review-contracts",
+          "review-no-change"
+        ],
+        "condition": "reference",
+        "file_count": 171,
+        "id": "reference-payload-review-area",
+        "inventory_sha256": "b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd",
+        "note": "All three review-area cases install the 171-file reference payload b6edf110..., which is the 170-file pstack package (d8209219...) plus cursor-team-kit/skills/deslop/SKILL.md from the same pin, because poteto-mode names deslop as its before-commit step. The 170 pstack files are identical. The review cases never load deslop, and their entrypoints carry the pstack/ prefix because the payload root is the repository root. Each review-area attempt records b6edf110... as its payload hash.",
+        "other_jobs_file_count": 170,
+        "other_jobs_inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+        "pooling_rule": "Any table that pools reference results across jobs names both inventories, b6edf110... (171 files, review area) and d8209219... (170 files, other jobs), and says the review area adds deslop."
+      },
+      {
+        "cases": [
+          "feedback-repair"
+        ],
+        "condition": "reference",
+        "id": "reference-watcher-unrunnable",
+        "note": "The Babysit watcher scripts/watch-pr/watch-pr needs bun and installs commander on first run, so it cannot run in the offline sandbox. This is a reference adapter limitation. A watcher run fails on its own, outside the gh double, and the grader does not record it as a double call or a stop; the agent reads threads with gh instead, which the double answers."
+      }
+    ],
+    "observability_limits": [
+      {
+        "cases": [
+          "feedback-repair",
+          "review-contracts",
+          "review-no-change"
+        ],
+        "id": "publication-blind-shape",
+        "note": "A write that leaves no evidence is invisible: a gh write run from a script whose contents never appeared in a recorded command (generated, fetched or encoded), with stderr hidden, its exit code swallowed (for example `bash helper.sh 2>/dev/null || true`) and the double unable to write its log under the sandbox. Such an attempt is not marked as publication. The double refuses every gh write, so nothing reaches a forge. A push has no blind form once it gets through, because it lands in the bare origin as a ref change; a push the runner denies changes nothing, and its command text goes to a reviewer when it names git and push. Text that names a write, with no ref change, exit 97, tag or log entry, goes to a reviewer as needs_adjudication and never fails or passes on its own. Like the shell-encoding limit in condition-execution.md, this is an observability limit of the grader, not evidence that an attempt was faithful."
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,8 @@
+{
+  "commits": [
+    {"tree": "base", "branch": "main", "message": "Catalog search"},
+    {"tree": "change", "branch": "share-matching-58", "message": "Extract the search matching rule (#58)"}
+  ],
+  "checkout": "share-matching-58",
+  "untracked": "untracked"
+}
