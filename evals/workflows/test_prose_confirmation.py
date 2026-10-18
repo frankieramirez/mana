@@ -2,9 +2,11 @@
 import copy
 import json
 from pathlib import Path
+import re
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 import conditions
 import prose_ablation as pa
@@ -35,17 +37,56 @@ class Workspace(unittest.TestCase):
         change(data)
         path.write_bytes(conditions.encoded(data))
 
+    def set_review(self, case_set, **fields):
+        """Write the second review this test needs, whatever the committed record holds."""
+        review = {'status': 'pending', 'reviewer': None, 'date': None, 'freeze_sha256': None,
+                  'contested_groups': [], 'notes': None, **fields}
+        self.edit_json(case_set / 'review.json', lambda r: r.update(second_review=review))
+
+    def complete_review(self, case_set, **fields):
+        lock = json.loads((case_set / 'freeze.json').read_text())
+        self.set_review(case_set, **{'status': 'complete', 'reviewer': 'second-reviewer', 'date': '2026-10-18',
+                                     'freeze_sha256': lock['freeze_sha256'], 'notes': 'reviewed', **fields})
+        return lock
+
 
 class LockTests(Workspace):
-    def test_committed_lock_verifies_and_waits_for_the_second_review(self):
+    def test_committed_lock_verifies(self):
         report = pc.verify()
         self.assertEqual(report['parent_slots'], 36)
         self.assertEqual(sorted(report['groups'].values()), sorted(pc.GROUP_KINDS))
         self.assertEqual(report['exposed_groups'], [])
+        self.assertIn(report['second_review'], ('pending', 'complete'))
+        self.assertFalse(report['agent_executed'])
+
+    def test_a_pending_second_review_is_the_only_open_gate(self):
+        case_set = self.copy_set()
+        self.set_review(case_set)
+        report = pc.verify(case_set)
         self.assertEqual(report['second_review'], 'pending')
         self.assertEqual(report['open_gates'], ['second review pending'])
         self.assertFalse(report['confirmation_ready'])
-        self.assertFalse(report['agent_executed'])
+
+    def test_a_completed_uncontested_review_on_this_freeze_makes_the_study_ready(self):
+        case_set = self.copy_set()
+        self.complete_review(case_set)
+        report = pc.verify(case_set)
+        self.assertEqual(report['open_gates'], [])
+        self.assertTrue(report['confirmation_ready'])
+
+    def test_the_lock_pins_the_screen_code(self):
+        lock = json.loads((SET / 'freeze.json').read_text())
+        self.assertEqual(lock['screen_source'], 'evals/workflows/prose_confirmation.py')
+        self.assertEqual(lock['screen_sha256'], conditions.digest((pc.HERE / 'prose_confirmation.py').read_bytes()))
+        case_set = self.copy_set()
+        edited = self.root / 'edited'
+        edited.mkdir()
+        source = (pc.HERE / 'prose_confirmation.py').read_bytes()
+        (edited / 'prose_confirmation.py').write_bytes(source.replace(b'|though|while)', b'|though|while|so)'))
+        self.assertNotEqual((edited / 'prose_confirmation.py').read_bytes(), source)
+        with mock.patch.object(pc, 'HERE', edited):
+            with self.assertRaisesRegex(ValueError, 'freeze.json does not match'):
+                pc.verify(case_set)
 
     def test_lock_pins_payloads_sources_requests_oracles_and_schedule(self):
         lock = json.loads((SET / 'freeze.json').read_text())
@@ -98,20 +139,36 @@ class LockTests(Workspace):
                     pc.verify(case_set)
                 shutil.rmtree(case_set)
 
-    def test_refreeze_after_a_change_sends_a_completed_review_back_to_pending(self):
+    def test_refreeze_after_a_change_moves_a_completed_review_into_history(self):
         case_set = self.copy_set()
-        lock = json.loads((case_set / 'freeze.json').read_text())
-        self.edit_json(case_set / 'review.json', lambda r: r['second_review'].update(
-            status='complete', reviewer='second-reviewer', date='2026-10-18', freeze_sha256=lock['freeze_sha256']))
-        self.assertTrue(pc.verify(case_set)['confirmation_ready'])
+        lock = self.complete_review(case_set, contested_groups=['pfc1-absent-cause'])
+        past = len(json.loads((case_set / 'review.json').read_text())['history'])
         path = case_set / 'inputs/pfc-hold-expiry/branch-notes.md'
         path.write_bytes(path.read_bytes().replace(b'5 to 2', b'6 to 1'))
-        new = pc.refreeze(case_set)
+        new = pc.refreeze(case_set, resolution='vote corrected')
         self.assertNotEqual(new, lock['freeze_sha256'])
         review = json.loads((case_set / 'review.json').read_text())
         self.assertEqual(review['freeze_sha256'], new)
         self.assertEqual(review['second_review']['status'], 'pending')
+        self.assertEqual(len(review['history']), past + 1)
+        self.assertEqual(review['history'][-1]['resolution'], 'vote corrected')
+        self.assertEqual(review['history'][-1]['review']['contested_groups'], ['pfc1-absent-cause'])
+        self.assertEqual(review['history'][-1]['review']['freeze_sha256'], lock['freeze_sha256'])
         self.assertIn('second review pending', pc.verify(case_set)['open_gates'])
+
+    def test_review_history_records_the_first_second_review(self):
+        history = json.loads((SET / 'review.json').read_text())['history']
+        first = history[0]['review']
+        self.assertEqual(first['status'], 'complete')
+        self.assertEqual(first['reviewer'], 'claude-pr-140-second-reviewer')
+        self.assertEqual(first['contested_groups'], ['pfc2-adjacent-config', 'pfc4-conditional-quantity'])
+        self.assertTrue(history[0]['resolution'])
+        case_set = self.copy_set()
+        lock = json.loads((case_set / 'freeze.json').read_text())
+        self.edit_json(case_set / 'review.json', lambda r: r['history'][0]['review'].update(
+            freeze_sha256=lock['freeze_sha256']))
+        with self.assertRaisesRegex(ValueError, 'past review cannot name the current freeze'):
+            pc.verify(case_set)
 
 
 class AdapterTests(Workspace):
@@ -198,8 +255,52 @@ class OracleTests(Workspace):
         oracle = oracle_for(case)
         valid = next(e['text'] for e in oracle['examples'] if e['id'] == 'g1-reason-absent-said')
         self.assertEqual(pc.screen(oracle, case, valid)['verdict'], 'screen_pass')
+        self.assertEqual(pc.screen(oracle, case, pc.stylize(valid))['verdict'], 'screen_pass')
         invented = valid.replace('instead of 7.', 'instead of 7 to give more patrons a turn.')
-        self.assertEqual(pc.screen(oracle, case, invented)['failures'], ['invented-cause'])
+        for text in (invented, pc.stylize(invented)):
+            result = pc.screen(oracle, case, text)
+            self.assertEqual(result['verdict'], 'needs_adjudication')
+            self.assertIn('unmapped-clause', result['cues'])
+
+    def test_a_clause_passes_only_when_templates_cover_every_word(self):
+        case = self.by_id['pfc-bikeshare-pricing']
+        oracle = oracle_for(case)
+        valid = next(e['text'] for e in oracle['examples'] if e['id'] == 'g1-plain')
+        self.assertEqual(pc.screen(oracle, case, valid)['verdict'], 'screen_pass')
+        swaps = {
+            'riders swapped': valid.replace('Annual members ride', 'Casual riders ride'),
+            'added rider group': valid.replace('for everyone,', 'for everyone except students,'),
+            'causal join': valid.replace("; it may change", ", so it may change"),
+            'unlock narrowed': valid.replace('unlock any bike', 'unlock a classic bike'),
+        }
+        for name, text in swaps.items():
+            with self.subTest(name):
+                self.assertNotEqual(text, valid)
+                self.assertNotEqual(pc.screen(oracle, case, text)['verdict'], 'screen_pass')
+        self.assertTrue(pc.mapped('annual members ride classic bikes free for the first 30 minutes',
+                                  re.compile('|'.join(t for s in oracle['statements'] for t in s['templates']))))
+
+    def test_no_labeled_failing_output_ever_passes_and_no_valid_one_ever_fails(self):
+        probes = 0
+        for case in self.cases:
+            oracle = oracle_for(case)
+            for example in oracle['examples']:
+                probes += example['id'].startswith('r1-')
+                for text in (example['text'], pc.stylize(example['text'], case['protected_spans'])):
+                    verdict = pc.screen(oracle, case, text)['verdict']
+                    if example['label'] == 'failing':
+                        self.assertNotEqual(verdict, 'screen_pass', example['id'])
+                    else:
+                        self.assertNotEqual(verdict, 'screen_fail', example['id'])
+        self.assertEqual(probes, 44)
+
+    def test_quoting_a_directive_name_never_stands_in_for_explaining_it(self):
+        case = self.by_id['pfc-kiosk-logrotate']
+        oracle = oracle_for(case)
+        names = next(e['text'] for e in oracle['examples'] if e['id'] == 'b8-names-only')
+        result = pc.screen(oracle, case, names)
+        self.assertEqual(result['verdict'], 'needs_adjudication')
+        self.assertTrue({'weekly', 'compress', 'delaycompress', 'missingok', 'rotate-8-kept'} <= set(result['unconfirmed']))
 
     def test_protected_spans_are_conclusive_and_excluded_from_prose_checks(self):
         case = self.by_id['pfc-kiosk-logrotate']
@@ -207,8 +308,9 @@ class OracleTests(Workspace):
         block = case['protected_spans'][0]['text']
         bare = pc.screen(oracle, case, block)
         self.assertTrue(bare['exact_spans']['logrotate-block'])
-        self.assertIn('wrong-interpretation', bare['failures'])
-        self.assertIn('lost-fact', bare['failures'])
+        self.assertEqual(bare['failures'], [])
+        self.assertEqual(bare['verdict'], 'needs_adjudication')
+        self.assertTrue({'weekly', 'ask-imran', 'path-scope'} <= set(bare['unconfirmed']))
         case = self.by_id['pfc-dome-autoclose']
         oracle = oracle_for(case)
         valid = next(e['text'] for e in oracle['examples'] if e['id'] == 'g1-plain')
@@ -221,10 +323,15 @@ class OracleTests(Workspace):
         base = oracle_for(case)
         broken = {
             'no failure opportunity': lambda o: o.update(checks=[c for c in o['checks'] if c['kind'] == 'preserve']),
-            'one legitimate alternative': lambda o: o.update(examples=[e for e in o['examples'] if e['id'] != 'g2-bullets']),
+            'one legitimate alternative': lambda o: o.update(examples=[
+                e for e in o['examples'] if e['label'] == 'failing' or e['id'] == 'g1-including']),
             'no polished failure': lambda o: [e.update(polished=False) for e in o['examples']],
             'valid example screened as failure': lambda o: o['examples'][0].update(screen='screen_fail'),
-            'failing example screened as pass': lambda o: o['examples'][3].update(screen='screen_pass'),
+            'failing example screened as pass': lambda o: next(
+                e for e in o['examples'] if e['label'] == 'failing').update(screen='screen_pass'),
+            'no statement templates': lambda o: o.update(statements=[]),
+            'wildcard template': lambda o: o['statements'][0]['templates'].append('why did the form .*'),
+            'gap template': lambda o: o['statements'][0]['templates'].append(r'the form \w+ my proposal'),
             'not evaluator only': lambda o: o.update(evaluator_only=False),
             'wrong group kind': lambda o: o.update(group_kind='anything'),
             'extra field': lambda o: o.update(expected_rewrite='x'),
@@ -296,10 +403,21 @@ class GateTests(Workspace):
                     'contested_groups': [], 'notes': None, **fields}))
                 with self.assertRaises(ValueError):
                     pc.verify(case_set)
-        self.edit_json(case_set / 'review.json', lambda r: r.update(second_review={
-            'status': 'complete', 'reviewer': 'second-reviewer', 'date': '2026-10-18',
-            'freeze_sha256': lock['freeze_sha256'], 'contested_groups': ['pfc2-adjacent-config'], 'notes': 'x'}))
+        self.complete_review(case_set, contested_groups=['pfc2-adjacent-config'])
         self.assertEqual(pc.verify(case_set)['open_gates'], ['replace contested groups: pfc2-adjacent-config'])
+
+    def test_contested_groups_must_name_real_groups(self):
+        case_set = self.copy_set()
+        for contested in (['pfc9-imaginary'], ['pfc-dome-autoclose'], ['pfc2-adjacent-config', 'adjacent-code-config']):
+            with self.subTest(contested):
+                self.complete_review(case_set, contested_groups=contested)
+                with self.assertRaisesRegex(ValueError, 'contests a group that does not exist'):
+                    pc.verify(case_set)
+        self.edit_json(case_set / 'review.json', lambda r: r['history'][0]['review'].update(
+            contested_groups=['pfc7-gone']))
+        self.set_review(case_set)
+        with self.assertRaisesRegex(ValueError, 'contests a group that does not exist'):
+            pc.verify(case_set)
 
 
 if __name__ == '__main__':

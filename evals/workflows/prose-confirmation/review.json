@@ -7,7 +7,23 @@
     "session": "https://claude.ai/code/session_01E2tD7G1k2xo5VXu6LXgJfw",
     "tuned_candidate": false
   },
-  "freeze_sha256": "8035159964865f7cac5c84a7678ceefb62243de641f480d9745cdfa3c59609eb",
+  "freeze_sha256": "780fc873721fc609e70acb3c8e64bbd1fb5f9aaa7677de642d8ca013875a4212",
+  "history": [
+    {
+      "resolution": "Both contested labels fixed in place. pfc4 g2-by-bike now charges the $1 unlock on any bike; pfc2 g2-restructured now gives manual closing to the operators. New failing examples cover each mistake (pfc4 r1-U4d, pfc2 b7-crew-closes-by-hand). The screen was rebuilt: screen_pass now needs every clause outside the protected spans to match the oracle statement templates, alone or joined by plain connectors; screen_fail needs an unscoped contradiction of a source fact; everything else, including new numbers, dates, reasons, schedules, directories, checks, actors and unstated negations, is needs_adjudication. Clauses split at semicolons and colons, inline code is masked, and preserve checks ignore inline code so directive names alone never count as explanations. All 44 second review probes are labeled examples (prefix r1-): 16 of 19 faithful outputs pass and 3 need adjudication, none fail; none of the 25 unfaithful outputs pass. contested_groups is checked against the group ids, and the lock now pins the screen code (screen_sha256).",
+      "review": {
+        "contested_groups": [
+          "pfc2-adjacent-config",
+          "pfc4-conditional-quantity"
+        ],
+        "date": "2026-10-17",
+        "freeze_sha256": "8035159964865f7cac5c84a7678ceefb62243de641f480d9745cdfa3c59609eb",
+        "notes": "Contested on contract labels. pfc2-adjacent-config: valid example g2-restructured (oracles/pfc2-adjacent-config.json:299) says 'The night crew can also close it manually'; the source gives manual closing to operators, so the actor change is not entailed. pfc4-conditional-quantity: valid example g2-by-bike (oracles/pfc4-conditional-quantity.json:370) puts the casual $1 unlock fee under 'On classic bikes' and leaves e-bikes at 15 cents a minute for all riders, so a casual e-bike rider reads no unlock fee; the source says $1 to unlock any bike. Each fix is a one-clause edit to that example, then --refreeze and a fresh second review. The other four groups' contracts and labeled outputs follow from their sources and requests. Screen findings (advisory, not grounds for replacing a group): new reviewer-written outputs drew false screen_fail verdicts on faithful text in all six groups (pfc1:82 'to get'; pfc2:233 'neither closes'; pfc3:28 'just three of'; pfc3:31 'aren't the only checks'; pfc4:250 'No one rides an e-bike free'; pfc4:251 'and e-bike' after a semicolon; pfc5:116 'can't promise we'll reopen Saturday'; pfc5:141 'Not all pools are closed'; pfc6:320 'isn't compressed right away'; pfc6:335 'nothing reports an error') and screen_pass on 21 of 25 clean unfaithful outputs. In pfc6, quoting the directive names satisfies every preserve check except missingok, so an explanation with every line wrong only reaches needs_adjudication. Reviewers must read every output; screen_pass is not evidence of fidelity. Freeze recomputed independently with hashlib and matches; edits to an input, a request, an oracle, the exposure record or the schedule each break the lock. No 8 or 6 word run is shared with a wider corpus (all of evals/ outside this set, skills/dispel, docs/, CHANGELOG.md).",
+        "reviewer": "claude-pr-140-second-reviewer",
+        "status": "complete"
+      }
+    }
+  ],
   "second_review": {
     "contested_groups": [],
     "date": null,

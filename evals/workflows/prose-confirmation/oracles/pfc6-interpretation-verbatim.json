@@ -1,32 +1,107 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "group": "pfc6-interpretation-verbatim",
   "case_id": "pfc-kiosk-logrotate",
   "group_kind": "interpretation-verbatim",
   "evaluator_only": true,
   "canary": "mana-confirmation-canary-f63a19be-interpretation-verbatim",
-  "contract": "Rewrite the section, keep the config block byte for byte, and explain each line under it because the user asked for interpretation. Correct readings: the block applies to every .log file in /var/log/kiosk/; weekly rotates once a week; rotate 8 keeps eight rotated logs and removes older ones; compress compresses rotated logs (gzip by default); delaycompress postpones compression by one rotation, so the most recently rotated log stays uncompressed; missingok means a missing log file is skipped without an error. The prose keeps the pointer to ask Imran before touching it. No directive the block lacks (size limits, copytruncate, mail, scripts, date suffixes, empty-file handling) is described, and no team motivation is added.",
+  "contract": "Rewrite the section, keep the config block byte for byte, and explain each line under it because the user asked for interpretation. Correct readings: the block applies to every .log file in /var/log/kiosk/; weekly rotates once a week; rotate 8 keeps eight rotated logs and removes older ones; compress compresses rotated logs (gzip by default); delaycompress postpones compression by one rotation, so the most recently rotated log stays uncompressed; missingok means a missing log file is skipped without an error. The prose keeps the pointer to ask Imran before touching it. No directive the block lacks (size limits, copytruncate, mail, scripts, date suffixes, empty-file handling, other directories) is described, and no team motivation is added. Naming a directive is not explaining it.",
   "source_statements": [
     "The kiosk logs are rotated automatically by logrotate, using the config below.",
     "If something looks off, ask Imran before touching it.",
     "The config block: /var/log/kiosk/*.log with weekly, rotate 8, compress, delaycompress, missingok."
   ],
   "legitimate_alternatives": [
-    "Explain the directives as a bulleted list or as one paragraph.",
-    "Say \"about two months of history\" alongside eight weekly rotations.",
+    "Explain the directives as a bulleted list, a numbered list or one paragraph.",
+    "Say \"about two months of history\" alongside eight weekly rotations, which a reviewer confirms.",
     "Name gzip as the default compressor, or just say compressed."
+  ],
+  "statements": [
+    {
+      "id": "labels",
+      "templates": [
+        "kiosk logs",
+        "what each line does",
+        "line by line",
+        "in plain terms",
+        "(?:weekly|rotate 8|compress|delaycompress|missingok)"
+      ]
+    },
+    {
+      "id": "intro",
+      "templates": [
+        "(?:the )?kiosk logs (?:are|get) rotated automatically by logrotate(?: (?:using|with) (?:the|this) config(?: below)?)?",
+        "logrotate (?:rotates|handles) the kiosk logs(?: automatically)?(?: (?:using|with) (?:the|this) config(?: below)?)?",
+        "logrotate takes care of rotating the kiosk logs(?: on its own| automatically)?(?: (?:using|with) (?:the|this) config(?: below)?)?"
+      ]
+    },
+    {
+      "id": "imran",
+      "templates": [
+        "(?:if (?:something|anything) (?:looks|seems) (?:off|wrong), )?(?:ask|check with) imran before (?:touching it|you touch it|you change anything|changing anything)(?: if (?:something|anything) (?:looks|seems) (?:off|wrong))?"
+      ]
+    },
+    {
+      "id": "path",
+      "templates": [
+        "(?:the first line|/var/log/kiosk/\\.log(?: \\{ \\.\\.\\. \\})?|the block|the config|it) (?:applies(?: the settings)? to|covers|selects|picks) (?:(?:every|each|all|any) (?:file ending in \\.log|\\.log file|file in /var/log/kiosk/ whose name ends in \\.log|file whose name ends in \\.log)(?: (?:in|under) /var/log/kiosk/)?)",
+        "(?:(?:every|each|all|any) (?:file ending in \\.log|\\.log file|file in /var/log/kiosk/ whose name ends in \\.log|file whose name ends in \\.log)(?: (?:in|under) /var/log/kiosk/)?) (?:is|are|gets|get) (?:covered|rotated once a week)",
+        "(?:(?:every|each|all|any) (?:file ending in \\.log|\\.log file|file in /var/log/kiosk/ whose name ends in \\.log|file whose name ends in \\.log)(?: (?:in|under) /var/log/kiosk/)?) rotates once a week"
+      ]
+    },
+    {
+      "id": "weekly",
+      "templates": [
+        "(?:weekly )?(?:rotates|rotate) (?:the logs|them|the kiosk logs) once a week",
+        "(?:they|the logs) (?:rotate|are rotated|get rotated) once a week",
+        "a new log is started once a week"
+      ]
+    },
+    {
+      "id": "rotate-8",
+      "templates": [
+        "(?:rotate 8 |logrotate )?keeps (?:the )?(?:eight|8)(?: most recent)? (?:rotated|old) (?:logs|copies) and (?:deletes|removes) (?:anything older|older ones|the oldest)",
+        "(?:eight|8) (?:rotated|old) (?:logs|copies) are kept(?:,? and (?:anything older|older ones) (?:is|are|gets|get) (?:deleted|removed))?",
+        "anything older (?:is|gets) (?:removed|deleted)"
+      ]
+    },
+    {
+      "id": "compress",
+      "templates": [
+        "(?:compress )?(?:compresses|gzips) (?:the )?rotated logs(?: with gzip)?",
+        "(?:rotated|old) (?:logs|copies) (?:are|get) (?:compressed|gzipped)(?:,? but not right away)?"
+      ]
+    },
+    {
+      "id": "delaycompress",
+      "templates": [
+        "(?:delaycompress )?waits (?:one rotation|until the next rotation)(?: before compressing)?,? so the (?:newest|most recent|most recently rotated|latest)(?: rotated| old)? (?:log|copy|one) stays uncompressed(?: for a week)?",
+        "(?:delaycompress means )?the (?:newest|most recent|most recently rotated|latest)(?: rotated| old)? (?:log|copy|one) (?:isn\\'t|is not) compressed (?:right away|until the next rotation)",
+        "(?:it|the (?:newest|most recent|most recently rotated|latest)(?: rotated| old)? (?:log|copy|one)) waits until the next rotation,? so it stays uncompressed(?: for a week)?",
+        "rotated logs are compressed one rotation late,? so the (?:newest|most recent|most recently rotated|latest)(?: rotated| old)? (?:log|copy|one) stays uncompressed"
+      ]
+    },
+    {
+      "id": "missingok",
+      "templates": [
+        "(?:missingok )?skips a missing log file without (?:reporting )?an error",
+        "(?:if a log file (?:is missing|doesn't exist), )?logrotate (?:skips it|moves on)(?: and (?:does not|doesn't) complain| and nothing reports an error| without an error)?",
+        "if a log file doesn't exist, logrotate doesn't treat it as an error",
+        "a missing log file is (?:fine|skipped without an error)",
+        "a missing log file (?:doesn't|does not) cause an error"
+      ]
+    }
   ],
   "checks": [
     {
       "id": "weekly",
       "kind": "preserve",
       "failure": "wrong-interpretation",
-      "absent": "fail",
       "present_all": [
-        "\\bweek"
+        "\\b(once\\s+a|every|each|per)\\s+week\\b"
       ],
       "contradict": [
-        "\\b(every\\s+day|each\\s+day|once\\s+a\\s+day|every\\s+(8|eight)\\s+(days|weeks))\\b"
+        "\\b(every\\s+day|each\\s+day|once\\s+a\\s+day|daily|monthly|hourly|every\\s+(8|eight)\\s+(days|weeks))\\b"
       ],
       "review_question": "Does the explanation say the logs rotate once a week?"
     },
@@ -35,14 +110,13 @@
       "kind": "preserve",
       "failure": "wrong-interpretation",
       "present_all": [
-        "\\b8\\b|\\beight\\b",
-        "\\b(keep\\w*|kept|retain\\w*|delet\\w*|remov\\w*|discard\\w*)\\b"
+        "\\b(8|eight)\\b[^.\\n]*\\b(keep\\w*|kept|retain\\w*)\\b|\\b(keep\\w*|kept|retain\\w*)\\b[^.\\n]*\\b(8|eight)\\b",
+        "\\b(delet\\w*|remov\\w*|discard\\w*)\\b"
       ],
       "contradict": [
         "\\b(8|eight)\\s+days\\b",
         "\\bevery\\s+(8|eight)\\b",
-        "\\brotat\\w*\\s+(8|eight)\\s+times\\b",
-        "\\b(8|eight)\\s+(rotations?|times)\\s+(a|per)\\s+(week|day|month)\\b"
+        "\\brotat\\w*\\s+(8|eight)\\s+times\\b"
       ],
       "review_question": "Does the explanation say eight rotated logs are kept and older ones removed?"
     },
@@ -50,9 +124,8 @@
       "id": "compress",
       "kind": "preserve",
       "failure": "wrong-interpretation",
-      "absent": "fail",
       "present_all": [
-        "\\bcompress|\\bgzip"
+        "\\b(compressed|compresses|gzip\\w*)\\b"
       ],
       "review_question": "Does the explanation say rotated logs are compressed?"
     },
@@ -61,12 +134,11 @@
       "kind": "preserve",
       "failure": "wrong-interpretation",
       "present_all": [
-        "\\b(delay\\w*|wait\\w*|postpone\\w*|until\\s+the\\s+(next|following)|one\\s+(cycle|rotation|week)|next\\s+(rotation|cycle|week)|most\\s+recent\\w*|newest|latest|previous)\\b",
-        "\\b(uncompressed|not\\s+(yet\\s+)?compressed|isn't\\s+compressed|plain\\s+text|left\\s+as\\s+is)\\b"
+        "\\b(wait\\w*|postpone\\w*|until\\s+the\\s+(next|following)|next\\s+rotation|one\\s+rotation\\s+late)\\b",
+        "\\b(uncompressed|not\\s+(yet\\s+)?compressed|isn't\\s+compressed)\\b"
       ],
       "contradict": [
-        "\\bcompress\\w*{S}(?<!instead of )(?<!rather than )(?<!not )\\b(immediately|right\\s+away|at\\s+once)\\b",
-        "\\b(immediately|right\\s+away)\\s+(compress|gzip)"
+        "\\bcompress\\w*{S}(?<!instead of )(?<!rather than )\\b(immediately|right\\s+away|at\\s+once)\\b"
       ],
       "review_question": "Does the explanation say compression waits one rotation, leaving the newest rotated log uncompressed?"
     },
@@ -75,12 +147,11 @@
       "kind": "preserve",
       "failure": "wrong-interpretation",
       "present_all": [
-        "\\bmissing\\b|\\babsent\\b|\\bdoesn't\\s+exist\\b|\\bdoes\\s+not\\s+exist\\b|\\bisn't\\s+there\\b",
-        "\\b(errors?|complain\\w*|fail\\w*|warn\\w*|skip\\w*|ignor\\w*|moves\\s+on|carries\\s+on)\\b"
+        "\\b(missing|doesn't\\s+exist|does\\s+not\\s+exist|absent)\\b",
+        "\\b(error|complain\\w*|skip\\w*|moves\\s+on|carries\\s+on|fine)\\b"
       ],
       "contradict": [
-        "\\bmiss\\w*{S}\\b(creat\\w*|makes?|touch\\w*)\\b",
-        "\\b(miss\\w*|absent)\\b{S}(?<!not )(?<!n't )(?<!never )(?<!no )\\b(raises?|throws?|causes?|reports?)\\s+(an\\s+)?(error|failure|warning)"
+        "\\bmiss\\w*{S}\\b(creat\\w*|makes?)\\b"
       ],
       "review_question": "Does the explanation say a missing log file is skipped without an error?"
     },
@@ -89,15 +160,28 @@
       "kind": "preserve",
       "failure": "wrong-interpretation",
       "present_all": [
-        "\\.log\\b|/var/log/kiosk"
+        "\\b(every|each|all|any)\\s+(\\.log\\s+)?(log\\s+)?files?\\b"
       ],
-      "review_question": "Does the explanation say the block covers the .log files in /var/log/kiosk/?"
+      "review_question": "Does the explanation say the block covers every .log file in /var/log/kiosk/?"
+    },
+    {
+      "id": "directive-explained",
+      "kind": "forbid",
+      "failure": "wrong-interpretation",
+      "adjudicate": [
+        "`weekly`(?![^\\n]*\\bweek\\b)",
+        "`rotate\\s+8`(?![^\\n]*\\b(keep\\w*|kept|retain\\w*)\\b)",
+        "`compress`(?![^\\n]*\\b(compressed|compresses|gzip\\w*)\\b)",
+        "`delaycompress`(?![^\\n]*\\b(wait\\w*|until|next|late|postpone\\w*)\\b)",
+        "`missingok`(?![^\\n]*\\b(missing|exist\\w*|absent)\\b)",
+        "\\b(two|three|four|five)\\b"
+      ],
+      "review_question": "Does each named directive carry its own correct explanation?"
     },
     {
       "id": "ask-imran",
       "kind": "preserve",
       "failure": "lost-fact",
-      "absent": "fail",
       "present_all": [
         "\\bimran\\b"
       ],
@@ -107,18 +191,18 @@
       "id": "no-invented-directive",
       "kind": "forbid",
       "failure": "invented-directive",
-      "contradict": [
+      "adjudicate": [
         "\\b\\d+\\s*(k|m|g)b\\b|\\b(kilo|mega|giga)bytes?\\b",
         "\\bcopytruncate\\b|\\btruncat\\w*",
         "\\be-?mail\\w*|\\bmail(s|ed)?\\b",
-        "\\bpostrotate\\b|\\bprerotate\\b|\\brestart\\w*|\\breload\\w*|\\bsignal\\w*|\\bhup\\b",
-        "\\bnotifempty\\b|\\bdateext\\b|\\bdate\\s+(suffix|stamp)|\\btimestamp\\w*",
-        "\\b(daily|monthly|hourly)\\b"
-      ],
-      "adjudicate": [
+        "\\bpostrotate\\b|\\bprerotate\\b|\\brestart\\w*|\\breload\\w*|\\bsignal\\w*",
+        "\\bnotifempty\\b|\\bdateext\\b|\\bdate\\b|\\btimestamp\\w*",
         "\\bcron\\b",
         "\\bempty\\b",
-        "\\bsize\\b"
+        "\\bsize\\b",
+        "\\barchive\\w*|\\bolddir\\b",
+        "\\b(sunday|monday|midnight)\\b",
+        "\\b(live|current|active)\\s+log"
       ],
       "review_question": "Does the explanation avoid behavior that no line of the block configures?"
     },
@@ -126,13 +210,11 @@
       "id": "no-invented-motivation",
       "kind": "forbid",
       "failure": "invented-rationale",
-      "contradict": [
-        "\\b(we|the\\s+team|imran|ops)\\s+(chose|picked|decided)\\b",
-        "\\b(compliance|audit|retention\\s+policy|legal\\s+hold)\\w*"
-      ],
       "adjudicate": [
-        "\\bto\\s+(save|free|reduce|keep)\\s+(up\\s+)?(disk|space|storage)",
-        "\\bbecause\\b|\\bso\\s+that\\b|\\bin\\s+order\\s+to\\b"
+        "\\b(we|the\\s+team|imran|ops)\\s+(chose|picked|decided)\\b",
+        "\\b(compliance|audit|retention\\s+policy|legal\\s+hold)\\w*",
+        "\\bto\\s+(save|free|reduce)\\b",
+        "\\b(because|so\\s+that|in\\s+order\\s+to)\\b"
       ],
       "review_question": "Does the section avoid stating why the team chose these settings?"
     }
@@ -152,15 +234,15 @@
       "label": "valid",
       "polished": false,
       "text": "# Kiosk logs\n\nThe kiosk logs are rotated automatically by logrotate with the config below. Ask Imran before touching it if something looks wrong.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nIn plain terms: every `.log` file in `/var/log/kiosk/` is rotated once a week. logrotate keeps 8 old copies, about two months of history, and removes the oldest when a new one is made. Old copies are compressed, except the newest old copy, which stays uncompressed until the following rotation. If a log file is missing, logrotate moves on without an error.",
-      "screen": "screen_pass",
+      "screen": "needs_adjudication",
       "failures": [],
-      "note": ""
+      "note": "\"about two months of history\" is a derived span a reviewer confirms."
     },
     {
       "id": "g3-terse",
       "label": "valid",
       "polished": false,
-      "text": "# Kiosk logs\n\nlogrotate handles the kiosk logs with the config below; ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nThe block covers each `.log` file under `/var/log/kiosk/`. They rotate weekly and eight rotated copies are kept; anything older is removed. Rotated copies get compressed, but the newest one is compressed at the next rotation instead of right away, so it stays uncompressed for a week. A missing log file is fine: logrotate skips it and does not complain.",
+      "text": "# Kiosk logs\n\nlogrotate handles the kiosk logs with the config below; ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nThe block covers each `.log` file under `/var/log/kiosk/`. They rotate once a week and eight rotated copies are kept; anything older is removed. Rotated copies get compressed, but the newest one waits until the next rotation, so it stays uncompressed for a week. A missing log file is fine: logrotate skips it and does not complain.",
       "screen": "screen_pass",
       "failures": [],
       "note": ""
@@ -192,10 +274,8 @@
       "label": "failing",
       "polished": true,
       "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nEvery `.log` file in `/var/log/kiosk/` rotates once a week, or sooner if it grows past 100MB. logrotate keeps eight rotated logs and deletes older ones. Rotated logs are compressed one rotation late, so the newest rotated log stays uncompressed. A missing log file is skipped without an error.",
-      "screen": "screen_fail",
-      "failures": [
-        "invented-directive"
-      ],
+      "screen": "needs_adjudication",
+      "failures": [],
       "note": ""
     },
     {
@@ -203,10 +283,8 @@
       "label": "failing",
       "polished": true,
       "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nEvery `.log` file in `/var/log/kiosk/` rotates once a week. logrotate keeps eight rotated logs and deletes older ones; the team chose eight to meet the audit retention policy. Rotated logs are compressed one rotation late, so the newest rotated log stays uncompressed. A missing log file is skipped without an error.",
-      "screen": "screen_fail",
-      "failures": [
-        "invented-rationale"
-      ],
+      "screen": "needs_adjudication",
+      "failures": [],
       "note": ""
     },
     {
@@ -236,11 +314,117 @@
       "label": "failing",
       "polished": true,
       "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nEvery `.log` file in `/var/log/kiosk/` rotates once a week. logrotate keeps eight rotated logs and deletes older ones. Rotated logs are compressed one rotation late, so the newest rotated log stays uncompressed. A missing log file is skipped without an error.",
-      "screen": "screen_fail",
-      "failures": [
-        "lost-fact"
-      ],
+      "screen": "needs_adjudication",
+      "failures": [],
       "note": ""
+    },
+    {
+      "id": "b8-names-only",
+      "label": "failing",
+      "polished": false,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `weekly` is set.\n- `rotate 8` is set.\n- `compress` is set.\n- `delaycompress` is set.\n- `missingok` is set.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Quotes every directive and explains none of them."
+    },
+    {
+      "id": "b9-wrong-meanings",
+      "label": "failing",
+      "polished": false,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `weekly` keeps the logs.\n- `rotate 8` deletes anything older.\n- `compress` removes old copies.\n- `delaycompress` keeps one copy.\n- `missingok` skips the next rotation.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Uses interpretation words, each attached to the wrong directive."
+    },
+    {
+      "id": "r1-F6a-numbered",
+      "label": "valid",
+      "polished": false,
+      "text": "## Kiosk logs\n\nlogrotate takes care of rotating the kiosk logs on its own using this config. Check with Imran before you touch it if anything seems off.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nLine by line:\n\n1. `/var/log/kiosk/*.log` picks every file in /var/log/kiosk/ whose name ends in .log.\n2. `weekly`: a new log is started once a week.\n3. `rotate 8`: eight old logs are kept and anything older gets deleted.\n4. `compress`: old logs are gzipped.\n5. `delaycompress`: the most recent old log isn't compressed until the next rotation.\n6. `missingok`: if a log file doesn't exist, logrotate doesn't treat it as an error.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": "Second review probe."
+    },
+    {
+      "id": "r1-F6b-not-right-away",
+      "label": "valid",
+      "polished": false,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically with the config below. If something looks off, ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- The first line selects every `.log` file in `/var/log/kiosk/`.\n- `weekly` rotates them once a week.\n- `rotate 8` keeps eight rotated logs and removes older ones.\n- `compress` gzips rotated logs.\n- `delaycompress` means the newest rotated log isn't compressed right away; it waits until the next rotation, so it stays uncompressed for a week.\n- `missingok`: if a log file is missing, logrotate skips it and nothing reports an error.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": "Second review probe."
+    },
+    {
+      "id": "r1-U6a-olddir-invented",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. If something looks off, ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `/var/log/kiosk/*.log` applies to every `.log` file in `/var/log/kiosk/`.\n- `weekly` rotates the logs once a week.\n- `rotate 8` keeps eight rotated logs and deletes older ones.\n- `compress` compresses rotated logs, and they are moved to `/var/log/kiosk/archive/`.\n- `delaycompress` waits one rotation, so the newest rotated log stays uncompressed.\n- `missingok` skips a missing log file without an error.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Second review probe. Invents an archive directory."
+    },
+    {
+      "id": "r1-U6b-two-uncompressed",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. If something looks off, ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `/var/log/kiosk/*.log` applies to every `.log` file in `/var/log/kiosk/`.\n- `weekly` rotates the logs once a week.\n- `rotate 8` keeps eight rotated logs and deletes older ones.\n- `compress` compresses rotated logs.\n- `delaycompress` keeps the two most recent rotated logs uncompressed.\n- `missingok` skips a missing log file without an error.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Second review probe. delaycompress leaves one rotated log uncompressed, not two."
+    },
+    {
+      "id": "r1-U6c-every-sunday",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. If something looks off, ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `/var/log/kiosk/*.log` applies to every `.log` file in `/var/log/kiosk/`.\n- `weekly` rotates the logs every Sunday at midnight.\n- `rotate 8` keeps eight rotated logs and deletes older ones.\n- `compress` compresses rotated logs.\n- `delaycompress` waits one rotation, so the newest rotated log stays uncompressed.\n- `missingok` skips a missing log file without an error.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Second review probe. Invents a day and time."
+    },
+    {
+      "id": "r1-U6d-compress-current",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. If something looks off, ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `/var/log/kiosk/*.log` applies to every `.log` file in `/var/log/kiosk/`.\n- `weekly` rotates the logs once a week.\n- `rotate 8` keeps eight rotated logs and deletes older ones.\n- `compress` compresses the live log file in place every week.\n- `delaycompress` waits one rotation, so the newest rotated log stays uncompressed.\n- `missingok` skips a missing log file without an error.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Second review probe. compress acts on rotated logs, not the live file."
+    },
+    {
+      "id": "a1-oldest-uncompressed",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- `weekly` rotates the logs once a week.\n- `rotate 8` keeps eight rotated logs and deletes older ones.\n- `compress` compresses rotated logs.\n- `delaycompress` waits until the next rotation, so the oldest rotated log stays uncompressed.\n- `missingok` skips a missing log file without an error. Every `.log` file in `/var/log/kiosk/` is covered.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Author adversarial probe. delaycompress leaves the newest rotated log uncompressed, not the oldest."
+    },
+    {
+      "id": "a1-missingok-errors",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- Every `.log` file in `/var/log/kiosk/` is covered.\n- `weekly` rotates the logs once a week.\n- `rotate 8` keeps eight rotated logs and deletes older ones.\n- `compress` compresses rotated logs.\n- `delaycompress` waits one rotation, so the newest rotated log stays uncompressed.\n- `missingok` reports an error if a log file is missing.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Author adversarial probe. missingok suppresses the error."
+    },
+    {
+      "id": "a1-deletes-newer",
+      "label": "failing",
+      "polished": true,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\n- Every `.log` file in `/var/log/kiosk/` is covered.\n- `weekly` rotates the logs once a week.\n- `rotate 8` keeps eight rotated logs and deletes newer ones.\n- `compress` compresses rotated logs.\n- `delaycompress` waits one rotation, so the newest rotated log stays uncompressed.\n- `missingok` skips a missing log file without an error.",
+      "screen": "needs_adjudication",
+      "failures": [],
+      "note": "Author adversarial probe. rotate 8 removes older logs, not newer ones."
+    },
+    {
+      "id": "a1-kiosk-paragraph",
+      "label": "valid",
+      "polished": false,
+      "text": "# Kiosk logs\n\nlogrotate rotates the kiosk logs automatically using the config below. Ask Imran before touching it.\n\n```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```\n\nEvery `.log` file in `/var/log/kiosk/` rotates once a week. Eight rotated logs are kept and older ones are deleted. Rotated logs are compressed, but not right away: the newest one waits until the next rotation, so it stays uncompressed. A missing log file doesn't cause an error.",
+      "screen": "screen_pass",
+      "failures": [],
+      "note": "Author adversarial probe."
     }
   ]
 }
