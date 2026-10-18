@@ -9,6 +9,7 @@ the real challenge.sh against the same synthetic project. Nothing here is a cons
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -107,7 +108,9 @@ class RefreshTests(unittest.TestCase):
     # Criterion 1: unchanged input -------------------------------------------------
     def test_unchanged_refresh_is_no_diff_and_deterministic(self):
         self.fixture()
+        index = (self.fx.repo / ".git/index").read_bytes()
         summary = self.assert_no_diff()
+        self.assertEqual((self.fx.repo / ".git/index").read_bytes(), index, "a no-diff refresh rewrote the index")
         self.assertEqual(summary["state"], "unchanged")
         self.assertEqual(summary["findings"], [])
         again = self.assert_no_diff()
@@ -140,7 +143,6 @@ class RefreshTests(unittest.TestCase):
         self.assertTrue(self.static()["conformant"])
         record = self.ledger_records()[-1]
         self.assertEqual(record["applied"], ["path-renamed:fixtures/ready.json"])
-        self.assertEqual(record["knowledge"], {"briefing": "proposed"})
         self.assertEqual(self.assert_no_diff()["state"], "unchanged")
 
     def test_directory_rename_follows_source_roots_and_the_break_patch(self):
@@ -191,17 +193,16 @@ class RefreshTests(unittest.TestCase):
         self.assertTrue(self.static()["conformant"])
         self.assert_no_diff()
 
-    def test_route_rename_is_proposed_and_keeps_the_feature_id(self):
+    def test_route_rename_is_unresolved_and_the_record_is_kept(self):
         self.fixture()
+        feature_bytes = self.read(FEATURE)
         server = self.read("src/hosted/server.mjs")
         write(self.fx.repo, "src/hosted/server.mjs", server.replace("'/kingdom'", "'/realm'"))
-        summary, candidate, path = self.refresh()
-        self.assertEqual(self.ids(summary), {"route-renamed:briefing:/kingdom": "proposed"})
+        summary, _candidate, path = self.refresh()
+        self.assertEqual(self.ids(summary), {"route-missing:briefing:/kingdom": "needs_adjudication"})
+        self.assertEqual(summary["writes"], [LEDGER])
         self.apply(path)
-        record = json.loads(self.read(FEATURE))
-        self.assertEqual(record["id"], "briefing")
-        self.assertEqual(record["reach"][0]["route"], "/realm")
-        self.assertEqual(record["reach"][0]["steps"], ["Open /briefing and follow its redirect."])
+        self.assertEqual(self.read(FEATURE), feature_bytes)
         self.assert_no_diff()
 
     def test_route_deletion_keeps_confirmed_intent_unresolved(self):
@@ -212,29 +213,32 @@ class RefreshTests(unittest.TestCase):
         server = re.sub(r"  if \(url.pathname === '/briefing'\).*\n", "", server)
         server = re.sub(r"  if \(url.pathname === '/kingdom'\) \{\n(?:.*\n)*?  \}\n", "", server)
         write(self.fx.repo, "src/hosted/server.mjs", server)
-        summary, candidate, path = self.refresh()
+        summary, _candidate, path = self.refresh()
         self.assertEqual(summary["state"], "unresolved")
         self.assertEqual(self.ids(summary), {"route-missing:briefing:/kingdom": "needs_adjudication"})
-        finding = summary["findings"][0]
-        self.assertEqual(finding["evidence"]["confirmedIntent"]["summary"], "Read a return summary in the kingdom overview")
         self.assertEqual(summary["writes"], [LEDGER])
         self.apply(path)
         self.assertEqual(self.read(FEATURE), feature_bytes, "refresh edited a confirmed feature")
         record = self.ledger_records()[-1]
-        self.assertEqual(record["knowledge"], {"briefing": "confirmed"})
-        self.assertIn("briefing", record["confirmedIntent"])
         self.assertEqual(record["findings"], [{"id": "route-missing:briefing:/kingdom", "kind": "route-missing", "severity": "needs_adjudication"}])
         self.assert_no_diff()
 
-    def test_new_route_is_an_explicit_finding_without_edits(self):
+    def test_unrelated_route_swap_is_not_guessed_as_a_rename(self):
         self.fixture()
+        self.set_confirmed()
+        feature_bytes = self.read(FEATURE)
         server = self.read("src/hosted/server.mjs")
-        write(self.fx.repo, "src/hosted/server.mjs", server.replace(
-            "  if (url.pathname === '/api/kingdom') {", "  if (url.pathname === '/ledger') return response.end('ledger');\n  if (url.pathname === '/api/kingdom') {"))
-        summary, _candidate, path = self.refresh()
-        self.assertEqual(self.ids(summary), {"route-added:briefing:/ledger": "needs_adjudication"})
-        self.assertEqual(summary["writes"], [LEDGER])
+        server = server.replace("location: '/kingdom' + url.search", "location: '/health'")
+        server = re.sub(r"  if \(url.pathname === '/kingdom'\) \{\n(?:.*\n)*?  \}\n",
+                        "  if (url.pathname === '/billing') return response.end('unrelated billing page');\n", server)
+        write(self.fx.repo, "src/hosted/server.mjs", server)
+        summary, candidate, path = self.refresh()
+        self.assertEqual(summary["state"], "unresolved")
+        self.assertEqual(self.ids(summary), {"route-missing:briefing:/kingdom": "needs_adjudication"})
+        self.assertNotIn(FEATURE, candidate["edits"])
         self.apply(path)
+        self.assertEqual(self.read(FEATURE), feature_bytes, "refresh edited a confirmed feature")
+        self.assertEqual(json.loads(self.read(FEATURE))["knowledge"], "confirmed")
         self.assert_no_diff()
 
     def test_feature_deletion_retains_record_and_names_every_gap(self):
@@ -249,7 +253,6 @@ class RefreshTests(unittest.TestCase):
             self.assertEqual(ids.get(key), "needs_adjudication", ids)
         deleted = next(f for f in summary["findings"] if f["kind"] == "feature-implementation-missing")
         self.assertEqual(deleted["evidence"]["knowledge"], "confirmed")
-        self.assertIn("briefing.return-summary", deleted["evidence"]["confirmedIntent"]["scenarios"])
         self.assertEqual(summary["writes"], [LEDGER])
         self.apply(path)
         self.assertEqual(self.read(FEATURE), feature_bytes)
@@ -289,10 +292,10 @@ class RefreshTests(unittest.TestCase):
         write(self.fx.repo, "package.json", json.dumps(package, indent=2) + "\n")
         before = self.bytes_state()
         summary, _candidate, path = self.refresh()
-        kinds = {f["kind"]: f for f in summary["findings"]}
-        self.assertEqual(set(kinds), {"port-drift", "port-unattributed", "command-missing"})
+        self.assertEqual(sorted(f["kind"] for f in summary["findings"]), ["command-missing", "port-drift", "port-drift"])
         self.assertTrue(all(f["severity"] == "needs_adjudication" for f in summary["findings"]))
-        self.assertEqual(kinds["port-drift"]["evidence"]["instructionPort"], 5173)
+        drift = {f["evidence"]["instructionPort"]: f["evidence"]["attribution"] for f in summary["findings"] if f["kind"] == "port-drift"}
+        self.assertEqual(drift, {5173: "named", 5180: "no profile named"})
         self.apply(path)
         after = self.bytes_state()
         self.assertEqual({k for k in after if after[k] != before.get(k)}, {LEDGER},
@@ -300,8 +303,8 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(json.loads(self.read(".claude/launch.json")), launch)
 
     # Criterion 3: confirmed intent and human-owned runtime/tests survive -------------
-    def generator_copy(self, edit):
-        copy = Path(self.temp.name) / "generator-copy"
+    def generator_copy(self, edit, name="generator-copy"):
+        copy = Path(self.temp.name) / name
         shutil.copytree(ROOT / "skills/leyline", copy)
         template = copy / "references/recipes/control.ts.template"
         template.write_text(edit(template.read_text()))
@@ -316,12 +319,8 @@ class RefreshTests(unittest.TestCase):
         test = self.read("tests/hosted/briefing.test.mjs") + "\n// human test note\n"
         write(self.fx.repo, "tests/hosted/briefing.test.mjs", test)
         self.commit("hand edits to runtime and tests")
-        # The person's knowledge decision is a material observation and is recorded once.
-        summary, _candidate, path = self.refresh()
-        self.assertEqual((summary["state"], summary["findings"], summary["writes"]), ("unchanged", [], [LEDGER]))
-        self.apply(path)
-        self.assertEqual(self.ledger_records()[-1]["knowledge"], {"briefing": "confirmed"})
-        self.assert_no_diff()
+        # A person confirming intent is already in history; refresh records nothing for it.
+        self.assertEqual(self.assert_no_diff()["state"], "unchanged")
         updated = self.generator_copy(lambda text: text + "// generator update for refresh fixtures\n")
         summary, _candidate, path = self.refresh(generator=updated)
         self.assertEqual(self.ids(summary), {"runtime-update:scripts/control.ts": "proposed"})
@@ -333,6 +332,24 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(json.loads(self.read(FEATURE))["knowledge"], "confirmed")
         summary = self.assert_no_diff_with(updated)
         self.assertEqual(summary["state"], "unchanged")
+
+    def test_a_second_generator_update_keeps_hand_edits(self):
+        self.fixture()
+        runtime = self.read("scripts/control.ts").split("\n", 1)
+        write(self.fx.repo, "scripts/control.ts", runtime[0] + "\n// HAND EDIT\n" + runtime[1])
+        self.commit("hand edit")
+        first = self.generator_copy(lambda text: text + "// gen update 1\n", "generator-1")
+        summary, _candidate, path = self.refresh(generator=first)
+        self.assertEqual(self.ids(summary), {"runtime-update:scripts/control.ts": "proposed"})
+        self.apply(path, generator=first)
+        self.commit("apply refresh 1")
+        self.assertIn("// HAND EDIT", self.read("scripts/control.ts"))
+        second = self.generator_copy(lambda text: text + "// gen update 1\n// gen update 2\n", "generator-2")
+        before = self.read("scripts/control.ts")
+        summary, _candidate, path = self.refresh(generator=second)
+        self.assertEqual(self.ids(summary), {"runtime-base-missing:scripts/control.ts": "needs_adjudication"})
+        self.apply(path, generator=second)
+        self.assertEqual(self.read("scripts/control.ts"), before, "the second update replaced hand-edited bytes")
 
     def assert_no_diff_with(self, generator):
         before = self.bytes_state()
@@ -384,20 +401,23 @@ class RefreshTests(unittest.TestCase):
         feature_bytes = self.read(FEATURE)
         summary, _candidate, path = self.refresh("--challenge", evidence)
         self.assertEqual(summary["state"], "verified")
-        self.assertFalse(summary["knowledgeChanged"])
         self.assertTrue(summary["challenge"]["evidence"]["verified"])
         self.apply(path)
         self.assertEqual(self.read(FEATURE), feature_bytes)
+        self.assertEqual(json.loads(self.read(FEATURE))["knowledge"], "proposed")
         record = self.ledger_records()[-1]
-        self.assertEqual(record["knowledge"], {"briefing": "proposed"})
         self.assertEqual(record["state"], "verified")
         self.assertEqual(sorted(record["challengeRunIds"]), summary["challenge"]["runIds"])
         self.assertTrue(record["challengeRunIds"])
+        # Committing the ledger record moves HEAD without changing the challenged bytes.
+        self.commit("record the verified challenge")
+        os.utime(self.fx.repo / "fixtures/ready.json", (1, 1))
         before = self.bytes_state()
         again, _candidate, path = self.refresh("--challenge", evidence)
+        self.assertEqual(again["state"], "verified")
         self.assertEqual(again["writes"], [])
         self.apply(path)
-        self.assertEqual(self.bytes_state(), before)
+        self.assertEqual(self.bytes_state(), before, "a no-diff challenge refresh rewrote the index or a file")
 
     # Criterion 4: interrupted setup and failed challenge keep recoverable state ------
     def test_failed_challenge_retains_evidence_and_the_pointer(self):
@@ -437,7 +457,7 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(self.read("AGENTS.md"), agents, "a failed challenge removed the working pointer")
         self.assertIn("Control: " + SKILL_FILE, agents)
 
-    def test_interrupted_install_reports_partial_state_and_resumes_only_unchanged_parts(self):
+    def test_interrupted_install_is_reported_and_reinstall_finishes_it(self):
         fixture = self.fixture(install=False)
         injection = Path(self.temp.name) / "kill"
         injection.mkdir()
@@ -455,46 +475,26 @@ os.link = link
         killed = self.run_cmd(["bash", GENERATOR, "install", fixture.repo, "--map", fixture.map_path], code=None,
                               env={"PYTHONPATH": str(injection)})
         self.assertNotEqual(killed.returncode, 0)
+        absent = "verification/scenarios/briefing/no-activity.json"
+        write(fixture.repo, absent, "human bytes written after the interruption\n")
+        before = self.bytes_state()
         summary, _candidate, path = self.refresh("--map", fixture.map_path)
         self.assertEqual(summary["state"], "partial")
         partial = summary["partial"]
         self.assertEqual(len(partial["complete"]), 3, partial)
         self.assertIn(LEDGER, partial["absent"])
         self.assertIn("AGENTS.md", partial["absent"], "the Control pointer was activated before its targets")
+        self.assertEqual([c["path"] for c in partial["conflicting"]], [absent])
         self.assertEqual(len(partial["recovery"]), 1, partial)
-        self.assertTrue(partial["resumable"])
-        # A map whose checksum was recomputed over other bytes cannot resume.
-        forged = json.loads(Path(fixture.map_path).read_text())
-        forged["outputs"][FEATURE]["text"] = forged["outputs"][FEATURE]["text"].replace('"proposed"', '"confirmed"')
-        forged["outputs"][FEATURE]["digest"] = hashlib.sha256(forged["outputs"][FEATURE]["text"].encode()).hexdigest()
-        forged.pop("mapDigest")
-        forged["mapDigest"] = hashlib.sha256(json.dumps(forged, sort_keys=True, separators=(",", ":"),
-                                                        ensure_ascii=False).encode()).hexdigest()
-        forged_path = Path(self.temp.name) / "forged-map.json"
-        forged_path.write_text(json.dumps(forged))
-        refused, _candidate, refused_path = self.refresh("--map", forged_path)
-        self.assertFalse(refused["partial"]["resumable"])
-        self.assertTrue(any("recipe" in line for line in refused["partial"]["recoveryWork"]), refused["partial"])
-        self.apply(refused_path, code=1)
-        # A human file at an absent output makes resumption refuse and keeps the bytes.
-        absent = next(p for p in partial["absent"] if p.startswith("verification/scenarios/"))
-        write(fixture.repo, absent, "human bytes written after the interruption\n")
-        before = self.bytes_state()
-        blocked, _candidate, blocked_path = self.refresh("--map", fixture.map_path)
-        self.assertFalse(blocked["partial"]["resumable"])
-        self.assertEqual([c["path"] for c in blocked["partial"]["conflicting"]], [absent])
-        self.apply(blocked_path, code=1)
-        self.assertEqual(self.bytes_state(), before)
-        (fixture.repo / absent).unlink()
-        summary, _candidate, path = self.refresh("--map", fixture.map_path)
-        self.assertTrue(summary["partial"]["resumable"])
-        applied = self.apply(path)
-        self.assertIn(LEDGER, applied["written"])
+        self.assertTrue(any("rerun install" in line for line in partial["recoveryWork"]), partial)
+        self.assertEqual(summary["writes"], [])
+        self.apply(path, code=1)
+        self.assertEqual(self.bytes_state(), before, "refresh wrote into an interrupted installation")
+        # Following the recovery work: drop the partial outputs and staging file, then install again.
+        for name in [absent, *partial["complete"], *partial["recovery"]]:
+            (fixture.repo / name).unlink()
+        self.run_cmd(["bash", GENERATOR, "install", fixture.repo, "--map", fixture.map_path])
         self.assertTrue(self.static()["conformant"])
-        self.assertTrue(self.ledger_records()[0]["installedFiles"])
-        after, _candidate, _path = self.refresh()
-        self.assertEqual(self.ids(after), {"recovery-files:checkout": "needs_adjudication"})
-        (fixture.repo / partial["recovery"][0]).unlink()
         self.assertEqual(self.assert_no_diff()["state"], "unchanged")
 
     def test_forged_or_stale_candidates_are_refused(self):

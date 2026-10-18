@@ -77,7 +77,7 @@ For `refresh`, after a challenge, or when the source or configuration moved sinc
 bash "<SKILL_DIR>/scripts/generate.sh" refresh <repo> --out <candidate.json> --challenge <evidence-dir>
 ```
 
-Read every finding and edit diff. Apply with `--apply <candidate.json>` when edit authority covers it. Report `needs_adjudication` and `conflict` findings as the person's decisions; never resolve them by editing records, tests or instructions yourself. Pass `--map <map.json>` to inspect or resume an interrupted installation.
+Read every finding and edit diff. Apply with `--apply <candidate.json>` when edit authority covers it. Report `needs_adjudication` and `conflict` findings as the person's decisions; never resolve them by editing records, tests or instructions yourself. Pass `--map <map.json>` to inspect an interrupted installation; finishing it is a rerun of install.
 
 ## Stage 6: Report
 

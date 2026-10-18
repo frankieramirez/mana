@@ -346,8 +346,6 @@ def installed_files(plan):
         entry = {'digest': item['digest'], 'blob': git_blob(item['text'].encode()), 'ownership': item['ownership']}
         if name == 'scripts/control.ts':
             entry['templateDigest'] = plan['generator']['files'][RUNTIME]
-        elif name.startswith('skills/') and name.endswith('-control/SKILL.md'):
-            entry['templateDigest'] = plan['generator']['files'][TEMPLATE]
         files[name] = entry
     return files
 
@@ -542,7 +540,6 @@ RECORD = re.compile(r'<!-- leyline-(install|refresh):([0-9a-f]{64}) -->\n## [^\n
 ROUTE = re.compile(r'''['"`](/[A-Za-z0-9._~:/-]*)(?=['"`?#])''')
 PORT = re.compile(r'(?i)(?:\bport\s+|\blocalhost:|\b127\.0\.0\.1:|\b0\.0\.0\.0:)(\d{2,5})\b')
 SKILL_PATH = re.compile(r'^skills/([a-z0-9][a-z0-9-]*)-control/SKILL\.md$')
-RANK = {'unchanged': 0, 'verified': 1, 'unverified': 2, 'unresolved': 3, 'candidate': 4, 'failed': 5, 'conflict': 6, 'partial': 7}
 
 
 def is_recovery(name):
@@ -637,13 +634,6 @@ class Tree:
         prefix = name + '/'
         return {n[len(prefix):]: b for n, b in self.blobs.items() if n.startswith(prefix)}
 
-    def text(self, name):
-        data = git(self.root, 'show', f'{self.commit}:{name}', required=False)
-        try:
-            return data.decode() if data is not None else None
-        except UnicodeDecodeError:
-            return None
-
 
 def challenge_observation(root, path):
     evidence = Path(path).resolve(strict=True)
@@ -680,9 +670,16 @@ def challenge_observation(root, path):
     run_ids = sorted({r.get('runId') for p in probes if isinstance(p, dict) for r in p.get('runs') or [] if isinstance(r, dict) and isinstance(r.get('runId'), str)})
     head = (doc.get('source') or {}).get('head') if isinstance(doc.get('source'), dict) else None
     current = git(root, 'rev-parse', 'HEAD').decode().strip()
-    status = git(root, 'status', '--porcelain', '-z', '--untracked-files=all').decode().split('\0')
+    # No optional locks: reading status must not rewrite the index of a no-diff refresh.
+    status = git(root, '--no-optional-locks', 'status', '--porcelain', '-z', '--untracked-files=all').decode().split('\0')
     dirty = sorted(entry[3:] for entry in status if entry and entry[3:] != LEDGER and not is_recovery(entry[3:]))
-    relevance = 'current' if head == current and not dirty else 'stale'
+    # A commit that only records the ledger leaves the challenged bytes unchanged.
+    if not isinstance(head, str) or not re.fullmatch(r'[0-9a-f]{40,64}', head):
+        moved = None
+    else:
+        moved = git(root, 'diff', '--name-only', '-z', head, current, required=False) if head != current else b''
+    same_bytes = moved is not None and set(filter(None, moved.decode(errors='replace').split('\0'))) <= {LEDGER}
+    relevance = 'current' if same_bytes and not dirty else 'stale'
     return {'outcome': outcome, 'head': head, 'feature': doc.get('feature'), 'runIds': run_ids,
             'probes': {p.get('probe'): p.get('status') for p in probes if isinstance(p, dict)},
             'evidence': {'dir': str(evidence), 'manifestDigest': manifest.get('digest'), 'verified': not mismatched,
@@ -757,31 +754,17 @@ class Refresh:
         candidates = sorted(set(candidates))
         if len(candidates) == 1:
             return candidates[0], candidates, f'identical content now lives only at {candidates[0]}'
-        hints = []
-        status = git(self.root, 'diff', '-M', '--name-status', '-z', tree.commit, required=False)
-        fields = (status or b'').decode(errors='replace').split('\0')
-        i = 0
-        while i < len(fields):
-            code = fields[i]
-            if code.startswith(('R', 'C')) and i + 2 < len(fields):
-                if fields[i + 1] == old or fields[i + 1].startswith(old + '/'):
-                    hints.append({'similarity': code, 'from': fields[i + 1], 'to': fields[i + 2]})
-                i += 3
-            else:
-                i += 2 if code else 1
         reason = 'several paths hold identical content' if candidates else 'no path holds identical content'
-        return None, candidates + [h['to'] for h in hints[:5]], reason
+        return None, candidates, reason
 
     # Analysis --------------------------------------------------------------------
     def run(self):
         records = read_ledger(self.root)
-        self.records = records
         recovery = [n for n in self.files if is_recovery(n)]
         result = {'format': REFRESH, 'contract': 'control/0', 'inputs': self.inputs, 'generator': generator_identity(),
                   'source': {'head': self.source['head'], 'manifestDigest': self.source['manifest']['digest']},
                   'executedProjectCode': False}
         installs = [r for r in records if r['kind'] == 'install']
-        plan = None
         if self.inputs['map']:
             plan = read_json(self.inputs['map'])
             claimed = plan.pop('mapDigest', None)
@@ -790,7 +773,6 @@ class Refresh:
             plan['mapDigest'] = claimed
             if not any(r['mark'] == claimed for r in installs):
                 return self.partial(result, plan, recovery)
-            result['mapRecorded'] = claimed
         if recovery:
             self.recovery_finding(recovery, {})
         if not installs:
@@ -803,12 +785,11 @@ class Refresh:
         last = records[-1]['record']
         self.installed = last.get('installedFiles') or {}
         self.managed = last.get('managed') or {}
-        self.origins = dict(last.get('origins') or {})
-        self.generation_head = (install.get('source') or {}).get('head')
+        generation_head = (install.get('source') or {}).get('head')
         self.head_tree = Tree(self.root, self.source['head'])
-        self.base_tree = Tree(self.root, self.generation_head)
+        self.base_tree = Tree(self.root, generation_head)
         if not self.base_tree.available:
-            self.not_checked.append(f'generation base {self.generation_head} is not readable; route drift and base renames were not checked')
+            self.not_checked.append(f'generation base {generation_head} is not readable; renames since installation were not checked')
         self.config = self.load_json(CONFIG, 'config')
         controls = inspect(self.root)['controls']
         self.skill_path = self.check_pointer(controls)
@@ -822,7 +803,6 @@ class Refresh:
         self.check_runtime(install)
         self.check_command()
         self.check_ports()
-        self.features = features
         challenge = challenge_observation(self.root, self.inputs['challenge']) if self.inputs['challenge'] else None
         return self.finish(result, challenge, records)
 
@@ -848,20 +828,6 @@ class Refresh:
             if record is not None:
                 features[name] = record
         return features
-
-    def confirmed(self, record):
-        if record.get('knowledge') != 'confirmed':
-            return {}
-        folder = (self.config or {}).get('scenariosDir', 'verification/scenarios')
-        scenarios = {}
-        for path in sorted((self.root / folder / str(record.get('id'))).glob('*.json')):
-            try:
-                value = json.loads(path.read_text())
-                scenarios[value.get('id')] = value.get('steps')
-            except (ValueError, OSError, AttributeError):
-                continue
-        return {'confirmedIntent': {'feature': record.get('id'), 'summary': record.get('summary'), 'scenarios': scenarios,
-                                    'note': 'confirmed intent survives; refresh never edits it'}}
 
     def check_pointer(self, controls):
         if len(controls) > 1:
@@ -920,64 +886,23 @@ class Refresh:
             if roots and all(not self.exists(r) and r not in self.renames for r in roots):
                 self.add('feature-implementation-missing', str(record.get('id')), 'needs_adjudication',
                          'every source root of this feature is gone. The record, its id and its intent are kept until a person decides on retirement.',
-                         [name], evidence={'knowledge': record.get('knowledge'), **self.confirmed(record)})
-
-    def routes_now(self, roots):
-        found = set()
-        for root in roots:
-            for name in self.current_under(root):
-                text = self.text(name)
-                if text is not None:
-                    found.update(ROUTE.findall(text))
-        return found
-
-    def routes_base(self, roots):
-        found = set()
-        for current in roots:
-            # A path renamed by an applied refresh is read at its generation-base name.
-            root = self.origins.get(current, current)
-            for rel in self.base_tree.under(root):
-                text = self.base_tree.text(f'{root}/{rel}' if rel else root)
-                if text is not None:
-                    found.update(ROUTE.findall(text))
-        return found
+                         [name], evidence={'knowledge': record.get('knowledge')})
 
     def check_routes(self, features):
-        if not self.base_tree.available:
-            return
-        mapped = {str(r.get('route')).split('?', 1)[0] for f in features.values() for r in f.get('reach') or [] if isinstance(r, dict) and r.get('route')}
         for name, record in features.items():
-            roots = [r for r in record.get('sourceRoots') or [] if isinstance(r, str)]
-            now = self.routes_now([self.renames.get(r, r) for r in roots])
-            base = self.routes_base(roots)
-            removed, added = base - now, now - base - mapped
-            consumed = set()
+            roots = [self.renames.get(r, r) for r in record.get('sourceRoots') or [] if isinstance(r, str)]
+            found = set()
+            for root in roots:
+                for source_file in self.current_under(root):
+                    found.update(ROUTE.findall(self.text(source_file) or ''))
             feature = str(record.get('id'))
-            for index, entry in enumerate(record.get('reach') or []):
+            for entry in record.get('reach') or []:
                 route = entry.get('route') if isinstance(entry, dict) else None
-                if not isinstance(route, str):
-                    continue
-                path = route.split('?', 1)[0]
-                if path in now:
-                    continue
-                if path not in base:
-                    self.not_checked.append(f'{feature} route {route} is not a literal in its source roots at the generation base or now')
-                    continue
-                if len(removed) == 1 and len(added) == 1:
-                    new = next(iter(added))
-                    consumed.add(new)
-                    key = self.add('route-renamed', f'{feature}:{route}', 'proposed',
-                                   f'{route} is the only route literal that left the source roots and {new} the only one that arrived. The feature id and its scenarios stay.',
-                                   [name], {'from': route, 'to': new}, {'feature': feature, **self.confirmed(record)})
-                    self.change(name, ('reach', index, 'route'), route, route.replace(path, new, 1), key)
-                else:
+                if isinstance(route, str) and route.split('?', 1)[0] not in found:
+                    # A missing literal can be a rename, a deletion or a route built at runtime; a person decides.
                     self.add('route-missing', f'{feature}:{route}', 'needs_adjudication',
-                             f'{route} was a literal in the source roots at the generation base and is gone. Decide the new reach or retire the feature; refresh keeps the record.',
-                             [name], evidence={'feature': feature, 'removed': sorted(removed), 'added': sorted(added), **self.confirmed(record)})
-            for route in sorted(added - consumed):
-                self.add('route-added', f'{feature}:{route}', 'needs_adjudication',
-                         f'{route} arrived in the source roots of {feature} and no feature reaches it. Map it as reach or a new proposed feature, or leave it unmapped.',
-                         [name], evidence={'feature': feature})
+                             f'{route} is not a quoted literal in the source roots. Decide the new reach or retire the feature; refresh keeps the record.',
+                             [name], evidence={'feature': feature, 'routesFound': sorted(found)})
 
     def check_bindings(self, features):
         if self.config is None:
@@ -1092,8 +1017,10 @@ class Refresh:
         if current == generated:
             self.runtime_next = (generated, now_template)
             return
-        if digest(current.encode()) == entry.get('digest'):
-            key = self.add('runtime-update', RUNTIME_PATH, 'proposed', 'the runtime is byte-identical to its installed base, so the generator update applies as a reviewed patch', [RUNTIME_PATH])
+        # The blob names the generated base; after a merge it differs from the merged bytes on disk.
+        unedited = git_blob(current.encode()) == entry['blob'] if entry.get('blob') else digest(current.encode()) == entry.get('digest')
+        if unedited:
+            key = self.add('runtime-update', RUNTIME_PATH, 'proposed', 'the runtime is byte-identical to its generated base, so the generator update applies as a reviewed patch', [RUNTIME_PATH])
             self.text_edits[RUNTIME_PATH] = (generated, key)
             self.runtime_next = (generated, now_template)
             return
@@ -1169,22 +1096,15 @@ class Refresh:
             for match in PORT.finditer(line):
                 port = int(match.group(1))
                 named = [p for p in profiles if re.search(rf'(?<![\w-]){re.escape(p["name"])}(?![\w-])', line)]
-                subject = f'{self.skill_path}:{number}:{port}'
-                evidence = {'line': number, 'text': line.strip(), 'instructionPort': port, 'profiles': profiles}
-                if len(named) == 1 and named[0]['port'] == port:
+                if len(named) == 1 and named[0]['port'] == port or not named and port in ports:
                     continue
-                if len(named) == 1:
-                    self.add('port-drift', subject, 'needs_adjudication',
-                             f'line {number} describes profile {named[0]["name"]!r} on port {port}; {LAUNCH} gives that profile port {named[0]["port"]}. '
-                             'Which value is right needs a measured launch or a person. Neither file is edited.',
-                             [self.skill_path, LAUNCH], evidence=evidence)
-                elif len(named) > 1:
-                    self.add('port-ambiguous', subject, 'needs_adjudication',
-                             f'line {number} names several launch profiles, so port {port} cannot be attributed to one', [self.skill_path, LAUNCH], evidence=evidence)
-                elif port not in ports:
-                    self.add('port-unattributed', subject, 'needs_adjudication',
-                             f'line {number} gives port {port}, which no launch profile uses, and names no profile. Record which profile it describes before correcting either value.',
-                             [self.skill_path, LAUNCH], evidence=evidence)
+                attribution = 'named' if len(named) == 1 else 'several profiles named' if named else 'no profile named'
+                self.add('port-drift', f'{self.skill_path}:{number}:{port}', 'needs_adjudication',
+                         f'line {number} gives port {port}, which cannot be matched to exactly one launch profile using it ({attribution}). '
+                         'Which value is right needs a measured launch or a person. Neither file is edited.',
+                         [self.skill_path, LAUNCH], evidence={'line': number, 'text': line.strip(), 'instructionPort': port,
+                                                              'attribution': attribution, 'namedProfiles': [p['name'] for p in named],
+                                                              'profiles': profiles})
 
     def recovery_finding(self, recovery, outputs):
         listed = []
@@ -1199,33 +1119,8 @@ class Refresh:
                  recovery, evidence={'files': listed})
 
     # Interrupted installation ----------------------------------------------------
-    def recipe_matches(self, plan):
-        """Rebuild the pre-install source and recompute the recipe; True, or why it cannot be shown."""
-        with tempfile.TemporaryDirectory(prefix='leyline-recipe-') as folder:
-            original = Path(folder).resolve()
-            for name, state in plan['source']['manifest']['files'].items():
-                target = original / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                if state['kind'] == 'symlink':
-                    target.symlink_to(state['target'])
-                    continue
-                path = self.root / name
-                data = path.read_bytes() if path.is_file() and not path.is_symlink() else None
-                if data is None or digest(data) != state['digest']:
-                    # An output written over an existing file: its original bytes come from HEAD.
-                    data = git(self.root, 'show', f'HEAD:{name}', required=False)
-                if data is None or digest(data) != state['digest']:
-                    return f'the original bytes of {name} are not recoverable'
-                target.write_bytes(data)
-                os.chmod(target, state['mode'])
-            try:
-                validate_spec(original, plan['spec'])
-                expected = build_outputs(original, inspect(original), plan['spec'])
-            except Problem as exc:
-                return str(exc)
-            return True if expected == plan['outputs'] else 'its candidate contents differ from the declared recipe'
-
     def partial(self, result, plan, recovery):
+        """Report an installation that stopped before its ledger record. Refresh writes nothing here."""
         outputs = dict(plan['outputs'])
         outputs[LEDGER] = ledger_output(plan)
         complete, absent, conflicting = [], [], []
@@ -1240,30 +1135,15 @@ class Refresh:
         base = plan['source']['manifest']['files']
         drift = sorted({n for n, s in self.files.items() if n not in outputs and not is_recovery(n) and base.get(n) != s} |
                        {n for n in base if n not in outputs and n not in self.files})
-        generator_same = plan['generator'] == generator_identity()
-        recipe = self.recipe_matches(plan) if generator_same and not conflicting and not drift else None
-        work = [f'Keep {c["path"]}: its bytes match neither the original nor the candidate. Decide them before resuming.' for c in conflicting]
-        work += [f'Source changed since the map at {n}; regenerate and review a new map after deciding the partial files.' for n in drift]
-        if not generator_same:
-            work.append('The generator changed since the map; resume would write different bytes. Regenerate the map.')
-        if recipe is not None and recipe is not True:
-            work.append(f'The map cannot be checked against the recipe ({recipe}); a map checksum alone does not authorize generated bytes. Regenerate the map.')
+        work = [f'Keep {c["path"]}: its bytes match neither the original nor the candidate. Decide them first.' for c in conflicting]
+        work += [f'Source changed since the map at {n}; regenerate and review a new map.' for n in drift]
         if recovery:
             self.recovery_finding(recovery, outputs)
             work += [f'Inspect {n} and remove it once its bytes are accounted for.' for n in recovery]
-        resumable = bool(absent) and not conflicting and not drift and generator_same and recipe is True
+        work.append('Restore the original bytes of every complete output, so the checkout matches the map source again, then rerun install with the same map.')
         result['partial'] = {'map': self.inputs['map'], 'mapDigest': plan['mapDigest'], 'complete': complete, 'absent': absent,
-                             'conflicting': conflicting, 'drift': drift, 'recovery': recovery, 'resumable': resumable,
-                             'recoveryWork': work or ['Resume writes the absent outputs in installation order, then the ledger record.']}
-        result['state'] = 'partial'
-        result['findings'] = sorted(self.findings.values(), key=lambda f: f['id'])
-        result['edits'] = {name: {'findings': [], 'withheld': not resumable,
-                                  'diff': ''.join(difflib.unified_diff((self.text(name) or '').splitlines(True) if self.exists(name) else [],
-                                                                       outputs[name]['text'].splitlines(True), f'a/{name}', f'b/{name}'))}
-                           for name in absent}
-        result['writes'] = {name: {k: outputs[name][k] for k in ('before', 'text', 'digest', 'ownership')} for name in absent} if resumable else {}
-        result['ledgerAppend'] = resumable
-        result['knowledgeChanged'] = False
+                             'conflicting': conflicting, 'drift': drift, 'recovery': recovery, 'recoveryWork': work}
+        result.update(state='partial', findings=sorted(self.findings.values(), key=lambda f: f['id']), edits={}, writes={}, ledgerAppend=False)
         return result
 
     # Result ----------------------------------------------------------------------
@@ -1323,7 +1203,6 @@ class Refresh:
                                          'diff': ''.join(difflib.unified_diff(self.text(name).splitlines(True) if self.exists(name) else [], item['text'].splitlines(True), f'a/{name}', f'b/{name}'))}
         result['writes'] = writes
         result['ledgerAppend'] = LEDGER in writes
-        result['knowledgeChanged'] = False
         return result
 
     def record(self, state, findings, applied, challenge, records):
@@ -1335,44 +1214,23 @@ class Refresh:
                 installed[name].update(digest=digest(new.encode()), blob=git_blob(new.encode()))
         if getattr(self, 'managed_next', None) and self.skill_path in applied:
             managed[self.skill_path] = self.managed_next
-            installed.setdefault(self.skill_path, {})['templateDigest'] = generator_identity()['files'][TEMPLATE]
         runtime = getattr(self, 'runtime_next', None)
         if runtime and (RUNTIME_PATH in applied or self.text(RUNTIME_PATH) == runtime[0]) and RUNTIME_PATH in installed:
             # The recorded base is the generated text, so a later merge sees hand edits as edits.
             installed[RUNTIME_PATH].update(templateDigest=runtime[1], blob=git_blob(runtime[0].encode()))
-            if RUNTIME_PATH not in applied:
-                installed[RUNTIME_PATH]['digest'] = digest(runtime[0].encode())
         applied_keys = {key for _old, _new, keys in applied.values() for key in keys}
-        origins = dict(getattr(self, 'origins', {}))
-        for finding in findings:
-            if finding['kind'] == 'path-renamed' and finding['id'] in applied_keys:
-                moved = finding['resolution']
-                origins[moved['to']] = origins.pop(moved['from'], moved['from'])
-        knowledge ={str(r.get('id')): r.get('knowledge') for r in getattr(self, 'features', {}).values()}
-        intent = {}
-        for finding in findings:
-            snapshot = finding['evidence'].get('confirmedIntent')
-            if snapshot and finding['id'] not in applied_keys:
-                intent[snapshot['feature']] = snapshot
         run_ids = sorted(set(last.get('challengeRunIds') or []) | set((challenge or {}).get('runIds') or []))
         summary = None
         if challenge:
             summary = {k: challenge[k] for k in ('outcome', 'head', 'feature', 'relevance')}
             summary['evidence'] = {k: challenge['evidence'][k] for k in ('dir', 'manifestDigest', 'verified')}
-        record = {'kind': 'refresh', 'state': state, 'generator': generator_identity(),
-                  'base': {'installMap': next(r['mark'] for r in reversed(records) if r['kind'] == 'install') if any(r['kind'] == 'install' for r in records) else None,
-                           'generationHead': getattr(self, 'generation_head', None)},
-                  'source': {'head': self.source['head'], 'manifestDigest': self.source['manifest']['digest']},
-                  'installedFiles': installed, 'managed': managed, 'origins': origins,
-                  'applied': sorted(applied_keys),
-                  'findings': [{'id': f['id'], 'kind': f['kind'], 'severity': f['severity']} for f in findings if f['id'] not in applied_keys],
-                  'knowledge': knowledge, 'challengeRunIds': run_ids,
-                  'challenge': summary if challenge else last.get('challenge')}
-        if intent:
-            record['confirmedIntent'] = intent
-        record['pending'] = [] if state == 'verified' else [
-            'A passing challenge of the current committed bytes, refreshed with --challenge, is still owed before any readiness claim.']
-        return record
+        return {'kind': 'refresh', 'state': state, 'generator': generator_identity(),
+                'source': {'head': self.source['head'], 'manifestDigest': self.source['manifest']['digest']},
+                'installedFiles': installed, 'managed': managed, 'applied': sorted(applied_keys),
+                'findings': [{'id': f['id'], 'kind': f['kind'], 'severity': f['severity']} for f in findings if f['id'] not in applied_keys],
+                'challengeRunIds': run_ids, 'challenge': summary if challenge else last.get('challenge'),
+                'pending': [] if state == 'verified' else [
+                    'A passing challenge of the current committed bytes, refreshed with --challenge, is still owed before any readiness claim.']}
 
     @staticmethod
     def material(record):
@@ -1380,9 +1238,7 @@ class Refresh:
             return None
         challenge = record.get('challenge') or {}
         return canonical({'installedFiles': record.get('installedFiles') or {}, 'managed': record.get('managed') or {},
-                          'origins': record.get('origins') or {},
-                          'findings': record.get('findings') or [], 'knowledge': record.get('knowledge') or {},
-                          'challengeRunIds': record.get('challengeRunIds') or [],
+                          'findings': record.get('findings') or [], 'challengeRunIds': record.get('challengeRunIds') or [],
                           'challenge': {k: challenge.get(k) for k in ('outcome', 'head', 'evidence')} if challenge else None})
 
 
@@ -1395,30 +1251,25 @@ def refresh(root, args):
         fresh = Refresh(root, candidate['inputs']['map'], candidate['inputs']['challenge']).run()
         if fresh != candidate:
             fail('the checkout, ledger or inputs changed since this refresh candidate was reviewed; regenerate and review it')
-        if fresh['state'] == 'partial' and not fresh['partial']['resumable']:
-            fail('the interrupted installation cannot resume: ' + ' '.join(fresh['partial']['recoveryWork']))
+        if fresh['state'] == 'partial':
+            fail('refresh does not finish an interrupted installation: ' + ' '.join(fresh['partial']['recoveryWork']))
         writes = fresh['writes']
         for name in writes:
             path = relative(root, name)
             if any(parent.is_symlink() for parent in [path, *path.parents] if parent != root and root in parent.parents):
                 fail(f'output path crosses a symlink: {name}')
-        if fresh['state'] == 'partial' and writes:
-            plan = read_json(candidate['inputs']['map'])
-            outputs = dict(plan['outputs'])
-            outputs[LEDGER] = ledger_output(plan)
-            check_candidate(root, plan, outputs)
         if writes:
             publish(root, {name: {k: item[k] for k in ('before', 'text', 'digest', 'ownership')} for name, item in writes.items()})
         return {'mode': 'refresh', 'applied': True, 'state': fresh['state'], 'written': sorted(writes),
                 'ledgerAppend': fresh['ledgerAppend'], 'withheld': sorted(n for n, e in fresh['edits'].items() if e['withheld']),
-                'executedProjectCode': False, 'knowledgeChanged': False}
+                'executedProjectCode': False}
     result = Refresh(root, args.map, args.challenge).run()
     result['candidateDigest'] = digest(canonical(result))
     if args.out:
         target = output_path(args.out, root)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(encode(result))
-    summary = {k: result.get(k) for k in ('state', 'findings', 'notChecked', 'facts', 'challenge', 'partial', 'ledgerAppend', 'knowledgeChanged', 'executedProjectCode')}
+    summary = {k: result.get(k) for k in ('state', 'findings', 'notChecked', 'facts', 'challenge', 'partial', 'ledgerAppend', 'executedProjectCode')}
     summary.update(mode='refresh', candidate=str(output_path(args.out, root)) if args.out else None,
                    candidateDigest=result['candidateDigest'], diff=bool(result['writes']),
                    edits={name: {'findings': e['findings'], 'withheld': e['withheld']} for name, e in (result.get('edits') or {}).items()},
