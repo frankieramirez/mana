@@ -11,7 +11,7 @@ The user delegated the decisions in this map. The choices below preserve the exi
 
 This decision inspected Mana at `9d1aa521974bc7c72bf9cdd676de18c09a036468`: changelog entries 0.26.0 through 0.42.0, the retained workflow and semantic findings, the matching helper fixtures, and the linked correction history in PRs 69 and 71. Its topics are verification honesty, completion evidence, review confidence, and prose fidelity. Consumer inspection was limited to the two M4 proposals and the current instructions, check catalogue, and CI/control entry points needed to assess them.
 
-The consumer snapshots are Ultima `bea865cdbb49e0e827e30b6b5d1e768555be7fd4` and Clankhaven `d07dcc13f819ba1e2617b0170ecd5419ee98ba1b`. The latter repository now lives at `lightburden/clankhaven`. Refresh these sources before implementation. No consumer code ran during this decision.
+The consumer snapshots are Ultima `bea865cdbb49e0e827e30b6b5d1e768555be7fd4` and a private consumer app whose repository is not public. Refresh these sources before implementation. No consumer code ran during this decision.
 
 No private session-log corpus, broad review-history export, or usage telemetry was collected. Unavailable transcripts supply no evidence. A changelog's reported experiment is historical evidence with its stated limits; it is not a new measurement performed here.
 
@@ -60,9 +60,9 @@ The bad fixture, valid alternatives, and actual scope inventory must pass review
 
 After enforcement ships, replace the duplicate absolute wording in Forge with the rule id, its scope, and the few cases requiring judgment. Keep the rationale for state-change and token-derived comparisons. Documentation describing unsupported cases remains necessary.
 
-### Clankhaven: execute the project release gate in CI
+### Private consumer app: execute the project release gate in CI
 
-Accept the existing M4 gate direction after M2 supplies a runnable project control. At the inspected revision, [package.json](https://github.com/lightburden/clankhaven/blob/d07dcc13f819ba1e2617b0170ecd5419ee98ba1b/package.json) has test and typecheck commands but no verification entry point; [AGENTS.md](https://github.com/lightburden/clankhaven/blob/d07dcc13f819ba1e2617b0170ecd5419ee98ba1b/AGENTS.md) names validation but no `Control:` pointer. The complete recursive repository tree contains no `.github/` or `verification/` directory. This establishes the inspected repository gap, not the absence of every external CI service or a history of escaped defects.
+Accept the existing M4 gate direction after M2 supplies a runnable project control. At the inspected revision, package.json has test and typecheck commands but no verification entry point; AGENTS.md names validation but no `Control:` pointer. The complete recursive repository tree contains no `.github/` or `verification/` directory. This establishes the inspected repository gap, not the absence of every external CI service or a history of escaped defects.
 
 Keep this as one promotion. The workflow invokes the project's control `release` operation and its report gate using the same reviewed source identity. Configure prerequisites explicitly and retain the report when execution fails. Do not copy the release logic into workflow YAML. The exact command, setup, and branch requirements come from decisions 78 through 80, which reconcile current consumer ownership.
 
