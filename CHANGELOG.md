@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.13
+
+- Leyline gains a refresh stage. `generate.sh refresh` reads the installation ledger, the checkout and optional retained challenge evidence without running project code, and writes a reviewable candidate outside the checkout. A path rename proven by identical content becomes a focused value edit to the records, the adapter configuration, the break patch headers or the marked discovery block. Deletions, missing routes, stale scenario bindings, port disagreements and human edits become named findings for a person, and any conflict withholds every edit. Confirmed intent is never edited, and a passing challenge never confirms intent. A challenge is recorded as verified only when its hashed evidence verifies and it covered the current commit, ignoring a commit of the ledger itself; a failed one keeps its evidence path, run ids and the Control pointer. `--map` reports an installation interrupted before its ledger record and leaves finishing it to a rerun of install. An unchanged refresh writes nothing, and `--apply` refuses a candidate the checkout no longer matches. Install records now carry blob ids and the marked block so later merges have a base. Synthetic fixtures cover every case; no consumer refresh is claimed.
+
 ## 0.43.12
 
 - The workflow evaluator holds three frozen held-out prose-fidelity groups for protected config bytes, quantified scope and exact quotation. Exact checks pass or fail; every other prose output goes to an adjudicator with a fact list. The second review of the freeze is complete.

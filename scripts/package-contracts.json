@@ -142,6 +142,7 @@
         "references/feature-map.md",
         "references/install.md",
         "references/challenge.md",
+        "references/refresh.md",
         "references/control-skill-template.md",
         "references/recipes/typescript-node.md",
         "references/recipes/briefing-map.example.json",

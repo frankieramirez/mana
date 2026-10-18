@@ -1,7 +1,7 @@
 ---
 name: leyline
-description: "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, or /leyline."
-argument-hint: "[inspect | map | install] [path:<repo>] [report:<file>] [run[:<feature>]]"
+description: "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, refresh or reconcile an installed control after the code or config changed, or /leyline."
+argument-hint: "[inspect | map | install | refresh] [path:<repo>] [report:<file>] [run[:<feature>]]"
 ---
 
 <!-- BEGIN MANA PERSONA -->
@@ -22,13 +22,14 @@ If a skill rule requires a pause or leaves requested work unfinished, name and l
 
 A project control gives an agent a feature map and a way to run existing assertions with honest source-bound reports. The project owns its runtime, records and tests. This skill inspects an existing control or generates a reviewable first installation for an explicitly mapped Node briefing feature.
 
-The first-install recipe is implemented locally. Existing-control adaptation, refresh, a private consumer rollout and cold-session measurement remain separate work. A generated candidate is not a readiness result.
+The first-install recipe and refresh of a ledger-recorded installation are implemented locally. Existing-control adaptation without a ledger, a private consumer rollout and cold-session measurement remain separate work. A generated candidate is not a readiness result.
 
 ## Arguments and authority
 
 - Blank or `inspect`: inspect the current repository; `path:<repo>` selects another checkout.
 - `map`: draft a review artifact from inspected source and explicit scenario bindings. It does not modify the target.
 - `install`: apply the candidate within existing edit authority. Generate and inspect the concrete diff first; proceed without a second permission question when installation is already authorized.
+- `refresh`: reconcile an installed control with the current checkout and any retained challenge evidence. Reading and proposing executes no project code; applying the reviewed candidate needs the same edit authority as `install`.
 - `report:<file>`: validate a saved report with the actual process exit when known.
 - `run` or `run:<feature>`: execute dynamic probes for the selected feature. An existing request to run these checks covers execution; static-only scope does not.
 
@@ -50,7 +51,7 @@ Inspect exact output paths, candidate content, source identity, prerequisites an
 
 ## Stage 3: Install
 
-When editing is authorized, load [references/install.md](references/install.md). Apply the reviewed map in an isolated candidate checkout using the bundled installer. It checks static conformance and records ownership before returning a candidate. Keep the source-bound map and ledger. Preserve conflicts instead of overwriting them. Refresh is not implemented by this command.
+When editing is authorized, load [references/install.md](references/install.md). Apply the reviewed map in an isolated candidate checkout using the bundled installer. It checks static conformance and records ownership before returning a candidate. Keep the source-bound map and ledger. Preserve conflicts instead of overwriting them. Later changes go through Refresh.
 
 ## Stage 4: Conformance and challenge
 
@@ -68,7 +69,17 @@ bash "<SKILL_DIR>/scripts/challenge.sh" <repo> --trust --plan <plan.json> --evid
 
 It runs the feature seven times plus once per plan variant from committed HEAD bytes and retains every report with a hash manifest outside the checkout. Name any excluded uncommitted changes. A static pass or successful discovery never substitutes for executed assertions.
 
-## Stage 5: Report
+## Stage 5: Refresh
+
+For `refresh`, after a challenge, or when the source or configuration moved since installation, load [references/refresh.md](references/refresh.md). Generate the candidate outside the checkout, passing retained challenge evidence when there is some:
+
+```bash
+bash "<SKILL_DIR>/scripts/generate.sh" refresh <repo> --out <candidate.json> --challenge <evidence-dir>
+```
+
+Read every finding and edit diff. Apply with `--apply <candidate.json>` when edit authority covers it. Report `needs_adjudication` and `conflict` findings as the person's decisions; never resolve them by editing records, tests or instructions yourself. Pass `--map <map.json>` to inspect an interrupted installation; finishing it is a rerun of install.
+
+## Stage 6: Report
 
 Lead with the actual state: inspected, candidate installed, statically conformant, or the observed challenge outcome. Name errors, missing prerequisites and unexecuted work. Link the source identity, raw reports, retained artifacts and installation ledger when present. State which feature/scenarios and environment the evidence covers. Local synthetic fixtures cannot establish a private consumer's browser readiness or a performance improvement.
 
@@ -82,3 +93,4 @@ Lead with the actual state: inspected, candidate installed, statically conforman
 - [references/contract.md](references/contract.md): control/0. Conformance.
 - [references/conformance.md](references/conformance.md): checker usage. Conformance.
 - [references/challenge.md](references/challenge.md): execution evidence and its limits. Challenge.
+- [references/refresh.md](references/refresh.md): drift, ownership and evidence reconciliation. Refresh.
