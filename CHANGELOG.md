@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.43.17
+
+- The `effectiveness-pilot-1` gate record is filled in. Frankie authorized the frozen matrix bounds of 72 parent slots, 35,640 parent seconds and 540 children, and recorded the human-effort cohort as unavailable because no other people will review, so reviewer-effort metrics stay unmeasured. `pilot.py --check` now reports no blockers. Nothing has been prepared or run.
+- The leyline challenge fixture renames its ready file into place, so the SIGTERM test no longer reads it half written.
+
 ## 0.43.16
 
 - Discovery results and probe records keep only a count of entries in each host skill folder, because the folder names describe the operator's machine and the records are committed. The outside-load check still reads each skill's name and description in memory. The workflow evaluator records a live Codex CLI 0.163.0 discovery probe: the automatic canary was read directly from the installed catalog with no outside loads, so 0.163.0 is accepted for discovery runs. `explicit_only_honored` stays unknown, because the explicit canary was read in the same command as a search hit.
