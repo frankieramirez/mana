@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; exact checks pass or fail and every prose output that clears them goes to an adjudicator with a fact list; a second review of this freeze is pending",
+  "status": "frozen; payload inventories verified; exact checks pass or fail and every prose output that clears them goes to an adjudicator with a fact list; the second review of this freeze is complete",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",

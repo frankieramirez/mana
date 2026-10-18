@@ -2,7 +2,7 @@
 
 [Ticket 108](https://github.com/frankieramirez/mana/issues/108) instantiates the three prose rows of the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md): `prose-exempt`, `prose-scope` and `prose-verbatim`. Each is its own source group (`sealed-prose-exempt-01`, `sealed-prose-scope-01`, `sealed-prose-verbatim-01`), split `confirmation`, with new inputs that share no sentence of 30 or more characters with the public prose evals, the semantic pilot or the focused workflow cases.
 
-Status: frozen, with both payload inventories verified. The second review of the current freeze is pending, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
+Status: frozen, with both payload inventories verified and the second review of the current freeze complete. Nothing here invokes a model.
 
 ## Layout
 
@@ -57,7 +57,7 @@ Changing any input, oracle, example or manifest field needs a deliberate refreez
 
 ## Review record
 
-`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. Seven reviews of earlier freezes requested changes and are history entries 1 to 7. The first six each found a gap in an automated prose-fidelity screen: pattern lists, then closed lists of canonical sentences, then scare quotes. The ticket asks for oracle review, not a screen, so the screen and the labeled corpora built to test it are gone. The seventh found that the `4.2` token and word-count checks graded prose and that some labels were incomplete; those checks became facts for the adjudicator. The slot is `pending` for the current freeze.
+`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. Seven reviews of earlier freezes requested changes and are history entries 1 to 7. The first six each found a gap in an automated prose-fidelity screen: pattern lists, then closed lists of canonical sentences, then scare quotes. The ticket asks for oracle review, not a screen, so the screen and the labeled corpora built to test it are gone. The seventh found that the `4.2` token and word-count checks graded prose and that some labels were incomplete; those checks became facts for the adjudicator. The slot holds a `complete` review of the current freeze.
 
 ## Limits
 

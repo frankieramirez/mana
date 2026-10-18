@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator holds three frozen held-out prose-fidelity groups for protected config bytes, quantified scope and exact quotation. Exact checks pass or fail; every other prose output goes to an adjudicator with a fact list, and a second review of the freeze is pending.
+- The workflow evaluator holds three frozen held-out prose-fidelity groups for protected config bytes, quantified scope and exact quotation. Exact checks pass or fail; every other prose output goes to an adjudicator with a fact list. The second review of the freeze is complete.
 
 ## 0.43.0
 

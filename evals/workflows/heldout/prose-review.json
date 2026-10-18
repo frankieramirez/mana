@@ -8,17 +8,28 @@
     "date": "2026-10-17"
   },
   "second_review": {
-    "status": "pending",
-    "reviewer": null,
-    "reviewed_freeze_sha256": null,
-    "date": null,
+    "status": "complete",
+    "reviewer": "independent reviewer agent, Claude",
+    "reviewed_freeze_sha256": "8d24afd71e02b9c0af04ffe4090ea4b344239ea0d0fbcef1d4836b80fa2aa34d",
+    "date": "2026-10-18",
     "checked": {
-      "contracts": null,
-      "known_good": null,
-      "known_bad": null,
-      "valid_alternatives": null
+      "contracts": true,
+      "known_good": true,
+      "known_bad": true,
+      "valid_alternatives": true
     },
-    "notes": null
+    "notes": {
+      "verdict": "approved",
+      "checks_meaning": "true: checked with no defect.",
+      "automated_prose_judgement": "None left. The grader runs only allowed paths, no commit, unchanged and changed files, the protected YAML span and the exact quote; any prose-group output that clears them is needs_adjudication with the fact list.",
+      "exact_checks": "Byte exact, with the mutation controls from round 7 and test_protected_config_bytes_are_exact and test_verbatim_quote_is_byte_exact.",
+      "shows": "Each shows names a fact the output breaks: exempt b1 no-sample-facts, b2 full-cache-behavior, b3 cold-after-restart; scope b1 validation-scope, b2 example-not-exhaustive, b3 no-added-fact, b4 version-onward, b5 shorter-than-source.",
+      "faithful_labels": "All hold, including the prose of exempt b4 and b5. Scope replies run 39, 52 and 37 words against a source of 81.",
+      "request_kind": "Kept. Shortening and reply-only come from the request, not from the source paragraph, so they fit none of the three source kinds, and the adjudicator still needs a question for each.",
+      "freeze": "--recompute gives 8d24afd71e02b9c0af04ffe4090ea4b344239ea0d0fbcef1d4836b80fa2aa34d and --check reports no problems.",
+      "tests": "With this record in place the held-out tests pass at ebf8d7a, where the two tests that refreeze a temp copy reset the copied review slot to pending first.",
+      "nits": "Non-blocking: the shorter-than-source review question says clearly shorter where its statement says shorter."
+    }
   },
   "history": [
     {
