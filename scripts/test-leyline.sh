@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 python3 - <<'PY'
-import json, os, pathlib, shutil, subprocess, tempfile
+import hashlib, json, os, pathlib, shutil, subprocess, tempfile
 
 script = pathlib.Path("skills/leyline/scripts/conform.sh").resolve()
 
@@ -54,7 +54,7 @@ if args[:1] == ["feature"]:
     check = {"id": "unit", "status": "passed" if ok else "failed", "reason": "ran the greeting test",
              "argv": ["python3", "tests/test_greet.py"], "expected": [] if mode == "zero" else ["greet.hello"], "executed": executed}
     status, code = ("passed", 0) if ok else ("failed", 1)
-    if mode == "incomplete":
+    if mode == "incomplete" or (mode == "break-incomplete" and text != "hello"):
         check["status"], status, code = "blocked", "incomplete", 3
     report = {"contract": "control/0", "runId": "run-1" if mode == "fixed-id" else uuid.uuid4().hex, "status": status, "exit": code,
               "source": {"identity": {"head": "abc123", "manifest": {"digest": hashlib.sha256(text.encode()).hexdigest()}}, "sourceChanged": False},
@@ -75,6 +75,7 @@ def git(repo, *a):
 
 
 def conform(*a, env=None, code=None):
+    env = dict(env or {}, TMPDIR=OUT_ROOT)  # the worktree and default report folder land in the fixture
     p = subprocess.run(["bash", str(script), *a], text=True, capture_output=True, env=dict(os.environ, **(env or {})))
     if code is not None and p.returncode != code:
         raise AssertionError((a, p.returncode, p.stdout[-3000:], p.stderr[-2000:]))
@@ -118,6 +119,8 @@ def rules(doc):
 
 with tempfile.TemporaryDirectory(prefix="leyline-") as td:
     base = pathlib.Path(td)
+    OUT_ROOT = str(base / "out")
+    os.makedirs(OUT_ROOT)
     repo = fixture(base)
 
     # static: the honest fixture conforms and no project code runs.
@@ -242,6 +245,91 @@ with tempfile.TemporaryDirectory(prefix="leyline-") as td:
     _, doc = probes("honest", 0)
     assert "excludedChanges" in doc, doc
     git(repo, "checkout", "--", "src/greet.txt")
+
+    # Regressions for the checker defects the Ultima refresh reproduced. Each case reports its own
+    # failure so one run shows every defect that is still present.
+    defects = []
+
+    def regression(name, fn):
+        try:
+            fn()
+            print(f"regression passed: {name}")
+        except Exception as exc:
+            defects.append(f"{name}: {exc!r}"[:600])
+            print(f"regression failed: {name}: {exc!r}"[:600])
+
+    def prepare_reason_on_stdout():
+        copy = base / "prepare-stdout"
+        shutil.copytree(repo, copy)
+        write(copy, "tools/prepare.py", 'print("ERR_STORE_MISSING the package store is empty")\nraise SystemExit(1)\n')
+        edit("skills/app-control/SKILL.md", lambda t: t + "Prepare: `python3 tools/prepare.py`\n")(copy)
+        git(copy, "add", ".")
+        git(copy, "commit", "-qm", "prepare reports on stdout")
+        p = conform("dynamic", str(copy), "--trust", "--timeout", "20", code=3)
+        d = json.loads(p.stdout)
+        prep = next(x for x in d["probes"] if x["probe"] == "prepare")
+        assert prep["status"] == "blocked", prep
+        assert "ERR_STORE_MISSING" in prep.get("stdout", ""), prep
+
+    def break_incomplete_is_blocked():
+        p = conform("dynamic", str(repo), "--trust", "--timeout", "20", env={"FAKE_MODE": "break-incomplete"})
+        d = json.loads(p.stdout)
+        got = {x["probe"]: x["status"] for x in d["probes"]}
+        assert got["baseline"] == "passed" and got["break"] == "blocked", got
+        assert got["restore"] == "passed" and got["parallel"] == "passed", got
+        assert p.returncode == 3, p.returncode
+
+    def reports_retained_with_run_ids():
+        def check_runs(d, out):
+            assert not os.path.exists(d["worktree"]), "the worktree should be removed"
+            assert d.get("retained") == str(out), (d.get("retained"), sorted(d))
+            byprobe = {x["probe"]: x for x in d["probes"]}
+            seen = set()
+            for name, count in (("baseline", 1), ("break", 1), ("restore", 1), ("parallel", 2)):
+                runs = byprobe[name].get("runs")
+                assert isinstance(runs, list) and len(runs) == count, (name, byprobe[name])
+                for run in runs:
+                    path = pathlib.Path(run["report"])
+                    assert path.parent == out and path.is_file(), run
+                    data = path.read_bytes()
+                    assert hashlib.sha256(data).hexdigest() == run["sha256"], run
+                    assert run["runId"] and json.loads(data)["runId"] == run["runId"], run
+                    seen.add(run["runId"])
+            assert len(seen) == 5, seen
+            assert sorted(x.name for x in out.iterdir()) == ["baseline.json", "break.json", "parallel-1.json", "parallel-2.json", "restore.json"], list(out.iterdir())
+
+        d = json.loads(conform("dynamic", str(repo), "--trust", "--timeout", "20", code=0).stdout)
+        assert d.get("retained"), sorted(d)
+        check_runs(d, pathlib.Path(d["retained"]))
+        out = (base / "retained").resolve()
+        d = json.loads(conform("dynamic", str(repo), "--trust", "--timeout", "20", "--out", str(out), code=0).stdout)
+        check_runs(d, out)
+        p = conform("dynamic", str(repo), "--trust", "--out", str(out), code=2)
+        assert "--out" in p.stderr, p.stderr
+
+    def report_without_head_fails():
+        bad = json.loads(json.dumps(good))
+        del bad["source"]["identity"]["head"]
+        d = report(bad, code=1)
+        assert "report.source" in rules(d), rules(d)
+        nulled = json.loads(json.dumps(good))
+        nulled["source"]["identity"]["head"] = None
+        assert report(nulled, code=0)["valid"]
+
+    def restore_always_appears():
+        got, _ = probes("incomplete", 3)
+        assert got.get("restore") == "blocked", got
+        p = conform("dynamic", str(base / "prepare-stdout"), "--trust", "--timeout", "20")
+        names = [x["probe"] for x in json.loads(p.stdout)["probes"]]
+        assert "restore" in names, names
+
+    regression("1 blocked probe keeps stdout", prepare_reason_on_stdout)
+    regression("2 incomplete break run is blocked", break_incomplete_is_blocked)
+    regression("3 dynamic retains run ids and reports", reports_retained_with_run_ids)
+    regression("4 missing source.identity.head fails", report_without_head_fails)
+    regression("5 restore always appears", restore_always_appears)
+    assert not defects, defects
+    assert len(git(repo, "worktree", "list").stdout.strip().splitlines()) == 1
 
     # usage errors
     conform("nope", code=2)

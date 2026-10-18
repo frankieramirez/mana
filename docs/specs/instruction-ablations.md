@@ -1,7 +1,7 @@
 # Instruction changes supported by outcome evidence
 
 Decision: [Choose instruction changes through failure cases, counterexamples, and ablation](https://github.com/frankieramirez/mana/issues/84).
-Status: decision settled on 2026-10-17; candidate payloads and live experiments unstarted.
+Status: decision settled on 2026-10-17. The three prose-fidelity payloads and their execution adapter are frozen in [prose instruction-ablation payloads](../../evals/workflows/prose-ablation.md). The six confirmation source groups are frozen in [prose-ablation confirmation cases](../../evals/workflows/prose-confirmation.md) and have passed their second review. Live experiments are unstarted.
 
 ## Decision and dependencies
 
@@ -64,11 +64,11 @@ Use the two historical invention cases and the published semantic examples as de
 
 An evaluator creates six new source groups after the payload freeze: an absent causal explanation, an adjacent code/config inference trap, a non-exhaustive list of invalid inputs, a conditional quantitative claim, a source-supported concrete explanation, and an explicit interpretation request with a verbatim segment. Each group includes enough source context to establish an exact fidelity oracle and at least one legitimate statement the rewrite must retain. Use different subject matter and underlying contracts from the historical sources. The evaluator keeps source statements and expected judgments outside candidate access except for the task's input text.
 
-The candidate's author does not tune against those labels. Before execution, an independent reviewer checks whether every proposed good and bad output follows from the source and user request. If reviewers cannot agree on the contract, replace that source group before freezing the manifest. Freeze source hashes, request hashes, permissible transformations and protected spans. These fixtures remain to be implemented; this decision supplies their required contracts.
+The candidate's author does not tune against those labels. Before execution, an independent reviewer checks whether every proposed good and bad output follows from the source and user request. If reviewers cannot agree on the contract, replace that source group before freezing the manifest. Freeze source hashes, request hashes, permissible transformations and protected spans. The [confirmation cases](../../evals/workflows/prose-confirmation.md) implement these contracts and have passed their second review.
 
 Run six groups, three conditions and two repetitions: 36 parent invocations, no children, 180 seconds each, one parent at a time. Maximum parent process time is 108 minutes. Use the same validated host, requested model and medium reasoning as the main protocol, with a fresh host check and an explicit instruction-loading wrapper. Shuffle condition/repetition cells within each source group using seed `20261017`; retain every attempt and provide no automatic retries. This group is separate from the 72-invocation comparative pilot.
 
-The existing workflow loader does not yet support dispel execution. Add a prose fixture and explicit condition payloads inside the existing evaluation machinery before launching. Preserve the original raw source and final answer, plus actual skill-file reads. The optional semantic runner may grade saved outputs afterwards; it does not execute the conditions or replace human fidelity review.
+The [prose adapter](../../evals/workflows/prose-ablation.md) supplies the prose fixture and the explicit condition payloads inside the existing evaluation machinery. Preserve the original raw source and final answer, plus actual skill-file reads. The optional semantic runner may grade saved outputs afterwards; it does not execute the conditions or replace human fidelity review.
 
 ## Acceptance, reversion and uncertainty
 

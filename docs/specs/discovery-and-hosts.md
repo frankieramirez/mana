@@ -1,7 +1,7 @@
 # Skill discovery and host capability evaluation
 
 Decision: [Evaluate natural-language skill selection and host compatibility separately](https://github.com/frankieramirez/mana/issues/83), following the [workflow effectiveness protocol](effectiveness-evaluation.md).
-Status: matrix settled on 2026-10-17; live discovery and capability runs unstarted.
+Status: matrix settled on 2026-10-17. The selection-only adapter, preregistered routes and activation probe exist and pass offline against the fake host ([issue 100](https://github.com/frankieramirez/mana/issues/100)); live discovery and capability runs unstarted.
 
 ## Decision
 
@@ -72,11 +72,15 @@ The catalog can have several acceptable routes. Lock the allowed set before resu
 | Linux Codex CLI 0.159.2, delegated execution | Persisted descendant collection, per-thread probes and four bounded review observations | Accepted for the documented collector contract; child usage remains unavailable |
 | Linux Codex CLI 0.155.1, focused execution | Original eight-scenario workflow pilot | Historical focused support; no delegated or discovery claim |
 | Current planning environment, Codex CLI 0.159.0-alpha.3 | Coordinator observed `codex --version` during this decision session | Outside the accepted execution versions; no live benchmark permitted through the existing runner until revalidated |
-| Any Codex CLI version, natural discovery | Existing runner skips host skill discovery and explicitly loads a skill | Unvalidated; requires a discovery adapter and activation-event probe |
+| Linux Codex CLI 0.159.2, comparative delegated execution | Thread cap configured but never challenged; no recorded family-termination probe | Not accepted; needs a fresh `--probe-host` record |
+| Linux Codex CLI 0.163.0, focused and delegated execution | Live `--probe-host` record on 2026-10-17, one model call: containment, events, usage, descendant collection, per-thread probes and process-family termination verified | Accepted for focused and delegated attempts; no runner uses the delegated acceptance yet, because `delegated_review.py` pins 0.159.2 |
+| Linux Codex CLI 0.163.0, comparative delegated execution | Same record; two children ran against `agents.max_threads=2` and the third spawn was refused only in the rollout file, which that probe did not read | Not accepted; the active-thread cap stays unknown |
+| Delivery container for issue 99, Claude Code 2.1.302 | `claude --version` on 2026-10-17; Codex CLI absent | Installation only; no evaluator adapter, containment unexercised, no live probe run |
+| Any Codex CLI version, natural discovery | Existing runner skips host skill discovery and explicitly loads a skill. `discovery.py` and `run.py --probe-discovery` exist, tested only against the fake host | Unvalidated; no host record verifies `skill_discovery` until a live activation probe is reviewed |
 | Claude Code, installed plugin | Manifests and optional host validator exist; prose outputs were supplied instructions in a separate experiment | No comparative discovery/host-control result established by these artifacts |
 | Cursor, Copilot or other skill hosts | Standalone package contract targets portability | Untested for this matrix; packaging does not establish runtime behavior |
 
-A verified installation is distinct from verified isolation, model selection, question support, delegation, event collection and completion detection. Store these as separate capability booleans with evidence links and timestamps. Unknown remains unknown. Native-host experiments form a different study when tools or model access differ; keep their results out of the controlled comparison's score.
+A verified installation is distinct from verified isolation, model selection, question support, delegation, event collection and completion detection. Store these as separate capability booleans with evidence links and timestamps. Unknown remains unknown. The workflow evaluator keeps them in [`evals/workflows/host-evidence/`](../../evals/workflows/host-evidence/), one record per probe, and accepts a host for a mode only when every capability that mode needs is verified. Native-host experiments form a different study when tools or model access differ; keep their results out of the controlled comparison's score.
 
 ## Bounds and implementation handoff
 

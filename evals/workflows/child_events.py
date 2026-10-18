@@ -23,7 +23,8 @@ class Reader:
             for line in self.process.stdout:
                 self.messages.put(line)
             self.messages.put(None)
-        threading.Thread(target=read, daemon=True).start()
+        self.thread = threading.Thread(target=read, daemon=True)
+        self.thread.start()
         try:
             self.call('initialize', {'clientInfo': {'name': 'mana_eval_reader', 'version': '1'},
                                      'capabilities': {'experimentalApi': True}})
@@ -58,12 +59,20 @@ class Reader:
                 return message['result']
 
     def close(self):
+        try:
+            self.process.stdin.close()
+        except OSError:
+            pass
         self.process.terminate()
         try:
             self.process.wait(timeout=5)
         except subprocess.TimeoutExpired:
             self.process.kill()
             self.process.wait()
+        # Close the output pipe only after the reader thread has seen end of file.
+        self.thread.join(timeout=5)
+        if not self.thread.is_alive():
+            self.process.stdout.close()
         self.log.close()
         self.stderr.close()
 
@@ -109,10 +118,14 @@ def pages(reader, method, params):
     raise ValueError('history pagination limit exceeded')
 
 
-def inspect(threads, parent, cwd, require_probe=True):
-    """Normalize persisted commands once, retaining thread and turn attribution."""
+def inspect(threads, parent, cwd, require_probe=True, require_children=True):
+    """Normalize persisted commands once, retaining thread and turn attribution.
+
+    Comparative arms may legitimately finish without children, so callers that
+    allow that pass require_children=False; the parent history is still required.
+    """
     failures, events = [], []
-    if parent not in threads or len(threads) < 2:
+    if parent not in threads or (require_children and len(threads) < 2):
         failures.append('parent or descendants missing')
     referenced = set()
     for identity, thread in threads.items():

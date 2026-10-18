@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {"expect": "#filters[data-collapsed=false]"},
+    {"press": "Shift+K"},
+    {"expect": "#filters[data-collapsed=true]"},
+    {"press": "Shift+K"},
+    {"expect": "#filters[data-collapsed=false]"},
+    {"focus": "#search"},
+    {"press": "Shift+K"},
+    {"expect": "#filters[data-collapsed=false]"}
+  ]
+}
