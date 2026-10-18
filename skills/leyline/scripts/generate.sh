@@ -216,7 +216,12 @@ def validate_spec(root, spec):
     for need in prerequisites:
         if not isinstance(need, dict) or not isinstance(need.get('need'), str) or not need['need']:
             fail('each prerequisite needs a name')
-        relative(root, need.get('path'))
+        if ('path' in need) == ('probe' in need):
+            fail('each prerequisite names exactly one path or probe command')
+        if 'path' in need:
+            relative(root, need.get('path'))
+        else:
+            argv(need['probe'], f"prerequisite {need['need']} probe")
     timeout = spec.get('timeoutSeconds', 60)
     if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or not 0 < timeout <= 3600:
         fail('timeoutSeconds must be positive and at most 3600')

@@ -60,7 +60,13 @@ Load [references/contract.md](references/contract.md) and [references/conformanc
 bash "<SKILL_DIR>/scripts/conform.sh" static <repo>
 ```
 
-For `report:<file>`, validate the actual saved report and process exit. For authorized dynamic work, load [references/challenge.md](references/challenge.md), select an affordable feature and run with `--trust`. The dynamic checker repeats the feature five times and uses committed HEAD bytes. Name any excluded uncommitted changes. A static pass or successful discovery never substitutes for executed assertions.
+For `report:<file>`, validate the actual saved report and process exit. For authorized dynamic work, load [references/challenge.md](references/challenge.md), select an affordable feature and run the challenge with `--trust`:
+
+```bash
+bash "<SKILL_DIR>/scripts/challenge.sh" <repo> --trust --plan <plan.json> --evidence <dir>
+```
+
+It runs the feature seven times plus once per plan variant from committed HEAD bytes and retains every report with a hash manifest outside the checkout. Name any excluded uncommitted changes. A static pass or successful discovery never substitutes for executed assertions.
 
 ## Stage 5: Report
 
