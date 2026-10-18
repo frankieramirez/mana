@@ -1,1 +1,0 @@
-Starting with version 4.2, the importer brings in every record that passes schema validation. Records that fail validation are still imported but flagged in the rejection report; a future `posted_on` date is one example. The importer doesn't modify records.

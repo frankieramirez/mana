@@ -1,4 +1,4 @@
-"""Held-out prose-fidelity groups: freeze integrity and evaluator-only oracle screens.
+"""Held-out prose-fidelity groups: freeze integrity, exact checks and evaluator-only fact lists.
 
 Candidates see only heldout/inputs/<case>/. Oracles under heldout/oracles/ never enter a
 prompt, a fixture workspace or the response schema. No model is invoked here.
@@ -26,13 +26,10 @@ ENTRY_FIELDS = ('id', 'source_group', 'job', 'split', 'fixture_path', 'fixture_s
 EFFECT_FIELDS = ('product_paths', 'local_commit', 'artifact_dir', 'external_publication')
 HEX40 = re.compile(r'[0-9a-f]{40}')
 RELATIVE = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*')
-# Prose screens use closed lists. A sentence passes only when it is a canonical faithful statement
-# or mentions no topic of any check; it fails only when it is a canonical contradiction. Every other
-# topical sentence goes to a reviewer. A canonical contradiction may hold no negation, quantifier
-# or reason clause, so a reworded or qualified contradiction can never hard-fail faithful text.
-SENTENCE_SPLIT = re.compile(r'\n+|(?<=[.!?])\s+')
-GUARD = re.compile(r"\b(not|no|never|nothing|none|nor|neither|without|because|since|so|therefore|due|unless)\b|n't",
-                   re.IGNORECASE)
+# A fact list is written for a human or model adjudicator: facts that must survive, conditions that
+# must not be lost and facts that must not be added. No code matches prose against it.
+FACT_KINDS = ('must-survive', 'condition', 'must-not-add')
+FACT_FIELDS = ('id', 'kind', 'statement', 'review_question')
 REVIEW_STATUSES = ('pending', 'changes_required', 'complete')
 REVIEW_CHECKS = {'contracts', 'known_good', 'known_bad', 'valid_alternatives'}
 HISTORY_FIELDS = {'date', 'freeze_sha256', 'previous_freeze_sha256', 'by', 'change'}
@@ -137,6 +134,10 @@ def verify(root=HELDOUT):
         if (oracle.get('oracle_id') != entry['oracle_id'] or oracle.get('case_id') != case
                 or oracle.get('evaluator_only') is not True):
             problems.append(case + ': oracle identity does not match the manifest')
+        facts = oracle.get('facts')
+        if (not isinstance(facts, list) or len({f.get('id') for f in facts}) != len(facts)
+                or any(tuple(f) != FACT_FIELDS or f['kind'] not in FACT_KINDS for f in facts)):
+            problems.append(case + ': oracle facts need a unique id, a kind, a statement and a review question')
     if manifest['freeze_sha256'] != freeze_sha256(manifest):
         problems.append('freeze_sha256 does not match the frozen manifest fields')
     history = manifest['history']
@@ -248,98 +249,10 @@ def words(text):
     return len(re.findall(r"[A-Za-z0-9_'`.]+", text))
 
 
-def compiled(pattern):
-    return re.compile(pattern, re.IGNORECASE)
-
-
-def normalize(sentence):
-    """Canonical comparison ignores case, spacing, heading and list markers, code ticks, quote style and a
-    closing period, colon, semicolon or exclamation mark. A question mark or a trailing ellipsis stays, so a
-    question never matches a statement."""
-    text = sentence.replace('’', "'").replace('‘', "'").replace('`', '').replace('"', '')
-    text = re.sub(r'^\s*(?:#+|[-*+]|\d+\.)\s+', '', text)
-    text = re.sub(r'\s+', ' ', text).strip().lower()
-    if text.endswith('...') or text.endswith('…'):
-        return text
-    return re.sub(r'[.!;:\s]+$', '', text)
-
-
-def sentences(prose):
-    """Every line counts, headings included; a line splits further at sentence-final punctuation."""
-    return [s for s in SENTENCE_SPLIT.split(prose) if normalize(s)]
-
-
-def source_sentences(screen, files):
-    """Normalized sentences of the text the candidate was asked to edit, fenced blocks left out."""
-    spec = screen.get('source')
-    if spec is None or files is None:
-        return set()
-    text = files[spec['path']]
-    if 'start' in spec:
-        text = span(text, spec)
-    text = re.sub(r'```.*?```', '\n', text, flags=re.S)
-    found = {normalize(s) for s in sentences(text)}
-    for item in screen.get('source_carries', []):
-        if normalize(item['sentence']) not in found:
-            raise ValueError('source sentence not found in the fixture: ' + item['sentence'])
-    return found
-
-
-def check_screen(screen):
-    """A canonical contradiction carrying a negation, quantifier or reason clause is an oracle defect."""
-    for item in screen['contradictions']:
-        if GUARD.search(item['sentence']):
-            raise ValueError('canonical contradiction holds a negation, quantifier or reason: ' + item['sentence'])
-
-
-def screen_prose(oracle, prose, files=None):
-    """Return (check, verdict, failure, reason) for every fact, in oracle order.
-    A sentence fails only as a canonical contradiction and passes only as a canonical faithful statement or
-    unchanged from the source text in files. Every other sentence goes to a reviewer: to each fact whose
-    topic it mentions, or else to the screen's catch-all check."""
-    screen = oracle.get('screen')
-    if screen is None:
-        return []
-    check_screen(screen)
-    faithful = {normalize(f['sentence']): f['carries'] for f in screen['faithful']}
-    faithful_source = {normalize(f['sentence']): f['carries'] for f in screen.get('source_carries', [])}
-    contradictions = {normalize(c['sentence']): c for c in screen['contradictions']}
-    if screen['unmatched'] not in {fact['id'] for fact in oracle['facts']}:
-        raise ValueError('screen catch-all check is not a fact: ' + screen['unmatched'])
-    unchanged = source_sentences(screen, files)
-    carried, routed, failed = set(), {}, {}
-    for sentence in sentences(prose):
-        key = normalize(sentence)
-        if key in contradictions and not GUARD.search(sentence):
-            failed.setdefault(contradictions[key]['check'], contradictions[key]['failure'])
-        elif key in faithful:
-            carried.update(faithful[key])
-        elif key in unchanged:
-            carried.update(faithful_source.get(key, []))
-        else:
-            topical = [fact['id'] for fact in oracle['facts']
-                       if any(compiled(p).search(sentence) for p in fact['topics'])]
-            for ident in topical or [screen['unmatched']]:
-                routed.setdefault(ident, 'sentence is neither canonical nor unchanged: ' + sentence.strip())
-    for cue in screen.get('prose_cues', []):
-        if compiled(cue['pattern']).search(prose):
-            routed.setdefault(cue['check'], 'reviewer cue in the reply layout')
-    results = []
-    for fact in oracle['facts']:
-        ident = fact['id']
-        if ident in failed:
-            results.append((ident, 'fail', failed[ident], 'canonical contradiction'))
-        elif ident in routed:
-            results.append((ident, 'adjudicate', None, routed[ident]))
-        elif fact['kind'] == 'preserve' and ident not in carried:
-            results.append((ident, 'adjudicate', None, 'no canonical statement of ' + ident))
-        else:
-            results.append((ident, 'pass', None, None))
-    return results
-
-
 def grade(case_id, observation, root=HELDOUT):
-    """Grade one completed observation: report text, final product files and commits created."""
+    """Grade one completed observation: report text, final product files and commits created.
+    Exact checks pass or fail. No prose verdict is automatic: when the oracle lists facts, the output
+    always goes to an adjudicator, who judges it against that fact list."""
     root = Path(root)
     manifest, _ = load(root)
     entry = next(e for e in manifest['cases'] if e['id'] == case_id)
@@ -362,7 +275,6 @@ def grade(case_id, observation, root=HELDOUT):
 
     graded = oracle['graded_text']
     text = observation['report'] if graded['source'] == 'report' else final.get(graded['path'], '')
-    prose = text
     for check in oracle['exact']:
         kind = check['kind']
         if kind == 'unchanged_file':
@@ -377,7 +289,6 @@ def grade(case_id, observation, root=HELDOUT):
                 raise ValueError('oracle span no longer matches its frozen digest')
             ok = text.count(protected) == 1
             record(check['id'], 'pass' if ok else 'fail', check['failure'])
-            prose = prose.replace(protected, '\n') if ok else re.sub(r'```.*?```', '\n', prose, flags=re.S)
         elif kind == 'required_token':
             ok = re.search(check['pattern'], text) is not None
             record(check['id'], 'pass' if ok else 'fail', check['failure'])
@@ -397,13 +308,13 @@ def grade(case_id, observation, root=HELDOUT):
         check = oracle['shorter_than']
         source = span(initial[check['span']['path']], check['span'])
         record(check['id'], 'pass' if words(text) < words(source) else 'fail', check['failure'])
-    for check_id, verdict, failure, reason in screen_prose(oracle, prose.strip(), initial):
-        record(check_id, verdict, failure, reason)
+    if oracle['facts']:
+        record('fact-review', 'adjudicate', reason='judge the prose against the oracle fact list')
     outcome = 'failed' if failures else 'needs_adjudication' if adjudication else 'passed'
     return {'case_id': case_id, 'oracle_id': oracle['oracle_id'], 'outcome': outcome,
             'failures': sorted(failures), 'adjudication': adjudication, 'checks': checks,
             'changed_paths': changed,
-            'review_questions': [f['review_question'] for f in oracle['facts']]}
+            'facts': oracle['facts']}
 
 
 def refreeze(root, by, change, date):

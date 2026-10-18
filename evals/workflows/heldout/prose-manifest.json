@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; oracles reworked after the fifth review, which requested changes, so only canonical or unchanged sentences pass; a new review of this freeze is needed",
+  "status": "frozen; payload inventories verified; the automated prose screen was removed after the sixth review, so exact checks pass or fail and every prose output goes to an adjudicator with a fact list; a second review of this freeze is pending",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -54,7 +54,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-exempt-01",
-      "oracle_sha256": "ed0a1a1456eeb776aff0aba9e747fecbce9e2aff3809e4eab44560d9e218e00e"
+      "oracle_sha256": "b5d0383ce91e85bdb6c4d38907c9e3f159d40c836a372e8e93ea08932eeea629"
     },
     {
       "id": "prose-scope",
@@ -85,7 +85,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-scope-01",
-      "oracle_sha256": "3d4837eb322af654f44d14006113aec5ece80793c42444bc270a31cf377eeb7b"
+      "oracle_sha256": "6c9a587c43428cc7531c0581a131e19e8c947cd5762e3245e588715fcbaec862"
     },
     {
       "id": "prose-verbatim",
@@ -116,11 +116,11 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-verbatim-01",
-      "oracle_sha256": "55981cbd3659ce260bc4982556f03da53219865cbd2b36531c9c87a85b232b9b"
+      "oracle_sha256": "888e86e361d3b864e98c6130f2ab6c999af23b8bf0f95165ba251dc86269046c"
     }
   ],
   "exposure": [],
-  "freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+  "freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
   "history": [
     {
       "date": "2026-10-17",
@@ -170,6 +170,13 @@
       "previous_freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
       "by": "Claude fixture author for issue 108",
       "change": "Fifth review: only canonical or unchanged sentences pass; headings are screened; a question mark is kept; thirteen reviewer outputs added as examples"
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
+      "previous_freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+      "by": "Claude fixture author for issue 108",
+      "change": "Sixth review: the automated prose screen is removed; exact checks pass or fail and every prose output goes to an adjudicator with a fact list; a small known-good and known-bad set per group replaces the screen corpora"
     }
   ]
 }

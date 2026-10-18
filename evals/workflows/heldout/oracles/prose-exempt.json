@@ -39,204 +39,39 @@
   "facts": [
     {
       "id": "cache-holds-thumbnails",
-      "kind": "preserve",
-      "topics": [
-        "render|thumbnail|gallery"
-      ],
-      "review_question": "Does the prose still say the cache keeps thumbnails close to (or for) the renderer?"
+      "kind": "must-survive",
+      "statement": "The image cache keeps thumbnails close to the renderer.",
+      "review_question": "Does the prose still say the cache keeps thumbnails close to the renderer?"
     },
     {
       "id": "periodic-sweep-removes-old",
-      "kind": "preserve",
-      "topics": [
-        "sweep|background|periodic|regular|schedul|clean|remov|purg|prune|expire|\\bold\\b"
-      ],
+      "kind": "must-survive",
+      "statement": "A background sweep periodically removes old thumbnails.",
       "review_question": "Does the prose still say a background sweep periodically removes old thumbnails?"
     },
     {
       "id": "full-cache-behavior",
-      "kind": "preserve",
-      "topics": [
-        "\\bfull\\b|fills?\\s+up|capacity|\\broom\\b|evict|pushed\\s+aside|push\\w*\\s+out|\\bolder\\b|\\boldest\\b|\\bdrop|replac|discard|least[- ]recently|\\bLRU\\b|\\bFIFO\\b|\\bstor"
-      ],
-      "review_question": "When the cache is full, does the prose still say new thumbnails render but are not stored, without inventing what happens to stored thumbnails?"
+      "kind": "condition",
+      "statement": "When the cache is full, new thumbnails still render but are not stored.",
+      "review_question": "Is the full-cache condition kept, with new thumbnails still rendering but not stored, and nothing said about what happens to stored thumbnails?"
     },
     {
       "id": "cold-after-restart",
-      "kind": "preserve",
-      "topics": [
-        "restart|reboot|\\bcold\\b|\\bempty\\b|\\bwarm|surviv|persist|\\bstay|still\\s+there|carr(y|ied|ies)\\s+over|retain|restor|\\bkept\\b|\\bgone\\b"
-      ],
-      "review_question": "Does the prose still say the cache starts cold after a restart, with nothing contradicting that?"
+      "kind": "condition",
+      "statement": "After a restart the cache starts cold.",
+      "review_question": "Does the prose still say the cache starts cold after a restart, with nothing anywhere (headings, asides, questions, quotes) suggesting otherwise?"
     },
     {
       "id": "no-sample-facts",
-      "kind": "forbid",
-      "topics": [
-        "\\d|thousand|thirty|six\\s+hours|quarter|hourly|\\bhour\\b|day\\s+and\\s+a\\s+half|warm_on_boot|max_entries|evict_after_hours|sweep_cron"
-      ],
-      "review_question": "Does the prose avoid numbers, schedules and settings that appear only in the YAML sample?"
+      "kind": "must-not-add",
+      "statement": "The entry limit, eviction age, sweep schedule, the reason in the cron comment and the boot setting appear only in the YAML sample.",
+      "review_question": "Does the prose stay free of numbers, schedules, settings and reasons that appear only in the YAML sample?"
     },
     {
       "id": "no-added-fact",
-      "kind": "forbid",
-      "topics": [],
-      "review_question": "Does every new or reworded sentence state only what the original prose stated, adding no fact about the cache (where it lives, who shares it, who can clear it) or anything else?"
-    },
-    {
-      "id": "no-inferred-reason",
-      "kind": "forbid",
-      "topics": [
-        "because|due\\s+to|so\\s+that|in\\s+order\\s+to|\\bso\\b|\\bto\\s+(free|avoid|prevent|keep|make|save|reclaim|ensure|reduce|improve|limit)|collid|stagger|contention|\\bspace\\b|slow|faster|latency|performance|speed|first\\s+(gallery\\s+)?(load|view|visit)|\\bmiss"
-      ],
-      "review_question": "Does the prose avoid adding a reason, purpose, mechanism or consequence (for example freeing space or slower first loads) that the prose never stated?"
+      "kind": "must-not-add",
+      "statement": "The prose states no eviction policy, reason, purpose, consequence or other fact about the cache beyond the four above.",
+      "review_question": "Does the prose avoid adding any fact, mechanism, reason or consequence (for example LRU eviction, freeing space, slower first loads, where the cache lives or who can clear it)?"
     }
-  ],
-  "screen": {
-    "source": {
-      "path": "docs/image-cache.md"
-    },
-    "source_carries": [
-      {
-        "sentence": "The image cache is a crucial component that seamlessly keeps thumbnails close to the renderer — it's not just a cache, it's the backbone of the gallery experience.",
-        "carries": [
-          "cache-holds-thumbnails"
-        ]
-      },
-      {
-        "sentence": "In order to keep things tidy, old thumbnails are cleaned up periodically by a background sweep.",
-        "carries": [
-          "periodic-sweep-removes-old"
-        ]
-      },
-      {
-        "sentence": "When the cache is full, new thumbnails still render, they just don't get stored.",
-        "carries": [
-          "full-cache-behavior"
-        ]
-      },
-      {
-        "sentence": "It's worth noting that the cache starts out cold after a restart.",
-        "carries": [
-          "cold-after-restart"
-        ]
-      }
-    ],
-    "unmatched": "no-added-fact",
-    "faithful": [
-      {
-        "sentence": "The image cache keeps thumbnails close to the renderer.",
-        "carries": [
-          "cache-holds-thumbnails"
-        ]
-      },
-      {
-        "sentence": "The cache keeps thumbnails close to the renderer.",
-        "carries": [
-          "cache-holds-thumbnails"
-        ]
-      },
-      {
-        "sentence": "A background sweep periodically removes old thumbnails.",
-        "carries": [
-          "periodic-sweep-removes-old"
-        ]
-      },
-      {
-        "sentence": "Old thumbnails are removed periodically by a background sweep.",
-        "carries": [
-          "periodic-sweep-removes-old"
-        ]
-      },
-      {
-        "sentence": "When the cache is full, new thumbnails still render but aren't stored.",
-        "carries": [
-          "full-cache-behavior"
-        ]
-      },
-      {
-        "sentence": "When the cache is full, new thumbnails still render but are not stored.",
-        "carries": [
-          "full-cache-behavior"
-        ]
-      },
-      {
-        "sentence": "When the cache is full, new thumbnails still render, but they aren't stored.",
-        "carries": [
-          "full-cache-behavior"
-        ]
-      },
-      {
-        "sentence": "The cache starts cold after a restart.",
-        "carries": [
-          "cold-after-restart"
-        ]
-      },
-      {
-        "sentence": "The cache starts out cold after a restart.",
-        "carries": [
-          "cold-after-restart"
-        ]
-      },
-      {
-        "sentence": "After a restart the cache starts cold.",
-        "carries": [
-          "cold-after-restart"
-        ]
-      },
-      {
-        "sentence": "After a restart, the cache starts cold.",
-        "carries": [
-          "cold-after-restart"
-        ]
-      }
-    ],
-    "contradictions": [
-      {
-        "check": "cold-after-restart",
-        "failure": "contradicted-fact",
-        "sentence": "The cache is warm after a restart."
-      },
-      {
-        "check": "cold-after-restart",
-        "failure": "contradicted-fact",
-        "sentence": "The cache keeps its thumbnails across a restart."
-      },
-      {
-        "check": "cold-after-restart",
-        "failure": "contradicted-fact",
-        "sentence": "Thumbnails survive a restart."
-      },
-      {
-        "check": "full-cache-behavior",
-        "failure": "contradicted-fact",
-        "sentence": "When the cache is full, new thumbnails fail to render."
-      },
-      {
-        "check": "full-cache-behavior",
-        "failure": "invented-mechanism",
-        "sentence": "When the cache is full, the oldest thumbnails are evicted."
-      },
-      {
-        "check": "full-cache-behavior",
-        "failure": "invented-mechanism",
-        "sentence": "When the cache is full, the least recently used thumbnails are evicted."
-      },
-      {
-        "check": "no-sample-facts",
-        "failure": "inferred-number",
-        "sentence": "A background sweep runs every six hours."
-      },
-      {
-        "check": "no-sample-facts",
-        "failure": "inferred-number",
-        "sentence": "The sweep removes thumbnails older than 36 hours."
-      },
-      {
-        "check": "no-sample-facts",
-        "failure": "inferred-number",
-        "sentence": "The cache holds up to 5000 thumbnails."
-      }
-    ]
-  }
+  ]
 }

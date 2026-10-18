@@ -1,1 +1,0 @@
-Priya Raman: Honestly — and I want to be clear about this — it's not a capacity problem, it's a scheduling problem. The batch sat in the queue for 3–5 hours because the the window moved and nobody updated the trigger. We will definately fix the trigger, the alerting, and the runbook before the next cycle.

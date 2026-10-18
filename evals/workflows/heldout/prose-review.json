@@ -1,140 +1,24 @@
 {
   "schema_version": 1,
-  "freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+  "freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
   "author": {
     "identity": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
-    "role": "Instantiated requests, fixtures, oracles and labeled examples",
+    "role": "Instantiated requests, fixtures, exact checks, fact lists and labeled examples",
     "edits_candidate_instructions": false,
     "date": "2026-10-17"
   },
   "second_review": {
-    "status": "changes_required",
-    "reviewer": "independent reviewer agent, Claude",
-    "reviewed_freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
-    "date": "2026-10-18",
+    "status": "pending",
+    "reviewer": null,
+    "reviewed_freeze_sha256": null,
+    "date": null,
     "checked": {
-      "contracts": true,
-      "known_good": true,
-      "known_bad": false,
-      "valid_alternatives": true
+      "contracts": null,
+      "known_good": null,
+      "known_bad": null,
+      "valid_alternatives": null
     },
-    "notes": {
-      "verdict": "changes required",
-      "checks_meaning": "true: checked with no defect; false: checked and found defects.",
-      "labeled_examples": "All 99 labeled examples grade to their expected outcome and failures; no known-bad example passes and no known-good or valid-alternative example fails.",
-      "previous_outputs": "All 77 outputs from rounds 1 to 5 pass, fail or route acceptably.",
-      "alternatives": [
-        {
-          "case": "prose-exempt",
-          "output": "canonical text with the cold sentence dropped",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "unchanged source sentences with the full-cache sentence dropped",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "unchanged source sentences reordered",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "unchanged source sentences with doubled spaces and extra line breaks",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "two unchanged sentences merged with \", and\"",
-          "reviewer_label": "faithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "The cache starts \"cold\" after a restart. (scare quotes)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "canonical cold sentence ending in a colon, then \"- unless it was warm before\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "canonical cold sentence ending in \"!\"",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "unchanged text under \"# Image cache (legacy behavior, removed in v2)\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "all prose dropped, sample only",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-scope",
-          "output": "canonical text with the example dropped",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-scope",
-          "output": "unchanged source sentences 1, 2 and 4 (example dropped)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-scope",
-          "output": "unchanged source sentences 1, 3 and 4 (exclusion dropped)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-scope",
-          "output": "all four unchanged source sentences reordered",
-          "reviewer_label": "not shortened",
-          "grader_result": "failed not-shortened, correct for the request"
-        },
-        {
-          "case": "prose-scope",
-          "output": "canonical text with the version dropped from the scope sentence",
-          "reviewer_label": "unfaithful",
-          "grader_result": "failed lost-condition"
-        },
-        {
-          "case": "prose-scope",
-          "output": "The importer doesn't \"modify\" records. (scare quotes)",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "canonical sentences on separate lines",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        }
-      ],
-      "defects": [
-        {
-          "where": "evals/workflows/heldout_prose.py:259",
-          "scenario": "normalize deletes straight double quotes, so scare quotes that cast doubt on a canonical statement still match it and pass: 'The cache starts \"cold\" after a restart.' and 'The importer doesn't \"modify\" records.' Curly quotes are not deleted and route correctly."
-        }
-      ],
-      "recommendation": "Map curly double quotes to straight ones instead of deleting straight ones, so a quoted word never matches a canonical or unchanged sentence. Omissions, reordering, merging and whitespace or closing punctuation edits all behave correctly."
-    }
+    "notes": null
   },
   "history": [
     {
@@ -803,6 +687,135 @@
           }
         ],
         "recommendation": "Route every sentence that is neither canonical faithful nor a canonical contradiction to a reviewer, whatever its topic; screen heading text as sentences, or route any heading that differs from the fixture heading; and keep the question mark in normalize so a question never matches a canonical statement or contradiction."
+      }
+    },
+    {
+      "status": "changes_required",
+      "reviewer": "independent reviewer agent, Claude",
+      "reviewed_freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+      "date": "2026-10-18",
+      "checked": {
+        "contracts": true,
+        "known_good": true,
+        "known_bad": false,
+        "valid_alternatives": true
+      },
+      "notes": {
+        "verdict": "changes required",
+        "checks_meaning": "true: checked with no defect; false: checked and found defects.",
+        "labeled_examples": "All 99 labeled examples grade to their expected outcome and failures; no known-bad example passes and no known-good or valid-alternative example fails.",
+        "previous_outputs": "All 77 outputs from rounds 1 to 5 pass, fail or route acceptably.",
+        "alternatives": [
+          {
+            "case": "prose-exempt",
+            "output": "canonical text with the cold sentence dropped",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "unchanged source sentences with the full-cache sentence dropped",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "unchanged source sentences reordered",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "unchanged source sentences with doubled spaces and extra line breaks",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "two unchanged sentences merged with \", and\"",
+            "reviewer_label": "faithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "The cache starts \"cold\" after a restart. (scare quotes)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "canonical cold sentence ending in a colon, then \"- unless it was warm before\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "canonical cold sentence ending in \"!\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "unchanged text under \"# Image cache (legacy behavior, removed in v2)\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "all prose dropped, sample only",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "canonical text with the example dropped",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "unchanged source sentences 1, 2 and 4 (example dropped)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "unchanged source sentences 1, 3 and 4 (exclusion dropped)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "all four unchanged source sentences reordered",
+            "reviewer_label": "not shortened",
+            "grader_result": "failed not-shortened, correct for the request"
+          },
+          {
+            "case": "prose-scope",
+            "output": "canonical text with the version dropped from the scope sentence",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed lost-condition"
+          },
+          {
+            "case": "prose-scope",
+            "output": "The importer doesn't \"modify\" records. (scare quotes)",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "canonical sentences on separate lines",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          }
+        ],
+        "defects": [
+          {
+            "where": "evals/workflows/heldout_prose.py:259",
+            "scenario": "normalize deletes straight double quotes, so scare quotes that cast doubt on a canonical statement still match it and pass: 'The cache starts \"cold\" after a restart.' and 'The importer doesn't \"modify\" records.' Curly quotes are not deleted and route correctly."
+          }
+        ],
+        "recommendation": "Map curly double quotes to straight ones instead of deleting straight ones, so a quoted word never matches a canonical or unchanged sentence. Omissions, reordering, merging and whitespace or closing punctuation edits all behave correctly."
       }
     }
   ]

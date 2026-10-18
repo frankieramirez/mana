@@ -35,191 +35,45 @@
   "facts": [
     {
       "id": "validation-scope",
-      "kind": "preserve",
-      "topics": [
-        "\\bevery\\b|\\ball\\b|\\beach\\b|\\bany\\b|valid|\\bpass|schema|\\bmeet|\\bclear|succe"
-      ],
+      "kind": "condition",
+      "statement": "Success holds for records that pass schema validation, not for every record.",
       "review_question": "Is the success guarantee still limited to records that pass schema validation?"
     },
     {
       "id": "version-onward",
-      "kind": "preserve",
-      "topics": [
-        "\\d+\\.\\d+|version|release|before|\\bafter\\b|since|starting|\\bfrom\\b|onward|later|earlier|\\bnow\\b|\\bno\\s+longer\\b"
-      ],
+      "kind": "condition",
+      "statement": "The guarantee holds from version 4.2 onward.",
       "review_question": "Does the reply say the guarantee holds from version 4.2 onward, not before it and not only in 4.2?"
     },
     {
       "id": "invalid-excluded-and-reported",
-      "kind": "preserve",
-      "topics": [
-        "fail|reject|report|import|skip|exclud|left\\s+out|drop|accept|brought\\s+in|bring"
-      ],
+      "kind": "must-survive",
+      "statement": "Records that fail validation are left out of the import and listed in the rejection report.",
       "review_question": "Does the reply still say failing records are not imported and are listed in the rejection report?"
     },
     {
       "id": "example-not-exhaustive",
-      "kind": "preserve",
-      "topics": [
-        "posted_on|posting\\s+date|post\\s+date|future|example|\\bonly\\b|reject|\\bsuch\\s+as\\b|\\bincluding\\b"
-      ],
-      "review_question": "Does the reply still say a record with a future posted_on date fails validation, as one example rather than the only case?"
+      "kind": "condition",
+      "statement": "A future posted_on date is one example of a record that fails validation, not the only case.",
+      "review_question": "Does the reply keep the future posted_on date as one failing example rather than the only case, and never place it among records that pass?"
     },
     {
       "id": "records-not-modified",
-      "kind": "preserve",
-      "topics": [
-        "modif|chang|alter|edit|rewrit|touch|transform|intact|as[- ]is|unaltered"
-      ],
-      "review_question": "Does the reply still say the importer does not modify records?"
+      "kind": "must-survive",
+      "statement": "The importer leaves records unmodified.",
+      "review_question": "Does the reply still state, as a statement and not a question, that the importer does not modify records?"
     },
     {
-      "id": "no-inferred-fact",
-      "kind": "forbid",
-      "topics": [
-        "re-?import|retr(y|ies|ied)|\\bfix|correct|email|notif|alert|time\\s*zone|clock|duplicat|dedup|faster|performance|\\bsent\\b|deliver|rout|forward|return|uploader|submitter|admin|because|due\\s+to|so\\s+that|\\bto\\s+(prevent|avoid|ensure|protect)|warning|reason"
-      ],
+      "id": "no-added-fact",
+      "kind": "must-not-add",
+      "statement": "The reply adds no fact, cause or consequence, such as a recovery path, a report recipient or a schedule.",
       "review_question": "Does the reply avoid adding any fact, cause or consequence the paragraph never stated?"
     },
     {
       "id": "reply-only",
-      "kind": "forbid",
-      "topics": [
-        "\\bhere(?:'s|\\s+is)\\b|\\bshort(?:er|ened)\\s+(?:version|paragraph)|^(?:sure|okay|certainly)\\b"
-      ],
+      "kind": "must-not-add",
+      "statement": "The reply holds only the shortened paragraph, with no preface, notes or alternatives.",
       "review_question": "Is the reply just the shortened paragraph, without a preface, notes or alternatives?"
     }
-  ],
-  "screen": {
-    "source": {
-      "path": "notes/importer-draft.md",
-      "start": "We are thrilled",
-      "end": "\n",
-      "include_start": true
-    },
-    "source_carries": [
-      {
-        "sentence": "We are thrilled to share that, starting with version 4.2, the importer will now successfully bring in each and every record that passes schema validation — reliably, consistently, and without exception.",
-        "carries": [
-          "validation-scope",
-          "version-onward"
-        ]
-      },
-      {
-        "sentence": "Records that fail validation are not imported at all, and instead they are listed in the rejection report.",
-        "carries": [
-          "invalid-excluded-and-reported"
-        ]
-      },
-      {
-        "sentence": "For example, a record whose `posted_on` date is in the future fails validation and will be rejected.",
-        "carries": [
-          "example-not-exhaustive"
-        ]
-      },
-      {
-        "sentence": "It is important to note that the importer does not modify any record in any way.",
-        "carries": [
-          "records-not-modified"
-        ]
-      }
-    ],
-    "unmatched": "no-inferred-fact",
-    "faithful": [
-      {
-        "sentence": "Starting with version 4.2, the importer brings in every record that passes schema validation.",
-        "carries": [
-          "validation-scope",
-          "version-onward"
-        ]
-      },
-      {
-        "sentence": "In 4.2 and later, the importer succeeds for every record that passes schema validation.",
-        "carries": [
-          "validation-scope",
-          "version-onward"
-        ]
-      },
-      {
-        "sentence": "Records that fail validation aren't imported and are listed in the rejection report; a future posted_on date is one example.",
-        "carries": [
-          "invalid-excluded-and-reported",
-          "example-not-exhaustive"
-        ]
-      },
-      {
-        "sentence": "Failing records are left out and listed in the rejection report; one example is a record whose posted_on date is in the future.",
-        "carries": [
-          "invalid-excluded-and-reported",
-          "example-not-exhaustive"
-        ]
-      },
-      {
-        "sentence": "The importer doesn't modify records.",
-        "carries": [
-          "records-not-modified"
-        ]
-      },
-      {
-        "sentence": "The importer does not modify records.",
-        "carries": [
-          "records-not-modified"
-        ]
-      },
-      {
-        "sentence": "Records are left unchanged.",
-        "carries": [
-          "records-not-modified"
-        ]
-      }
-    ],
-    "contradictions": [
-      {
-        "check": "validation-scope",
-        "failure": "lost-scope",
-        "sentence": "Starting with version 4.2, the importer brings in every record."
-      },
-      {
-        "check": "validation-scope",
-        "failure": "lost-scope",
-        "sentence": "The importer imports every record."
-      },
-      {
-        "check": "version-onward",
-        "failure": "lost-condition",
-        "sentence": "Before version 4.2, the importer brought in every record that passes schema validation."
-      },
-      {
-        "check": "example-not-exhaustive",
-        "failure": "example-made-exhaustive",
-        "sentence": "Only records with a future posted_on date are rejected."
-      },
-      {
-        "check": "example-not-exhaustive",
-        "failure": "contradicted-fact",
-        "sentence": "Records with a future posted_on date are imported."
-      },
-      {
-        "check": "example-not-exhaustive",
-        "failure": "contradicted-fact",
-        "sentence": "Records with a future posted_on date pass validation."
-      },
-      {
-        "check": "no-inferred-fact",
-        "failure": "inferred-fact",
-        "sentence": "Rejected records can be corrected and re-imported."
-      },
-      {
-        "check": "no-inferred-fact",
-        "failure": "inferred-fact",
-        "sentence": "The rejection report goes to the uploader."
-      }
-    ],
-    "prose_cues": [
-      {
-        "check": "reply-only",
-        "pattern": "\\n\\s*\\n"
-      }
-    ]
-  }
+  ]
 }

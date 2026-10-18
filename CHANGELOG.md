@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator holds three new prose-fidelity source groups for protected config bytes, quantified scope and exact quotation. Candidate inputs sit apart from evaluator-only oracles, labeled outcomes and a manifest that freezes request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite routes. Fact screens use closed lists: a sentence fails only on an exact canonical contradiction that holds no negation, quantifier or reason clause, and passes only on an exact canonical faithful statement or when left unchanged from the source text. Every other sentence reaches a reviewer, headings included, and a question never matches a statement. Offline tests check byte-exact oracles, labeled reviewer outputs that must never pass or never fail, style independence, prompt isolation, freeze tampering, a chained freeze history and review results that request changes. Five independent reviews requested changes; the oracles were repaired before any outcome each time and a new review is pending, so no confirmation run can start.
+- The workflow evaluator holds three frozen held-out prose-fidelity groups for protected config bytes, quantified scope and exact quotation. Exact checks pass or fail; every other prose output goes to an adjudicator with a fact list, and a second review of the freeze is pending.
 
 ## 0.43.0
 

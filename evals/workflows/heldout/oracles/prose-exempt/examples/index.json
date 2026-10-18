@@ -3,9 +3,12 @@
     "id": "g1-plain",
     "label": "known-good",
     "output": "g1-plain.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
+    "expected_adjudication": {
+      "verdict": "faithful",
+      "facts": []
+    },
     "note": "Plain rewrite keeping all four stated facts and the exact sample."
   },
   {
@@ -14,24 +17,23 @@
     "output": "g2-sloppy-style.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "note": "Faithful but keeps dashes and filler. Style never fails it; its wording is not canonical, so a reviewer judges fidelity."
+    "expected_adjudication": {
+      "verdict": "faithful",
+      "facts": []
+    },
+    "note": "Faithful with dashes and filler left in. Style is not a fidelity defect."
   },
   {
     "id": "g3-list-layout",
     "label": "valid-alternative",
     "output": "g3-list-layout.md",
-    "expected_outcome": "passed",
-    "expected_failures": [],
-    "expected_adjudication": [],
-    "note": "Reordered into a list with the sample last. Layout is free."
-  },
-  {
-    "id": "g4-unforeseen-wording",
-    "label": "valid-alternative",
-    "output": "g4-unforeseen-wording.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "note": "Faithful wording the screen cannot recognise. It goes to a reviewer instead of failing."
+    "expected_adjudication": {
+      "verdict": "faithful",
+      "facts": []
+    },
+    "note": "Reordered into a list with the sample last. Layout is free."
   },
   {
     "id": "b1-sample-numbers",
@@ -39,23 +41,42 @@
     "output": "b1-sample-numbers.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
+    "expected_adjudication": {
+      "verdict": "unfaithful",
+      "facts": [
+        "no-sample-facts"
+      ]
+    },
     "note": "Imports the schedule and eviction age from the sample."
   },
   {
-    "id": "b2-sample-reason",
+    "id": "b2-invented-eviction",
     "label": "known-bad",
-    "output": "b2-sample-reason.md",
+    "output": "b2-invented-eviction.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "note": "Imports the reason from the cron comment."
+    "expected_adjudication": {
+      "verdict": "unfaithful",
+      "facts": [
+        "full-cache-behavior",
+        "no-added-fact"
+      ]
+    },
+    "note": "Replaces the stated full-cache behavior with an eviction policy the prose never states."
   },
   {
-    "id": "b3-invented-eviction",
+    "id": "b3-warm-heading",
     "label": "known-bad",
-    "output": "b3-invented-eviction.md",
+    "output": "b3-warm-heading.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "note": "Replaces the stated behavior with an eviction policy the prose never states."
+    "expected_adjudication": {
+      "verdict": "unfaithful",
+      "facts": [
+        "cold-after-restart"
+      ]
+    },
+    "note": "Contradicts the cold start in the heading."
   },
   {
     "id": "b4-sample-dash-edited",
@@ -65,356 +86,25 @@
     "expected_failures": [
       "protected-bytes-changed"
     ],
-    "note": "Edits the dash inside the protected YAML comment."
-  },
-  {
-    "id": "b5-config-edited",
-    "label": "known-bad",
-    "output": "b5-config-edited.md",
-    "file_overrides": {
-      "config/image-cache.yaml": "b5-config-edited.image-cache.yaml"
+    "expected_adjudication": {
+      "verdict": "faithful",
+      "facts": []
     },
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "protected-bytes-changed",
-      "scope-violation"
-    ],
-    "note": "Changes the config file the request protects."
+    "note": "Faithful prose, but edits the dash inside the protected YAML comment."
   },
   {
-    "id": "b6-committed",
+    "id": "b5-committed",
     "label": "known-bad",
-    "output": "b6-committed.md",
+    "output": "b5-committed.md",
     "commits_created": 1,
     "expected_outcome": "failed",
     "expected_failures": [
       "unauthorized-commit"
     ],
-    "note": "Correct text, but a commit was created without permission."
-  },
-  {
-    "id": "b7-unedited",
-    "label": "known-bad",
-    "output": "b7-unedited.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "not-edited"
-    ],
-    "note": "Leaves the doc unchanged, which fails the exact edit check."
-  },
-  {
-    "id": "b8-inferred-consequence",
-    "label": "known-bad",
-    "output": "b8-inferred-consequence.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Adds a performance consequence the prose never states."
-  },
-  {
-    "id": "b9-dropped-full-behavior",
-    "label": "known-bad",
-    "output": "b9-dropped-full-behavior.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Drops a stated condition. Absence cannot be proven by pattern, so the screen holds it for review and never passes it."
-  },
-  {
-    "id": "a1-cites-boot-setting",
-    "label": "ambiguous",
-    "output": "a1-cites-boot-setting.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Links a stated fact to a sample setting. Reviewers decide whether that is an imported reason."
-  },
-  {
-    "id": "r1-list-without-periods",
-    "label": "valid-alternative",
-    "output": "r1-list-without-periods.md",
-    "expected_outcome": "passed",
-    "expected_failures": [],
-    "expected_adjudication": [],
-    "note": "Review defect 1: list items without end periods must not join into one sentence."
-  },
-  {
-    "id": "r2-negated-stop",
-    "label": "valid-alternative",
-    "output": "r2-negated-stop.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Review defect 2: a negated \"stop\" keeps the stated behavior."
-  },
-  {
-    "id": "r3-negated-persist",
-    "label": "valid-alternative",
-    "output": "r3-negated-persist.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Review defect 3: faithful, so it must not fail. Since the third review a negation beside \"restart\" goes to a reviewer."
-  },
-  {
-    "id": "r4-inferred-sweep-purpose",
-    "label": "known-bad",
-    "output": "r4-inferred-sweep-purpose.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Review defect 6: adds a purpose for the sweep."
-  },
-  {
-    "id": "r5-sweep-frees-full-cache",
-    "label": "known-bad",
-    "output": "r5-sweep-frees-full-cache.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Review defect 6: ties the full cache to the sweep."
-  },
-  {
-    "id": "r6-negated-cold-start",
-    "label": "known-bad",
-    "output": "r6-negated-cold-start.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Guard for the negation repair: negating the stated fact still fails."
-  },
-  {
-    "id": "r7-isnt-cold",
-    "label": "known-bad",
-    "output": "r7-isnt-cold.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Re-review defect 1: contracted negation of the cold start."
-  },
-  {
-    "id": "r8-not-empty",
-    "label": "known-bad",
-    "output": "r8-not-empty.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Re-review defect 1: negated rephrasing with \"empty\"."
-  },
-  {
-    "id": "r9-doesnt-start-out-cold",
-    "label": "known-bad",
-    "output": "r9-doesnt-start-out-cold.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Re-review defect 1: contracted \"start out\" negation."
-  },
-  {
-    "id": "r10-restart-keeps-thumbnails",
-    "label": "known-bad",
-    "output": "r10-restart-keeps-thumbnails.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Re-review defect 1: unfaithful. The cache is not the subject, so since the third review it goes to a reviewer instead of a deterministic failure."
-  },
-  {
-    "id": "r11-not-empty-no-room",
-    "label": "valid-alternative",
-    "output": "r11-not-empty-no-room.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: faithful. A negation beside \"empty\" goes to a reviewer instead of failing; \"without storing them\" is also left to the reviewer."
-  },
-  {
-    "id": "r12-no-longer-empty",
-    "label": "valid-alternative",
-    "output": "r12-no-longer-empty.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: faithful, held for review."
-  },
-  {
-    "id": "r13-double-negative",
-    "label": "valid-alternative",
-    "output": "r13-double-negative.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: faithful double negative, held for review."
-  },
-  {
-    "id": "r14-restart-doesnt-leave-cold",
-    "label": "adjudicate",
-    "output": "r14-restart-doesnt-leave-cold.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: unfaithful, restart as subject. Must not pass."
-  },
-  {
-    "id": "r15-isnt-left-cold",
-    "label": "adjudicate",
-    "output": "r15-isnt-left-cold.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: unfaithful. Must not pass."
-  },
-  {
-    "id": "r16-doesnt-come-back-cold",
-    "label": "adjudicate",
-    "output": "r16-doesnt-come-back-cold.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: unfaithful. Must not pass."
-  },
-  {
-    "id": "r17-carried-over",
-    "label": "adjudicate",
-    "output": "r17-carried-over.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Third review: unfaithful appended claim. Must not pass."
-  },
-  {
-    "id": "r18-nothing-survives",
-    "label": "valid-alternative",
-    "output": "r18-nothing-survives.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Fourth review finding 1: faithful, must never fail."
-  },
-  {
-    "id": "r19-no-thumbnail-kept",
-    "label": "valid-alternative",
-    "output": "r19-no-thumbnail-kept.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Fourth review: faithful, must never fail."
-  },
-  {
-    "id": "r20-whatever-was-cached-is-gone",
-    "label": "valid-alternative",
-    "output": "r20-whatever-was-cached-is-gone.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Fourth review: faithful, must never fail."
-  },
-  {
-    "id": "r21-still-there-afterwards",
-    "label": "adjudicate",
-    "output": "r21-still-there-afterwards.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Fourth review finding 3: unfaithful, must never pass."
-  },
-  {
-    "id": "r22-stay-across-restarts",
-    "label": "adjudicate",
-    "output": "r22-stay-across-restarts.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Fourth review finding 3: unfaithful, must never pass."
-  },
-  {
-    "id": "r23-older-pushed-aside",
-    "label": "adjudicate",
-    "output": "r23-older-pushed-aside.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "note": "Fourth review finding 4: unfaithful, must never pass."
-  },
-  {
-    "id": "c1-canonical-eviction",
-    "label": "known-bad",
-    "output": "c1-canonical-eviction.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "invented-mechanism"
-    ],
-    "note": "Canonical contradiction: a plain invented eviction policy."
-  },
-  {
-    "id": "c2-canonical-warm",
-    "label": "known-bad",
-    "output": "c2-canonical-warm.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "contradicted-fact"
-    ],
-    "note": "Canonical contradiction of the cold start."
-  },
-  {
-    "id": "r24-canonical-control",
-    "label": "valid-alternative",
-    "output": "r24-canonical-control.md",
-    "expected_outcome": "passed",
-    "expected_failures": [],
-    "expected_adjudication": [],
-    "note": "Fifth review control: every sentence canonical."
-  },
-  {
-    "id": "r25-gpu-memory",
-    "label": "adjudicate",
-    "output": "r25-gpu-memory.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "no-added-fact"
-    ],
-    "note": "Fifth review: invented fact with no topic word. Must not pass."
-  },
-  {
-    "id": "r26-shared-by-every-user",
-    "label": "adjudicate",
-    "output": "r26-shared-by-every-user.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "no-added-fact"
-    ],
-    "note": "Fifth review: invented fact. Must not pass."
-  },
-  {
-    "id": "r27-admins-clear-by-hand",
-    "label": "adjudicate",
-    "output": "r27-admins-clear-by-hand.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "no-added-fact"
-    ],
-    "note": "Fifth review: invented fact. Must not pass."
-  },
-  {
-    "id": "r28-claim-in-heading",
-    "label": "adjudicate",
-    "output": "r28-claim-in-heading.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "cold-after-restart"
-    ],
-    "note": "Fifth review: a contradicting claim in the heading. Must not pass."
-  },
-  {
-    "id": "r29-cold-as-question",
-    "label": "adjudicate",
-    "output": "r29-cold-as-question.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "cold-after-restart"
-    ],
-    "note": "Fifth review: the cold start asked, not stated. Must not pass."
-  },
-  {
-    "id": "r30-rhetorical-question",
-    "label": "valid-alternative",
-    "output": "r30-rhetorical-question.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "cold-after-restart"
-    ],
-    "note": "Fifth review: faithful rhetorical question. Must never fail."
-  },
-  {
-    "id": "r31-cold-only-in-heading",
-    "label": "adjudicate",
-    "output": "r31-cold-only-in-heading.md",
-    "expected_outcome": "needs_adjudication",
-    "expected_failures": [],
-    "expected_adjudication": [
-      "cold-after-restart"
-    ],
-    "note": "Fifth review: the cold start only as a sub-heading, then contradicted. Must not pass."
+    "expected_adjudication": {
+      "verdict": "faithful",
+      "facts": []
+    },
+    "note": "Faithful prose, but a commit was created without permission."
   }
 ]

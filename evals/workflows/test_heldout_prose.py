@@ -246,146 +246,76 @@ STYLE_CHANGES = {
 
 
 class Oracles(unittest.TestCase):
-    def test_labeled_examples_match_their_labels(self):
+    def test_labeled_examples_match_their_expected_grades(self):
         for case in hp.CASES:
             for example in hp.examples(hp.HELDOUT, case):
                 with self.subTest(case=case, example=example['id']):
                     result = hp.grade(case, observation(case, example))
                     self.assertEqual(result['outcome'], example['expected_outcome'])
                     self.assertEqual(result['failures'], sorted(example['expected_failures']))
-                    if 'expected_adjudication' in example:
-                        self.assertEqual([a['check'] for a in result['adjudication']], example['expected_adjudication'])
 
-    def test_review_defects_have_regression_examples(self):
-        """Every reviewer output keeps a labeled example with an allowed route. Faithful outputs may pass or
-        reach a reviewer but never fail; unfaithful outputs may fail or reach a reviewer but never pass."""
-        faithful = {
-            'prose-exempt': ['r1-list-without-periods', 'r2-negated-stop', 'r3-negated-persist',
-                             'r11-not-empty-no-room', 'r12-no-longer-empty', 'r13-double-negative',
-                             'r18-nothing-survives', 'r19-no-thumbnail-kept', 'r20-whatever-was-cached-is-gone',
-                             'r24-canonical-control', 'r30-rhetorical-question'],
-            'prose-scope': ['r1-meets-the-schema', 'r5-version-last', 'r9-failing-example-included', 'r13-among-them',
-                            'r14-clears-validation', 'r15-not-the-only-reason', 'r16-not-only-those',
-                            'r17-while-one-fails', 'r20-canonical-control'],
-        }
-        unfaithful = {
-            'prose-exempt': ['r4-inferred-sweep-purpose', 'r5-sweep-frees-full-cache', 'r6-negated-cold-start',
-                             'r7-isnt-cold', 'r8-not-empty', 'r9-doesnt-start-out-cold',
-                             'r10-restart-keeps-thumbnails', 'r14-restart-doesnt-leave-cold', 'r15-isnt-left-cold',
-                             'r16-doesnt-come-back-cold', 'r17-carried-over', 'r21-still-there-afterwards',
-                             'r22-stay-across-restarts', 'r23-older-pushed-aside', 'r25-gpu-memory',
-                             'r26-shared-by-every-user', 'r27-admins-clear-by-hand', 'r28-claim-in-heading',
-                             'r29-cold-as-question', 'r31-cold-only-in-heading'],
-            'prose-scope': ['r2-before-version', 'r3-version-only', 'r4-report-destination', 'r7-future-date-included',
-                            'r8-future-date-passes', 'r10-future-dates-included', 'r11-future-dates-too',
-                            'r12-now-accepts-future-date', 'r18-no-longer-fail', 'r19-no-reason-to-reject',
-                            'r21-runs-nightly', 'r22-arrival-order', 'r23-single-threaded',
-                            'r24-modification-as-question'],
-        }
-        for label, groups, forbidden in (('faithful', faithful, 'failed'), ('unfaithful', unfaithful, 'passed')):
-            for case, idents in groups.items():
-                labeled = {e['id']: e for e in hp.examples(hp.HELDOUT, case)}
-                for ident in idents:
-                    with self.subTest(case=case, example=ident, label=label):
-                        self.assertNotEqual(hp.grade(case, observation(case, labeled[ident]))['outcome'], forbidden)
-
-    def test_canonical_contradictions_are_plain(self):
-        """A contradiction fails only as a canonical sentence with no negation, quantifier or reason clause.
-        Negating it or adding a reason sends it to a reviewer instead."""
+    def test_every_prose_output_goes_to_an_adjudicator(self):
+        """Exact checks pass or fail; a prose output that clears them always needs adjudication, and
+        whatever its outcome the result hands the adjudicator the fact list."""
         for case in ('prose-exempt', 'prose-scope'):
             oracle = hp.load_oracle(hp.HELDOUT, case)
-            hp.check_screen(oracle['screen'])
-            for item in oracle['screen']['contradictions']:
-                plain = dict(hp.screen_prose(oracle, item['sentence'])[i][:2]
-                             for i in range(len(oracle['facts'])))
-                self.assertEqual(plain[item['check']], 'fail', item['sentence'])
-                for variant in ('It is not true that ' + item['sentence'][0].lower() + item['sentence'][1:],
-                                item['sentence'].rstrip('.') + ' because of the schedule.',
-                                'Nothing says ' + item['sentence'][0].lower() + item['sentence'][1:]):
-                    with self.subTest(case=case, variant=variant):
-                        routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, variant)}
-                        self.assertNotIn('fail', routes.values())
-                        self.assertEqual(routes[item['check']], 'adjudicate')
-        broken = {'faithful': [], 'contradictions': [{'check': 'x', 'failure': 'y',
-                                                      'sentence': 'The cache is not cold after a restart.'}]}
-        with self.assertRaises(ValueError):
-            hp.check_screen(broken)
+            for example in hp.examples(hp.HELDOUT, case):
+                with self.subTest(case=case, example=example['id']):
+                    result = hp.grade(case, observation(case, example))
+                    self.assertNotEqual(result['outcome'], 'passed')
+                    self.assertEqual([a['check'] for a in result['adjudication']], ['fact-review'])
+                    self.assertEqual(result['facts'], oracle['facts'])
+        for example in hp.examples(hp.HELDOUT, 'prose-verbatim'):
+            result = hp.grade('prose-verbatim', observation('prose-verbatim', example))
+            self.assertEqual(result['adjudication'], [], example['id'])
 
-    def test_canonical_faithful_statements_pass_alone(self):
+    def test_fact_lists_serve_an_adjudicator(self):
         for case in ('prose-exempt', 'prose-scope'):
             oracle = hp.load_oracle(hp.HELDOUT, case)
-            for item in oracle['screen']['faithful']:
-                routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, item['sentence'])}
-                for check in item['carries']:
-                    self.assertEqual(routes[check], 'pass', (case, item['sentence']))
-                self.assertNotIn('fail', routes.values())
+            self.assertNotIn('screen', oracle)
+            kinds = {f['kind'] for f in oracle['facts']}
+            self.assertEqual(kinds, set(hp.FACT_KINDS), case)
+            for fact in oracle['facts']:
+                self.assertEqual(tuple(fact), hp.FACT_FIELDS, (case, fact))
+                self.assertTrue(fact['statement'] and fact['review_question'].endswith('?'), (case, fact['id']))
+        self.assertEqual(hp.load_oracle(hp.HELDOUT, 'prose-verbatim')['facts'], [])
 
-    def test_topical_sentences_reach_a_reviewer(self):
-        """Sentences on a check's topic are routed even when they hold failure words."""
-        cases = {
-            'prose-exempt': ['Old thumbnails are still there afterwards.', 'Older ones are pushed aside.',
-                             'Thumbnails stay in it across restarts.'],
-            'prose-scope': ['A future posted_on date is no reason to reject a record.',
-                            'Future posted_on dates are included.', 'Every record that clears validation is imported.'],
-        }
-        for case, texts in cases.items():
-            oracle = hp.load_oracle(hp.HELDOUT, case)
-            for text in texts:
-                with self.subTest(case=case, text=text):
-                    routes = [v for _, v, _, _ in hp.screen_prose(oracle, text)]
-                    self.assertIn('adjudicate', routes)
-                    self.assertNotIn('fail', routes)
-
-    def test_only_canonical_or_unchanged_sentences_pass(self):
-        """A new or reworded sentence reaches a reviewer whatever its topic; an untouched source sentence passes."""
-        for case, invented in (('prose-exempt', 'The cache lives in GPU memory.'),
-                               ('prose-scope', 'It is single-threaded.')):
-            oracle = hp.load_oracle(hp.HELDOUT, case)
-            manifest, _ = hp.load()
-            entry = next(e for e in manifest['cases'] if e['id'] == case)
-            files = hp.fixture_files(hp.HELDOUT, entry)
-            with self.subTest(case=case, text=invented):
-                routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, invented, files)}
-                self.assertEqual(routes[oracle['screen']['unmatched']], 'adjudicate')
-                self.assertNotIn('fail', routes.values())
-            source = ' '.join(item['sentence'] for item in oracle['screen']['source_carries'])
-            routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, source, files)}
-            self.assertEqual(set(routes.values()), {'pass'}, case)
-            routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, source)}
-            self.assertNotIn('pass', [routes[i['carries'][0]] for i in oracle['screen']['source_carries']], case)
-            broken = json.loads(json.dumps(oracle))
-            broken['screen']['source_carries'][0]['sentence'] = 'A sentence the fixture never held.'
-            with self.assertRaises(ValueError):
-                hp.screen_prose(broken, source, files)
-            broken = json.loads(json.dumps(oracle))
-            broken['screen']['unmatched'] = 'not-a-fact'
-            with self.assertRaises(ValueError):
-                hp.screen_prose(broken, source, files)
-
-    def test_headings_and_questions_are_screened(self):
-        oracle = hp.load_oracle(hp.HELDOUT, 'prose-exempt')
-        self.assertNotEqual(hp.normalize('The cache starts cold after a restart?'),
-                            hp.normalize('The cache starts cold after a restart.'))
-        self.assertEqual(hp.normalize('## The cache starts cold after a restart'),
-                         hp.normalize('The cache starts cold after a restart.'))
-        for text in ('# Image cache (warm after every restart)', 'The cache is warm after a restart?',
-                     'The cache starts cold after a restart?'):
-            with self.subTest(text=text):
-                routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, text)}
-                self.assertEqual(routes['cold-after-restart'], 'adjudicate')
-                self.assertNotIn('fail', routes.values())
+    def test_malformed_fact_list_is_detected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            copy_tree(root)
+            path = root / 'oracles/prose-scope.json'
+            oracle = json.loads(path.read_text())
+            oracle['facts'][0]['topics'] = ['valid']
+            path.write_text(json.dumps(oracle, indent=2) + '\n')
+            self.assertTrue(any('oracle facts need' in p for p in hp.verify(root)))
 
     def test_examples_cover_good_bad_and_alternatives(self):
+        """Every group has known-good, valid-alternative and known-bad outputs. In prose groups each one names
+        the adjudication a second reviewer should reach; a known-bad output fails an exact check or is unfaithful."""
         for case in hp.CASES:
+            facts = {f['id'] for f in hp.load_oracle(hp.HELDOUT, case)['facts']}
             labels = [e['label'] for e in hp.examples(hp.HELDOUT, case)]
             self.assertGreaterEqual(labels.count('known-good'), 1, case)
             self.assertGreaterEqual(labels.count('valid-alternative'), 1, case)
-            self.assertGreaterEqual(labels.count('known-bad'), 6, case)
+            self.assertGreaterEqual(labels.count('known-bad'), 3, case)
             for example in hp.examples(hp.HELDOUT, case):
-                if example['label'] in ('known-bad', 'adjudicate'):
-                    self.assertNotEqual(example['expected_outcome'], 'passed', example['id'])
-                if example['label'] == 'adjudicate':
-                    self.assertEqual(example['expected_outcome'], 'needs_adjudication', example['id'])
+                with self.subTest(case=case, example=example['id']):
+                    adjudication = example.get('expected_adjudication')
+                    if not facts:
+                        self.assertIsNone(adjudication)
+                        self.assertEqual(example['expected_outcome'] == 'passed', example['label'] != 'known-bad')
+                        continue
+                    self.assertEqual(set(adjudication), {'verdict', 'facts'})
+                    self.assertLessEqual(set(adjudication['facts']), facts)
+                    self.assertEqual(adjudication['verdict'] == 'faithful', not adjudication['facts'])
+                    if example['label'] == 'known-bad':
+                        self.assertTrue(example['expected_failures'] or adjudication['verdict'] == 'unfaithful')
+                    else:
+                        self.assertEqual((example['expected_failures'], adjudication['verdict']), ([], 'faithful'))
+            bad = [e for e in hp.examples(hp.HELDOUT, case) if e['label'] == 'known-bad']
+            if facts:
+                self.assertTrue(any(not e['expected_failures'] for e in bad), case)
 
     def test_protected_config_bytes_are_exact(self):
         case = 'prose-exempt'
@@ -423,20 +353,17 @@ class Oracles(unittest.TestCase):
         obs['report'] = quote.replace('  ', ' ').replace(' ', '  ', 1)
         self.assertEqual(hp.grade(case, obs)['failures'], ['quote-altered'])
 
-    def test_fidelity_screens_ignore_style(self):
-        """Style edits outside protected bytes never create a failure and never make a reply pass.
-        Unrecognised wording, including restyled canonical sentences, reaches a reviewer."""
+    def test_exact_checks_ignore_style(self):
+        """Dash, filler and opener edits outside protected bytes never add an exact failure and never make a
+        prose output pass."""
         for case in ('prose-exempt', 'prose-scope'):
             oracle = hp.load_oracle(hp.HELDOUT, case)
             protected = None
             if case == 'prose-exempt':
                 manifest, _ = hp.load()
-                entry = manifest['cases'][0]
                 spec = oracle['exact'][0]['span']
-                protected = hp.span(hp.fixture_files(hp.HELDOUT, entry)[spec['path']], spec)
+                protected = hp.span(hp.fixture_files(hp.HELDOUT, manifest['cases'][0])[spec['path']], spec)
             for example in hp.examples(hp.HELDOUT, case):
-                if example['id'] == 'b7-unedited':
-                    continue
                 base = observation(case, example)
                 expected = hp.grade(case, base)
                 for name, change in STYLE_CHANGES.items():
@@ -448,21 +375,16 @@ class Oracles(unittest.TestCase):
                             path = oracle['graded_text']['path']
                             obs['files'][path] = outside_protected(obs['files'][path], protected, change)
                         result = hp.grade(case, obs)
-                        new = set(result['failures']) - set(expected['failures']) - {'not-shortened'}
-                        self.assertEqual(new, set())
-                        if expected['outcome'] != 'passed':
-                            self.assertNotEqual(result['outcome'], 'passed')
+                        self.assertEqual(set(result['failures']) - set(expected['failures']) - {'not-shortened'}, set())
+                        self.assertNotEqual(result['outcome'], 'passed')
 
-    def test_oracle_patterns_do_not_score_register(self):
+    def test_oracles_do_not_score_register(self):
         register = re.compile(r'[—–]|worth noting|honestly|leverag|seamless|crucial|robust|not just')
         for case in hp.CASES:
             oracle = hp.load_oracle(hp.HELDOUT, case)
             for fact in oracle['facts']:
-                for pattern in fact['topics']:
-                    self.assertIsNone(register.search(pattern), (case, fact['id'], pattern))
-            screen = oracle.get('screen', {'faithful': [], 'contradictions': []})
-            for item in screen['faithful'] + screen['contradictions']:
-                self.assertIsNone(register.search(item['sentence']), (case, item['sentence']))
+                for field in ('statement', 'review_question'):
+                    self.assertIsNone(register.search(fact[field]), (case, fact['id'], field))
 
     def test_missing_oracle_marker_is_an_error(self):
         with self.assertRaises(ValueError):

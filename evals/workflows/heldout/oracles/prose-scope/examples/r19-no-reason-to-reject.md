@@ -1,1 +1,0 @@
-Starting with version 4.2, the importer brings in every record that passes schema validation. A future `posted_on` date is no reason to reject a record. The importer doesn't modify records.
