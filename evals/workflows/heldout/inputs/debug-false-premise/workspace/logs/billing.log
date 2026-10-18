@@ -1,0 +1,7 @@
+2026-06-04T09:12:44Z release=3.1 invoice=INV-51 customer=C-3308 lines=3.35,3.34,3.35 total=10.03
+2026-06-04T09:12:44Z release=3.1 invoice=INV-51 customer=C-3308 exact_line_amounts=3.345,3.335,3.345
+2026-07-02T09:10:03Z release=3.1 invoice=INV-60 customer=C-3308 lines=4.46,3.34 total=7.80
+2026-08-19T14:00:00Z release=3.2 deploy migration=decimal-amounts
+2026-09-02T09:11:57Z release=3.2 invoice=INV-69 customer=C-3308 lines=4.46,3.34 total=7.80
+2026-10-02T09:13:20Z release=3.2 invoice=INV-77 customer=C-3308 lines=3.35,3.34,3.35 total=10.03
+2026-10-02T09:13:20Z release=3.2 invoice=INV-77 customer=C-3308 exact_line_amounts=3.345,3.335,3.345
