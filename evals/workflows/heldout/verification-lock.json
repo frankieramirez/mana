@@ -2192,21 +2192,52 @@
         },
         "recorded_in": "606a400",
         "round": 6
+      },
+      {
+        "record": {
+          "checked": {
+            "review_subject_scope": {
+              "notes": "git diff 606a400 d7fdcf5 is empty for heldout/inputs/verify-*, heldout/oracles/verify-* and verification-manifest.json. In heldout_verification.py only review_subject_digest changed: it now hashes inputs/<case> (request.md, fixture, base, bin, history.json), oracles/<case>.json and the oracles/<case> support folder for each of CASE_IDS, plus the manifest and the grader file. Those are every file materialize, check_manifest, load_oracle and run_suite read; the grader imports only the standard library.",
+              "result": "confirmed"
+            }
+          },
+          "findings": [],
+          "note": "Re-signs the unchanged verify inputs approved in round 6 (subject 8adcec5a) after review_subject_digest() was scoped to CASE_IDS in d7fdcf5, so other freezes' cases in the shared heldout folders no longer move it.",
+          "reviewer": "independent reviewer agent rev136, Claude (did not write the PR)",
+          "signed_on": "2026-10-18",
+          "status": "approved",
+          "subject_sha256": "1ab6eb049979aab56fd79dda9cc4cb403cad84864ac276e4bb6e20f28ee67094"
+        },
+        "recorded_in": "cf649d2",
+        "round": 7
       }
     ],
     "reviewer_record": {
       "checked": {
-        "review_subject_scope": {
-          "notes": "git diff 606a400 d7fdcf5 is empty for heldout/inputs/verify-*, heldout/oracles/verify-* and verification-manifest.json. In heldout_verification.py only review_subject_digest changed: it now hashes inputs/<case> (request.md, fixture, base, bin, history.json), oracles/<case>.json and the oracles/<case> support folder for each of CASE_IDS, plus the manifest and the grader file. Those are every file materialize, check_manifest, load_oracle and run_suite read; the grader imports only the standard library.",
+        "inputs_unchanged": {
+          "notes": "git diff 606a400 2d3b816 is empty for heldout/inputs/verify-*, heldout/oracles/verify-* and verification-manifest.json.",
+          "result": "confirmed"
+        },
+        "symlink_handling": {
+          "notes": "Grader changes since cf649d2 are only in run_suite: product files are copied with follow_symlinks=False (03f8b46), and a replacement run whose target or target folder is a candidate link returns exit None, ran 0 without writing (2d3b816). Reviewer probes with the delete-spy repair: a relative file link and a folder link under tests/ and an absolute link to the real workspace module give needs_adjudication, as before (the folder link used to crash with IsADirectoryError). An absolute link at shelf/export.py or at shelf gives failed with out-of-scope-edit and spy-coupling-retained, and the outside file stays unwritten (at 03f8b46 the grader wrote mutant bytes through it). A refusal needs a change under shelf/, so it always comes with out-of-scope-edit; in contract_controls an alternative with exit None counts as failing and a mutant with exit None is no survivor, so a refused run never earns clean controls.",
           "result": "confirmed"
         }
       },
-      "findings": [],
-      "note": "Re-signs the unchanged verify inputs approved in round 6 (subject 8adcec5a) after review_subject_digest() was scoped to CASE_IDS in d7fdcf5, so other freezes' cases in the shared heldout folders no longer move it.",
+      "findings": [
+        {
+          "id": 1,
+          "kind": "grader writes outside the disposable copy",
+          "scenario": "At 03f8b46 an absolute link at shelf/export.py or at shelf made the oracle replacement copy write alternative and mutant bytes to the outside target. The attempt still failed with out-of-scope-edit.",
+          "severity": "medium",
+          "status": "fixed by the author in 2d3b816, covered by test_replacement_runs_never_write_through_a_candidate_link",
+          "where": "evals/workflows/heldout_verification.py run_suite"
+        }
+      ],
+      "note": "Re-signs the unchanged verify inputs after the grader began copying candidate symlinks as links in the suite run and refusing oracle replacements through a candidate link.",
       "reviewer": "independent reviewer agent rev136, Claude (did not write the PR)",
       "signed_on": "2026-10-18",
       "status": "approved",
-      "subject_sha256": "1ab6eb049979aab56fd79dda9cc4cb403cad84864ac276e4bb6e20f28ee67094"
+      "subject_sha256": "948d16127c1fbac047f39f80a1d18d9bcf6b066261edd2e0795918a2fc4c682b"
     }
   },
   "schema_version": 1,
