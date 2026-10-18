@@ -166,7 +166,7 @@ def execute(argv):
     # agents.max_threads scheduling. `children` refuses spawns once the cap's worth of children
     # is open, `including_parent` also counts the parent, `queue` starts later children when a
     # slot frees without refusing, and `ignore` lets every child open at once. Like Codex 0.163.0,
-    # a refusal is written only to the rollout file unless `refusal_records` names other places.
+    # a refusal is written only to the rollout file; `refusal_output` null writes no output at all.
     configured = next((int(v.split('=', 1)[1]) for v in opts['configs'] if v.startswith('agents.max_threads=')), None)
     mode = PLAN.get('cap_mode', 'queue')
     specs = PLAN.get('children', [])
@@ -175,8 +175,9 @@ def execute(argv):
         slots = max(1, configured - (1 if mode == 'including_parent' else 0))
         if mode != 'queue':
             allowed = slots
-    records = set(PLAN.get('refusal_records', ['rollout']))
-    rollout = [{'type': 'response_item', 'payload': noise} for noise in PLAN.get('rollout_noise', [])]
+    refusal = PLAN.get('refusal_output', 'collab spawn failed: agent thread limit reached')
+    rollout = [{'type': 'session_meta', 'payload': {'id': PLAN.get('rollout_session', parent)}}]
+    rollout += [{'type': 'response_item', 'payload': noise} for noise in PLAN.get('rollout_noise', [])]
     for number, child in enumerate(specs):
         identity = child.get('id', 'thread-child-%d' % number)
         owner = child.get('parent', parent)
@@ -184,18 +185,9 @@ def execute(argv):
         rollout.append({'type': 'response_item', 'payload': {'type': 'function_call', 'name': 'spawn_agent',
                                                              'call_id': call, 'arguments': '{}'}})
         if number >= allowed:
-            if 'rollout' in records:
+            if refusal is not None:
                 rollout.append({'type': 'response_item', 'payload': {
-                    'type': 'function_call_output', 'call_id': call,
-                    'output': PLAN.get('refusal_output', 'collab spawn failed: agent thread limit reached')}})
-            if 'stream' in records:
-                emit({'type': 'item.completed', 'item': {
-                    'id': 'spawn-%d' % number, 'type': 'collab_tool_call', 'tool': 'spawn_agent',
-                    'sender_thread_id': parent, 'receiver_thread_ids': [], 'prompt': None,
-                    'agents_states': {}, 'status': 'failed'}})
-            if 'history' in records:
-                parent_items.append({'type': 'collabAgentToolCall', 'id': call, 'tool': 'spawnAgent',
-                                     'status': 'failed', 'senderThreadId': parent, 'receiverThreadIds': []})
+                    'type': 'function_call_output', 'call_id': call, 'output': refusal}})
             continue
         rollout.append({'type': 'response_item', 'payload': {'type': 'function_call_output', 'call_id': call,
                                                              'output': json.dumps({'agent_id': identity})}})
@@ -221,7 +213,7 @@ def execute(argv):
             emit({'type': 'item.completed', 'item': {'id': 'spawn-%d' % number, 'type': 'collab_tool_call',
                                                       'receiver_thread_ids': [identity]}})
     parent_items.append({'type': 'agentMessage', 'phase': 'final_answer', 'text': 'parent done'})
-    path = STATE / ('rollout-%s.jsonl' % parent)
+    path = STATE / PLAN.get('rollout_name', 'rollout-%s.jsonl' % parent)
     threads[parent] = {'id': parent, 'parentThreadId': None, 'cwd': work, 'model': model, 'reasoningEffort': 'medium',
                        'cliVersion': PLAN['version'], 'source': 'exec', 'path': str(path),
                        'turns': [{'id': 'turn-1', 'status': 'completed', 'itemsView': 'full', 'items': parent_items,
