@@ -32,6 +32,7 @@ CANARIES = {
     'alpha': ('automatic', 'Gives the alpha probe word. Use when the user asks for the alpha probe word.'),
     'beta': ('explicit', 'Gives the beta probe word. Use when the user asks for the beta probe word.'),
 }
+MODEL_TEXT = ('agent_message', 'reasoning')
 OPENAI_POLICY = 'policy:\n  allow_implicit_invocation: false\n'
 PROMPT = ('This is a host capability probe. All files are synthetic fixtures.\n'
           'What are the alpha probe word and the beta probe word? Put each word you found in the report field '
@@ -72,7 +73,8 @@ def judge(load, outputs_before, outputs, report, nonce):
 
 
 def probe(executable, out, model, reasoning='medium', timeout=120):
-    out = Path(out)
+    # Absolute, so catalog reads are not mistaken for outside loads and the outside canary really is outside.
+    out = Path(out).resolve()
     out.mkdir(parents=False, exist_ok=False)
     executable = Path(executable).resolve()
     names = {word: 'probe-' + secrets.token_hex(4) for word in CANARIES}
@@ -121,27 +123,27 @@ def probe(executable, out, model, reasoning='medium', timeout=120):
         report = ''
     record['reported_model'] = next((e['model'] for e in events if isinstance(e.get('model'), str)), None)
     changed = discovery.product_state(work) != before
-    commands = [e['item'] for e in events if e.get('type') == 'item.completed' and e.get('item', {}).get('type') == 'command_execution']
+    items = discovery.completed_items(events)
     loads = {load['skill']: load for load in observation['all_loads'] if load['first']}
     verdicts = {}
     for word in CANARIES:
         load = loads.get(names[word])
-        cut = load['index'] if load else len(commands)
-        outputs_before = '\n'.join(c['command'] + '\n' + c['aggregated_output'] for c in commands[:cut])
-        outputs = '\n'.join(c['command'] + '\n' + c['aggregated_output'] for c in commands)
+        cut = load['index'] if load else len(items)
+        # Tool items only: the model's own reply and reasoning repeat a secret it was given, invisibly or not.
+        outputs_before = '\n'.join(discovery.item_text(item) for item in items[:cut] if item.get('type') not in MODEL_TEXT)
+        outputs = '\n'.join(discovery.item_text(item) for item in items if item.get('type') not in MODEL_TEXT)
         verdicts[word] = judge(load, outputs_before, outputs, report, nonces[word])
     record['probes'].append({'name': 'activation', 'invocation': invocation, 'event_failures': failures,
                              'loads': loads, 'outside_loads': observation['outside_loads'],
                              'catalog_scans': observation['catalog_scans'], 'verdicts': verdicts,
-                             'product_changed': changed, 'command_events': len(commands)})
+                             'product_changed': changed, 'completed_items': len(items)})
     collected = not failures and invocation['outcome'] != 'cancelled' and invocation['family_terminated'] and not changed
     detail = 'alpha %s, beta %s, outside loads %d, event failures %d, outcome %s' % (
         verdicts['alpha'], verdicts['beta'], len(observation['outside_loads']), len(failures), invocation['outcome'])
-    clean = collected and not observation['outside_loads']
-    if clean and verdicts['alpha'] == 'direct':
+    if collected and verdicts['alpha'] == 'direct':
         caps['skill_discovery'] = cap('verified', 'automatic canary read directly from the installed catalog: ' + detail,
                                       notes='one observation; a load is a recorded command that printed the canary SKILL.md')
-    elif clean and verdicts['alpha'] == 'invisible':
+    elif collected and verdicts['alpha'] == 'invisible':
         caps['skill_discovery'] = cap('unavailable', 'automatic canary secret reached the response with no command output holding it: ' + detail)
     else:
         record['unknown'].append('skill_discovery: ' + detail)

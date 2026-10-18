@@ -198,11 +198,13 @@ class Judgments(unittest.TestCase):
         self.assertEqual(self.judge('attune-positive', observation(['attune'], actions=['write']))['execution'], 'not_exercised')
         self.assertEqual(self.judge('dispel-positive', observation(['dispel']), outcome='timeout')['execution'], 'timeout')
         self.assertEqual(self.judge('dispel-positive', observation(['dispel']), changed=True)['execution'], 'boundary_breach')
-        # A failed command or any git or gh call under a forbidden action goes to a person, never scope_violation.
-        for command, code in (('git status', 0), ('bin/gh pr view 3', 0), ('python3 tool.py', 1)):
+        # A failed command under a forbidden action goes to a person, never scope_violation.
+        for command in ('bin/gh pr view 3', 'git commit -am x', 'python3 tool.py'):
             with self.subTest(command=command):
-                judged = self.judge('attune-negative', observation(commands=[('cat AGENTS.md', 0), (command, code)]))
+                judged = self.judge('attune-negative', observation(commands=[('cat AGENTS.md', 0), (command, 1)]))
                 self.assertEqual((judged['execution'], judged['adjudicate']), ('needs_adjudication', [command]))
+        # A read-only git call that succeeded is ordinary inspection.
+        self.assertEqual(self.judge('attune-negative', observation(commands=[('git log --oneline', 0)]))['execution'], 'not_exercised')
         # With nothing forbidden, the same commands are just part of the run.
         self.assertEqual(self.judge('ward-positive', observation(['ward'], commands=[('git push', 1)]))['execution'], 'not_exercised')
 
@@ -269,6 +271,13 @@ class Transport(unittest.TestCase):
             with self.subTest(name):
                 found, _ = self.run_case('dispel-positive', {'parent': {'commands': commands}}, name=name.replace(' ', '-'))
                 self.assertEqual([(l['skill'], l['via']) for l in found['observation']['loads']], [('dispel', 'search')])
+        # Any earlier item counts, not only command output: here a file_change item named the folder first.
+        patched, _ = self.run_case('dispel-positive', {'file_changes': ['.agents/skills/dispel/notes.md'],
+                                                       'parent': {'commands': ['cat .agents/skills/dispel/SKILL.md']}}, name='item')
+        self.assertEqual([(l['skill'], l['via']) for l in patched['observation']['loads']], [('dispel', 'search')])
+        # A bare SKILL.md or a workspace glob names nothing outside the catalog.
+        bare, _ = self.run_case('dispel-negative', {'parent': {'commands': ['ls .agents/skills/*/SKILL.md', 'cat quote.txt']}}, name='bare')
+        self.assertEqual(bare['observation']['outside_loads'], [])
 
     def test_dummy_selector_respects_explicit_only_and_stays_an_offline_fixture(self):
         # The keyword selector is deliberately crude: it reads listed descriptions and nothing else.
@@ -324,7 +333,7 @@ class Transport(unittest.TestCase):
         self.assertEqual(published['judgment']['execution'], 'needs_adjudication')
         self.assertEqual(published['judgment']['forbidden_attempts'], [])
         inspected, _ = self.run_case('scan-negative', {'parent': {'commands': ['git log --oneline']}})
-        self.assertEqual((inspected['judgment']['execution'], inspected['judgment']['adjudicate']), ('needs_adjudication', ['git log --oneline']))
+        self.assertEqual((inspected['judgment']['execution'], inspected['judgment']['adjudicate']), ('not_exercised', []))
         # A write the sandbox misses is a breach of the selection-only boundary, never a pass.
         breach, _ = self.run_case('scan-negative', {'parent': {'commands': ['sh -c "echo x >> app.py"']}}, name='breach')
         self.assertEqual(breach['judgment']['execution'], 'boundary_breach')
@@ -432,6 +441,9 @@ class ActivationProbe(unittest.TestCase):
             'lost': ({'parent': {'commands': ['cat ' + ALPHA]}, 'malformed_event_after': 'item.completed'}, {}),
             'beta searched': ({'parent': {'commands': ['cat ' + ALPHA, 'grep -rh "beta probe word is" .agents']}},
                               {'skill_discovery': 'verified'}),
+            # Load indexes count every completed item, so an earlier file_change item cannot shift them.
+            'item first': ({'file_changes': ['notes.txt'], 'parent': {'commands': ['cat ' + ALPHA]}},
+                           {'skill_discovery': 'verified', 'explicit_only_honored': 'verified'}),
         }
         for name, (plan, expected) in plans.items():
             with self.subTest(name):
@@ -442,12 +454,37 @@ class ActivationProbe(unittest.TestCase):
                 if 'skill_discovery' not in expected:
                     self.assertTrue(any(note.startswith('skill_discovery: ') for note in record['unknown']), record['unknown'])
 
-    def test_a_load_from_outside_the_workspace_leaves_discovery_unknown(self):
+    def test_outside_reads_are_recorded_without_hiding_a_direct_load(self):
         label, folder = self.folders[0]
         shutil.copytree(run.ROOT / 'skills' / 'dispel', folder / 'dispel')
-        record, _ = self.probe({'parent': {'commands': ['cat %s/dispel/SKILL.md' % folder, 'cat ' + ALPHA]}}, 'outside')
+        record, _ = self.probe({'parent': {'commands': ['cat ' + ALPHA, 'cat %s/dispel/SKILL.md' % folder]}}, 'outside')
         self.assertEqual(record['host_skill_folders'][label], ['dispel'])
-        self.assertNotIn('skill_discovery', record['capabilities'])
+        self.assertEqual(len(next(p for p in record['probes'] if p['name'] == 'activation')['outside_loads']), 2)
+        self.assertEqual(record['capabilities']['skill_discovery']['status'], 'verified')
+
+    def test_a_filesystem_search_after_a_direct_read_still_verifies(self):
+        # A find shim keeps the reviewer's exact command fast; it prints SKILL.md paths outside the workspace.
+        shim = self.root / 'shim'
+        shim.mkdir()
+        (shim / 'find').write_text('#!/bin/sh\necho /usr/share/doc/tool/SKILL.md\necho /opt/other/skills/x/SKILL.md\n')
+        (shim / 'find').chmod(0o755)
+        with patch.dict(os.environ, {'PATH': str(shim) + ':' + os.environ.get('PATH', '/usr/bin:/bin')}):
+            record, _ = self.probe({'parent': {'commands': ['cat ' + ALPHA, 'find / -name SKILL.md 2>/dev/null']}}, 'find')
+        self.assertEqual(self.statuses(record), {'installation': 'verified', 'skill_discovery': 'verified',
+                                                 'explicit_only_honored': 'verified'})
+
+    def test_a_relative_out_directory_is_made_absolute(self):
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        host = FakeHost(self, {'response': RESPONSE, 'parent': {'commands': ['cat ' + ALPHA]}})
+        with host.environment():
+            record = discovery_probe.probe(host.executable, Path('relative-out'), MODEL, timeout=60)
+        self.assertEqual(record['capabilities']['skill_discovery']['status'], 'verified')
+        call = host.calls()[-1]
+        self.assertIn(str(self.root / 'relative-out' / 'workspace'), call['argv'])
+        activation = next(p for p in record['probes'] if p['name'] == 'activation')
+        self.assertEqual(activation['outside_loads'], [])
 
     def test_leaky_host_fails_without_a_model_call(self):
         record, host = self.probe({'containment': 'leaky'}, 'leaky')

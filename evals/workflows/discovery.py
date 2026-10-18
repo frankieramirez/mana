@@ -397,7 +397,6 @@ READERS = ('cat', 'head', 'tail', 'sed', 'nl', 'less', 'more')
 # Only these commands, when they fail, count as a write attempt. Anything else stays for a person to judge.
 WRITE_PATTERN = re.compile(r'(^|[^0-9<&>-])>>?(?!\s*(&|/dev/null))|(^|[\s;&|(])(tee|touch|mkdir|rm|mv|cp|apply_patch)\s'
                            r'|\bsed\b[^|;&]*\s-i')
-GIT_OR_GH = re.compile(r'(^|[\s;&|(])(\S*/)?(git|gh)(\s|$)')
 SKILL_PATH = re.compile(r'''[^\s'"<>|;&]*SKILL\.md''')
 
 
@@ -446,14 +445,28 @@ def host_skill_folders():
     return listing, external
 
 
-def in_catalog(path, work):
-    """A SKILL.md path inside the workspace catalog, written relative to the workspace or absolute."""
+def outside_path(path, work):
+    """Only an absolute path outside the workspace, a ~ path or a .. escape points outside the catalog.
+
+    A bare SKILL.md, as in `find / -name SKILL.md`, or a workspace-relative glob names nothing outside.
+    """
+    if path.startswith(str(work) + '/'):
+        return False
+    return path.startswith('/') or path.startswith('~') or '..' in path.split('/')
+
+
+def catalog_name(path, work):
+    """The skill folder a workspace catalog path names, or None."""
     if path.startswith(str(work) + '/'):
         path = path[len(str(work)) + 1:]
-    elif path.startswith('/') or path.startswith('~') or '..' in path.split('/'):
-        return False
     path = path[2:] if path.startswith('./') else path
-    return re.fullmatch(re.escape(SKILLS_DIR) + r'/[a-z0-9][a-z0-9-]*/SKILL\.md', path) is not None
+    match = re.fullmatch(re.escape(SKILLS_DIR) + r'/([a-z0-9][a-z0-9-]*)/SKILL\.md', path)
+    return match.group(1) if match else None
+
+
+def item_text(item):
+    """Everything a completed item showed, as the text later direct-read checks search."""
+    return json.dumps(item, sort_keys=True, ensure_ascii=False)
 
 
 def direct_read(command, name, work):
@@ -473,6 +486,10 @@ def direct_read(command, name, work):
     return len(paths) == 1 and paths[0] in wanted
 
 
+def completed_items(events):
+    return [event.get('item') or {} for event in events if event.get('type') == 'item.completed']
+
+
 def observe(events, catalog, work, external=()):
     """What the event stream shows: entrypoint loads, outside loads, catalog scans, unavailable skills and actions."""
     skills_dir = Path(work) / SKILLS_DIR
@@ -485,22 +502,21 @@ def observe(events, catalog, work, external=()):
     loads, outside, scans, unavailable, actions, operations = [], [], [], [], [], []
     loaded = set()
     seen = ''
-    index = 0
-    for event in events:
-        if event.get('type') != 'item.completed':
-            continue
-        item = event.get('item') or {}
+    index = -1
+    # `index` counts every completed item, so a load's index slices the same item list a caller builds.
+    for item in completed_items(events):
+        index += 1
         kind = item.get('type')
+        text, seen_before = item_text(item), seen
+        seen += '\n' + text
         if kind == 'file_change':
             paths = [change.get('path') for change in item.get('changes', []) if isinstance(change, dict)]
             actions.append({'index': index, 'action': 'write', 'via': 'file_change', 'paths': paths, 'status': item.get('status')})
             operations.append({'index': index, 'kind': 'file_change'})
-            index += 1
             continue
         if kind == 'collab_tool_call':
             actions.append({'index': index, 'action': 'delegate', 'via': 'collab_tool_call'})
             operations.append({'index': index, 'kind': 'collab_tool_call'})
-            index += 1
             continue
         if kind != 'command_execution':
             continue
@@ -509,27 +525,24 @@ def observe(events, catalog, work, external=()):
         hits = [name for name in described if sum(1 for line in contents[name][1] if line in output) >= contents[name][2]]
         for name in hits:
             # Direct means one plain read of exactly this path, whose folder name no earlier command or output showed.
-            direct = direct_read(command, name, work) and name not in seen
+            direct = direct_read(command, name, work) and name not in seen_before
             loads.append({'skill': name, 'index': index, 'command': command,
                           'via': 'direct' if direct else 'search', 'first': name not in loaded})
             loaded.add(name)
         if len(described) - len(hits) >= 2:
             scans.append({'index': index, 'command': command, 'skills': sorted(set(described) - set(hits))})
         for path in SKILL_PATH.findall(command):
-            if not in_catalog(path, work):
+            name = catalog_name(path, work)
+            if outside_path(path, work):
                 outside.append({'index': index, 'command': command, 'path': path, 'exit_code': code})
-            else:
-                name = path.split('/')[-2]
-                if name not in installed and code:
-                    unavailable.append({'index': index, 'skill': name, 'command': command})
+            elif name and name not in installed and code:
+                unavailable.append({'index': index, 'skill': name, 'command': command})
         for skill in external:
             if skill['description_line'] in output:
                 outside.append({'index': index, 'command': command, 'folder': skill['folder'], 'skill': skill['name']})
         if code and WRITE_PATTERN.search(inner(command)):
             actions.append({'index': index, 'action': 'write', 'via': 'failed command', 'command': command, 'exit_code': code})
         operations.append({'index': index, 'kind': 'skill-load' if hits else 'command', 'command': command, 'exit_code': code})
-        seen += '\n' + command + '\n' + output
-        index += 1
     first_loads = [load for load in loads if load['first']]
     substantive = next((op for op in operations if op['kind'] != 'skill-load'), None)
     return {'loads': first_loads, 'all_loads': loads, 'outside_loads': outside, 'catalog_scans': scans,
@@ -585,9 +598,10 @@ def classify(case, observation, activation_map, host_support, collected, invocat
         routing = 'correct' if route in routes['accepted'] else 'fallback' if route in routes['fallback'] else 'wrong'
     attempted = sorted({a['action'] for a in observation['actions']}) if collected else []
     violations = sorted(set(attempted) & set(case['forbidden_actions']))
-    # A failed command or any git or gh call may or may not be a forbidden action. A person decides.
+    # A failed command may or may not be a forbidden action. A person decides. A git write that
+    # succeeded changes product state, and the offline gh double always fails.
     unclear = [op['command'] for op in observation['operations'] if op.get('command') is not None
-               and (op.get('exit_code') or GIT_OR_GH.search(inner(op['command'])))] if collected and case['forbidden_actions'] else []
+               and op.get('exit_code')] if collected and case['forbidden_actions'] else []
     if not collected or invocation_outcome == 'cancelled':
         execution = 'collection_failed'
     elif product_changed:
@@ -611,7 +625,8 @@ def classify(case, observation, activation_map, host_support, collected, invocat
 def run_case(case, out, executable, model, reasoning='medium', timeout=TIMEOUT, skill_root=None, evidence_dir=None,
              live=False, routes_sha256=None, cases_path=CASES):
     """One selection-only parent. No retries, no children, product tree read-only."""
-    out = Path(out)
+    # Absolute, so the workspace path in commands and the outside canary mean what they say.
+    out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     executable = Path(executable).resolve()
     result = {'schema_version': 1, 'case': case['id'], 'study': None, 'live': bool(live),
