@@ -86,35 +86,39 @@ The fixture is writable so the agent can perform real Git operations. Assertions
 
 `discovery.py` measures whether a host picks the right skill from ordinary language, apart from how well the skill then runs. The contract is [discovery-and-hosts.md](../../docs/specs/discovery-and-hosts.md). The focused runner above names one skill path in its prompt and turns host discovery off, so none of its results say anything about discovery.
 
-Each case installs the whole catalog under `.agents/skills/` in a disposable repository and records a snapshot of every entrypoint's name, description, explicit-only flag and folder digest. The installed bytes must match the source. The prompt is the user's request plus one sentence saying the files are synthetic. It carries no skill path and no load instruction, and ordinary requests name no skill. The host settings match the focused runner's except that `features.skip_host_skill_discovery` stays off. Delegation stays off. The product tree and Git are read-only and only `artifacts/` is writable, so a run ends before any product mutation; a containment probe checks this through the host sandbox before the model call. The preregistered routes in `discovery-cases.json` sit outside every readable root.
+Each case installs the whole catalog under `.agents/skills/` in a disposable repository and records a snapshot of every entrypoint's name, description, explicit-only flag and folder digest. The installed bytes must match the source. The prompt is the user's request plus one sentence saying the files are synthetic, and it may not carry a workspace or catalog path. The host settings match the focused runner's except that `features.skip_host_skill_discovery` stays off. Delegation stays off. The product tree and Git are read-only and only `artifacts/` is writable, so a run ends before any product mutation. A containment probe checks this through the host sandbox before the model call, including a read attempt on `discovery-cases.json` that must be denied.
 
-`discovery-cases.json` holds the 46 cases from the spec: one positive and one negative per skill and the eight overlap and capability cases, each with its accepted routes, accepted fallbacks, forbidden skills and forbidden actions. The loader rejects an ordinary request that names a skill, an explicit-only skill expected from ordinary language, and a forbidden skill that is also accepted. A changed explicit-only flag in the catalog stops every run until the routes are revised. A live run must pass the file's digest, so routes are locked before results.
+The host keeps the operator's environment, so it may also list skills from `~/.agents/skills`, `~/.codex/skills` or `/etc/codex/skills`. The evaluator never edits those folders, the host's configuration or its credentials. It records their listing in every result and probe record, and any reference to a skill outside the workspace catalog goes to `needs_adjudication`.
 
-The event stream is the evidence. A load counts only when a recorded command printed that entrypoint's description line and body; reading descriptions across several skills is a catalog scan. Each load is marked `direct` or `search`, the latter when an earlier command output revealed the path. Four judgments stay separate:
+The catalog's `disable-model-invocation` is a Claude Code field. Codex names a skill explicitly with `$name` and reads its own implicit-invocation policy from `agents/openai.yaml`, so the catalog's explicit-only flags may mean nothing to Codex until the probe shows otherwise.
+
+`discovery-cases.json` holds the 46 cases from the spec: one positive and one negative per skill and the eight overlap and capability cases, each with its accepted routes, accepted fallbacks and forbidden actions. The loader rejects an ordinary request that names a skill, an explicit-only skill expected from ordinary language, and a negative case that accepts its own skill. A changed explicit-only flag in the catalog stops every run until the routes are revised. A live run must pass the file's digest, so routes are locked before results.
+
+The event stream is the evidence. A load counts only when a recorded command printed that entrypoint's description line and body; reading descriptions across several skills is a catalog scan. A load is `direct` only when one plain read names exactly that SKILL.md path, with no glob, search or pipe, and the folder name appeared in no earlier command or output. Every other load is `search`. Hard verdicts come only from unambiguous evidence, and the rest goes to `needs_adjudication` with the commands a person should read:
 
 | Field | Values | Meaning |
 |---|---|---|
-| `activation` | `correct`, `missing`, `unnecessary`, `unobservable` | Loaded entrypoints against the accepted routes. Only an automatic skill or a skill the user named can be missing. |
-| `routing` | `correct`, `fallback`, `wrong`, `unobservable` | The first loaded skill, or `ordinary`, against the accepted and fallback routes. |
-| `execution` | `not_exercised`, `scope_violation`, `timeout`, `boundary_breach`, `collection_failed` | What happened after selection. Selection-only runs never claim a workflow outcome. |
-| `capability_limit` | `none`, `declared`, `observed` | Unavailable skills and tools, recorded beside routing so a correct route that hits a missing capability stays correct. |
+| `activation` | `correct`, `missing`, `unnecessary`, `unobservable`, `needs_adjudication` | Loaded entrypoints against the accepted routes. Only an automatic skill or a skill the user named can be missing. |
+| `routing` | `correct`, `fallback`, `wrong`, `unobservable`, `needs_adjudication` | The first loaded skill, or `ordinary`, against the accepted and fallback routes. |
+| `execution` | `not_exercised`, `scope_violation`, `needs_adjudication`, `timeout`, `boundary_breach`, `collection_failed` | What happened after selection. Selection-only runs never claim a workflow outcome. |
+| `capability_limit` | `none`, `declared` | The skills or capabilities the case removes, kept apart from routing so a correct route that hits one stays correct. |
 
-Selection is `unobservable` when events are lost or the host has no verified `skill_discovery` record. `observe` also records the first substantive operation and the first consequential action.
+`scope_violation` comes only from a forbidden write shown by a `file_change` event or by a failed redirect, `tee`, `touch`, `mkdir`, `rm`, `mv`, `cp`, `sed -i` or `apply_patch`. A product state change is a `boundary_breach`. When a case forbids an action and the run had any other failed command or any `git` or `gh` call, execution is `needs_adjudication`. Selection is `unobservable` when events are lost or the host has no verified `skill_discovery` record.
 
 ```bash
 python3 -B evals/workflows/run.py --discovery-check
 python3 -B -m unittest discover -s evals/workflows -p test_discovery.py
 ```
 
-The check validates the routes against the catalog and prints their digest and the seeded 24-slot schedule for the first live group; no agent runs. The tests drive every judgment through `fake_host.py`, including its keyword selector over listed descriptions. That selector is an offline fixture. Fake runs are always labelled `offline-fixture`, refuse to run as live, and never enter a live denominator.
+The check validates the routes against the catalog and prints their digest and the seeded 24-slot schedule for the first live group; no agent runs. The tests drive every judgment through `fake_host.py`, including its keyword selector over listed descriptions. That selector is an offline fixture. Fake runs are always labelled `offline-fixture` and refuse to run as live.
 
-A live result needs a host record that verifies `skill_discovery`. No recorded host has one, so `--discover` refuses every version today. The activation probe installs two synthetic canary skills with secret words, one automatic and one explicit-only, and asks for both words without naming either:
+A live result needs a host record that verifies `skill_discovery`. No recorded host has one, so `--discover` refuses every version today. The activation probe installs two synthetic canary skills in randomly named folders, each holding a secret word. The explicit one carries both `disable-model-invocation: true` and `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. The probe asks for both words without naming either:
 
 ```bash
 python3 -B evals/workflows/run.py --probe-discovery --out evals/results/discovery-probe --model MODEL
 ```
 
-It makes one model call, limited to 120 seconds, after the containment probe passes. `skill_discovery` is verified when the automatic canary loads directly. A secret that reaches the response with no recorded load means the host loads skills invisibly, which records `unavailable`. `explicit_only_honored` is verified when the explicit canary stays unloaded beside a direct automatic load, fails on a direct load, and stays unknown when the canary was found by searching. Review the record before copying it into `host-evidence/`. After that, one case runs with:
+It makes one model call, limited to 120 seconds, after the containment probe passes. `skill_discovery` is verified when the automatic canary is read directly. A secret that reaches the response while no command output held it records `unavailable`. Everything else stays unknown, including a run where the model never reads the automatic canary. `explicit_only_honored` fails on a direct or invisible load of the explicit canary, is verified when its secret appears nowhere beside a verified automatic load, and otherwise stays unknown. Review the record before copying it into `host-evidence/`. After that, one case runs with:
 
 ```bash
 python3 -B evals/workflows/run.py --discover --live --case dispel-positive --routes-sha256 DIGEST --model MODEL

@@ -52,7 +52,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -74,9 +73,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "attune"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -102,7 +98,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -127,9 +122,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "augur"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -153,7 +145,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -175,9 +166,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "banish"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -201,7 +189,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -223,9 +210,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "cast"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -249,7 +233,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [],
       "setup": {
         "files": {
@@ -270,9 +253,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "conjure"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -298,7 +278,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -320,9 +299,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "dispel"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -348,7 +324,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -371,9 +346,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "leyline"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -399,7 +371,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -420,9 +391,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "mend"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -446,7 +414,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -470,9 +437,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "mimic"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -496,7 +460,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -520,9 +483,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "portal"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -544,7 +504,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -570,9 +529,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "remedy"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -598,7 +554,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [],
       "setup": {
         "branch_files": {
@@ -622,9 +577,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "reveal"
-      ],
       "forbidden_actions": [
         "publish"
       ],
@@ -648,7 +600,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -675,9 +626,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "scan"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -697,7 +645,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -721,9 +668,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "scry"
-      ],
       "forbidden_actions": [
         "publish"
       ],
@@ -745,7 +689,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -764,9 +707,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "setup-mana"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -790,7 +730,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -813,9 +752,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "sift"
-      ],
       "forbidden_actions": [
         "publish"
       ],
@@ -839,7 +775,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -862,9 +797,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "ultima"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -889,7 +821,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -913,9 +844,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "vision"
-      ],
       "forbidden_actions": [
         "publish"
       ],
@@ -939,7 +867,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [],
       "setup": {
         "branch_files": {
@@ -962,9 +889,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "ward"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -988,7 +912,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -1012,9 +935,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [
-        "ultima"
-      ],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -1043,12 +963,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [
-        "cast",
-        "sift",
-        "conjure",
-        "scry"
-      ],
       "forbidden_actions": [
         "publish"
       ],
@@ -1070,7 +984,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -1099,7 +1012,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -1127,7 +1039,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "publish"
       ],
@@ -1154,7 +1065,6 @@
           "ordinary"
         ]
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "write",
         "git-write",
@@ -1181,7 +1091,6 @@
         ],
         "fallback": []
       },
-      "forbidden_skills": [],
       "forbidden_actions": [
         "write",
         "git-write",

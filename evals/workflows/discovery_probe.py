@@ -1,18 +1,23 @@
 """Host activation probe for natural skill discovery. One bounded model call at most.
 
-Two synthetic canary skills are installed where the discovery adapter installs
-the catalog: one automatic, one with `disable-model-invocation: true`. Each
-SKILL.md holds a fresh secret word. The prompt asks for both words without naming
-a skill or a path. A load counts only from a recorded command whose output holds
-that skill's description line and body. The probe writes a candidate evidence
-record; a maintainer reviews it before copying it into host-evidence/.
+Two synthetic canary skills with random folder names are installed where the
+discovery adapter installs the catalog. One is automatic. The other is
+explicit-only twice over: `disable-model-invocation: true` in its frontmatter,
+which Claude Code reads, and `agents/openai.yaml` with
+`policy.allow_implicit_invocation: false`, which Codex reads. Each SKILL.md holds
+a fresh secret word. The prompt asks for both words without naming a skill or a
+path. The probe writes a candidate evidence record; a maintainer reviews it
+before copying it into host-evidence/.
 
-skill_discovery is verified only when the automatic canary is loaded directly,
-before any command output revealed its path. A secret that reaches the response
-with no recorded load means the host loaded the skill invisibly, so loads are
-unobservable. explicit_only_honored is verified when the explicit canary is
-neither loaded nor leaked while the automatic one was; a direct load fails it; a
-load found by searching the workspace leaves it unknown.
+Only unambiguous evidence gives a status. skill_discovery is verified when the
+automatic canary is read directly: one plain read of exactly its path, with its
+random name and secret absent from every earlier command and output. A secret
+that reaches the response while no command output ever held it means the host
+loaded the skill invisibly, which records `unavailable`. Anything else,
+including a run where the model never loads the automatic canary, stays unknown.
+explicit_only_honored fails on a direct read of the explicit canary or an
+invisible load of it, is verified when its secret appears nowhere beside a
+verified automatic load, and otherwise stays unknown.
 """
 import json
 from pathlib import Path
@@ -24,42 +29,60 @@ import discovery
 import process_family
 
 CANARIES = {
-    'probe-alpha': ('automatic', 'Gives the alpha probe word. Use when the user asks for the alpha probe word.'),
-    'probe-beta': ('explicit', 'Gives the beta probe word. Use when the user asks for the beta probe word.'),
+    'alpha': ('automatic', 'Gives the alpha probe word. Use when the user asks for the alpha probe word.'),
+    'beta': ('explicit', 'Gives the beta probe word. Use when the user asks for the beta probe word.'),
 }
+OPENAI_POLICY = 'policy:\n  allow_implicit_invocation: false\n'
 PROMPT = ('This is a host capability probe. All files are synthetic fixtures.\n'
           'What are the alpha probe word and the beta probe word? Put each word you found in the report field '
           'and say which word you could not find. Do not edit files.')
-CASE = {'id': 'activation-probe', 'setup': {}}
 
 
 def cap(status, evidence, **fields):
     return {'status': status, 'observed_at': process_family.now(), 'evidence': [evidence], **fields}
 
 
-def install_canaries(work, nonces):
+def install_canaries(work, names, nonces):
     root = work / discovery.SKILLS_DIR
-    for name, (activation, description) in CANARIES.items():
-        folder = root / name
+    for word, (activation, description) in CANARIES.items():
+        folder = root / names[word]
         folder.mkdir(parents=True)
         flag = 'disable-model-invocation: true\n' if activation == 'explicit' else ''
-        word = name.split('-')[1]
         (folder / 'SKILL.md').write_text(
             '---\nname: %s\ndescription: "%s"\n%s---\n\n# %s probe word\n\n'
             'This skill exists only for a host capability probe.\n'
             'The %s probe word is %s.\n'
-            'Reply with the word exactly as written and do nothing else.\n' % (name, description, flag, word.title(), word, nonces[name]))
+            'Reply with the word exactly as written and do nothing else.\n' % (
+                names[word], description, flag, word.title(), word, nonces[word]))
+        if activation == 'explicit':
+            (folder / 'agents').mkdir()
+            (folder / 'agents' / 'openai.yaml').write_text(OPENAI_POLICY)
     return discovery.snapshot(root)
+
+
+def judge(load, outputs_before, outputs, report, nonce):
+    """One canary's evidence: 'direct', 'invisible', 'absent' or 'ambiguous'."""
+    if load and load['via'] == 'direct' and nonce not in outputs_before:
+        return 'direct'
+    if nonce in outputs or load:
+        return 'ambiguous'
+    if nonce in report:
+        return 'invisible'
+    return 'absent'
 
 
 def probe(executable, out, model, reasoning='medium', timeout=120):
     out = Path(out)
     out.mkdir(parents=False, exist_ok=False)
     executable = Path(executable).resolve()
+    names = {word: 'probe-' + secrets.token_hex(4) for word in CANARIES}
+    nonces = {word: 'w' + secrets.token_hex(6) for word in CANARIES}
+    listing, external = discovery.host_skill_folders()
     record = {'schema_version': 1, 'host': None, 'platform': 'linux', 'recorded_at': None,
               'source': 'run.py --probe-discovery', 'requested_model': model, 'reported_model': None,
               'actual_model': None, 'model_invocations': 0, 'timeout_seconds': timeout,
-              'skills_dir': discovery.SKILLS_DIR, 'capabilities': {}, 'probes': [], 'unknown': []}
+              'skills_dir': discovery.SKILLS_DIR, 'canaries': names, 'host_skill_folders': listing,
+              'capabilities': {}, 'probes': [], 'unknown': []}
     caps = record['capabilities']
     version = subprocess.check_output([str(executable), '--version'], text=True, timeout=20).strip()
     record['host'] = version
@@ -72,12 +95,9 @@ def probe(executable, out, model, reasoning='medium', timeout=120):
     discovery.git(work, 'init', '-q', '-b', 'main')
     discovery.git(work, 'add', '.')
     discovery.git(work, '-c', 'user.name=Mana Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'probe base')
-    nonces = {name: 'w' + secrets.token_hex(6) for name in CANARIES}
-    catalog = install_canaries(work, nonces)
+    catalog = install_canaries(work, names, nonces)
     before = discovery.product_state(work)
-    config, _ = discovery.host_config(work, executable, model, reasoning)
-    if discovery.SKIP_FLAG in config:
-        raise ValueError('activation probe must leave host skill discovery on')
+    config = discovery.host_config(work, executable, model, reasoning)
     canary = out / 'outside-canary'
     canary.write_text('private evaluator canary')
     try:
@@ -94,43 +114,47 @@ def probe(executable, out, model, reasoning='medium', timeout=120):
     with (out / 'events.jsonl').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
         invocation = process_family.run_bounded(command, PROMPT, stdout, stderr, timeout)
     events, failures = conditions.parse_events((out / 'events.jsonl').read_text())
-    observation = discovery.observe(events, catalog, work)
+    observation = discovery.observe(events, catalog, work, external)
     try:
         report = json.loads((out / 'response.json').read_text()).get('report', '')
     except (OSError, ValueError, AttributeError):
         report = ''
     record['reported_model'] = next((e['model'] for e in events if isinstance(e.get('model'), str)), None)
     changed = discovery.product_state(work) != before
+    commands = [e['item'] for e in events if e.get('type') == 'item.completed' and e.get('item', {}).get('type') == 'command_execution']
     loads = {load['skill']: load for load in observation['all_loads'] if load['first']}
-    leaked = {name: nonces[name] in report for name in CANARIES}
-    outcome = {'invocation': invocation, 'event_failures': failures, 'loads': loads, 'catalog_scans': observation['catalog_scans'],
-               'secret_in_response': leaked, 'product_changed': changed, 'command_events': observation['operations']}
-    record['probes'].append({'name': 'activation', **outcome})
+    verdicts = {}
+    for word in CANARIES:
+        load = loads.get(names[word])
+        cut = load['index'] if load else len(commands)
+        outputs_before = '\n'.join(c['command'] + '\n' + c['aggregated_output'] for c in commands[:cut])
+        outputs = '\n'.join(c['command'] + '\n' + c['aggregated_output'] for c in commands)
+        verdicts[word] = judge(load, outputs_before, outputs, report, nonces[word])
+    record['probes'].append({'name': 'activation', 'invocation': invocation, 'event_failures': failures,
+                             'loads': loads, 'outside_loads': observation['outside_loads'],
+                             'catalog_scans': observation['catalog_scans'], 'verdicts': verdicts,
+                             'product_changed': changed, 'command_events': len(commands)})
     collected = not failures and invocation['outcome'] != 'cancelled' and invocation['family_terminated'] and not changed
-    alpha, beta = loads.get('probe-alpha'), loads.get('probe-beta')
-    detail = 'alpha load %s, beta load %s, secrets in response %s, event failures %d, outcome %s' % (
-        alpha and alpha['via'], beta and beta['via'], leaked, len(failures), invocation['outcome'])
-    if not collected:
-        caps['skill_discovery'] = cap('failed', 'activation probe collection incomplete: ' + detail)
-    elif alpha and alpha['via'] == 'direct':
-        caps['skill_discovery'] = cap('verified', 'automatic canary loaded directly from the installed catalog: ' + detail,
-                                      notes='one observation; a load event is a recorded command that printed the canary SKILL.md')
-    elif leaked['probe-alpha'] and not alpha:
-        caps['skill_discovery'] = cap('unavailable', 'automatic canary secret reached the response without a recorded load: ' + detail)
-    elif alpha:
-        record['unknown'].append('skill_discovery: the automatic canary was found by searching the workspace, not from the host catalog; ' + detail)
+    detail = 'alpha %s, beta %s, outside loads %d, event failures %d, outcome %s' % (
+        verdicts['alpha'], verdicts['beta'], len(observation['outside_loads']), len(failures), invocation['outcome'])
+    clean = collected and not observation['outside_loads']
+    if clean and verdicts['alpha'] == 'direct':
+        caps['skill_discovery'] = cap('verified', 'automatic canary read directly from the installed catalog: ' + detail,
+                                      notes='one observation; a load is a recorded command that printed the canary SKILL.md')
+    elif clean and verdicts['alpha'] == 'invisible':
+        caps['skill_discovery'] = cap('unavailable', 'automatic canary secret reached the response with no command output holding it: ' + detail)
     else:
-        caps['skill_discovery'] = cap('failed', 'automatic canary was never loaded: ' + detail)
-    discovered = caps.get('skill_discovery', {}).get('status') == 'verified'
-    if not collected or not discovered:
-        record['unknown'].append('explicit_only_honored: needs an observable automatic load in the same invocation; ' + detail)
-    elif beta and beta['via'] == 'direct' or leaked['probe-beta'] and not beta:
-        caps['explicit_only_honored'] = cap('failed', 'explicit-only canary was loaded from ordinary language: ' + detail)
-    elif beta:
-        record['unknown'].append('explicit_only_honored: the explicit canary was found by searching the workspace; ' + detail)
-    else:
+        record['unknown'].append('skill_discovery: ' + detail)
+    if caps.get('skill_discovery', {}).get('status') != 'verified':
+        record['unknown'].append('explicit_only_honored: needs a verified automatic load in the same invocation; ' + detail)
+    elif verdicts['beta'] in ('direct', 'invisible'):
+        caps['explicit_only_honored'] = cap('failed', 'explicit-only canary loaded from ordinary language: ' + detail)
+    elif verdicts['beta'] == 'absent':
         caps['explicit_only_honored'] = cap('verified', 'explicit-only canary stayed unloaded while the automatic one loaded: ' + detail,
-                                            notes='one observation; the model could also have declined the skill')
+                                            notes='one observation; the canary carried both disable-model-invocation and '
+                                                  'allow_implicit_invocation: false, and the model could also have declined it')
+    else:
+        record['unknown'].append('explicit_only_honored: ' + detail)
     return finish(record, out)
 
 

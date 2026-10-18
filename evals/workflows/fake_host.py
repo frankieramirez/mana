@@ -137,18 +137,24 @@ def emit(event):
 
 def catalog(work):
     """What a discovering host would list from the workspace skill folder: name, description, explicit flag."""
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, PLAN['evaluator_dir'])
+    from discovery import frontmatter
     found = []
     for path in sorted(Path(work, '.agents', 'skills').glob('*/SKILL.md')):
-        text = path.read_text()
-        meta = {}
-        for line in text[4:text.find('\n---\n', 3)].splitlines():
-            key, _, value = line.partition(':')
-            value = value.strip()
-            meta[key] = json.loads(value) if value.startswith('"') else value
+        meta, _, _ = frontmatter(path.read_text())
+        policy = path.parent / 'agents' / 'openai.yaml'
+        explicit = (meta.get('disable-model-invocation') == 'true'
+                    or (policy.is_file() and 'allow_implicit_invocation: false' in policy.read_text()))
         found.append({'name': meta.get('name'), 'description': meta.get('description', ''),
-                      'explicit': meta.get('disable-model-invocation') == 'true',
-                      'path': path.relative_to(work).as_posix()})
+                      'explicit': explicit, 'path': path.relative_to(work).as_posix()})
     return found
+
+
+def resolve(token, listed):
+    """A listed skill by exact name, else the first whose description holds the phrase."""
+    return next((s for s in listed if s['name'] == token), None) or next(
+        (s for s in listed if token in s['description']), None)
 
 
 def words(text):
@@ -193,7 +199,9 @@ def execute(argv):
     threads = {}
     parent_items = []
     parent_started = time.time()
-    commands = list(PLAN.get('parent', {}).get('commands', []))
+    # `@skill:PHRASE@` stands for the path of the listed skill that resolve() finds, for randomly named skills.
+    commands = [re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], command)
+                for command in PLAN.get('parent', {}).get('commands', [])]
     if PLAN.get('selector') == 'keyword' and listed:
         chosen = dummy_selection(prompt, listed)
         if chosen:
@@ -253,9 +261,9 @@ def execute(argv):
     if opts['output'] and 'response' in PLAN:
         response = dict(PLAN['response'])
         # A host that injects skill text without any recorded event, so the load is invisible.
-        for name in PLAN.get('hidden_load', []):
+        for token in PLAN.get('hidden_load', []):
             if discovering:
-                response['report'] = response.get('report', '') + '\n' + Path(work, '.agents', 'skills', name, 'SKILL.md').read_text()
+                response['report'] = response.get('report', '') + '\n' + Path(work, resolve(token, listed)['path']).read_text()
         Path(opts['output']).write_text(json.dumps(response))
     return PLAN.get('exit_code', 0)
 

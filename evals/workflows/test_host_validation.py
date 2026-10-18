@@ -74,7 +74,8 @@ class FakeHost:
         self.write(plan)
 
     def write(self, plan):
-        plan = dict({'version': FAKE, 'containment': 'enforced', 'reported_model': MODEL}, **plan)
+        plan = dict({'version': FAKE, 'containment': 'enforced', 'reported_model': MODEL,
+                     'evaluator_dir': str(run.HERE)}, **plan)
         plan['state'] = str(self.state)
         self.plan_path.write_text(json.dumps(plan))
 

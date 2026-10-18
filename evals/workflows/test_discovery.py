@@ -24,29 +24,36 @@ from test_host_validation import FAKE, MODEL, FakeHost
 LINUX = sys.platform.startswith('linux')
 RESPONSE = {'report': 'done', 'checks': []}
 SPEC = (run.ROOT / 'docs/specs/discovery-and-hosts.md').read_text()
+ALPHA = '@skill:alpha probe word@'
+BETA = '@skill:beta probe word@'
 
 
 def cases():
     return {case['id']: case for case in discovery.load_cases()['cases']}
 
 
-def evidence(directory, *extra, host=FAKE, discovery_status='verified'):
+def evidence(directory, host=FAKE, discovery_status='verified'):
     """A registry with focused containment, plus skill discovery unless told otherwise."""
     at = process_family.now()
     caps = {key: {'status': 'verified', 'observed_at': at, 'evidence': ['offline fixture record']} for key in hosts.FOCUSED}
     if discovery_status:
         caps['skill_discovery'] = {'status': discovery_status, 'observed_at': at, 'evidence': ['offline fixture record']}
-    for key in extra:
-        caps[key] = {'status': 'verified', 'observed_at': at, 'evidence': ['offline fixture record']}
     Path(directory).mkdir(parents=True, exist_ok=True)
     (Path(directory) / 'record.json').write_text(json.dumps({'schema_version': 1, 'host': host, 'platform': 'linux',
                                                              'recorded_at': at, 'source': 'offline test', 'capabilities': caps}))
     return Path(directory)
 
 
-def observation(loads=(), unavailable=(), actions=()):
+def observation(loads=(), actions=(), commands=(), outside=()):
     return {'loads': [{'skill': name, 'via': 'direct', 'first': True} for name in loads],
-            'unavailable': [{'capability': c} for c in unavailable], 'actions': [{'action': a} for a in actions]}
+            'actions': [{'action': a} for a in actions], 'outside_loads': [{'command': c} for c in outside],
+            'operations': [{'command': c, 'exit_code': code} for c, code in commands]}
+
+
+def empty_host_folders(root):
+    """Point the outside skill folders at empty temporary paths so the operator's machine never leaks in."""
+    folders = tuple((label, Path(root) / ('host-folder-%d' % n)) for n, (label, _) in enumerate(discovery.HOST_SKILL_FOLDERS))
+    return patch.object(discovery, 'HOST_SKILL_FOLDERS', folders), folders
 
 
 class Routes(unittest.TestCase):
@@ -95,9 +102,8 @@ class Routes(unittest.TestCase):
             'ordinary request names a skill': lambda d: case(d, 'vague-bug').update(request='Use cast: checkout is flaky.'),
             'explicit skill expected from ordinary language': lambda d: case(d, 'cast-positive').update(
                 invocation='ordinary', request='Implement this ready ticket, no-pr.'),
-            'forbidden skill is also accepted': lambda d: case(d, 'review-or-audit')['forbidden_skills'].append('scan'),
             'unknown route': lambda d: case(d, 'scan-negative')['routes']['accepted'].append('skill:nonexistent'),
-            'negative may load its own skill': lambda d: case(d, 'dispel-negative').update(forbidden_skills=[]),
+            'negative accepts its own skill': lambda d: case(d, 'dispel-negative')['routes']['accepted'].append('skill:dispel'),
             'missing overlap case': lambda d: d['cases'].pop(),
             'fixture writes into the catalog': lambda d: case(d, 'scan-negative')['setup'].update(files={'.agents/skills/x': ''}),
         }
@@ -118,31 +124,25 @@ class Prompt(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
 
-    def test_requests_reach_the_host_without_hidden_load_instructions(self):
-        catalog = discovery.snapshot(run.ROOT / 'skills')
+    def test_requests_reach_the_host_without_workspace_paths(self):
         work = self.root / 'workspace'
         for case in cases().values():
             text = discovery.prompt(case)
             with self.subTest(case=case['id']):
                 self.assertEqual(text, case['request'] + discovery.SUFFIX)
-                self.assertEqual(discovery.hidden_instructions(text, case, catalog, work), [])
+                self.assertEqual(discovery.prompt_paths(text, work), [])
         # The focused runner's prompt is exactly what this adapter must never send.
-        case = cases()['dispel-positive']
-        legacy = 'Use the skill at %s/installed/dispel/SKILL.md.\n%s' % (work, case['request'])
-        problems = discovery.hidden_instructions(legacy, case, catalog, work)
-        self.assertTrue(any('SKILL.md' in p for p in problems) and any('names skills' in p for p in problems), problems)
+        legacy = 'Use the skill at %s/.agents/skills/dispel/SKILL.md.\nRewrite this release note.' % work
+        self.assertEqual(discovery.prompt_paths(legacy, work), [str(work), discovery.SKILLS_DIR, 'SKILL.md'])
 
-    def test_host_settings_keep_discovery_on_children_off_and_routes_unreadable(self):
+    def test_host_settings_keep_discovery_on_and_children_off(self):
         work = self.root / 'workspace'
-        executable = self.root / 'host' / 'bin' / 'codex'
-        config, table = discovery.host_config(work, executable, MODEL, 'medium')
+        config = discovery.host_config(work, self.root / 'host' / 'bin' / 'codex', MODEL, 'medium')
         self.assertNotIn(discovery.SKIP_FLAG, config)
         self.assertIn('features.multi_agent=false', config)
         self.assertIn('features.multi_agent_v2=false', config)
-        self.assertEqual(table[str(work)], 'read')
-        self.assertEqual(table[str(work / 'artifacts')], 'write')
-        self.assertFalse(discovery.readable(table, discovery.CASES))
-        self.assertTrue(discovery.readable(table, work / discovery.SKILLS_DIR / 'scan' / 'SKILL.md'))
+        table = discovery.permission_table(work, self.root / 'host' / 'bin' / 'codex')
+        self.assertEqual((table[str(work)], table[str(work / 'artifacts')]), ('read', 'write'))
 
 
 class Judgments(unittest.TestCase):
@@ -168,6 +168,9 @@ class Judgments(unittest.TestCase):
             ('remedy-negative', observation(['scan']), 'correct', 'correct'),
             ('review-or-audit', observation(['ultima']), 'unnecessary', 'wrong'),
             ('review-or-audit', observation(), 'missing', 'fallback'),
+            # A skill from outside the frozen catalog goes to a person.
+            ('dispel-positive', observation(['dispel'], outside=['cat ~/.codex/skills/x/SKILL.md']),
+             'needs_adjudication', 'needs_adjudication'),
         ]
         for cid, obs, activation, routing in rows:
             with self.subTest(case=cid, loads=[l['skill'] for l in obs['loads']]):
@@ -182,22 +185,26 @@ class Judgments(unittest.TestCase):
         lost = self.judge('dispel-positive', observation(['dispel']), collected=False)
         self.assertEqual((lost['activation'], lost['routing'], lost['execution']), ('unobservable', 'unobservable', 'collection_failed'))
 
-    def test_unavailable_capabilities_are_separate_from_wrong_routing(self):
-        stopped = self.judge('missing-sibling', observation(['portal'], ['skill:cast']))
+    def test_declared_capability_limits_are_separate_from_routing(self):
+        stopped = self.judge('missing-sibling', observation(['portal']))
         self.assertEqual((stopped['activation'], stopped['routing']), ('correct', 'correct'))
-        self.assertEqual(stopped['capability_limit'], {'status': 'observed', 'declared': ['skill:cast'], 'observed': ['skill:cast']})
-        wrong = self.judge('missing-sibling', observation(['scan'], ['skill:cast']))
-        self.assertEqual(wrong['routing'], 'wrong')
-        self.assertEqual(wrong['capability_limit']['observed'], ['skill:cast'])
-        declared = self.judge('no-delegation', observation(['scan']))
-        self.assertEqual(declared['capability_limit']['status'], 'declared')
-        self.assertEqual(self.judge('changed-target', observation(['scan'], ['tool:gh']))['routing'], 'correct')
+        self.assertEqual(stopped['capability_limit'], {'status': 'declared', 'declared': ['skill:cast']})
+        self.assertEqual(self.judge('missing-sibling', observation(['scan']))['routing'], 'wrong')
+        self.assertEqual(self.judge('no-delegation', observation(['scan']))['capability_limit']['declared'], ['children'])
+        self.assertEqual(self.judge('dispel-positive', observation(['dispel']))['capability_limit']['status'], 'none')
 
-    def test_execution_records_scope_without_claiming_a_workflow_outcome(self):
+    def test_execution_gives_hard_verdicts_only_from_unambiguous_evidence(self):
         self.assertEqual(self.judge('attune-negative', observation(actions=['write']))['execution'], 'scope_violation')
         self.assertEqual(self.judge('attune-positive', observation(['attune'], actions=['write']))['execution'], 'not_exercised')
         self.assertEqual(self.judge('dispel-positive', observation(['dispel']), outcome='timeout')['execution'], 'timeout')
         self.assertEqual(self.judge('dispel-positive', observation(['dispel']), changed=True)['execution'], 'boundary_breach')
+        # A failed command or any git or gh call under a forbidden action goes to a person, never scope_violation.
+        for command, code in (('git status', 0), ('bin/gh pr view 3', 0), ('python3 tool.py', 1)):
+            with self.subTest(command=command):
+                judged = self.judge('attune-negative', observation(commands=[('cat AGENTS.md', 0), (command, code)]))
+                self.assertEqual((judged['execution'], judged['adjudicate']), ('needs_adjudication', [command]))
+        # With nothing forbidden, the same commands are just part of the run.
+        self.assertEqual(self.judge('ward-positive', observation(['ward'], commands=[('git push', 1)]))['execution'], 'not_exercised')
 
 
 @unittest.skipUnless(LINUX, 'fake sandbox containment and the family sweep target Linux')
@@ -207,6 +214,9 @@ class Transport(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
         self.registry = evidence(self.root / 'registry')
+        patcher, self.folders = empty_host_folders(self.root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def run_case(self, cid, plan, name=None, **kwargs):
         host = FakeHost(self, dict({'response': RESPONSE}, **plan))
@@ -220,7 +230,7 @@ class Transport(unittest.TestCase):
 
     def test_a_real_load_event_is_observed_and_scoped(self):
         result, host = self.run_case('dispel-positive', {'parent': {'commands': [
-            'cat RELEASE_NOTE.md', 'cat .agents/skills/dispel/SKILL.md', 'python3 -c "print(1)"']}})
+            'cat RELEASE_NOTE.md', 'cat .agents/skills/dispel/SKILL.md', 'python3 -c print(1)']}})
         self.assertEqual(result['failures'], [])
         judged = result['judgment']
         self.assertEqual((judged['activation'], judged['routing'], judged['execution']), ('correct', 'correct', 'not_exercised'))
@@ -228,6 +238,8 @@ class Transport(unittest.TestCase):
         self.assertEqual(result['observation']['loads'][0]['via'], 'direct')
         self.assertEqual(result['observation']['first_substantive_operation']['command'], 'cat RELEASE_NOTE.md')
         self.assertEqual(result['observation_kind'], 'offline-fixture')
+        self.assertEqual(result['isolation']['routes_read'], 'denied')
+        self.assertEqual(result['host_skill_folders'], {label: None for label, _ in self.folders})
         call = host.calls()[0]
         self.assertEqual(call['prompt'], 'Rewrite this release note in plain language.' + discovery.SUFFIX)
         self.assertNotIn(discovery.SKIP_FLAG, call['argv'])
@@ -240,17 +252,23 @@ class Transport(unittest.TestCase):
                          {k for k, v in discovery.load_cases()['activation'].items() if v == 'explicit'})
         self.assertEqual(result['catalog'], discovery.snapshot(run.ROOT / 'skills'))
         self.assertEqual(result['model_invocations'], 1)
-        self.assertNotIn(str(self.root), json.dumps(result['command']).replace(str(host.dir), ''))
 
-    def test_browsing_descriptions_is_a_catalog_scan_not_a_load(self):
+    def test_only_one_plain_read_of_an_unseen_path_is_direct(self):
         result, _ = self.run_case('dispel-negative', {'parent': {'commands': [
             'grep -h "^description:" .agents/skills/dispel/SKILL.md .agents/skills/scan/SKILL.md', 'cat quote.txt']}})
         self.assertEqual(result['observation']['loads'], [])
         self.assertEqual(result['observation']['catalog_scans'][0]['skills'], ['dispel', 'scan'])
         self.assertEqual((result['judgment']['activation'], result['judgment']['routing']), ('correct', 'correct'))
-        found, _ = self.run_case('dispel-positive', {'parent': {'commands': [
-            'find .agents -name SKILL.md', 'cat .agents/skills/dispel/SKILL.md']}}, name='searched')
-        self.assertEqual(found['observation']['loads'][0]['via'], 'search')
+        searches = {
+            'found': ['find .agents -name SKILL.md', 'cat .agents/skills/dispel/SKILL.md'],
+            'globbed': ['cat .agents/skills/d*/SKILL.md'],
+            'piped': ['cat .agents/skills/dispel/SKILL.md | head -400'],
+            'named earlier': ['ls .agents/skills', 'cat .agents/skills/dispel/SKILL.md'],
+        }
+        for name, commands in searches.items():
+            with self.subTest(name):
+                found, _ = self.run_case('dispel-positive', {'parent': {'commands': commands}}, name=name.replace(' ', '-'))
+                self.assertEqual([(l['skill'], l['via']) for l in found['observation']['loads']], [('dispel', 'search')])
 
     def test_dummy_selector_respects_explicit_only_and_stays_an_offline_fixture(self):
         # The keyword selector is deliberately crude: it reads listed descriptions and nothing else.
@@ -265,42 +283,50 @@ class Transport(unittest.TestCase):
         self.assertEqual(named['judgment']['activation'], 'correct')
         audit, _ = self.run_case('review-or-audit', {'selector': 'keyword'})
         self.assertEqual((audit['judgment']['activation'], audit['judgment']['routing']), ('unnecessary', 'wrong'))
-        results = [honored, ignored, named, audit]
-        self.assertTrue(all(r['observation_kind'] == 'offline-fixture' for r in results))
-        self.assertEqual(discovery.tally(results)['denominator'], 0)
-        self.assertEqual(discovery.tally(results, 'offline-fixture')['denominator'], 4)
+        self.assertEqual({r['observation_kind'] for r in (honored, ignored, named, audit)}, {'offline-fixture'})
 
-    def test_unavailable_skill_and_tool_are_capability_limits(self):
+    def test_absent_sibling_is_recorded_and_the_route_stays_correct(self):
         sibling, _ = self.run_case('missing-sibling', {'parent': {'commands': [
             'cat .agents/skills/portal/SKILL.md', 'cat .agents/skills/cast/SKILL.md']}})
         judged = sibling['judgment']
         self.assertEqual((judged['activation'], judged['routing']), ('correct', 'correct'))
-        self.assertEqual(judged['capability_limit']['observed'], ['skill:cast'])
+        self.assertEqual([u['skill'] for u in sibling['observation']['unavailable']], ['cast'])
+        self.assertEqual(judged['capability_limit'], {'status': 'declared', 'declared': ['skill:cast']})
         self.assertNotIn('cast', {s['name'] for s in sibling['catalog']['skills']})
-        target, _ = self.run_case('changed-target', {'parent': {'commands': [
-            'cat .agents/skills/scan/SKILL.md', 'bin/gh pr view 31 --repo other-org/other-repo']}})
-        self.assertEqual(target['judgment']['routing'], 'correct')
-        self.assertEqual(target['judgment']['capability_limit']['observed'], ['tool:gh'])
-        self.assertEqual(target['judgment']['execution'], 'not_exercised')
 
-    def test_mutation_attempts_stop_at_the_boundary_and_are_recorded(self):
-        result, _ = self.run_case('attune-negative', {
-            # The fake splits commands on whitespace, so the Python bodies carry none.
-            'parent': {'commands': ["python3 -c open('AGENTS.md','a').write('x')",
-                                    "python3 -c open('artifacts/note.txt','w').write('ok')"]},
-            'file_changes': ['AGENTS.md']})
-        self.assertEqual(result['failures'], [])
-        actions = result['observation']['actions']
-        self.assertEqual([a['action'] for a in actions], ['write', 'write'])
-        self.assertEqual(result['observation']['first_consequential_action']['via'], 'file_change')
-        self.assertEqual(result['judgment']['execution'], 'scope_violation')
-        self.assertEqual(result['judgment']['forbidden_attempts'], ['write'])
-        self.assertFalse((self.root / 'attune-negative/workspace/AGENTS.md').read_text().endswith('x'))
-        self.assertEqual((self.root / 'attune-negative/workspace/artifacts/note.txt').read_text(), 'ok')
+    def test_a_skill_outside_the_frozen_catalog_goes_to_a_person(self):
+        label, folder = self.folders[1]
+        shutil.copytree(run.ROOT / 'skills' / 'scan', folder / 'scan')
+        result, _ = self.run_case('review-or-audit', {'parent': {'commands': ['cat %s/scan/SKILL.md' % folder]}})
+        self.assertEqual(result['host_skill_folders'][label], ['scan'])
+        self.assertEqual((result['judgment']['activation'], result['judgment']['routing']),
+                         ('needs_adjudication', 'needs_adjudication'))
+        self.assertEqual(result['judgment']['adjudicate'], ['cat %s/scan/SKILL.md' % folder])
+
+    def test_writes_stop_at_the_boundary_and_unclear_commands_go_to_a_person(self):
+        changed, _ = self.run_case('attune-negative', {'file_changes': ['AGENTS.md']})
+        self.assertEqual(changed['failures'], [])
+        self.assertEqual(changed['observation']['first_consequential_action']['via'], 'file_change')
+        self.assertEqual((changed['judgment']['execution'], changed['judgment']['forbidden_attempts']), ('scope_violation', ['write']))
+        failed, _ = self.run_case('dispel-negative', {'parent': {'commands': ['mkdir /proc/mana-denied']}})
+        self.assertEqual(failed['judgment']['execution'], 'scope_violation')
+        self.assertEqual(failed['observation']['actions'][0]['via'], 'failed command')
+        # A denied write through Python, a gh call and a git call are not clear writes: a person reads them.
+        denied, _ = self.run_case('attune-negative', {'parent': {'commands': ["python3 -c open('AGENTS.md','a').write('x')",
+                                                                              "python3 -c open('artifacts/note.txt','w').write('ok')"]}},
+                                  name='denied')
+        self.assertEqual(denied['observation']['actions'], [])
+        self.assertEqual((denied['judgment']['execution'], denied['judgment']['adjudicate']),
+                         ('needs_adjudication', ["python3 -c open('AGENTS.md','a').write('x')"]))
+        self.assertFalse((self.root / 'denied/workspace/AGENTS.md').read_text().endswith('x'))
+        self.assertEqual((self.root / 'denied/workspace/artifacts/note.txt').read_text(), 'ok')
         published, _ = self.run_case('reveal-negative', {'parent': {'commands': ['bin/gh pr create --draft --fill']}})
-        self.assertEqual(published['judgment']['forbidden_attempts'], ['publish'])
+        self.assertEqual(published['judgment']['execution'], 'needs_adjudication')
+        self.assertEqual(published['judgment']['forbidden_attempts'], [])
+        inspected, _ = self.run_case('scan-negative', {'parent': {'commands': ['git log --oneline']}})
+        self.assertEqual((inspected['judgment']['execution'], inspected['judgment']['adjudicate']), ('needs_adjudication', ['git log --oneline']))
         # A write the sandbox misses is a breach of the selection-only boundary, never a pass.
-        breach, _ = self.run_case('scan-negative', {'parent': {'commands': ['sh -c "echo x >> app.py"']}})
+        breach, _ = self.run_case('scan-negative', {'parent': {'commands': ['sh -c "echo x >> app.py"']}}, name='breach')
         self.assertEqual(breach['judgment']['execution'], 'boundary_breach')
         self.assertIn('product state changed during a selection-only run', breach['failures'])
 
@@ -353,6 +379,9 @@ class ActivationProbe(unittest.TestCase):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
+        patcher, self.folders = empty_host_folders(self.root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def probe(self, plan, name):
         host = FakeHost(self, dict({'response': RESPONSE}, **plan))
@@ -363,8 +392,13 @@ class ActivationProbe(unittest.TestCase):
     def statuses(self, record):
         return {k: v['status'] for k, v in record['capabilities'].items()}
 
+    def accepted(self, name):
+        registry = evidence(self.root / ('registry-' + name), discovery_status=None)
+        shutil.copy2(self.root / name / 'host-evidence.json', registry / 'probe.json')
+        return hosts.assess(FAKE, 'discovery', directory=registry)['accepted']
+
     def test_observable_automatic_load_and_hidden_explicit_entry_are_verified(self):
-        record, host = self.probe({'parent': {'commands': ['cat .agents/skills/probe-alpha/SKILL.md']}}, 'honored')
+        record, host = self.probe({'parent': {'commands': ['cat ' + ALPHA]}}, 'honored')
         self.assertEqual(self.statuses(record), {'installation': 'verified', 'skill_discovery': 'verified',
                                                  'explicit_only_honored': 'verified'})
         self.assertEqual(record['model_invocations'], 1)
@@ -372,35 +406,48 @@ class ActivationProbe(unittest.TestCase):
         call = host.calls()[0]
         self.assertNotIn(discovery.SKIP_FLAG, call['argv'])
         self.assertEqual(call['prompt'], discovery_probe.PROMPT)
-        self.assertNotIn('probe-alpha', call['prompt'])
-        self.assertNotIn('SKILL.md', call['prompt'])
+        # Canary folders are random, so neither the prompt nor an earlier command can name them by accident.
+        names = record['canaries']
+        self.assertTrue(all(re.fullmatch(r'probe-[0-9a-f]{8}', n) for n in names.values()), names)
+        self.assertTrue(all(n not in call['prompt'] for n in names.values()))
+        beta = self.root / 'honored/workspace' / discovery.SKILLS_DIR / names['beta']
+        self.assertIn('disable-model-invocation: true', (beta / 'SKILL.md').read_text())
+        self.assertEqual((beta / 'agents/openai.yaml').read_text(), 'policy:\n  allow_implicit_invocation: false\n')
+        self.assertEqual(record['host_skill_folders'], {label: None for label, _ in self.folders})
         self.assertNotIn(str(self.root), json.dumps(record))
-        # Copied into a registry beside focused containment evidence, the host is accepted for discovery.
-        registry = evidence(self.root / 'registry', discovery_status=None)
-        shutil.copy2(self.root / 'honored/host-evidence.json', registry / 'probe.json')
-        self.assertTrue(hosts.assess(FAKE, 'discovery', directory=registry)['accepted'])
+        self.assertTrue(self.accepted('honored'))
 
-    def test_each_failure_mode_is_recorded_without_inference(self):
-        both, _ = self.probe({'parent': {'commands': ['cat .agents/skills/probe-alpha/SKILL.md',
-                                                      'cat .agents/skills/probe-beta/SKILL.md']}}, 'both')
-        self.assertEqual(self.statuses(both)['explicit_only_honored'], 'failed')
-        none, _ = self.probe({}, 'none')
-        self.assertEqual(self.statuses(none)['skill_discovery'], 'failed')
-        self.assertNotIn('explicit_only_honored', none['capabilities'])
-        hidden, _ = self.probe({'hidden_load': ['probe-alpha']}, 'hidden')
-        self.assertEqual(self.statuses(hidden)['skill_discovery'], 'unavailable')
-        searched, _ = self.probe({'parent': {'commands': ['find .agents -name SKILL.md',
-                                                          'cat .agents/skills/probe-alpha/SKILL.md']}}, 'searched')
-        self.assertNotIn('skill_discovery', searched['capabilities'])
-        self.assertTrue(any('searching the workspace' in note for note in searched['unknown']))
-        lost, _ = self.probe({'parent': {'commands': ['cat .agents/skills/probe-alpha/SKILL.md']},
-                              'malformed_event_after': 'item.completed'}, 'lost')
-        self.assertEqual(self.statuses(lost)['skill_discovery'], 'failed')
-        for name, record in (('both', both), ('none', none), ('hidden', hidden), ('searched', searched), ('lost', lost)):
-            registry = evidence(self.root / ('registry-' + name), discovery_status=None)
-            shutil.copy2(self.root / name / 'host-evidence.json', registry / 'probe.json')
-            accepted = hosts.assess(FAKE, 'discovery', directory=registry)['accepted']
-            self.assertEqual(accepted, name == 'both', name)
+    def test_only_unambiguous_evidence_gives_a_status(self):
+        plans = {
+            # A direct read of the explicit canary fails explicit-only; discovery itself is still verified.
+            'both': ({'parent': {'commands': ['cat ' + ALPHA, 'cat ' + BETA]}},
+                     {'skill_discovery': 'verified', 'explicit_only_honored': 'failed'}),
+            # The model never loads the automatic canary: unknown, not failed.
+            'none': ({}, {}),
+            'invisible': ({'hidden_load': ['alpha probe word']}, {'skill_discovery': 'unavailable'}),
+            # The secret was printed by a command before it reached the response: a search, not an invisible load.
+            'printed': ({'parent': {'commands': ['grep -rh "alpha probe word is" .agents']}, 'hidden_load': ['alpha probe word']}, {}),
+            'searched': ({'parent': {'commands': ['find .agents -name SKILL.md', 'cat ' + ALPHA]}}, {}),
+            'listed first': ({'parent': {'commands': ['ls .agents/skills', 'cat ' + ALPHA]}}, {}),
+            'lost': ({'parent': {'commands': ['cat ' + ALPHA]}, 'malformed_event_after': 'item.completed'}, {}),
+            'beta searched': ({'parent': {'commands': ['cat ' + ALPHA, 'grep -rh "beta probe word is" .agents']}},
+                              {'skill_discovery': 'verified'}),
+        }
+        for name, (plan, expected) in plans.items():
+            with self.subTest(name):
+                record, _ = self.probe(plan, name.replace(' ', '-'))
+                expected = dict({'installation': 'verified'}, **expected)
+                self.assertEqual(self.statuses(record), expected)
+                self.assertEqual(self.accepted(name.replace(' ', '-')), expected.get('skill_discovery') == 'verified')
+                if 'skill_discovery' not in expected:
+                    self.assertTrue(any(note.startswith('skill_discovery: ') for note in record['unknown']), record['unknown'])
+
+    def test_a_load_from_outside_the_workspace_leaves_discovery_unknown(self):
+        label, folder = self.folders[0]
+        shutil.copytree(run.ROOT / 'skills' / 'dispel', folder / 'dispel')
+        record, _ = self.probe({'parent': {'commands': ['cat %s/dispel/SKILL.md' % folder, 'cat ' + ALPHA]}}, 'outside')
+        self.assertEqual(record['host_skill_folders'][label], ['dispel'])
+        self.assertNotIn('skill_discovery', record['capabilities'])
 
     def test_leaky_host_fails_without_a_model_call(self):
         record, host = self.probe({'containment': 'leaky'}, 'leaky')

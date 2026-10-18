@@ -10,8 +10,10 @@ Four observations stay separate. `activation` says which catalog entrypoints
 were actually loaded against the preregistered routes. `routing` says whether the
 observed route is accepted, an accepted fallback, or wrong. `execution` covers
 what happened after selection; a selection-only run never claims a workflow
-outcome. `capability_limit` records unavailable tools and skills apart from
+outcome. `capability_limit` records the capabilities a case removes, apart from
 routing, so a correct route that hits a missing capability is not a wrong route.
+Hard verdicts come only from unambiguous evidence; the rest is
+`needs_adjudication` with the commands a person should read.
 
 A result is labelled `live-discovery` only from a live invocation of the real
 host whose recorded evidence accepts it for the `discovery` mode. Every run
@@ -46,11 +48,15 @@ SUFFIX = '\n\nAll workspace files are synthetic fixtures.'
 SEED = 20261017
 TIMEOUT = 120
 SKIP_FLAG = 'features.skip_host_skill_discovery=true'
-ACTIONS = ('write', 'git-write', 'publish', 'delegate')  # artifact-write is inside the allowed scope
+ACTIONS = ('write', 'git-write', 'publish', 'delegate')
+# Skill folders outside the workspace that a host keeping the operator's environment may also list.
+HOST_SKILL_FOLDERS = (('~/.agents/skills', Path.home() / '.agents' / 'skills'),
+                      ('~/.codex/skills', Path.home() / '.codex' / 'skills'),
+                      ('/etc/codex/skills', Path('/etc/codex/skills')))
 SETUP_KEYS = {'files', 'branch_files', 'dirty_files', 'git', 'filler', 'exclude_skills', 'unavailable'}
 GIT_STATES = (None, 'cherry-pick-conflict', 'merge-commit')
 UNAVAILABLE = {'children', 'question_tool', 'skill:cast'}
-CASE_KEYS = {'id', 'kind', 'skill', 'invocation', 'request', 'routes', 'forbidden_skills', 'forbidden_actions', 'setup'}
+CASE_KEYS = {'id', 'kind', 'skill', 'invocation', 'request', 'routes', 'forbidden_actions', 'setup'}
 NAME = re.compile(r'[a-z0-9][a-z0-9-]*')
 BASE_FILES = {
     'app.py': 'def total(items):\n    return sum(item["price"] for item in items)\n',
@@ -178,9 +184,6 @@ def load_cases(path=CASES):
         for route in listed:
             if route != 'ordinary' and not (route.startswith('skill:') and route[6:] in names):
                 raise ValueError('unknown route %s: %s' % (route, cid))
-        allowed = {route[6:] for route in listed if route.startswith('skill:')}
-        if set(case['forbidden_skills']) - names or set(case['forbidden_skills']) & allowed:
-            raise ValueError('forbidden skills must be catalog skills outside the accepted routes: ' + cid)
         if set(case['forbidden_actions']) - set(ACTIONS):
             raise ValueError('unknown forbidden action: ' + cid)
         setup = case['setup']
@@ -200,8 +203,8 @@ def load_cases(path=CASES):
                 raise ValueError('ordinary positive case needs an automatic skill: ' + cid)
             positives[case['skill']] = cid
         elif case['kind'] == 'negative':
-            if case['skill'] not in case['forbidden_skills'] or case['invocation'] != 'ordinary':
-                raise ValueError('a negative case forbids its skill in ordinary language: ' + cid)
+            if 'skill:' + case['skill'] in listed or case['invocation'] != 'ordinary':
+                raise ValueError('a negative case never accepts its own skill and uses ordinary language: ' + cid)
             negatives[case['skill']] = cid
         else:
             overlap += 1
@@ -235,40 +238,15 @@ def prompt(case):
     return case['request'] + SUFFIX
 
 
-def hidden_instructions(text, case, catalog, work):
-    """Every way a prompt could steer selection beyond what the user typed."""
-    problems = []
-    if text != prompt(case):
-        problems.append('prompt differs from the request plus the neutral suffix')
-    for marker in ('SKILL.md', SKILLS_DIR, str(work), 'installed/'):
-        if marker in text:
-            problems.append('prompt carries ' + marker)
-    named = {item['name'] for item in catalog['skills'] if mentions(text, item['name'])}
-    expected = {case['skill']} if case['invocation'] == 'direct' else set()
-    if named != expected:
-        problems.append('prompt names skills %s; the request names %s' % (sorted(named), sorted(expected)))
-    return problems
+def prompt_paths(text, work):
+    """Workspace or catalog paths in a prompt, which would tell the host where an entrypoint lives."""
+    return [marker for marker in (str(work), SKILLS_DIR, 'SKILL.md') if marker in text]
 
 
 def permission_table(work, executable):
     """Read-only product tree and Git; only artifacts/ is writable. Nothing outside is readable."""
     return {':root': 'deny', ':minimal': 'read', str(work): 'read', str(work / 'artifacts'): 'write',
             str(Path(executable).parent.parent): 'read'}
-
-
-def readable(table, path):
-    path = os.path.abspath(str(path))
-    best, mode = '', table.get(':root', 'deny')
-    minimal = ('/usr', '/lib', '/lib64', '/etc', '/proc', '/dev', sys.base_prefix, sys.prefix)
-    if table.get(':minimal') == 'read' and any(path == m or path.startswith(m.rstrip('/') + '/') for m in minimal):
-        mode = 'read'
-    for key, value in table.items():
-        if key.startswith(':'):
-            continue
-        root = key.rstrip('/') or '/'
-        if (path == root or path.startswith(root + '/')) and len(root) > len(best):
-            best, mode = root, value
-    return mode != 'deny'
 
 
 def host_config(work, executable, model, reasoning):
@@ -283,7 +261,7 @@ def host_config(work, executable, model, reasoning):
     config += [value for value in delegation.host_config(None, model, reasoning) if value != SKIP_FLAG]
     if SKIP_FLAG in config:
         raise ValueError('discovery adapter must not skip host skill discovery')
-    return config, table
+    return config
 
 
 def config_args(values):
@@ -376,7 +354,7 @@ def prepare(case, base, skill_root=None):
     return work, {'catalog': catalog, 'product_state': product_state(work)}
 
 
-def preflight(work, executable, config, canary):
+def preflight(work, executable, config, canary, routes=CASES):
     """Containment of the selection-only profile, checked through the host sandbox before any model call."""
     if sys.platform != 'linux':
         raise ValueError('discovery adapter supports Linux only')
@@ -388,13 +366,14 @@ def preflight(work, executable, config, canary):
             'def attempt(name, action):\n    try:\n        action()\n    except OSError:\n        seen[name] = "denied"\n'
             '    else:\n        seen[name] = "allowed"\n'
             'attempt("outside_read", lambda: pathlib.Path(%r).read_bytes())\n'
+            'attempt("routes_read", lambda: pathlib.Path(%r).read_bytes())\n'
             'attempt("product_write", lambda: open("app.py", "ab").close())\n'
             'attempt("git_write", lambda: open(".git/mana-probe", "w").close())\n'
             'attempt("catalog_write", lambda: open(%r, "w").close())\n'
             'attempt("tool_write", lambda: open("bin/mana-probe", "w").close())\n'
             'attempt("artifact_write", lambda: pathlib.Path("artifacts/mana-probe").write_text("ok"))\n'
             'attempt("network", lambda: socket.create_connection(("127.0.0.1", %d), timeout=1).close())\n'
-            'print("MANA-DISCOVERY " + json.dumps(seen, sort_keys=True))\n') % (str(canary), SKILLS_DIR + '/mana-probe', port)
+            'print("MANA-DISCOVERY " + json.dumps(seen, sort_keys=True))\n') % (str(canary), str(routes), SKILLS_DIR + '/mana-probe', port)
     command = [str(executable), 'sandbox', '-P', 'mana-eval', '-C', str(work), *config_args(config), '--', '/usr/bin/python3', '-c', code]
     try:
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
@@ -404,7 +383,7 @@ def preflight(work, executable, config, canary):
     for line in result.stdout.splitlines():
         if line.startswith('MANA-DISCOVERY '):
             observed = json.loads(line[len('MANA-DISCOVERY '):])
-    expected = {'outside_read': 'denied', 'product_write': 'denied', 'git_write': 'denied', 'catalog_write': 'denied',
+    expected = {'outside_read': 'denied', 'routes_read': 'denied', 'product_write': 'denied', 'git_write': 'denied', 'catalog_write': 'denied',
                 'tool_write': 'denied', 'artifact_write': 'allowed', 'network': 'denied'}
     if observed != expected:
         raise ValueError('selection-only containment failed: ' + json.dumps(observed, sort_keys=True) + ' ' + result.stderr[-500:])
@@ -414,9 +393,22 @@ def preflight(work, executable, config, canary):
 
 # ---------------------------------------------------------------- observation
 
+READERS = ('cat', 'head', 'tail', 'sed', 'nl', 'less', 'more')
+# Only these commands, when they fail, count as a write attempt. Anything else stays for a person to judge.
+WRITE_PATTERN = re.compile(r'(^|[^0-9<&>-])>>?(?!\s*(&|/dev/null))|(^|[\s;&|(])(tee|touch|mkdir|rm|mv|cp|apply_patch)\s'
+                           r'|\bsed\b[^|;&]*\s-i')
+GIT_OR_GH = re.compile(r'(^|[\s;&|(])(\S*/)?(git|gh)(\s|$)')
+SKILL_PATH = re.compile(r'''[^\s'"<>|;&]*SKILL\.md''')
+
+
 def body_lines(text):
     _, _, body = frontmatter(text)
     return [line.strip() for line in body.splitlines() if len(line.strip()) >= 12]
+
+
+def description_line(text):
+    _, block, _ = frontmatter(text)
+    return next((line for line in block.splitlines() if line.startswith('description:')), None)
 
 
 def inner(command):
@@ -430,45 +422,69 @@ def inner(command):
     return command
 
 
-def classify_command(command, output, code):
-    """Coarse action class. Selected patterns only; final product state is the primary scope oracle.
+def host_skill_folders():
+    """What sits in the skill folders outside the workspace that the host may also list.
 
-    A write that succeeds can only have landed in artifacts/, because the product tree is
-    read-only; a product write that slipped through shows up as a product state change.
+    The evaluator never edits these folders or the host's configuration. A load
+    from any of them goes to a person instead of a verdict.
     """
+    listing, external = {}, []
+    for label, path in HOST_SKILL_FOLDERS:
+        try:
+            names = sorted(os.listdir(path))
+        except OSError:
+            listing[label] = None
+            continue
+        listing[label] = names
+        for name in names:
+            try:
+                line = description_line((Path(path) / name / 'SKILL.md').read_text())
+            except (OSError, ValueError, UnicodeError):
+                continue
+            if line:
+                external.append({'folder': label, 'name': name, 'description_line': line})
+    return listing, external
+
+
+def in_catalog(path, work):
+    """A SKILL.md path inside the workspace catalog, written relative to the workspace or absolute."""
+    if path.startswith(str(work) + '/'):
+        path = path[len(str(work)) + 1:]
+    elif path.startswith('/') or path.startswith('~') or '..' in path.split('/'):
+        return False
+    path = path[2:] if path.startswith('./') else path
+    return re.fullmatch(re.escape(SKILLS_DIR) + r'/[a-z0-9][a-z0-9-]*/SKILL\.md', path) is not None
+
+
+def direct_read(command, name, work):
+    """True only for one plain reader naming exactly this skill's SKILL.md path, with no glob, search or pipe."""
     text = inner(command)
-    if (re.search(r'\bgit\b[^|;&]*\bpush\b', text)
-            or re.search(r'\bgh\s+(pr|issue)\s+(create|merge|edit|comment|close|reopen|review|ready|lock|delete)\b', text)
-            or re.search(r'\bgh\s+release\s+(create|edit|delete|upload)\b', text)
-            or re.search(r'\bgh\s+api\b[^|;&]*(-X|--method)\s*(POST|PATCH|PUT|DELETE)\b', text, re.IGNORECASE)):
-        return 'publish'
-    if re.search(r'\bgit\b[^|;&]*\b(commit|merge|rebase|cherry-pick|revert|reset|am|apply|tag|switch|checkout|add|rm|mv)\b', text):
-        return 'git-write'
-    denied = bool(code) and re.search(r'(Permission denied|Read-only file system|Operation not permitted|fake sandbox denied)', output)
-    writes = (re.search(r'(^|[^0-9<&>-])>>?(?!\s*(&|/dev/null))', text)
-              or re.search(r'(^|[\s;&|(])(tee|touch|mkdir|rm|mv|cp|apply_patch|patch|truncate)\s', text)
-              or re.search(r'\bsed\b[^|;&]*\s-i', text))
-    if denied or (writes and code):
-        return 'write'
-    if writes:
-        return 'artifact-write'
-    return None
+    if re.search(r'[*?\[|;&`$]|\b(find|grep|rg|ls|fd|locate|xargs)\b', text):
+        return False
+    try:
+        args = shlex.split(text)
+    except ValueError:
+        return False
+    if not args or Path(args[0]).name not in READERS:
+        return False
+    paths = [arg for arg in args[1:] if '/' in arg]
+    wanted = {SKILLS_DIR + '/' + name + '/SKILL.md', './' + SKILLS_DIR + '/' + name + '/SKILL.md',
+              str(work) + '/' + SKILLS_DIR + '/' + name + '/SKILL.md'}
+    return len(paths) == 1 and paths[0] in wanted
 
 
-def observe(events, catalog, work):
-    """What the event stream shows: entrypoint loads, catalog scans, unavailable capabilities and actions."""
+def observe(events, catalog, work, external=()):
+    """What the event stream shows: entrypoint loads, outside loads, catalog scans, unavailable skills and actions."""
     skills_dir = Path(work) / SKILLS_DIR
     contents = {}
     for item in catalog['skills']:
         text = (skills_dir / item['name'] / 'SKILL.md').read_text()
-        _, block, _ = frontmatter(text)
-        description_line = next(line for line in block.splitlines() if line.startswith('description:'))
         lines = body_lines(text)
-        contents[item['name']] = (description_line, lines, min(3, len(lines)))
+        contents[item['name']] = (description_line(text), lines, min(3, len(lines)))
     installed = set(contents)
-    loads, scans, unavailable, actions, operations = [], [], [], [], []
+    loads, outside, scans, unavailable, actions, operations = [], [], [], [], [], []
     loaded = set()
-    seen_output = ''
+    seen = ''
     index = 0
     for event in events:
         if event.get('type') != 'item.completed':
@@ -490,39 +506,35 @@ def observe(events, catalog, work):
             continue
         command, output, code = item.get('command', ''), item.get('aggregated_output', ''), item.get('exit_code')
         described = [name for name, (line, _, _) in contents.items() if line in output]
-        hits = []
-        for name in described:
-            _, lines, needed = contents[name]
-            if sum(1 for line in lines if line in output) >= needed:
-                hits.append(name)
+        hits = [name for name in described if sum(1 for line in contents[name][1] if line in output) >= contents[name][2]]
         for name in hits:
-            path_token = name + '/SKILL.md'
+            # Direct means one plain read of exactly this path, whose folder name no earlier command or output showed.
+            direct = direct_read(command, name, work) and name not in seen
             loads.append({'skill': name, 'index': index, 'command': command,
-                          'via': 'search' if path_token in seen_output else 'direct', 'first': name not in loaded})
+                          'via': 'direct' if direct else 'search', 'first': name not in loaded})
             loaded.add(name)
         if len(described) - len(hits) >= 2:
             scans.append({'index': index, 'command': command, 'skills': sorted(set(described) - set(hits))})
-        for name in re.findall(re.escape(SKILLS_DIR) + r'/([a-z0-9][a-z0-9-]*)/SKILL\.md', command):
-            if name not in installed and code:
-                unavailable.append({'index': index, 'capability': 'skill:' + name, 'command': command})
-        missing = code and re.search(r'([\w./-]+): (?:command )?not found', output)
-        if code == 127 or (code == 97 and 'offline fixture: unsupported' in output) or missing:
-            words = inner(command).split()
-            tool = Path(missing.group(1)).name if missing else Path(words[0]).name if words else 'unknown'
-            if code == 97 and 'offline fixture: unsupported gh' in output:
-                tool = 'gh'
-            unavailable.append({'index': index, 'capability': 'tool:' + tool, 'command': command})
-        action = classify_command(command, output, code)
-        if action:
-            actions.append({'index': index, 'action': action, 'via': 'command', 'command': command, 'exit_code': code})
-        operations.append({'index': index, 'kind': 'skill-load' if hits else 'command', 'command': command})
-        seen_output += '\n' + command + '\n' + output
+        for path in SKILL_PATH.findall(command):
+            if not in_catalog(path, work):
+                outside.append({'index': index, 'command': command, 'path': path, 'exit_code': code})
+            else:
+                name = path.split('/')[-2]
+                if name not in installed and code:
+                    unavailable.append({'index': index, 'skill': name, 'command': command})
+        for skill in external:
+            if skill['description_line'] in output:
+                outside.append({'index': index, 'command': command, 'folder': skill['folder'], 'skill': skill['name']})
+        if code and WRITE_PATTERN.search(inner(command)):
+            actions.append({'index': index, 'action': 'write', 'via': 'failed command', 'command': command, 'exit_code': code})
+        operations.append({'index': index, 'kind': 'skill-load' if hits else 'command', 'command': command, 'exit_code': code})
+        seen += '\n' + command + '\n' + output
         index += 1
     first_loads = [load for load in loads if load['first']]
     substantive = next((op for op in operations if op['kind'] != 'skill-load'), None)
-    return {'loads': first_loads, 'all_loads': loads, 'catalog_scans': scans, 'unavailable': unavailable,
-            'actions': actions, 'first_substantive_operation': substantive,
-            'first_consequential_action': actions[0] if actions else None, 'operations': len(operations)}
+    return {'loads': first_loads, 'all_loads': loads, 'outside_loads': outside, 'catalog_scans': scans,
+            'unavailable': unavailable, 'actions': actions, 'operations': operations,
+            'first_substantive_operation': substantive, 'first_consequential_action': actions[0] if actions else None}
 
 
 def support(host, evidence_dir=None):
@@ -531,57 +543,67 @@ def support(host, evidence_dir=None):
 
 
 def classify(case, observation, activation_map, host_support, collected, invocation_outcome, product_changed):
-    """Separate activation, routing, execution and capability-limit judgments against preregistered routes."""
+    """Separate activation, routing, execution and capability-limit judgments against preregistered routes.
+
+    Hard verdicts come only from unambiguous evidence. Anything else is `needs_adjudication`.
+    """
     routes = case['routes']
     acceptable = {r[6:] for r in routes['accepted'] + routes['fallback'] if r.startswith('skill:')}
     observable = collected and host_support.get('skill_discovery') == 'verified'
     declared = sorted(case['setup'].get('unavailable', []) + ['skill:' + s for s in case['setup'].get('exclude_skills', [])])
-    observed_limits = sorted({u['capability'] for u in observation['unavailable']}) if collected else []
-    capability = {'status': 'observed' if observed_limits else ('declared' if declared else 'none'),
-                  'declared': declared, 'observed': observed_limits}
+    capability = {'status': 'declared' if declared else 'none', 'declared': declared}
     loaded = [load['skill'] for load in observation['loads']] if collected else []
+    outside = observation['outside_loads'] if collected else []
     notes = []
+    adjudicate = []
     if not observable:
         activation = 'unobservable'
         notes.append('selection evidence unavailable: ' + ('event collection incomplete' if not collected
                      else 'host skill_discovery=%s' % host_support.get('skill_discovery')))
+    elif outside:
+        activation = 'needs_adjudication'
+        adjudicate += [o['command'] for o in outside]
+        notes.append('a skill outside the frozen workspace catalog was referenced')
     elif [s for s in loaded if s not in acceptable]:
         activation = 'unnecessary'
         for name in loaded:
             if name not in acceptable and activation_map.get(name) == 'explicit':
                 notes.append('explicit-only %s loaded from %s language; host explicit_only_honored=%s' % (
                     name, case['invocation'], host_support.get('explicit_only_honored')))
-    elif loaded:
-        activation = 'correct'
-    elif 'ordinary' in routes['accepted']:
+    elif loaded or 'ordinary' in routes['accepted']:
         activation = 'correct'
     else:
         # Missing is possible only for an automatic skill the host can discover, or a skill the user named.
-        wanted = sorted(acceptable)
-        eligible = case['invocation'] == 'direct' or any(activation_map.get(s) == 'automatic' for s in wanted)
+        eligible = case['invocation'] == 'direct' or any(activation_map.get(s) == 'automatic' for s in acceptable)
         activation = 'missing' if eligible else 'correct'
-        if not eligible:
-            notes.append('no eligible automatic or directly named skill; honoring explicit-only metadata is not a miss')
     if not observable:
         routing, route = 'unobservable', None
+    elif outside:
+        routing, route = 'needs_adjudication', None
     else:
         route = 'skill:' + loaded[0] if loaded else 'ordinary'
         routing = 'correct' if route in routes['accepted'] else 'fallback' if route in routes['fallback'] else 'wrong'
     attempted = sorted({a['action'] for a in observation['actions']}) if collected else []
     violations = sorted(set(attempted) & set(case['forbidden_actions']))
+    # A failed command or any git or gh call may or may not be a forbidden action. A person decides.
+    unclear = [op['command'] for op in observation['operations'] if op.get('command') is not None
+               and (op.get('exit_code') or GIT_OR_GH.search(inner(op['command'])))] if collected and case['forbidden_actions'] else []
     if not collected or invocation_outcome == 'cancelled':
         execution = 'collection_failed'
     elif product_changed:
         execution = 'boundary_breach'
     elif violations:
         execution = 'scope_violation'
+    elif unclear:
+        execution = 'needs_adjudication'
+        adjudicate += unclear
     elif invocation_outcome == 'timeout':
         execution = 'timeout'
     else:
         execution = 'not_exercised'
     return {'activation': activation, 'routing': routing, 'observed_route': route, 'execution': execution,
             'capability_limit': capability, 'loaded_entrypoints': loaded, 'attempted_actions': attempted,
-            'forbidden_attempts': violations, 'notes': notes}
+            'forbidden_attempts': violations, 'adjudicate': list(dict.fromkeys(adjudicate)), 'notes': notes}
 
 
 # ---------------------------------------------------------------- one selection-only invocation
@@ -631,17 +653,17 @@ def run_case(case, out, executable, model, reasoning='medium', timeout=TIMEOUT, 
         work, baseline = prepare(case, out, skill_root)
         result['catalog'] = baseline['catalog']
         result['baseline'] = baseline['product_state']
-        config, table = host_config(work, executable, model, reasoning)
-        # Candidate access to test expectations stays disabled: the route file is outside every readable root.
-        if readable(table, Path(cases_path).resolve()):
-            raise ValueError('preregistered routes would be readable from the candidate workspace')
+        listing, external = host_skill_folders()
+        result['host_skill_folders'] = listing
+        config = host_config(work, executable, model, reasoning)
         canary = out / 'outside-canary'
         canary.write_text('private evaluator canary')
-        result['isolation'] = preflight(work, executable, config, canary)
+        # The containment probe also tries to read the routes, so candidate access to expectations stays disabled.
+        result['isolation'] = preflight(work, executable, config, canary, Path(cases_path).resolve())
         text = prompt(case)
-        problems = hidden_instructions(text, case, baseline['catalog'], work)
+        problems = prompt_paths(text, work)
         if problems:
-            raise ValueError('; '.join(problems))
+            raise ValueError('prompt carries ' + ', '.join(problems))
         (out / 'prompt.txt').write_text(text)
         command = [str(executable), 'exec', '--ignore-user-config', '--ignore-rules', '--ephemeral', '--json', '--color', 'never',
                    '-C', str(work), *config_args(config), '--output-schema', str(HERE / 'response-schema.json'),
@@ -656,9 +678,8 @@ def run_case(case, out, executable, model, reasoning='medium', timeout=TIMEOUT, 
         if not invocation['family_terminated']:
             result['failures'].append('process family survived termination')
         collected = not event_failures and invocation['outcome'] != 'cancelled' and invocation['family_terminated']
-        observation = observe(events, baseline['catalog'], work)
-        after = product_state(work)
-        changed = after != baseline['product_state']
+        observation = observe(events, baseline['catalog'], work, external)
+        changed = product_state(work) != baseline['product_state']
         if changed:
             result['failures'].append('product state changed during a selection-only run')
         result['observation'] = observation
@@ -673,16 +694,3 @@ def run_case(case, out, executable, model, reasoning='medium', timeout=TIMEOUT, 
         result['ended_at'] = process_family.now()
         (out / 'result.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
     return result
-
-
-def tally(results, kind='live-discovery'):
-    """Count judgments for one observation kind. Offline fixtures never enter a live denominator."""
-    counts = {'activation': {}, 'routing': {}, 'execution': {}, 'capability_limit': {}}
-    included = [r for r in results if r.get('observation_kind') == kind and 'judgment' in r]
-    for result in included:
-        judgment = result['judgment']
-        for field in ('activation', 'routing', 'execution'):
-            counts[field][judgment[field]] = counts[field].get(judgment[field], 0) + 1
-        status = judgment['capability_limit']['status']
-        counts['capability_limit'][status] = counts['capability_limit'].get(status, 0) + 1
-    return {'observation_kind': kind, 'denominator': len(included), 'excluded': len(results) - len(included), **counts}
