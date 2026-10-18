@@ -1,0 +1,4 @@
+{
+  "base_message": "Add nightly shelf snapshot export",
+  "head_message": "Build snapshot rows in one pass"
+}
