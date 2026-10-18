@@ -425,7 +425,9 @@ def host_skill_folders():
     """What sits in the skill folders outside the workspace that the host may also list.
 
     The evaluator never edits these folders or the host's configuration. A load
-    from any of them goes to a person instead of a verdict.
+    from any of them goes to a person instead of a verdict. Records keep only a
+    count per folder, because they are committed and the names describe the
+    operator's machine.
     """
     listing, external = {}, []
     for label, path in HOST_SKILL_FOLDERS:
@@ -434,7 +436,7 @@ def host_skill_folders():
         except OSError:
             listing[label] = None
             continue
-        listing[label] = names
+        listing[label] = len(names)
         for name in names:
             try:
                 line = description_line((Path(path) / name / 'SKILL.md').read_text())

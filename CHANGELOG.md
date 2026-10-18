@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.16
+
+- Discovery results and probe records keep only a count of entries in each host skill folder, because the folder names describe the operator's machine and the records are committed. The outside-load check still reads each skill's name and description in memory. The workflow evaluator records a live Codex CLI 0.163.0 discovery probe: the automatic canary was read directly from the installed catalog with no outside loads, so 0.163.0 is accepted for discovery runs. `explicit_only_honored` stays unknown, because the explicit canary was read in the same command as a search hit.
+
 ## 0.43.15
 
 - The workflow evaluator records a second live Codex CLI 0.163.0 host probe. The host refused a third child spawn while two were open, so the active-thread cap is verified as counting child threads only, and the host is accepted for comparative delegated runs. The study's delegated parity gate is now open; only the resource authorization and human-effort records keep it closed.

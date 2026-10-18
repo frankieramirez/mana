@@ -3,6 +3,8 @@
 Every host here is fake_host.py. No model is invoked. A fake run is an offline
 fixture and these tests check that it can never be labelled live discovery.
 """
+import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -311,7 +313,7 @@ class Transport(unittest.TestCase):
         label, folder = self.folders[1]
         shutil.copytree(run.ROOT / 'skills' / 'scan', folder / 'scan')
         result, _ = self.run_case('review-or-audit', {'parent': {'commands': ['cat %s/scan/SKILL.md' % folder]}})
-        self.assertEqual(result['host_skill_folders'][label], ['scan'])
+        self.assertEqual(result['host_skill_folders'][label], 1)
         self.assertEqual((result['judgment']['activation'], result['judgment']['routing']),
                          ('needs_adjudication', 'needs_adjudication'))
         self.assertEqual(result['judgment']['adjudicate'], ['cat %s/scan/SKILL.md' % folder])
@@ -387,6 +389,27 @@ class Transport(unittest.TestCase):
 
 
 @unittest.skipUnless(LINUX, 'fake sandbox containment and the family sweep target Linux')
+class LiveRecord(unittest.TestCase):
+    def test_live_codex_0163_discovery_record(self):
+        # Recorded by run.py --probe-discovery on a real Codex CLI 0.163.0 host with one model call,
+        # then folder names were replaced with counts. Assessed in a copy with the focused host record.
+        directory = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, directory)
+        path = hosts.EVIDENCE / '2026-10-18-codex-cli-0.163.0-discovery.json'
+        self.assertEqual('5bf4921e82d7a800bb8b9b604b416050439c9035d83a85f8ad593642524d5d2b',
+                         hashlib.sha256(path.read_bytes()).hexdigest())
+        for name in (path.name, '2026-10-17-codex-cli-0.163.0.json'):
+            shutil.copy2(hosts.EVIDENCE / name, directory / name)
+        record = json.loads(path.read_text())
+        self.assertEqual(1, record['model_invocations'])
+        self.assertTrue(all(v is None or isinstance(v, int) for v in record['host_skill_folders'].values()))
+        self.assertNotIn('explicit_only_honored', record['capabilities'])
+        at = hosts.parse_time(record['recorded_at']) + datetime.timedelta(days=1)
+        result = hosts.assess('codex-cli 0.163.0', 'discovery', directory=directory, at=at)
+        self.assertTrue(result['accepted'])
+        self.assertEqual('verified', result['capabilities']['skill_discovery']['status'])
+
+
 class ActivationProbe(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
@@ -466,7 +489,7 @@ class ActivationProbe(unittest.TestCase):
         label, folder = self.folders[0]
         shutil.copytree(run.ROOT / 'skills' / 'dispel', folder / 'dispel')
         record, _ = self.probe({'parent': {'commands': ['cat ' + ALPHA, 'cat %s/dispel/SKILL.md' % folder]}}, 'outside')
-        self.assertEqual(record['host_skill_folders'][label], ['dispel'])
+        self.assertEqual(record['host_skill_folders'][label], 1)
         self.assertEqual(len(next(p for p in record['probes'] if p['name'] == 'activation')['outside_loads']), 2)
         self.assertEqual(record['capabilities']['skill_discovery']['status'], 'verified')
 
@@ -499,11 +522,6 @@ class ActivationProbe(unittest.TestCase):
         self.assertEqual(record['model_invocations'], 0)
         self.assertEqual(host.calls(), [])
         self.assertNotIn('skill_discovery', record['capabilities'])
-
-    def test_recorded_hosts_are_not_yet_accepted_for_discovery(self):
-        self.assertEqual(hosts.accepted_versions('discovery'), set())
-        result = hosts.assess('codex-cli 0.163.0', 'discovery')
-        self.assertEqual(result['missing'], ['skill_discovery=unknown'])
 
     def test_cli_refuses_unbounded_or_mixed_discovery_options(self):
         script = str(run.HERE / 'run.py')
