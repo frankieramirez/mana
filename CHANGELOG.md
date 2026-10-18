@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.7
+
+- The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. An independent second review approved all six groups.
+
 ## 0.43.6
 
 - The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. A re-review of the revised oracles and runner integration are still pending.

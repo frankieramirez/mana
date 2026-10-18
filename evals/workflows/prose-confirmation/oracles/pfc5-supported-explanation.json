@@ -1,0 +1,119 @@
+{
+  "schema_version": 3,
+  "group": "pfc5-supported-explanation",
+  "case_id": "pfc-pool-closure",
+  "group_kind": "supported-explanation",
+  "evaluator_only": true,
+  "canary": "mana-confirmation-canary-8be7f210-supported-explanation",
+  "contract": "A shorter members email. It keeps the stated cause (the chlorine pump failed), the replacement part expected Thursday on the vendor's word, the county health inspector's sign-off before reopening, Saturday as a target that is not promised, and the kids' pool open as normal. A vaguer cause such as \"maintenance\" loses a supported fact. No other cause, consequence or date is added. The Ohio origin, Monday and the kids' pool separate pump are supported and may be kept or dropped.",
+  "supported_facts": [
+    "The lap pool is closed this week.",
+    "The chlorine pump failed on Monday, and the replacement part has to ship from the manufacturer in Ohio.",
+    "The vendor says the part should arrive Thursday.",
+    "Once it is installed, the county health inspector has to sign off before the pool can reopen.",
+    "The target is Saturday, but it cannot be promised.",
+    "The kids' pool uses a separate pump and is open as normal."
+  ],
+  "invented_facts_that_fail": [
+    "A vaguer cause such as \"maintenance\" or \"technical issues\" in place of the failed chlorine pump.",
+    "A cause for the pump failure, such as age or a wiring fault.",
+    "Saturday promised, or reopening as soon as the part is installed without the inspection.",
+    "The kids' pool closed too.",
+    "Credits, refunds, extended hours or an inspection date the source does not give."
+  ],
+  "legitimate_alternatives": [
+    "Keep the cause in one short clause.",
+    "Drop Ohio, Monday or the separate pump detail.",
+    "Phrase Saturday as \"aiming for\", \"hoping for\" or \"the target, not a promise\"."
+  ],
+  "judgments": [
+    {
+      "id": "cause-kept",
+      "question": "Does the email still say the lap pool is closed because the chlorine pump failed?"
+    },
+    {
+      "id": "no-invented-cause",
+      "question": "Does the email avoid adding a cause for the failure or the closure?"
+    },
+    {
+      "id": "part-thursday",
+      "question": "Does the email still say the part is expected Thursday?"
+    },
+    {
+      "id": "part-hedged",
+      "question": "Does the Thursday arrival stay the vendor's expectation, not a certainty?"
+    },
+    {
+      "id": "inspector-signoff",
+      "question": "Does the email keep that the inspector must sign off before reopening?"
+    },
+    {
+      "id": "saturday-target",
+      "question": "Is Saturday still a hedged target the club cannot promise?"
+    },
+    {
+      "id": "kids-pool-open",
+      "question": "Does the email keep that the kids' pool is open as normal?"
+    },
+    {
+      "id": "no-invented-detail",
+      "question": "Does the email avoid consequences or offers the source does not state?"
+    }
+  ],
+  "examples": [
+    {
+      "id": "g1-plain",
+      "label": "valid",
+      "polished": false,
+      "text": "The lap pool is closed this week. The chlorine pump failed on Monday, and the replacement part is coming from the manufacturer in Ohio; the vendor expects it Thursday. After it is installed, the county health inspector has to sign off before we can reopen. We're aiming for Saturday, but we can't promise it. The kids' pool has its own pump and is open as usual. Thanks for your patience."
+    },
+    {
+      "id": "g2-short",
+      "label": "valid",
+      "polished": false,
+      "text": "Lap pool update: it's closed this week because the chlorine pump broke Monday. The replacement part should arrive Thursday, then the county health inspector needs to approve the repair before we reopen. Saturday is the target, not a promise. The kids' pool is open as normal."
+    },
+    {
+      "id": "g3-conditional-saturday",
+      "label": "valid",
+      "polished": false,
+      "text": "Quick update: the lap pool is closed this week. Its chlorine pump failed and the replacement part is due Thursday. Once it's in and the county health inspector signs off, we'll reopen, hopefully on Saturday. The kids' pool is open as normal."
+    },
+    {
+      "id": "b1-maintenance",
+      "label": "failing",
+      "polished": true,
+      "text": "The lap pool is closed this week for maintenance. We expect to reopen Saturday once the county health inspector signs off, but we can't promise that. The kids' pool is open as normal.",
+      "shows": "cause-kept",
+      "note": "Swaps the stated cause for a vaguer one."
+    },
+    {
+      "id": "b2-aging-pump",
+      "label": "failing",
+      "polished": true,
+      "text": "The lap pool is closed this week because its aging chlorine pump failed on Monday. The vendor expects the replacement part Thursday, and the county health inspector has to sign off before we reopen. We are aiming for Saturday but can't promise it. The kids' pool is open as normal.",
+      "shows": "no-invented-cause"
+    },
+    {
+      "id": "b3-definite-saturday",
+      "label": "failing",
+      "polished": true,
+      "text": "The lap pool is closed this week because the chlorine pump failed. The replacement part should arrive Thursday and the county health inspector will sign off after it is installed. The lap pool will reopen Saturday. The kids' pool is open as normal.",
+      "shows": "saturday-target"
+    },
+    {
+      "id": "b4-both-closed",
+      "label": "failing",
+      "polished": false,
+      "text": "Both pools are closed this week because the chlorine pump failed. The vendor expects the part Thursday, and the county health inspector has to sign off before we reopen. We're aiming for Saturday.",
+      "shows": "kids-pool-open"
+    },
+    {
+      "id": "b6-no-inspection",
+      "label": "failing",
+      "polished": false,
+      "text": "The lap pool is closed this week because the chlorine pump failed. The replacement part should arrive Thursday and we'll reopen as soon as it's installed, hopefully Saturday. The kids' pool is open as normal.",
+      "shows": "inspector-signoff"
+    }
+  ]
+}
