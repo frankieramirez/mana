@@ -15,7 +15,7 @@ These validate fixtures and graders. They do not execute an agent. Each syntheti
 
 ## Actual agent runs
 
-The adapter supports Linux and Codex CLI 0.155.1 or 0.159.2, with an existing host login. Version 0.159.2 passed a fresh containment probe and a live command-event, usage, and structured-response check during package C. Other versions and hosts are unvalidated and fail closed. Revalidate isolation and the event contract before changing the supported version. Python's standard library is sufficient for the harness itself.
+The adapter supports Linux and an existing Codex CLI login. It accepts exactly the versions whose committed evidence records in `host-evidence/` verify the capabilities a mode needs, as read by `hosts.py`; see [host validation](condition-execution.md#host-validation-and-delegated-arms). The first records restate the 0.155.1 pilot and the 0.159.2 package C probe. The 0.163.0 record comes from a live `--probe-host` run and supports focused and delegated attempts; its thread cap stays unknown, so it does not support comparative delegated studies. No runner uses that delegated acceptance today: the `--delegated` review path in `delegated_review.py` still pins Codex CLI 0.159.2, and frozen delegated studies need comparative acceptance. Versions without a record are unvalidated and fail closed. Revalidate isolation and the event contract with `--probe-host` before adding a record. Python's standard library is sufficient for the harness itself.
 
 ```bash
 python3 -B evals/workflows/run.py --live \
@@ -100,7 +100,9 @@ See `findings.md` for measured pilot outcomes and limits.
 
 ## Package C focused comparisons
 
-For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study.
+For explicit frozen Mana, reference and no-suite conditions, see [Frozen execution conditions](condition-execution.md). That opt-in path supports a declared subset of public development fixtures, installs distinct payloads, and preserves a hashed schedule. It does not replace the legacy commands below or implement the planned held-out study. Each allocated slot is sealed as an immutable attempt record, and completed attempts export to blinded review packets with independent judgment and regrade records.
+
+The first prose instruction ablation has its own frozen dispel payloads and adapter in [Prose instruction-ablation payloads](prose-ablation.md), and its six independent confirmation groups in [Prose-ablation confirmation cases](prose-confirmation.md).
 
 Use `--skill-root /absolute/baseline/skills` to install a saved baseline payload; omit it for the candidate. Each run records the installed file hashes and retains the runner sources beside the results. Keep baseline and candidate requests, model, reasoning, and tool configuration identical. Example:
 

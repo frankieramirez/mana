@@ -1,9 +1,8 @@
 """Full-review extension of the workflow pilot with attributed saved history."""
 import json
-import os
 from pathlib import Path
 import shutil
-import signal
+import process_family
 import socket
 import subprocess
 import time
@@ -121,6 +120,8 @@ def execute(out, skill_root, timeout, model, reasoning, heldout=False):
         result['host']=subprocess.check_output([str(exe),'--version'],text=True).strip()
         if result['host'] != run.SUPPORTED_HOST:
             raise ValueError('delegated adapter is validated only for '+run.SUPPORTED_HOST)
+        # The registry must also hold verified delegated evidence for this exact version.
+        result['host_capability']=run.capability_summary(run.hosts.require(result['host'],'delegated'))
         case,work,baseline=prepare(out,skill_root,heldout)
         result['baseline']=baseline
         config=run.permission_config(work,exe)
@@ -138,13 +139,18 @@ Host constraints: Use artifacts/run as RUN_DIR, artifacts/ as all scratch storag
 Containment protocol: before any review commands, run python3 bin/probe.py parent. Every child must first run python3 bin/probe.py ROLE with its unique reviewer name (validator for validator), then perform its task; include this instruction in every child prompt. The probe is a harness prerequisite and no review finding. Do not run child probes yourself. Installed instructions and bin are read-only. All files are synthetic fixtures.'''
         (out/'prompt.txt').write_text(prompt)
         with (out/'events.jsonl').open('w') as stdout,(out/'stderr.txt').open('w') as stderr:
-            with subprocess.Popen(command,stdin=subprocess.PIPE,stdout=stdout,stderr=stderr,text=True,start_new_session=True) as p:
-                try:
-                    p.communicate(prompt,timeout=timeout)
-                    result['execution']='completed' if p.returncode==0 else 'agent_failed'
-                    result['exit_code']=p.returncode
-                except subprocess.TimeoutExpired:
-                    os.killpg(p.pid,signal.SIGKILL);p.communicate();result['execution']='timeout'
+            invocation=process_family.run_bounded(command,prompt,stdout,stderr,timeout)
+        result['process_family']=invocation
+        if invocation['outcome']=='completed':
+            result['execution']='completed' if invocation['exit_code']==0 else 'agent_failed'
+            result['exit_code']=invocation['exit_code']
+        elif invocation['outcome']=='timeout':
+            result['execution']='timeout'
+        else:
+            result['execution']='agent_failed'
+            result['failures'].append('invocation cancelled: '+invocation.get('cancel_reason','unknown'))
+        if not invocation['family_terminated']:
+            result['failures'].append('process family survived termination: '+', '.join(map(str,invocation['surviving_pids'])))
         events=[]
         for number,line in enumerate((out/'events.jsonl').read_text().splitlines(),1):
             try:

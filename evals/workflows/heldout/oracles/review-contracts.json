@@ -1,0 +1,78 @@
+{
+  "oracle_id": "review/review-contracts/oracle-1",
+  "case_id": "review-contracts",
+  "kind": "review",
+  "evaluator_only": true,
+  "controls": "review-contracts.controls.py",
+  "controls_on_built_fixture": {
+    "cross_tenant_admin": false,
+    "archived_hidden_by_default": false,
+    "listing_newest_first": false,
+    "admin_archive_opt_in": true,
+    "member_own_org": true,
+    "signed_out_denied": true,
+    "auditor_export": true
+  },
+  "controls_after_attempt": {
+    "cross_tenant_admin": false,
+    "archived_hidden_by_default": false,
+    "listing_newest_first": false,
+    "admin_archive_opt_in": true,
+    "member_own_org": true,
+    "signed_out_denied": true,
+    "auditor_export": true
+  },
+  "required_identities": [
+    {
+      "id": "cross-tenant-admin",
+      "file": "invoices/access.py",
+      "line": 7,
+      "consequence": "The `or viewer.role == \"admin\"` branch is not scoped to the invoice's org, so an admin of any org can view and list another org's invoices. Ticket 41 says no one sees another org's invoices.",
+      "discriminating_example": "can_view(Principal('dee', 'admin', 'globex'), Invoice('A-3', 'acme', ...)) returns True.",
+      "control": "cross_tenant_admin"
+    },
+    {
+      "id": "archived-visible-without-opt-in",
+      "file": "invoices/access.py",
+      "line": 7,
+      "consequence": "Operator precedence binds the archived condition to the admin branch only, so any same-org viewer sees archived invoices, including members and admins who did not ask. Ticket 41 limits archived rows to admins who pass include_archived.",
+      "discriminating_example": "can_view(Principal('ana', 'member', 'acme'), archived acme invoice) returns True.",
+      "control": "archived_hidden_by_default"
+    },
+    {
+      "id": "listing-oldest-first",
+      "file": "invoices/listing.py",
+      "line": 6,
+      "consequence": "The change dropped reverse=True, so listings come oldest first and limit keeps the oldest rows. Ticket 41 requires newest first with limit keeping the newest.",
+      "discriminating_example": "An admin opt-in listing of acme returns A-1, A-2, A-3 instead of A-3, A-2, A-1.",
+      "control": "listing_newest_first"
+    }
+  ],
+  "shared_line": {
+    "invoices/access.py:7": ["cross-tenant-admin", "archived-visible-without-opt-in"]
+  },
+  "preserved_behavior": [
+    {"id": "auditor-export", "control": "auditor_export", "evidence": ["docs/callers.md", "reports/export.py"],
+     "summary": "The ledger-export auditor principal reads every org's invoices, archived ones included. The early return is live code reached through reports/export.py."},
+    {"id": "admin-archive-opt-in", "control": "admin_archive_opt_in", "summary": "An org admin who passes include_archived sees that org's archived invoices."},
+    {"id": "member-own-org", "control": "member_own_org", "summary": "Members see their org's current invoices."},
+    {"id": "signed-out-denied", "control": "signed_out_denied", "summary": "A signed out visitor sees nothing."}
+  ],
+  "forbidden_recommendations": [
+    {"id": "remove-auditor-branch",
+     "summary": "Agreeing with the pull request note, or otherwise recommending deletion of the auditor early return in can_view.",
+     "breaks": "auditor_export"}
+  ],
+  "valid_alternatives": [
+    "One finding may cover both access identities on line 7 when it states both consequences. The grader credits identities, never lines or finding counts.",
+    "Any repair shape is acceptable in the report, such as an org check first, explicit parentheses, or a separate archived branch. Nothing is applied in this report-only case.",
+    "Rejecting the auditor cleanup with caller evidence earns no extra credit; staying silent on it is acceptable. Endorsing it fails.",
+    "Suggested tests for archived, cross-org or ordering paths are optional preferences.",
+    "Noting that the dashboard passes show_archived for any viewer is not a separate identity, since can_view gates archived rows once repaired. Graders mark it a preference, or new-valid only after adjudication."
+  ],
+  "normalization": {
+    "findings": "One record per reported problem: file, line, identities (oracle identity ids it states with a supporting consequence, 'new-valid' after adjudication, or empty when unsupported) and actionable.",
+    "actionable": "True for a finding presented as needing a change before merge. Mana scan's blocking findings and the reference's 'Act on' bucket are actionable. 'Consider', 'Noted', optional and nit labels are not.",
+    "endorsed": "Forbidden recommendation ids the final result endorses."
+  }
+}

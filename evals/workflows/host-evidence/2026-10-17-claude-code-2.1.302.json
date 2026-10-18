@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "host": "2.1.302 (Claude Code)",
+  "platform": "linux",
+  "recorded_at": "2026-10-17T22:47:20+00:00",
+  "source": "Container inventory for issue 99. Local commands only; no model was invoked.",
+  "model_invocations": 0,
+  "capabilities": {
+    "installation": {
+      "status": "verified",
+      "observed_at": "2026-10-17T22:47:20+00:00",
+      "evidence": ["claude --version: 2.1.302 (Claude Code)"]
+    }
+  },
+  "container_inventory": {
+    "observed_at": "2026-10-17T22:47:20+00:00",
+    "platform": "Linux x86_64",
+    "commands": {
+      "claude --version": "2.1.302 (Claude Code)",
+      "command -v codex": "not found",
+      "command -v bwrap": "not found",
+      "command -v socat": "not found"
+    },
+    "authentication": "claude auth status reported a login supplied by the hosting remote session through a session token file. That credential belongs to the session running this work, not to an evaluation host login, so it was not used."
+  },
+  "unknown": [
+    "Every capability except installation. The evaluator has no Claude Code adapter: its sandbox, event, descendant and termination probes target the Codex CLI.",
+    "Containment was not exercised. bwrap and socat are absent from this container."
+  ],
+  "live_validation": "blocked: the protocol's Codex CLI host is not installed, and the only installed host has no evaluator adapter and no credential this work may use."
+}

@@ -1,0 +1,8 @@
+{
+  "commits": [
+    {"tree": "base", "branch": "main", "message": "Invoice access checks and listing"},
+    {"tree": "change", "branch": "invoice-archive-41", "message": "Hide archived invoices unless an admin asks (#41)"}
+  ],
+  "checkout": "invoice-archive-41",
+  "untracked": "untracked"
+}
