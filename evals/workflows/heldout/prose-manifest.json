@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; oracles reworked after the third review, which requested changes; a new review of this freeze is needed",
+  "status": "frozen; payload inventories verified; oracles reworked to closed lists after the fourth review, which requested changes; a new review of this freeze is needed",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -54,7 +54,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-exempt-01",
-      "oracle_sha256": "be81f3817b3f540072053ed17071e7c659b7ad0e32a940493d36eef0036d89c6"
+      "oracle_sha256": "80a60700b130f79190cd711a21d1403ebb4d48ccc351b0488288c43936a53328"
     },
     {
       "id": "prose-scope",
@@ -85,7 +85,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-scope-01",
-      "oracle_sha256": "b1d177ae5263f0129d4671f188967dea42dbf33a56317ab636d3a7b95d1c53c8"
+      "oracle_sha256": "bd839f9f33333104eead1e50deb93e52b37c551639607689ca960a2689b58651"
     },
     {
       "id": "prose-verbatim",
@@ -120,7 +120,7 @@
     }
   ],
   "exposure": [],
-  "freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+  "freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
   "history": [
     {
       "date": "2026-10-17",
@@ -156,6 +156,13 @@
       "previous_freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
       "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
       "change": "Oracle approach change after the third review of freeze f6afdd62, before any outcome: cold-after-restart fails deterministically only when the cache is the subject and is said to persist or not be cold after a restart; any negation in a clause about cold, empty, restart, carried over or survive, and any clause tying a restart to kept thumbnails, goes to needs_adjudication. In prose-scope, a sentence naming posted_on without a failure cue goes to needs_adjudication. Grader gains clause and sentence scoped reviewer cues. Examples r11 to r17 (prose-exempt) and r10 to r13 (prose-scope) added; r3 and r10 (prose-exempt) now go to a reviewer under the new rule."
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+      "previous_freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Policy change after the fourth review of freeze 80775510, before any outcome: prose screens use closed lists. A prose sentence fails only as a canonical contradiction with no negation, quantifier or reason clause; it passes only as a canonical faithful statement or when it mentions no topic of any check; every other topical sentence goes to needs_adjudication, with no failure-word exemption. Verb-list contradictions and presence patterns are removed, including the full-cache check. The version 4.2 token becomes an exact required-token check. Examples r18 to r23 and c1, c2 (prose-exempt), r14 to r19 and c3, c4 (prose-scope) added; earlier routes relabeled to the new policy."
     }
   ]
 }

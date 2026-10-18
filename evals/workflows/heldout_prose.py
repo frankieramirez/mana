@@ -26,14 +26,13 @@ ENTRY_FIELDS = ('id', 'source_group', 'job', 'split', 'fixture_path', 'fixture_s
 EFFECT_FIELDS = ('product_paths', 'local_commit', 'artifact_dir', 'external_publication')
 HEX40 = re.compile(r'[0-9a-f]{40}')
 RELATIVE = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*')
-# A sentence span: it stops at a line break and at sentence punctuation, but not at the dot in 4.2.
-SENTENCE = r'(?:[^.;\n]|\.(?=\d))*'
-# The same span when it holds no negation, so a contradiction cannot fire on a negated clause.
-UNNEGATED = r"(?:(?!\bnot\b|n't\b|\bnever\b|\bno\b|\bnothing\b|\bnor\b)(?:[^.;\n]|\.(?=\d)))*"
-# Scoped reviewer cues: a negation or claim near a protected fact goes to a reviewer instead of
-# being passed or failed by a growing verb list. Clauses break at commas, dashes and sentence ends.
-SENTENCE_BREAK = r'(?:[!?\n]|\.(?!\d))+'
-CLAUSE_BREAK = r'(?:[;:!?\n,—–]|\.(?!\d))+'
+# Prose screens use closed lists. A sentence passes only when it is a canonical faithful statement
+# or mentions no topic of any check; it fails only when it is a canonical contradiction. Every other
+# topical sentence goes to a reviewer. A canonical contradiction may hold no negation, quantifier
+# or reason clause, so a reworded or qualified contradiction can never hard-fail faithful text.
+SENTENCE_SPLIT = re.compile(r'\n+|(?<=[.!?])\s+')
+GUARD = re.compile(r"\b(not|no|never|nothing|none|nor|neither|without|because|since|so|therefore|due|unless)\b|n't",
+                   re.IGNORECASE)
 REVIEW_STATUSES = ('pending', 'changes_required', 'complete')
 REVIEW_CHECKS = {'contracts', 'known_good', 'known_bad', 'valid_alternatives'}
 HISTORY_FIELDS = {'date', 'freeze_sha256', 'previous_freeze_sha256', 'by', 'change'}
@@ -250,28 +249,63 @@ def words(text):
 
 
 def compiled(pattern):
-    return re.compile(pattern.replace('{S}', SENTENCE).replace('{N}', UNNEGATED), re.IGNORECASE | re.MULTILINE)
+    return re.compile(pattern, re.IGNORECASE)
 
 
-def screen_fact(fact, prose):
-    """preserve: contradiction fails, a found statement passes, anything else needs a reviewer.
-    forbid: a known inference fails, a suspicious cue needs a reviewer, otherwise the screen passes."""
-    if any(compiled(p).search(prose) for p in fact.get('contradict', [])):
-        return 'fail', 'contradicted or invented: ' + fact['id']
-    if any(compiled(p).search(prose) for p in fact.get('adjudicate', [])):
-        return 'adjudicate', 'reviewer cue matched: ' + fact['id']
-    for rule in fact.get('scoped_adjudicate', []):
-        for part in re.split(CLAUSE_BREAK if rule['scope'] == 'clause' else SENTENCE_BREAK, prose):
-            if (all(compiled(p).search(part) for p in rule['all'])
-                    and not any(compiled(p).search(part) for p in rule.get('none', []))):
-                return 'adjudicate', f'{rule["scope"]} needs a reviewer: ' + fact['id']
-    if fact['kind'] == 'forbid':
-        return 'pass', None
-    if all(any(compiled(p).search(prose) for p in group) for group in fact['present_all']):
-        return 'pass', None
-    if fact.get('absent') == 'fail':
-        return 'fail', 'stated condition absent: ' + fact['id']
-    return 'adjudicate', 'statement not found: ' + fact['id']
+def normalize(sentence):
+    """Canonical comparison ignores case, spacing, list markers, code ticks, quote style and end punctuation."""
+    text = sentence.replace('’', "'").replace('‘', "'").replace('`', '').replace('"', '')
+    text = re.sub(r'^\s*(?:[-*+]|\d+\.)\s+', '', text)
+    text = re.sub(r'\s+', ' ', text).strip().lower()
+    return text.rstrip('.!?;: ').strip()
+
+
+def sentences(prose):
+    lines = [line for line in prose.splitlines() if not line.lstrip().startswith('#')]
+    return [s for s in SENTENCE_SPLIT.split('\n'.join(lines)) if normalize(s)]
+
+
+def check_screen(screen):
+    """A canonical contradiction carrying a negation, quantifier or reason clause is an oracle defect."""
+    for item in screen['contradictions']:
+        if GUARD.search(item['sentence']):
+            raise ValueError('canonical contradiction holds a negation, quantifier or reason: ' + item['sentence'])
+
+
+def screen_prose(oracle, prose):
+    """Return (check, verdict, failure, reason) for every fact, in oracle order."""
+    screen = oracle.get('screen')
+    if screen is None:
+        return []
+    check_screen(screen)
+    faithful = {normalize(f['sentence']): f['carries'] for f in screen['faithful']}
+    contradictions = {normalize(c['sentence']): c for c in screen['contradictions']}
+    carried, routed, failed = set(), {}, {}
+    for sentence in sentences(prose):
+        key = normalize(sentence)
+        if key in contradictions and not GUARD.search(sentence):
+            failed.setdefault(contradictions[key]['check'], contradictions[key]['failure'])
+        elif key in faithful:
+            carried.update(faithful[key])
+        else:
+            for fact in oracle['facts']:
+                if any(compiled(p).search(sentence) for p in fact['topics']):
+                    routed.setdefault(fact['id'], 'topical sentence is not canonical: ' + sentence.strip())
+    for cue in screen.get('prose_cues', []):
+        if compiled(cue['pattern']).search(prose):
+            routed.setdefault(cue['check'], 'reviewer cue in the reply layout')
+    results = []
+    for fact in oracle['facts']:
+        ident = fact['id']
+        if ident in failed:
+            results.append((ident, 'fail', failed[ident], 'canonical contradiction'))
+        elif ident in routed:
+            results.append((ident, 'adjudicate', None, routed[ident]))
+        elif fact['kind'] == 'preserve' and ident not in carried:
+            results.append((ident, 'adjudicate', None, 'no canonical statement of ' + ident))
+        else:
+            results.append((ident, 'pass', None, None))
+    return results
 
 
 def grade(case_id, observation, root=HELDOUT):
@@ -314,6 +348,9 @@ def grade(case_id, observation, root=HELDOUT):
             ok = text.count(protected) == 1
             record(check['id'], 'pass' if ok else 'fail', check['failure'])
             prose = prose.replace(protected, '\n') if ok else re.sub(r'```.*?```', '\n', prose, flags=re.S)
+        elif kind == 'required_token':
+            ok = re.search(check['pattern'], text) is not None
+            record(check['id'], 'pass' if ok else 'fail', check['failure'])
         elif kind == 'exact_text':
             expected = span(initial[check['span']['path']], check['span'])
             if conditions.digest(expected.encode()) != check['expected_sha256']:
@@ -330,10 +367,8 @@ def grade(case_id, observation, root=HELDOUT):
         check = oracle['shorter_than']
         source = span(initial[check['span']['path']], check['span'])
         record(check['id'], 'pass' if words(text) < words(source) else 'fail', check['failure'])
-    prose = prose.strip()
-    for fact in oracle['facts']:
-        verdict, reason = screen_fact(fact, prose)
-        record(fact['id'], verdict, fact['failure'], reason)
+    for check_id, verdict, failure, reason in screen_prose(oracle, prose.strip()):
+        record(check_id, verdict, failure, reason)
     outcome = 'failed' if failures else 'needs_adjudication' if adjudication else 'passed'
     return {'case_id': case_id, 'oracle_id': oracle['oracle_id'], 'outcome': outcome,
             'failures': sorted(failures), 'adjudication': adjudication, 'checks': checks,

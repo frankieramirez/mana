@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+  "freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
   "author": {
     "identity": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
     "role": "Instantiated requests, fixtures, oracles and labeled examples",

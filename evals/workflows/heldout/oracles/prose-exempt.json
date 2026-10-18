@@ -40,150 +40,167 @@
     {
       "id": "cache-holds-thumbnails",
       "kind": "preserve",
-      "failure": "lost-fact",
-      "present_all": [
-        [
-          "thumbnail"
-        ]
+      "topics": [
+        "render|thumbnail|gallery"
       ],
       "review_question": "Does the prose still say the cache keeps thumbnails close to (or for) the renderer?"
     },
     {
       "id": "periodic-sweep-removes-old",
       "kind": "preserve",
-      "failure": "lost-fact",
-      "present_all": [
-        [
-          "sweep|background\\s+(job|task|process|pass)"
-        ],
-        [
-          "\\bold|stale|aged|expired|outdated"
-        ],
-        [
-          "periodic|regular|from\\s+time\\s+to\\s+time|on\\s+a\\s+schedule|scheduled|every\\s+so\\s+often|now\\s+and\\s+then"
-        ]
+      "topics": [
+        "sweep|background|periodic|regular|schedul|clean|remov|purg|prune|expire|\\bold\\b"
       ],
       "review_question": "Does the prose still say a background sweep periodically removes old thumbnails?"
     },
     {
-      "id": "full-still-renders-not-stored",
+      "id": "full-cache-behavior",
       "kind": "preserve",
-      "failure": "contradicted-fact",
-      "present_all": [
-        [
-          "\\bfull\\b|fills?\\s+up|at\\s+capacity|reaches\\s+(its\\s+)?(limit|capacity)"
-        ],
-        [
-          "still\\s+render|keeps?\\s+rendering|continues?\\s+to\\s+render|render\\w*\\s+(anyway|normally|as\\s+usual)|(not|n't|never)\\s+(stop|prevent|block|keep)\\w*{S}\\brender"
-        ],
-        [
-          "(not|n't|never)\\s+(get\\s+|be\\s+|being\\s+)?(stored|cached|saved|kept|added)|without\\s+being\\s+(stored|cached|saved)|skip\\w*\\s+(the\\s+)?(cache|stor\\w*)"
-        ]
+      "topics": [
+        "\\bfull\\b|fills?\\s+up|capacity|\\broom\\b|evict|pushed\\s+aside|push\\w*\\s+out|\\bolder\\b|\\boldest\\b|\\bdrop|replac|discard|least[- ]recently|\\bLRU\\b|\\bFIFO\\b|\\bstor"
       ],
-      "contradict": [
-        "(?:^|[.;]){N}\\bfull\\b{N}\\b(fail|error|block|wait|stop|prevent)\\w*{S}\\brender",
-        "(?:^|[.;]){N}\\bfull\\b{N}\\brender\\w*\\s+(fail|stop|block|wait)\\w*",
-        "\\bfull\\b{S}\\b(do\\s+not|don't|doesn't|does\\s+not|won't|cannot|can't)\\s+render"
-      ],
-      "review_question": "When the cache is full, does the prose still say new thumbnails render but are not stored, with nothing contradicting that?"
-    },
-    {
-      "id": "no-full-eviction-mechanism",
-      "kind": "forbid",
-      "failure": "invented-mechanism",
-      "contradict": [
-        "\\b(full|capacity|limit)\\b{S}\\b(evict|replac|drop|remov|discard|delet|push\\w*\\s+out|make\\s+room|overwrit)\\w*",
-        "\\b(full|capacity)\\b{S}\\b(until|unless|sweep)",
-        "least[- ]recently|\\bLRU\\b|\\bFIFO\\b|first[- ]in"
-      ],
-      "review_question": "Does the prose avoid inventing what happens to stored thumbnails when the cache is full?"
+      "review_question": "When the cache is full, does the prose still say new thumbnails render but are not stored, without inventing what happens to stored thumbnails?"
     },
     {
       "id": "cold-after-restart",
       "kind": "preserve",
-      "failure": "contradicted-fact",
-      "present_all": [
-        [
-          "\\bcold\\b|\\bempty\\b|from\\s+scratch|nothing\\s+(cached|in\\s+it|in\\s+the\\s+cache)|starts?\\s+(over|fresh|clean)"
-        ],
-        [
-          "restart|reboot|\\bboot|start\\s*-?up|redeploy|relaunch"
-        ]
-      ],
-      "contradict": [
-        "\\bcache\\s+(is\\s+not|isn't|is\\s+never)\\s+(cold|empty)\\b{S}\\b(after|across|following|on)\\s+(a\\s+|the\\s+|each\\s+|every\\s+)?(restart|reboot)",
-        "\\b(after|across|following|on)\\s+(a\\s+|the\\s+|each\\s+|every\\s+)?(restart|reboot),?\\s+the\\s+(image\\s+)?cache\\s+(is\\s+not|isn't|is\\s+never)\\s+(cold|empty)\\b",
-        "\\bcache\\s+(does\\s+not|doesn't|never)\\s+starts?\\s+(out\\s+)?(cold|empty)\\b",
-        "\\bcache\\s+(persists|survives|is\\s+kept|is\\s+preserved|is\\s+restored|stays\\s+warm|remains\\s+warm|is\\s+warm|starts\\s+warm)\\b{S}\\b(restart|reboot)",
-        "\\b(after|across|following)\\s+(a\\s+|the\\s+)?(restart|reboot),?\\s+the\\s+(image\\s+)?cache\\s+(is\\s+warm|stays\\s+warm|is\\s+restored|is\\s+still\\s+(full|populated))\\b"
-      ],
-      "scoped_adjudicate": [
-        {
-          "scope": "clause",
-          "all": [
-            "\\bnot\\b|n't\\b|\\bnever\\b|\\bno\\b|\\bnothing\\b|\\bnone\\b|\\bwithout\\b",
-            "\\bcold\\b|\\bempty\\b|restart|reboot|carr(y|ied|ies)\\s+over|surviv"
-          ]
-        },
-        {
-          "scope": "clause",
-          "all": [
-            "restart|reboot",
-            "carr(y|ied|ies)\\s+over|surviv|persist|retain|\\bkept\\b|preserv|restor|reload|\\bwarm(?!_on_boot)"
-          ]
-        }
+      "topics": [
+        "restart|reboot|\\bcold\\b|\\bempty\\b|\\bwarm|surviv|persist|\\bstay|still\\s+there|carr(y|ied|ies)\\s+over|retain|restor|\\bkept\\b|\\bgone\\b"
       ],
       "review_question": "Does the prose still say the cache starts cold after a restart, with nothing contradicting that?"
     },
     {
-      "id": "no-sample-numbers",
+      "id": "no-sample-facts",
       "kind": "forbid",
-      "failure": "inferred-number",
-      "contradict": [
-        "\\b5,?000\\b|five\\s+thousand|\\b36\\b|thirty[- ]six|day\\s+and\\s+a\\s+half|1\\.5\\s+days|\\bsix\\s+hours|\\b6\\s*(h|hrs?|hours?)\\b|every\\s+(6|six)\\b|quarter\\s+past|:15\\b|\\b15\\s+(minutes\\s+)?past|four\\s+times\\s+(a|per)\\s+day|\\b4\\s*(x|times)\\s+(a|per)\\s+day"
+      "topics": [
+        "\\d|thousand|thirty|six\\s+hours|quarter|hourly|\\bhour\\b|day\\s+and\\s+a\\s+half|warm_on_boot|max_entries|evict_after_hours|sweep_cron"
       ],
-      "adjudicate": [
-        "\\d"
-      ],
-      "review_question": "Does the prose avoid numbers that appear only in the YAML sample (entries, hours, schedule)?"
+      "review_question": "Does the prose avoid numbers, schedules and settings that appear only in the YAML sample?"
     },
     {
-      "id": "no-sample-reason",
+      "id": "no-inferred-reason",
       "kind": "forbid",
-      "failure": "inferred-reason",
-      "contradict": [
-        "(on|off|top\\s+of)\\s+the\\s+hour|hourly\\s+(jobs?|tasks?|work|runs?|batch)|collid|collision|contention|stagger|clear\\s+of|\\b(avoid|dodge|miss)\\w*{S}\\b(jobs?|tasks?|load|peak|spike)"
+      "topics": [
+        "because|due\\s+to|so\\s+that|in\\s+order\\s+to|\\bso\\b|\\bto\\s+(free|avoid|prevent|keep|make|save|reclaim|ensure|reduce|improve|limit)|collid|stagger|contention|\\bspace\\b|slow|faster|latency|performance|speed|first\\s+(gallery\\s+)?(load|view|visit)|\\bmiss"
       ],
-      "adjudicate": [
-        "\\bbecause\\b|\\bdue\\s+to\\b|warm_on_boot|max_entries|evict_after_hours|sweep_cron"
-      ],
-      "review_question": "Does the prose avoid giving a reason for the sweep timing or any setting that the prose never stated?"
-    },
-    {
-      "id": "no-inferred-purpose",
-      "kind": "forbid",
-      "failure": "inferred-reason",
-      "contradict": [
-        "\\bto\\s+(free|reclaim|save)\\w*\\s+(up\\s+)?(space|room|memory|disk|storage)|\\bso\\s+(that\\s+)?(there\\s+is|there's)\\s+(space|room)|keep\\w*\\s+the\\s+cache\\s+(small|lean|from\\s+fill\\w*)"
-      ],
-      "adjudicate": [
-        "\\bto\\s+(prevent|avoid|ensure|reduce|improve|limit|cap|bound|speed)\\b|\\bso\\s+that\\b|\\bin\\s+order\\s+to\\s+(?!keep\\s+things\\s+tidy)"
-      ],
-      "review_question": "Does the prose avoid adding a purpose, cause or other fact (for example that the sweep frees space) that the prose never stated?"
-    },
-    {
-      "id": "no-inferred-consequence",
-      "kind": "forbid",
-      "failure": "inferred-consequence",
-      "contradict": [
-        "\\b(first|initial)\\s+(gallery\\s+)?(load|view|request|render|visit)\\w*{S}\\b(slow|longer|wait|miss|lag)\\w*",
-        "\\b(slow|slower|latency|delay|lag)\\w*{S}\\b(first|initial)\\b",
-        "cache\\s+miss"
-      ],
-      "adjudicate": [
-        "faster|\\bspeed|performance|latency"
-      ],
-      "review_question": "Does the prose avoid adding consequences such as slower first loads or performance effects?"
+      "review_question": "Does the prose avoid adding a reason, purpose, mechanism or consequence (for example freeing space or slower first loads) that the prose never stated?"
     }
-  ]
+  ],
+  "screen": {
+    "faithful": [
+      {
+        "sentence": "The image cache keeps thumbnails close to the renderer.",
+        "carries": [
+          "cache-holds-thumbnails"
+        ]
+      },
+      {
+        "sentence": "The cache keeps thumbnails close to the renderer.",
+        "carries": [
+          "cache-holds-thumbnails"
+        ]
+      },
+      {
+        "sentence": "A background sweep periodically removes old thumbnails.",
+        "carries": [
+          "periodic-sweep-removes-old"
+        ]
+      },
+      {
+        "sentence": "Old thumbnails are removed periodically by a background sweep.",
+        "carries": [
+          "periodic-sweep-removes-old"
+        ]
+      },
+      {
+        "sentence": "When the cache is full, new thumbnails still render but aren't stored.",
+        "carries": [
+          "full-cache-behavior"
+        ]
+      },
+      {
+        "sentence": "When the cache is full, new thumbnails still render but are not stored.",
+        "carries": [
+          "full-cache-behavior"
+        ]
+      },
+      {
+        "sentence": "When the cache is full, new thumbnails still render, but they aren't stored.",
+        "carries": [
+          "full-cache-behavior"
+        ]
+      },
+      {
+        "sentence": "The cache starts cold after a restart.",
+        "carries": [
+          "cold-after-restart"
+        ]
+      },
+      {
+        "sentence": "The cache starts out cold after a restart.",
+        "carries": [
+          "cold-after-restart"
+        ]
+      },
+      {
+        "sentence": "After a restart the cache starts cold.",
+        "carries": [
+          "cold-after-restart"
+        ]
+      },
+      {
+        "sentence": "After a restart, the cache starts cold.",
+        "carries": [
+          "cold-after-restart"
+        ]
+      }
+    ],
+    "contradictions": [
+      {
+        "check": "cold-after-restart",
+        "failure": "contradicted-fact",
+        "sentence": "The cache is warm after a restart."
+      },
+      {
+        "check": "cold-after-restart",
+        "failure": "contradicted-fact",
+        "sentence": "The cache keeps its thumbnails across a restart."
+      },
+      {
+        "check": "cold-after-restart",
+        "failure": "contradicted-fact",
+        "sentence": "Thumbnails survive a restart."
+      },
+      {
+        "check": "full-cache-behavior",
+        "failure": "contradicted-fact",
+        "sentence": "When the cache is full, new thumbnails fail to render."
+      },
+      {
+        "check": "full-cache-behavior",
+        "failure": "invented-mechanism",
+        "sentence": "When the cache is full, the oldest thumbnails are evicted."
+      },
+      {
+        "check": "full-cache-behavior",
+        "failure": "invented-mechanism",
+        "sentence": "When the cache is full, the least recently used thumbnails are evicted."
+      },
+      {
+        "check": "no-sample-facts",
+        "failure": "inferred-number",
+        "sentence": "A background sweep runs every six hours."
+      },
+      {
+        "check": "no-sample-facts",
+        "failure": "inferred-number",
+        "sentence": "The sweep removes thumbnails older than 36 hours."
+      },
+      {
+        "check": "no-sample-facts",
+        "failure": "inferred-number",
+        "sentence": "The cache holds up to 5000 thumbnails."
+      }
+    ]
+  }
 }

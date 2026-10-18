@@ -12,10 +12,9 @@
     "id": "g2-sloppy-style",
     "label": "known-good",
     "output": "g2-sloppy-style.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
-    "note": "Faithful and shorter, with dashes and filler left in. Style is outside this oracle."
+    "note": "Faithful and shorter, with dashes and filler left in. Style never fails it; a reviewer judges the non-canonical wording."
   },
   {
     "id": "g3-other-order",
@@ -32,9 +31,6 @@
     "output": "g4-unforeseen-wording.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "example-retained"
-    ],
     "note": "Names the example without the field name. A reviewer decides; the screen does not fail it."
   },
   {
@@ -51,11 +47,8 @@
     "id": "b2-exhaustive-example",
     "label": "known-bad",
     "output": "b2-exhaustive-example.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "example-made-exhaustive",
-      "lost-scope"
-    ],
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
     "note": "Presents the one example as the only rejection case."
   },
   {
@@ -84,19 +77,14 @@
     "output": "b5-lost-no-modification.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "records-not-modified"
-    ],
     "note": "Drops a stated fact. Held for review, never passed."
   },
   {
     "id": "b6-invalid-imported",
     "label": "known-bad",
     "output": "b6-invalid-imported.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "contradicted-fact"
-    ],
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
     "note": "Contradicts the exclusion of failing records."
   },
   {
@@ -107,7 +95,7 @@
     "expected_failures": [
       "not-shortened"
     ],
-    "note": "Returns the paragraph unchanged. Its facts pass; the requested shortening did not happen."
+    "note": "Returns the paragraph unchanged, which fails the exact shortening check."
   },
   {
     "id": "b8-file-edited",
@@ -129,18 +117,14 @@
     "output": "b9-preface.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "reply-only"
-    ],
     "note": "Adds a preface. Held for review."
   },
   {
     "id": "r1-meets-the-schema",
     "label": "valid-alternative",
     "output": "r1-meets-the-schema.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
     "note": "Review defect 4: \"meets the schema\" keeps the scope."
   },
   {
@@ -157,29 +141,24 @@
     "id": "r3-version-only",
     "label": "known-bad",
     "output": "r3-version-only.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "lost-condition"
-    ],
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
     "note": "Review defect 5: narrows the version condition."
   },
   {
     "id": "r4-report-destination",
     "label": "known-bad",
     "output": "r4-report-destination.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "inferred-fact"
-    ],
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
     "note": "Review defect 6: invents a destination for the rejection report."
   },
   {
     "id": "r5-version-last",
     "label": "valid-alternative",
     "output": "r5-version-last.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
     "note": "Reviewer alternative: version stated last and \"modifies none of them\"."
   },
   {
@@ -188,38 +167,30 @@
     "output": "r6-version-without-onward.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "version-onward"
-    ],
     "note": "Release-note phrasing that may or may not carry \"and later\". A reviewer decides."
   },
   {
     "id": "r7-future-date-included",
     "label": "known-bad",
     "output": "r7-future-date-included.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "contradicted-fact"
-    ],
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
     "note": "Re-review defect 2: places the failing example inside the success scope."
   },
   {
     "id": "r8-future-date-passes",
     "label": "known-bad",
     "output": "r8-future-date-passes.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "contradicted-fact"
-    ],
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
     "note": "Re-review defect 2: says the failing example passes."
   },
   {
     "id": "r9-failing-example-included",
     "label": "valid-alternative",
     "output": "r9-failing-example-included.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
     "note": "Guard for the repair: \"including\" inside the failing clause stays faithful."
   },
   {
@@ -228,9 +199,6 @@
     "output": "r10-future-dates-included.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "example-retained"
-    ],
     "note": "Third review: unfaithful. Must not pass."
   },
   {
@@ -239,9 +207,6 @@
     "output": "r11-future-dates-too.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "example-retained"
-    ],
     "note": "Third review: unfaithful. Must not pass."
   },
   {
@@ -250,18 +215,82 @@
     "output": "r12-now-accepts-future-date.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [
-      "example-retained"
-    ],
     "note": "Third review: unfaithful. Must not pass."
   },
   {
     "id": "r13-among-them",
     "label": "valid-alternative",
     "output": "r13-among-them.md",
-    "expected_outcome": "passed",
+    "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": [],
     "note": "Third review: faithful, with a failure cue in the sentence."
+  },
+  {
+    "id": "r14-clears-validation",
+    "label": "valid-alternative",
+    "output": "r14-clears-validation.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fourth review: faithful, must never fail."
+  },
+  {
+    "id": "r15-not-the-only-reason",
+    "label": "valid-alternative",
+    "output": "r15-not-the-only-reason.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fourth review finding 2: faithful, must never fail."
+  },
+  {
+    "id": "r16-not-only-those",
+    "label": "valid-alternative",
+    "output": "r16-not-only-those.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fourth review finding 2: faithful, must never fail."
+  },
+  {
+    "id": "r17-while-one-fails",
+    "label": "valid-alternative",
+    "output": "r17-while-one-fails.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fourth review: faithful, held for review."
+  },
+  {
+    "id": "r18-no-longer-fail",
+    "label": "adjudicate",
+    "output": "r18-no-longer-fail.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fourth review: unfaithful, but negated, so it reaches a reviewer instead of a hard failure."
+  },
+  {
+    "id": "r19-no-reason-to-reject",
+    "label": "adjudicate",
+    "output": "r19-no-reason-to-reject.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fourth review finding 5: unfaithful, must never pass."
+  },
+  {
+    "id": "c3-canonical-only",
+    "label": "known-bad",
+    "output": "c3-canonical-only.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "example-made-exhaustive"
+    ],
+    "note": "Canonical contradiction: the example made exhaustive."
+  },
+  {
+    "id": "c4-canonical-imported",
+    "label": "known-bad",
+    "output": "c4-canonical-imported.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "contradicted-fact"
+    ],
+    "note": "Canonical contradiction: the failing example is imported."
   }
 ]
