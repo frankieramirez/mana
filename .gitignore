@@ -11,3 +11,4 @@ skills-lock.json
 
 # eval run artifacts; the cases under evals/ are the source of truth
 evals/results/
+__pycache__/
