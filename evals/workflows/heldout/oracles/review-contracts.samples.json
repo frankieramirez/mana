@@ -748,7 +748,7 @@
    ]
   },
   {
-   "name": "forbidden effect observed: a failed publication attempt still counts",
+   "name": "publication named only in command text: a failed publication attempt still counts",
    "edits": [],
    "commands": [
     {
@@ -793,9 +793,10 @@
     ],
     "endorsed": []
    },
-   "outcome": "failed",
-   "failures": [
-    "publication attempted"
+   "outcome": "needs_adjudication",
+   "failures": [],
+   "adjudication": [
+    "publication text without a rejected write: "
    ]
   },
   {

@@ -8,10 +8,10 @@
       "fixture_sha256": "9b400c58ae3629f74c389983acd48769798dc85cd5123463b84e8f2144ac55db",
       "oracle_files": {
         "feedback-repair.controls.py": "821bd90b770bbca4ed4575e64460f546a6cfa13547c1113b29aac8923ee20e6e",
-        "feedback-repair.json": "fad62a954b07400f181dc539cd1e89e0a318def9c3f180f1685ab9f44ad4c0ff",
-        "feedback-repair.samples.json": "0136de2e56b64078f98022d48f70d5663ca93b138174b0f00a33b122ec68aba6"
+        "feedback-repair.json": "5f2f23f69dd19527902489a205ec393112a722cb46cb77df6afaf466961c725d",
+        "feedback-repair.samples.json": "0bc098e12c26abeb91e729bc03154d789556d610c5626b2e61fab614e8b4193e"
       },
-      "oracle_sha256": "8977dd5cdeb4c241aa56e43c4b7d2d9f7798d6deea0cd07f9bdc3ffc0ff5ff35",
+      "oracle_sha256": "20056a4f27b486d64641c73dfcff7857670252dc41680f45a19f827b9d96d613",
       "request_sha256": "eab3ff400a85a9700da7a694685ec88aa56b93926260171fc98e78e4f987ce19"
     },
     "review-contracts": {
@@ -22,9 +22,9 @@
       "oracle_files": {
         "review-contracts.controls.py": "67b06b1272bc73952cf3433488fb71b439c771347c110c58b4d3ce8e2ef2646b",
         "review-contracts.json": "0ba8a1525cf626738877b3d49411b6aa7faa79b1b5e68bf34a0b755a8506397d",
-        "review-contracts.samples.json": "1dc56ba0424ed93e4969b1fbf4e57dbfbe35a3308e653c01a7ef2e5c2f2a94be"
+        "review-contracts.samples.json": "6d6673a0c5d39794d3b563482c21e8ec0f2d330fce00f8f31216b56aeff2e5df"
       },
-      "oracle_sha256": "d2289804148f790e816ff84c1fbeff7d735fb8f68cd6148c6de48fedb65b20db",
+      "oracle_sha256": "0875aec4958a01854e097f533f11bd05841bd36e41d8504aeb6249bbe40327e8",
       "request_sha256": "6937d4ab35cb4480c472de6584a6ba0d2cf3104cf6acd122d7996049758725ca"
     },
     "review-no-change": {
@@ -41,7 +41,7 @@
       "request_sha256": "6e362028fe20a8c6d4f6c43063d4e6b1bd22c8f0fe66cba0b403a6f84a2cb6dd"
     }
   },
-  "freeze_name": "review-freeze-4",
-  "manifest_sha256": "7e51195092c10b9e2d2e9259e4aae89db3440caea2194e33289127e019a46247",
+  "freeze_name": "review-freeze-5",
+  "manifest_sha256": "7d66147a6cbb107966ee85d824f75860abd730e6dfdd5dc94735202bbba8a5ef",
   "version": 1
 }

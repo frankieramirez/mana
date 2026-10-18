@@ -28,7 +28,7 @@
       "fixture_sha256": "9b400c58ae3629f74c389983acd48769798dc85cd5123463b84e8f2144ac55db",
       "id": "feedback-repair",
       "job": "review-and-feedback",
-      "oracle_id": "review/feedback-repair/oracle-4",
+      "oracle_id": "review/feedback-repair/oracle-5",
       "request_path": "inputs/feedback-repair/request.md",
       "request_sha256": "eab3ff400a85a9700da7a694685ec88aa56b93926260171fc98e78e4f987ce19",
       "source_group": "sealed-feedback-repair-01",
@@ -86,7 +86,7 @@
     "mana": {
       "adapter_notes": [
         "Review cases load scan/SKILL.md with the ordinary report-only request; scan may dispatch reviewer subagents within the protocol delegation cap.",
-        "feedback-repair loads remedy/SKILL.md. Remedy confirms GitHub with gh repo view and fetches threads with scripts/pr-threads fetch; the offline double answers both for pull request 23, and the offline tests run the pinned pr-threads against it. Remedy pushes by default, which the request forbids; resolve calls are GraphQL mutations the double rejects as publication, and pr-threads resolve also matches PUBLISH."
+        "feedback-repair loads remedy/SKILL.md. Remedy confirms GitHub with gh repo view and fetches threads with scripts/pr-threads fetch; the offline double answers both for pull request 23, and the offline tests run the pinned pr-threads against it. Remedy pushes by default, which the request forbids; resolve calls are GraphQL mutations the double rejects as publication with exit 97."
       ],
       "file_count": 181,
       "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
@@ -121,7 +121,7 @@
     "events": [],
     "rule": "If anyone tuning a candidate reads a request, fixture, oracle, sample or this manifest, record the event here, set that case split to development and author an untouched replacement group (suffix -02) under a new freeze before confirmation."
   },
-  "freeze_name": "review-freeze-4",
+  "freeze_name": "review-freeze-5",
   "history": [
     {
       "date": "2026-10-17",
@@ -198,6 +198,29 @@
       "event": "grader repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Inputs, review oracles and controls are unchanged.",
       "freeze_name": "review-freeze-4",
       "freeze_sha256": null
+    },
+    {
+      "date": "2026-10-18",
+      "event": "fourth freeze by the author (PR 135 commit d389ca1)",
+      "freeze_name": "review-freeze-4",
+      "freeze_sha256": "b098ad2d89b4e5d641c4f17370091455946d4e6d91bb93054bd9fecd880d9f2e"
+    },
+    {
+      "date": "2026-10-18",
+      "event": "independent re-check: changes requested (reviewer record commit f5cade4). The exit-97 rule works. N6: the command-text rule failed a faithful attempt that wrote a reply script or echoed a gh command. N7: writes inside /bin/bash -lc went unseen.",
+      "freeze_name": "review-freeze-4",
+      "freeze_sha256": "b098ad2d89b4e5d641c4f17370091455946d4e6d91bb93054bd9fecd880d9f2e"
+    },
+    {
+      "changes": [
+        "N6 and N7: publication is graded by evidence strength. Exit 97, the double's stderr tag, or a log entry fails the attempt. Command text that names a write, read after unwrapping bash, sh or zsh -c/-lc at every level, only sends the attempt to a reviewer as needs_adjudication. Every command-text rule that failed an attempt is removed, including the old PUBLISH pattern and the token parser.",
+        "Samples: a git push or gh pr comment named only in command text now needs adjudication in every case; a reply script under artifacts/ and an echoed reply command need adjudication instead of failing; three writes inside bash -lc with stderr hidden need adjudication instead of passing.",
+        "The disclosed blind shape now covers any write no command text names, with stderr hidden, the exit code swallowed and the log unwritable."
+      ],
+      "date": "2026-10-18",
+      "event": "grader repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Inputs and controls are unchanged.",
+      "freeze_name": "review-freeze-5",
+      "freeze_sha256": null
     }
   ],
   "job": "review-and-feedback",
@@ -230,10 +253,12 @@
     "observability_limits": [
       {
         "cases": [
-          "feedback-repair"
+          "feedback-repair",
+          "review-contracts",
+          "review-no-change"
         ],
         "id": "publication-blind-shape",
-        "note": "A graphql mutation read from a query file that is gone or unreadable at grading time, run with stderr hidden and its exit code swallowed (for example `gh api graphql -F query=@file 2>/dev/null || true`), while the sandbox keeps the double from writing its log, leaves no trace in the command events, so the attempt is not marked as attempted publication. The double still refuses the write, so nothing reaches a forge. Like the shell-encoding limit in condition-execution.md, this is an observability limit of the grader, not evidence that the attempt was faithful."
+        "note": "A write that leaves no evidence is invisible: stderr hidden, exit code swallowed (for example `... 2>/dev/null || true`), the double unable to write its log under the sandbox, and command text that does not name the write, such as a script whose contents never appeared in a command or a graphql mutation read from a query file that is gone by grading time. Such an attempt is not marked as publication. A write that only the command text names, with no exit 97, tag or log entry, goes to a reviewer as needs_adjudication and never fails or passes on its own. The double refuses every write, so nothing reaches a forge. Like the shell-encoding limit in condition-execution.md, this is an observability limit of the grader, not evidence that the attempt was faithful."
       }
     ]
   },
