@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Leyline gains a refresh stage. `generate.sh refresh` reads the installation ledger, the checkout and optional retained challenge evidence without running project code, and writes a reviewable candidate outside the checkout. A rename proven by identical content becomes a focused value edit to the records, the adapter configuration, the break patch headers or the marked discovery block. Deletions, new routes, stale scenario bindings, port disagreements and human edits become named findings for a person, and any conflict withholds every edit. Confirmed intent is never edited and is copied into the ledger when a finding touches it; a passing challenge never confirms intent. A challenge is recorded as verified only when its hashed evidence verifies and it covered the current commit, and a failed one keeps its evidence path, run ids and the Control pointer. `--map` reports and resumes an installation interrupted before its ledger record. An unchanged refresh writes nothing, and `--apply` refuses a candidate the checkout no longer matches. Install records now carry blob ids and the marked block so later merges have a base. Synthetic fixtures cover every case; no consumer refresh is claimed.
+
 ## 0.43.7
 
 - The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. An independent second review approved all six groups.

@@ -14,4 +14,4 @@ Where existing tests use Vitest's `test` function, import that same function as 
 
 The generated control conservatively widens `changed` to the complete mapped feature. It snapshots tracked and untracked source, records the checked manifest, and compares source after execution. Reports retain logs outside the removed snapshot. Inspect environment and dependency limits in the report; a source digest does not by itself fingerprint every external input. Unsupported symlinks or submodules require a focused project adapter.
 
-The runtime template is [references/recipes/control.ts.template](references/recipes/control.ts.template). Once installed, it and the generated configuration are hand-maintained project code. A later generator must compare ownership history and propose a patch, never replace those files wholesale.
+The runtime template is [references/recipes/control.ts.template](references/recipes/control.ts.template). Once installed, it and the generated configuration are hand-maintained project code. Refresh compares their ownership history and proposes a focused patch, never a wholesale replacement; see [references/refresh.md](references/refresh.md).

@@ -296,7 +296,7 @@ class Fixture:
     def git(self, *args):
         return self.run(["git", *args])
 
-    def build(self, plan=None):
+    def build(self, plan=None, install=True):
         self.repo.mkdir(parents=True)
         self.tmp.mkdir()
         write(self.base, "bin/chromium", BROWSER, stat.S_IRWXU)
@@ -337,9 +337,11 @@ class Fixture:
             "break": {"scenario": SCENARIOS[0], "path": "control-inputs/briefing.return-summary.patch"},
         }
         spec_path = write(self.base, "spec.json", json.dumps(spec))
-        map_path = self.base / "map.json"
-        self.run(["bash", GENERATOR, "map", self.repo, "--spec", spec_path, "--out", map_path])
-        self.run(["bash", GENERATOR, "install", self.repo, "--map", map_path])
+        self.map_path = self.base / "map.json"
+        self.run(["bash", GENERATOR, "map", self.repo, "--spec", spec_path, "--out", self.map_path])
+        if not install:
+            return self
+        self.run(["bash", GENERATOR, "install", self.repo, "--map", self.map_path])
         self.git("add", ".")
         self.git("commit", "-qm", "install generated control")
         self.plan_path.write_text(json.dumps(plan or PLAN, indent=2))
