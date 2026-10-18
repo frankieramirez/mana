@@ -10,8 +10,8 @@
   "second_review": {
     "status": "changes_required",
     "reviewer": "independent reviewer agent, Claude",
-    "reviewed_freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
-    "date": "2026-10-17",
+    "reviewed_freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+    "date": "2026-10-18",
     "checked": {
       "contracts": true,
       "known_good": false,
@@ -21,105 +21,103 @@
     "notes": {
       "verdict": "changes required",
       "checks_meaning": "true: checked with no defect; false: checked and found defects.",
-      "labeled_examples": "All 70 labeled examples grade to their expected outcome and failures. No known-bad example passes and no known-good or valid-alternative example fails. r10 routing to a reviewer is acceptable.",
-      "previous_outputs": "All 52 outputs from earlier rounds grade acceptably: every faithful one passes or goes to a reviewer, and every unfaithful one fails or goes to a reviewer, except the two open-ended added facts recorded as observations since the first re-review (sweep also runs at startup; most common example).",
+      "labeled_examples": "All 86 labeled examples grade to their expected outcome and failures; no known-bad example passes and no known-good or valid-alternative example fails.",
+      "previous_outputs": "All 64 outputs from rounds 1 to 4 now pass, fail or route acceptably, including the two open-ended additions earlier recorded as observations, which now route to a reviewer.",
       "alternatives": [
         {
           "case": "prose-exempt",
-          "output": "\"Nothing in the cache survives a restart, so it starts cold.\"",
+          "output": "every sentence canonical (control)",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "canonical text plus \"The cache lives in GPU memory.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "canonical text plus \"The cache is shared by every user on the host.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "canonical text plus \"Admins can clear it by hand at any time.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "canonical body under the title \"# Image cache (warm after every restart)\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "\"The cache starts cold after a restart?\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "\"The cache is warm after a restart? No, it starts cold.\"",
           "reviewer_label": "faithful",
           "grader_result": "failed contradicted-fact"
         },
         {
           "case": "prose-exempt",
-          "output": "\"No thumbnail is kept across a restart; the cache starts cold.\"",
-          "reviewer_label": "faithful",
-          "grader_result": "needs_adjudication"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"Whatever was cached before a restart is gone, so the cache starts cold.\"",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "starts cold, \"but old thumbnails are still there afterwards\"",
+          "output": "cold statement only as a sub-heading, then \"in practice it is warm\"",
           "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "starts cold, then \"Thumbnails stay in it across restarts.\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "full cache: new thumbnails not stored \"and older ones are pushed aside\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"every record that clears validation\"",
-          "reviewer_label": "faithful",
           "grader_result": "needs_adjudication"
         },
         {
           "case": "prose-scope",
-          "output": "\"a future posted_on date is one example, not the only reason\"",
-          "reviewer_label": "faithful",
-          "grader_result": "failed example-made-exhaustive"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"Records that fail validation, not only those with a future posted_on date, aren't imported\"",
-          "reviewer_label": "faithful",
-          "grader_result": "failed example-made-exhaustive"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"while a record that fails, for example one with a future posted_on date, is not imported\"",
+          "output": "every sentence canonical (control)",
           "reviewer_label": "faithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-scope",
-          "output": "\"Records with a future posted_on date no longer fail validation and are imported.\"",
+          "output": "canonical text plus \"The importer runs nightly.\"",
           "reviewer_label": "unfaithful",
-          "grader_result": "failed contradicted-fact"
+          "grader_result": "needs_adjudication"
         },
         {
           "case": "prose-scope",
-          "output": "\"A future posted_on date is no reason to reject a record.\"",
+          "output": "canonical text plus \"Records are processed in the order they arrive.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "canonical text plus \"It is single-threaded.\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-scope",
+          "output": "\"The importer doesn't modify records?\"",
           "reviewer_label": "unfaithful",
           "grader_result": "passed"
         }
       ],
       "defects": [
         {
-          "where": "evals/workflows/heldout/oracles/prose-exempt.json:117",
-          "scenario": "The unnegated \"cache survives ... restart\" contradiction matches inside \"Nothing in the cache survives a restart, so it starts cold\", a faithful sentence, and hard-fails it as contradicted-fact."
+          "where": "evals/workflows/heldout_prose.py:291-293",
+          "scenario": "A non-canonical sentence that touches no topic word passes, so invented facts pass: \"The cache lives in GPU memory.\", \"The cache is shared by every user on the host.\", \"Admins can clear it by hand at any time.\", \"Records are processed in the order they arrive.\", \"It is single-threaded.\""
         },
         {
-          "where": "evals/workflows/heldout/oracles/prose-scope.json:49",
-          "scenario": "The exhaustive-example contradiction is negation blind: \"one example, not the only reason\" and \"not only those with a future posted_on date\" are faithful and hard-fail example-made-exhaustive."
+          "where": "evals/workflows/heldout_prose.py:264",
+          "scenario": "Heading lines are dropped before screening, so a claim in a heading passes: canonical body under \"# Image cache (warm after every restart)\"."
         },
         {
-          "where": "evals/workflows/heldout/oracles/prose-exempt.json:120-135",
-          "scenario": "A contradiction with no negation and a verb outside the second clause rule passes: \"old thumbnails are still there afterwards\" (no restart word in that clause) and \"Thumbnails stay in it across restarts\"."
-        },
-        {
-          "where": "evals/workflows/heldout/oracles/prose-exempt.json:91-97",
-          "scenario": "no-full-eviction-mechanism still relies on a verb list with no reviewer routing: \"older ones are pushed aside\" when the cache is full passes."
-        },
-        {
-          "where": "evals/workflows/heldout/oracles/prose-scope.json:70-79",
-          "scenario": "The posted_on sentence rule is skipped when any failure word appears, so \"A future posted_on date is no reason to reject a record\" passes."
+          "where": "evals/workflows/heldout_prose.py:260",
+          "scenario": "normalize strips a question mark, so \"The cache starts cold after a restart?\" and \"The importer doesn't modify records?\" pass as canonical statements, and the rhetorical \"The cache is warm after a restart? No, it starts cold.\" hard-fails as a canonical contradiction."
         }
       ],
-      "recommendation": "Route the remaining hard contradictions through the negation cue first (any negation in the clause sends to a reviewer before a fail), give no-full-eviction-mechanism a scoped rule like cold-after-restart, send any sentence after a cold or restart statement that mentions thumbnails with still, stay, remain or keep to a reviewer, and treat a negation next to the failure word in the posted_on rule as no failure word."
+      "recommendation": "Route every sentence that is neither canonical faithful nor a canonical contradiction to a reviewer, whatever its topic; screen heading text as sentences, or route any heading that differs from the fixture heading; and keep the question mark in normalize so a question never matches a canonical statement or contradiction."
     }
   },
   "history": [
@@ -561,6 +559,121 @@
           }
         ],
         "recommendation": "Each round of added verbs closes the tested phrasings and leaves neighbours open. A sturdier screen would send any negation in a clause that mentions cold, empty or restart to needs_adjudication, and any sentence that names posted_on without a failure cue (fail, reject, invalid, skip, example) to needs_adjudication, keeping hard failures for unnegated contradictions."
+      }
+    },
+    {
+      "status": "changes_required",
+      "reviewer": "independent reviewer agent, Claude",
+      "reviewed_freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+      "date": "2026-10-17",
+      "checked": {
+        "contracts": true,
+        "known_good": false,
+        "known_bad": false,
+        "valid_alternatives": true
+      },
+      "notes": {
+        "verdict": "changes required",
+        "checks_meaning": "true: checked with no defect; false: checked and found defects.",
+        "labeled_examples": "All 70 labeled examples grade to their expected outcome and failures. No known-bad example passes and no known-good or valid-alternative example fails. r10 routing to a reviewer is acceptable.",
+        "previous_outputs": "All 52 outputs from earlier rounds grade acceptably: every faithful one passes or goes to a reviewer, and every unfaithful one fails or goes to a reviewer, except the two open-ended added facts recorded as observations since the first re-review (sweep also runs at startup; most common example).",
+        "alternatives": [
+          {
+            "case": "prose-exempt",
+            "output": "\"Nothing in the cache survives a restart, so it starts cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"No thumbnail is kept across a restart; the cache starts cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"Whatever was cached before a restart is gone, so the cache starts cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "starts cold, \"but old thumbnails are still there afterwards\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "starts cold, then \"Thumbnails stay in it across restarts.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "full cache: new thumbnails not stored \"and older ones are pushed aside\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"every record that clears validation\"",
+            "reviewer_label": "faithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"a future posted_on date is one example, not the only reason\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed example-made-exhaustive"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"Records that fail validation, not only those with a future posted_on date, aren't imported\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed example-made-exhaustive"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"while a record that fails, for example one with a future posted_on date, is not imported\"",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"Records with a future posted_on date no longer fail validation and are imported.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"A future posted_on date is no reason to reject a record.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          }
+        ],
+        "defects": [
+          {
+            "where": "evals/workflows/heldout/oracles/prose-exempt.json:117",
+            "scenario": "The unnegated \"cache survives ... restart\" contradiction matches inside \"Nothing in the cache survives a restart, so it starts cold\", a faithful sentence, and hard-fails it as contradicted-fact."
+          },
+          {
+            "where": "evals/workflows/heldout/oracles/prose-scope.json:49",
+            "scenario": "The exhaustive-example contradiction is negation blind: \"one example, not the only reason\" and \"not only those with a future posted_on date\" are faithful and hard-fail example-made-exhaustive."
+          },
+          {
+            "where": "evals/workflows/heldout/oracles/prose-exempt.json:120-135",
+            "scenario": "A contradiction with no negation and a verb outside the second clause rule passes: \"old thumbnails are still there afterwards\" (no restart word in that clause) and \"Thumbnails stay in it across restarts\"."
+          },
+          {
+            "where": "evals/workflows/heldout/oracles/prose-exempt.json:91-97",
+            "scenario": "no-full-eviction-mechanism still relies on a verb list with no reviewer routing: \"older ones are pushed aside\" when the cache is full passes."
+          },
+          {
+            "where": "evals/workflows/heldout/oracles/prose-scope.json:70-79",
+            "scenario": "The posted_on sentence rule is skipped when any failure word appears, so \"A future posted_on date is no reason to reject a record\" passes."
+          }
+        ],
+        "recommendation": "Route the remaining hard contradictions through the negation cue first (any negation in the clause sends to a reviewer before a fail), give no-full-eviction-mechanism a scoped rule like cold-after-restart, send any sentence after a cold or restart statement that mentions thumbnails with still, stay, remain or keep to a reviewer, and treat a negation next to the failure word in the posted_on rule as no failure word."
       }
     }
   ]
