@@ -1,0 +1,11 @@
+2026-10-09T02:11:40Z worker=ship-2 order=A-1040 sku=KETTLE-3 qty=1 stock_before=14 attempt=1 carrier=ok label=LBL-A-1040-1 stock_after=13
+2026-10-09T02:12:03Z worker=ship-2 order=A-1041 sku=MUG-12 qty=1 stock_before=12 attempt=1 carrier=timeout stock_now=11
+2026-10-09T02:12:09Z worker=ship-2 order=A-1041 sku=MUG-12 qty=1 attempt=2 carrier=ok label=LBL-A-1041-2 stock_after=10
+2026-10-09T02:13:15Z worker=ship-2 order=A-1042 sku=LID-12 qty=4 stock_before=4 attempt=1 carrier=reject error=CarrierRejected stock_after=0
+2026-10-09T02:14:01Z worker=ship-2 order=A-1043 sku=MUG-12 qty=2 stock_before=10 attempt=1 reserving
+2026-10-09T02:14:01Z worker=ship-2 order=A-1043 reserved stock_now=8
+2026-10-09T02:14:02Z worker=ship-2 process exited signal=SIGKILL reason=oom
+2026-10-09T02:14:30Z worker=ship-3 started recovered_store=state/after-crash.json
+2026-10-09T02:14:31Z worker=ship-3 order=A-1043 sku=MUG-12 qty=2 stock_before=8 attempt=1 redelivered=true
+2026-10-09T02:14:31Z worker=ship-3 order=A-1043 attempt=1 carrier=timeout stock_now=6
+2026-10-09T02:14:37Z worker=ship-3 order=A-1043 attempt=2 carrier=ok label=LBL-A-1043-2 stock_after=4

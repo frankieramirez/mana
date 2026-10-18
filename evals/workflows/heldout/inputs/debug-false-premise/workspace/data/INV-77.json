@@ -1,0 +1,10 @@
+{
+  "customer": "C-3308",
+  "invoice": "INV-77",
+  "issued": "2026-10-02",
+  "lines": [
+    {"description": "Seed trays", "quantity": "3", "unit_price": "1.115"},
+    {"description": "Drip emitters", "quantity": "2", "unit_price": "1.6675"},
+    {"description": "Shade cloth", "quantity": "1", "unit_price": "3.345"}
+  ]
+}

@@ -1,8 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.43.8
 
 - `run.py --probe-host` reads refused spawns from the parent's Codex rollout file, where Codex 0.163.0 records a refused `spawn_agent` call as tool output starting with `collab spawn failed: agent thread limit reached`. The rollout is the only refusal source, and it must belong to the parent thread by file name or `session_meta` id. A spawn that failed for any other reason, and any model text, does not count. This depends on Codex's on-disk session format. A refusal with the cap full of children verifies the cap; more children open than the cap marks it failed. The cap counts the parent only when a refusal came while the run's single child was open. Everything else, including two children at the cap with no refusal or a staggered run, stays unknown. The docs now say that no runner uses the Codex CLI 0.163.0 delegated acceptance yet, because the delegated review path pins 0.159.2.
+
+## 0.43.7
+
+- The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. An independent second review approved all six groups.
+
+## 0.43.6
+
+- The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. A re-review of the revised oracles and runner integration are still pending.
 
 ## 0.43.5
 

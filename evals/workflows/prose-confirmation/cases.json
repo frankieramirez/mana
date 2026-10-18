@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "study": "prose-fidelity-confirmation-1",
+  "reasoning": "medium",
+  "seed": 20261017,
+  "repetitions": 2,
+  "cases": [
+    {
+      "id": "pfc-hold-expiry",
+      "source_group": "pfc1-absent-cause",
+      "split": "confirmation",
+      "request": "Turn branch-notes.md into a short notice for the front desk staff. Return just the notice.",
+      "inputs": "inputs/pfc-hold-expiry",
+      "protected_spans": [],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "pfc-dome-autoclose",
+      "source_group": "pfc2-adjacent-config",
+      "split": "confirmation",
+      "request": "Clean up the prose in docs/dome.md so it reads like a person wrote it, without changing what it says. Keep the TOML block exactly as it is. Return the whole rewritten section.",
+      "inputs": "inputs/pfc-dome-autoclose",
+      "protected_spans": [
+        {
+          "id": "autoclose-toml",
+          "file": "docs/dome.md",
+          "text": "```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```"
+        }
+      ],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "pfc-cfp-checks",
+      "source_group": "pfc3-nonexhaustive-list",
+      "split": "confirmation",
+      "request": "Tighten up the answer in faq-draft.md for the call-for-proposals page. Keep it accurate. Reply with just the question and the shortened answer.",
+      "inputs": "inputs/pfc-cfp-checks",
+      "protected_spans": [],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "pfc-bikeshare-pricing",
+      "source_group": "pfc4-conditional-quantity",
+      "split": "confirmation",
+      "request": "Rewrite pricing-notes.md as one short paragraph for the app's help screen. Return only the paragraph.",
+      "inputs": "inputs/pfc-bikeshare-pricing",
+      "protected_spans": [],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "pfc-pool-closure",
+      "source_group": "pfc5-supported-explanation",
+      "split": "confirmation",
+      "request": "Make pool-update.md shorter and less rambly for the members' email. Keep it accurate. Return just the email text.",
+      "inputs": "inputs/pfc-pool-closure",
+      "protected_spans": [],
+      "timeout_seconds": 180
+    },
+    {
+      "id": "pfc-kiosk-logrotate",
+      "source_group": "pfc6-interpretation-verbatim",
+      "split": "confirmation",
+      "request": "Rewrite kiosk-logs.md for the ops handbook. Keep the config block exactly as it is. Under it, explain in plain words what each line of the config does, since most readers have never used logrotate. Return just the rewritten section.",
+      "inputs": "inputs/pfc-kiosk-logrotate",
+      "protected_spans": [
+        {
+          "id": "logrotate-block",
+          "file": "kiosk-logs.md",
+          "text": "```conf\n/var/log/kiosk/*.log {\n    weekly\n    rotate 8\n    compress\n    delaycompress\n    missingok\n}\n```"
+        }
+      ],
+      "timeout_seconds": 180
+    }
+  ]
+}
