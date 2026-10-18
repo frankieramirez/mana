@@ -1,179 +1,68 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "group": "pfc3-nonexhaustive-list",
   "case_id": "pfc-cfp-checks",
   "group_kind": "non-exhaustive-list",
   "evaluator_only": true,
   "canary": "mana-confirmation-canary-27c6e9d1-nonexhaustive-list",
   "contract": "The question and a shorter answer. The three form checks (abstract over 300 words, empty speaker bio, session length other than 25 or 50 minutes) stay examples from a longer list. Passing the form does not mean acceptance: the review committee can still turn proposals down for reasons the form never checks. Everyone who submits hears back by June 12. No other check, reason or date is added.",
-  "source_statements": [
+  "supported_facts": [
     "The form bounces a proposal if, among other things, the abstract runs over 300 words, the speaker bio is left empty, or the session length is anything other than 25 or 50 minutes.",
     "Getting past the form doesn't mean acceptance; the review committee can still turn proposals down for reasons the form never checks.",
     "Everyone who submits hears back by June 12."
+  ],
+  "invented_facts_that_fail": [
+    "The three checks presented as the complete list (\"only if\", \"the full list\", \"that's all\").",
+    "A form check the source does not list, such as a missing title or description.",
+    "Passing the form treated as acceptance.",
+    "A reason for committee decisions, such as a full program.",
+    "A changed limit, a range of session lengths, or a reply only for some submitters."
   ],
   "legitimate_alternatives": [
     "Mark the list as partial with \"for example\", \"including\", \"such as\" or \"among other things\".",
     "Use a bulleted list of the three checks.",
     "Say the form \"doesn't check everything\" in place of \"reasons the form never checks\"."
   ],
-  "statements": [
-    {
-      "id": "question",
-      "templates": [
-        "why did the form bounce my proposal"
-      ]
-    },
-    {
-      "id": "checks",
-      "templates": [
-        "(?:among other things, )?the (?:submission )?form (?:will )?(?:bounces|bounce|rejects|reject)(?: (?:a proposal|proposals|your proposal)(?: back(?: to you)?)?)?(?: if,? among other things,?| if| when| with| for (?:several |many |various |a number of )?reasons,? including|, for example,| including| such as)? (?:(?:(?:the|an|your) )?abstract (?:that )?(?:runs over|is over|over|longer than|tops|exceeds|is longer than|of more than|with more than) 300 words|(?:(?:the|an|your|a) )?(?:empty|blank|missing) speaker bio|(?:the |your )?speaker bio (?:is )?(?:left )?(?:empty|blank)|(?:(?:the|a|your) )?session(?: length)? (?:(?:is |that is |that's )?(?:anything )?other than|(?:that )?(?:isn't|is not)) (?:either )?25 or 50 minutes(?: long)?)",
-        "the (?:submission )?form (?:will )?(?:bounces|bounce|rejects|reject)(?: (?:a proposal|proposals|your proposal)(?: back(?: to you)?)?)? for (?:several|a number of|many|various|other) reasons",
-        "(?:(?:(?:the|an|your) )?abstract (?:that )?(?:runs over|is over|over|longer than|tops|exceeds|is longer than|of more than|with more than) 300 words|(?:(?:the|an|your|a) )?(?:empty|blank|missing) speaker bio|(?:the |your )?speaker bio (?:is )?(?:left )?(?:empty|blank)|(?:(?:the|a|your) )?session(?: length)? (?:(?:is |that is |that's )?(?:anything )?other than|(?:that )?(?:isn't|is not)) (?:either )?25 or 50 minutes(?: long)?)"
-      ]
-    },
-    {
-      "id": "partial",
-      "templates": [
-        "three common ones",
-        "here are three of the things the form checks",
-        "the form checks (?:a few|several|some) things(?:, for example)?",
-        "for example",
-        "(?:those|these) (?:aren't|are not) the only (?:checks|reasons)",
-        "(?:it|the form) (?:doesn't|does not) check everything"
-      ]
-    },
-    {
-      "id": "not-acceptance",
-      "templates": [
-        "(?:passing|clearing|getting past|getting through) the form (?:doesn't|does not|won't) (?:guarantee|mean) (?:acceptance|you're accepted|your proposal is accepted)",
-        "(?:passing|clearing|getting past) the form (?:isn't|is not) (?:acceptance|a guarantee of acceptance)"
-      ]
-    },
-    {
-      "id": "committee",
-      "templates": [
-        "(?:even if you (?:get past|pass) the form, )?the (?:review )?committee (?:can|may) still (?:turn (?:proposals|a proposal|it|them) down|turn down (?:proposals|a proposal)(?: that (?:gets through|passes|pass))?|turn down proposals that pass|reject (?:proposals|a proposal|it)|decline (?:proposals|a proposal|it)(?: that (?:passes|pass|gets through))?|say no)(?: for (?:other )?reasons(?: the form (?:never|doesn\\'t|does not) (?:checks|check|looks at))?)?"
-      ]
-    },
-    {
-      "id": "reply",
-      "templates": [
-        "(?:everyone(?: who submits)?|all submitters|every submitter) (?:hears|hear) back by june 12(?: either way)?"
-      ]
-    }
-  ],
-  "checks": [
+  "judgments": [
     {
       "id": "list-stays-partial",
-      "kind": "preserve",
       "failure": "example-made-exhaustive",
-      "present_all": [
-        "\\bamong\\s+other|\\bfor\\s+example\\b|\\bfor\\s+instance\\b|\\be\\.g\\.|\\bsuch\\s+as\\b|\\bincluding\\b|\\ba\\s+few\\b|\\bsome\\s+of\\b|\\bseveral\\b|\\bnumber\\s+of\\b|\\bnot\\s+the\\s+only\\b|\\baren't\\s+the\\s+only\\b|\\bthree\\s+of\\b|\\bcommon\\s+ones\\b|\\bdoesn't\\s+check\\s+everything\\b"
-      ],
-      "contradict": [
-        "\\bonly\\s+(if|when|for)\\b",
-        "\\bthe\\s+(only|sole)\\s+(reasons?|checks?|things?)\\b",
-        "\\b(complete|full|whole|entire)\\s+list\\b",
-        "\\bthat'?s\\s+(all|everything)\\b",
-        "\\bonly\\s+(checks|bounces|rejects|looks)\\b"
-      ],
-      "adjudicate": [
-        "\\b(three|3)\\s+(checks|reasons|things|rules|cases)\\b"
-      ],
-      "review_question": "Are the three form checks still presented as examples, never as the complete list?"
+      "question": "Are the three form checks still presented as examples, never as the complete list?"
     },
     {
       "id": "abstract-limit",
-      "kind": "preserve",
       "failure": "contradicted-fact",
-      "present_all": [
-        "\\babstract",
-        "\\b300\\b"
-      ],
-      "contradict": [
-        "\\babstract{S}\\b(?!300\\b)\\d{3}\\b"
-      ],
-      "review_question": "Is the abstract limit still over 300 words?"
+      "question": "Is the abstract limit still over 300 words?"
     },
     {
       "id": "empty-bio",
-      "kind": "preserve",
       "failure": "lost-fact",
-      "present_all": [
-        "\\bbio",
-        "\\b(empty|blank|missing|left\\s+out)\\b"
-      ],
-      "review_question": "Is an empty speaker bio still listed?"
+      "question": "Is an empty speaker bio still listed?"
     },
     {
       "id": "session-lengths",
-      "kind": "preserve",
       "failure": "contradicted-fact",
-      "present_all": [
-        "\\b25\\b",
-        "\\b50\\b"
-      ],
-      "contradict": [
-        "\\b(?!25\\b|50\\b)\\d{2}[- ]min",
-        "\\bbetween\\s+25\\s+and\\s+50\\b",
-        "\\b25\\s*(-|to)\\s*50\\b"
-      ],
-      "review_question": "Are the allowed session lengths still exactly 25 or 50 minutes?"
+      "question": "Are the allowed session lengths still exactly 25 or 50 minutes?"
     },
     {
       "id": "committee-may-reject",
-      "kind": "preserve",
       "failure": "contradicted-fact",
-      "present_all": [
-        "\\bcommittee\\b",
-        "\\bturn\\w*\\s+(it\\s+|them\\s+|proposals?\\s+|a\\s+proposal\\s+)?down\\b|\\breject|\\bdeclin|\\bsay\\s+no\\b"
-      ],
-      "contradict": [
-        "\\b(pass\\w*|clear\\w*|gets?\\s+past|getting\\s+past|makes?\\s+it\\s+through)\\b{S}\\b(means?|guarantees?|ensures?)\\b{S}\\baccept"
-      ],
-      "review_question": "Does the answer keep that passing the form is not acceptance and the committee can still turn proposals down?"
+      "question": "Does the answer keep that passing the form is not acceptance and the committee can still turn proposals down?"
     },
     {
       "id": "reply-date",
-      "kind": "preserve",
       "failure": "contradicted-fact",
-      "present_all": [
-        "\\bjune\\s+12|\\b12\\s+june",
-        "\\b(everyone|all|every)\\b"
-      ],
-      "contradict": [
-        "\\bjune\\s+(?!12\\b)\\d+",
-        "\\bonly\\b{S}\\bhears?\\s+back\\b",
-        "\\bhears?\\s+back\\b{S}\\bonly\\s+if\\b"
-      ],
-      "review_question": "Does everyone who submits still hear back by June 12?"
+      "question": "Does everyone who submits still hear back by June 12?"
     },
     {
       "id": "no-invented-check",
-      "kind": "forbid",
       "failure": "invented-fact",
-      "adjudicate": [
-        "\\btitles?\\b",
-        "\\bduplicates?\\b",
-        "\\b(pdf|attachments?|file\\s+size|description)\\b",
-        "\\bco-?speakers?\\b",
-        "\\bcharacters?\\b",
-        "\\bheadshots?\\b",
-        "\\blinks?\\b"
-      ],
-      "review_question": "Does the answer avoid naming form checks the source does not list?"
+      "question": "Does the answer avoid naming form checks the source does not list?"
     },
     {
       "id": "no-invented-cause",
-      "kind": "forbid",
       "failure": "invented-cause",
-      "adjudicate": [
-        "\\b(because|since|due\\s+to|so\\s+that)\\b",
-        "\\bto\\s+(keep|ensure|make\\s+sure|help|save|fit)\\b",
-        "\\bif\\s+the\\s+(program|schedule)\\b",
-        "\\b(full|capacity|slots?)\\b"
-      ],
-      "review_question": "Does the answer avoid adding a reason for the checks or for committee decisions?"
+      "question": "Does the answer avoid adding a reason for the checks or for committee decisions?"
     }
   ],
   "examples": [
@@ -182,7 +71,6 @@
       "label": "valid",
       "polished": false,
       "text": "Q: Why did the form bounce my proposal?\n\nThe form bounces a proposal for several reasons, including an abstract over 300 words, an empty speaker bio, or a session length other than 25 or 50 minutes. Passing the form doesn't guarantee acceptance: the review committee can still decline proposals for reasons the form doesn't check. Everyone who submits hears back by June 12.",
-      "screen": "screen_pass",
       "failures": [],
       "note": ""
     },
@@ -191,38 +79,26 @@
       "label": "valid",
       "polished": false,
       "text": "Q: Why did the form bounce my proposal?\n\nA: The form checks a few things, for example:\n- an abstract longer than 300 words\n- an empty speaker bio\n- a session length that isn't 25 or 50 minutes\n\nIt doesn't check everything, and the review committee may still turn down a proposal that gets through. You will hear back by June 12 either way.",
-      "screen": "needs_adjudication",
       "failures": [],
-      "note": "\"You will hear back\" does not name everyone, so a reviewer confirms the reply date covers all submitters."
+      "note": "\"You will hear back\" addresses the reader; the adjudicator confirms it still covers every submitter."
     },
     {
       "id": "b1-only-if",
       "label": "failing",
       "polished": true,
       "text": "Q: Why did the form bounce my proposal?\n\nThe form bounces a proposal only if the abstract is over 300 words, the speaker bio is empty, or the session length isn't 25 or 50 minutes. The review committee can still decline proposals for other reasons. Everyone hears back by June 12.",
-      "screen": "screen_fail",
       "failures": [
-        "example-made-exhaustive"
+        "list-stays-partial"
       ],
       "note": "\"Among other things\" became \"only if\"."
-    },
-    {
-      "id": "b2-three-checks",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nThe form runs three checks: the abstract must be 300 words or fewer, the speaker bio must be filled in, and the session must be 25 or 50 minutes. The review committee can still decline a proposal that passes. Everyone hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": ""
     },
     {
       "id": "b3-pass-means-accepted",
       "label": "failing",
       "polished": false,
       "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces an abstract over 300 words, an empty speaker bio, or a session length other than 25 or 50 minutes. Passing the form means your proposal is accepted. Everyone hears back by June 12.",
-      "screen": "screen_fail",
       "failures": [
-        "contradicted-fact"
+        "committee-may-reject"
       ],
       "note": ""
     },
@@ -231,8 +107,9 @@
       "label": "failing",
       "polished": true,
       "text": "Q: Why did the form bounce my proposal?\n\nThe form bounces a proposal for reasons including a missing title, an abstract over 300 words, an empty speaker bio, or a session length other than 25 or 50 minutes. The review committee can still decline proposals that pass. Everyone hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
+      "failures": [
+        "no-invented-check"
+      ],
       "note": ""
     },
     {
@@ -240,116 +117,10 @@
       "label": "failing",
       "polished": false,
       "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces an abstract over 300 words, an empty speaker bio, or a session outside 25 to 50 minutes. The review committee can still decline proposals that pass. Everyone hears back by June 12.",
-      "screen": "screen_fail",
       "failures": [
-        "contradicted-fact"
+        "session-lengths"
       ],
       "note": "Turns two allowed lengths into a range."
-    },
-    {
-      "id": "b6-wrong-limit",
-      "label": "failing",
-      "polished": false,
-      "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces an abstract over 250 words, an empty speaker bio, or a session length other than 25 or 50 minutes. The review committee can still decline proposals that pass. Everyone hears back by June 12.",
-      "screen": "screen_fail",
-      "failures": [
-        "contradicted-fact"
-      ],
-      "note": ""
-    },
-    {
-      "id": "r1-F3a-three-common-ones",
-      "label": "valid",
-      "polished": false,
-      "text": "Q: Why did the form bounce my proposal?\n\nA: The form rejects proposals for a number of reasons. Three common ones: an abstract longer than 300 words, a blank speaker bio, or a session that isn't 25 or 50 minutes long. Clearing the form isn't acceptance; the committee can still say no for reasons the form never looks at. Everyone hears back by June 12.",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Second review probe."
-    },
-    {
-      "id": "r1-F3b-arent-the-only-checks",
-      "label": "valid",
-      "polished": false,
-      "text": "Q: Why did the form bounce my proposal?\n\nThe form will bounce your proposal if your abstract tops 300 words, your speaker bio is empty, or your session isn't 25 or 50 minutes, though those aren't the only checks. Even if you get past the form, the review committee can still reject proposals for reasons the form doesn't check. All submitters hear back by June 12.",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Second review probe."
-    },
-    {
-      "id": "r1-F3c-just-three-of",
-      "label": "valid",
-      "polished": false,
-      "text": "Q: Why did the form bounce my proposal?\n\nA: Here are just three of the things the form checks: an abstract over 300 words, an empty speaker bio, or a session length other than 25 or 50 minutes. Passing the form doesn't mean you're accepted; the review committee can still turn proposals down for reasons the form never checks. Everyone who submits hears back by June 12.",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Second review probe."
-    },
-    {
-      "id": "r1-U3a-invented-description",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces a proposal with an abstract over 300 words, an empty speaker bio, a session length other than 25 or 50 minutes, or a missing session description. The review committee can still turn down proposals that pass. Everyone who submits hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Second review probe. Adds a check the source does not list."
-    },
-    {
-      "id": "r1-U3b-committee-reason",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces an abstract over 300 words, an empty speaker bio, or a session length other than 25 or 50 minutes. The review committee can still turn down a proposal that passes if the program is already full. Everyone who submits hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Second review probe. Invents a committee reason."
-    },
-    {
-      "id": "r1-U3c-whole-list",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nThe form bounces a proposal when the abstract is over 300 words, the speaker bio is empty, or the session isn't 25 or 50 minutes. That's the complete list. The review committee can still decline proposals that pass. Everyone hears back by June 12.",
-      "screen": "screen_fail",
-      "failures": [
-        "example-made-exhaustive"
-      ],
-      "note": "Second review probe. Calls a partial list complete."
-    },
-    {
-      "id": "r1-U3d-everyone-hears-accepted",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces an abstract over 300 words, an empty speaker bio, or a session length other than 25 or 50 minutes. The review committee can still decline proposals that pass, and only accepted speakers hear back by June 12.",
-      "screen": "screen_fail",
-      "failures": [
-        "contradicted-fact"
-      ],
-      "note": "Second review probe. Everyone who submits hears back."
-    },
-    {
-      "id": "a1-session-25-or-50",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nThe form bounces a proposal if the abstract runs over 300 words, the speaker bio is left empty, or the session length is 25 or 50 minutes. The review committee can still turn proposals down. Everyone who submits hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Inverts the session length rule and drops the partial list marker."
-    },
-    {
-      "id": "a1-two-checks-only",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces a proposal if the abstract runs over 300 words or the speaker bio is left empty. Everyone who submits hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Drops the session check and the committee."
-    },
-    {
-      "id": "a1-committee-same-checks",
-      "label": "failing",
-      "polished": true,
-      "text": "Q: Why did the form bounce my proposal?\n\nAmong other things, the form bounces a proposal if the abstract runs over 300 words, the speaker bio is left empty, or the session length is anything other than 25 or 50 minutes. The review committee checks the same things as the form. Everyone who submits hears back by June 12.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Invents what the committee checks."
     }
   ]
 }

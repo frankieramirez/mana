@@ -1,17 +1,24 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "group": "pfc1-absent-cause",
   "case_id": "pfc-hold-expiry",
   "group_kind": "absent-cause",
   "evaluator_only": true,
   "canary": "mana-confirmation-canary-5d2e81c4-absent-cause",
   "contract": "A short front desk notice. From March 3, holds on new-release DVDs expire after 4 days instead of 7. Holds on books, audiobooks and magazines stay at 7 days. The source records no reason for the change, so the notice gives none. The Elm Street shelf overflow is a separate remark; the notice may repeat it as a separate item or leave it out, and never presents it as the cause or circumstance of the change. The vote (5 to 2, February meeting) may be kept or omitted, and if kept it stays accurate.",
-  "source_statements": [
+  "supported_facts": [
     "Starting March 3, holds on new-release DVDs expire after 4 days instead of 7.",
     "The circulation committee voted for the change at the February meeting, 5 to 2.",
     "The minutes do not say why; nobody explained the reasoning.",
     "Holds on books, audiobooks and magazines are not affected and stay at 7 days.",
     "Separately, the Elm Street hold shelf has been overflowing since January."
+  ],
+  "invented_facts_that_fail": [
+    "Any reason or purpose for the shorter DVD hold, such as more turnover or shorter waits.",
+    "The Elm Street shelf overflow presented as the cause or circumstance of the change.",
+    "A claim that the committee or the minutes gave a reason.",
+    "The 4 day rule applied to all holds, or to books, audiobooks or magazines.",
+    "A different start date, vote count or meeting month."
   ],
   "legitimate_alternatives": [
     "Say plainly that no reason was recorded, or say nothing about a reason.",
@@ -19,131 +26,36 @@
     "Mention the Elm Street shelf as a separate item, or omit it.",
     "Use a list, a heading or one paragraph."
   ],
-  "statements": [
-    {
-      "id": "header",
-      "templates": [
-        "(?:front desk notice|notice for (?:the )?front desk(?: staff)?|heads up, front desk|notice|front desk staff)"
-      ]
-    },
-    {
-      "id": "dvd-rule",
-      "templates": [
-        "(?:(?:starting|from|beginning|effective|as of|on) (?:march 3(?:rd)?|3(?:rd)? march|mar 3|3 mar), )?(?:holds on new-release dvds|new-release dvd holds|holds for new-release dvds) (?:will |now )?expire (?:after|in) (?:4|four) days(?: instead of (?:7|seven)(?: days)?|, not (?:7|seven)(?: days)?|, down from (?:7|seven)(?: days)?|, it was (?:7|seven)(?: days)?| rather than (?:7|seven)(?: days)?)?(?:, (?:starting|from|beginning|effective|as of|on) (?:march 3(?:rd)?|3(?:rd)? march|mar 3|3 mar))?",
-        "(?:(?:starting|from|beginning|effective|as of|on) (?:march 3(?:rd)?|3(?:rd)? march|mar 3|3 mar), )?(?:holds on new-release dvds|new-release dvd holds|holds for new-release dvds) (?:will )?go from (?:7|seven) days to (?:4|four) days(?:, (?:starting|from|beginning|effective|as of|on) (?:march 3(?:rd)?|3(?:rd)? march|mar 3|3 mar))?",
-        "(?:starting|from|beginning|effective|as of|on) (?:march 3(?:rd)?|3(?:rd)? march|mar 3|3 mar)"
-      ]
-    },
-    {
-      "id": "vote",
-      "templates": [
-        "(?:the (?:circulation )?committee) (?:approved|voted for|passed) (?:the change|it)(?: 5(?: to |-)2)?(?: (?:at|in) (?:its |the )?february(?: meeting)?)?(?: 5(?: to |-)2)?",
-        "(?:the (?:circulation )?committee)'s vote was 5(?: to |-)2 (?:at|in) (?:its |the )?february(?: meeting)?"
-      ]
-    },
-    {
-      "id": "reason-absent",
-      "templates": [
-        "the minutes (?:don't|do not|didn't|did not) (?:say|record|give|state|explain)(?: why| a reason| the reason)?",
-        "no reason (?:was|is|has been) (?:given|recorded|stated)",
-        "nobody explained (?:the reasoning|why)",
-        "(?:the committee |it )?recorded no reason",
-        "why"
-      ]
-    },
-    {
-      "id": "other-holds",
-      "templates": [
-        "(?:holds on books, audiobooks,? (?:and|or) magazines|book, audiobook,? and magazine holds|books, audiobooks,? (?:and|or) magazines|other holds|holds on books|book holds) (?:are not |aren't |are un)affected(?:,? and (?:stay|remain) at (?:7|seven) days)?",
-        "(?:holds on books, audiobooks,? (?:and|or) magazines|book, audiobook,? and magazine holds|books, audiobooks,? (?:and|or) magazines|other holds|holds on books|book holds) (?:still |also )?(?:stay|stays|remain|remains|are unchanged|stay the same|remain unchanged)(?: at (?:7|seven) days)?",
-        "(?:holds on books, audiobooks,? (?:and|or) magazines|book, audiobook,? and magazine holds|books, audiobooks,? (?:and|or) magazines|other holds|holds on books|book holds) (?:still )?expire after (?:7|seven) days",
-        "(?:holds on books, audiobooks,? (?:and|or) magazines|book, audiobook,? and magazine holds|books, audiobooks,? (?:and|or) magazines|other holds|holds on books|book holds), which (?:stay|remain) at (?:7|seven) days",
-        "nothing(?:'s| is) changing for (?:holds on books, audiobooks,? (?:and|or) magazines|book, audiobook,? and magazine holds|books, audiobooks,? (?:and|or) magazines|other holds|holds on books|book holds)",
-        "(?:those|these|the other) holds (?:keep|stay at|remain at) (?:their |a )?(?:7|seven)(?:-| )day(?:s| window)",
-        "not affected"
-      ]
-    },
-    {
-      "id": "shelf",
-      "templates": [
-        "(?:separately, )?(?:dana mentioned that )?the elm street hold shelf has been overflowing since january"
-      ]
-    }
-  ],
-  "checks": [
+  "judgments": [
     {
       "id": "new-period",
-      "kind": "preserve",
       "failure": "contradicted-fact",
-      "present_all": [
-        "\\bdvds?\\b",
-        "new[- ]?releases?",
-        "\\b(4|four)[- ]days?\\b"
-      ],
-      "contradict": [
-        "\\bdvds?\\b{S}\\b(1|2|3|5|6|one|two|three|five|six)[- ]days?\\b"
-      ],
-      "review_question": "Does the notice say new-release DVD holds expire after 4 days?"
+      "question": "Does the notice say new-release DVD holds expire after 4 days?"
     },
     {
       "id": "start-date",
-      "kind": "preserve",
       "failure": "contradicted-fact",
-      "present_all": [
-        "\\bmarch\\s+3(rd)?\\b|\\b3(rd)?\\s+(of\\s+)?march\\b|\\bmar\\.?\\s+3\\b"
-      ],
-      "contradict": [
-        "\\bmarch\\s+(?!3(rd)?\\b)\\d+",
-        "\\b(?!3\\b)\\d+(st|nd|rd|th)?\\s+(of\\s+)?march\\b"
-      ],
-      "review_question": "Does the notice keep the March 3 start date?"
+      "question": "Does the notice keep the March 3 start date?"
     },
     {
       "id": "other-holds-unchanged",
-      "kind": "preserve",
       "failure": "broadened-scope",
-      "present_all": [
-        "\\bbooks?\\b",
-        "\\b(7|seven)\\b"
-      ],
-      "contradict": [
-        "\\b(all|every|any)\\s+holds?\\b{S}\\b(4|four)[- ]days?\\b"
-      ],
-      "review_question": "Does the notice keep book, audiobook and magazine holds at 7 days, with no claim that all holds changed?"
+      "question": "Does the notice keep book, audiobook and magazine holds at 7 days, with no claim that all holds changed?"
     },
     {
       "id": "vote-accurate",
-      "kind": "forbid",
       "failure": "contradicted-fact",
-      "contradict": [
-        "\\bunanimous",
-        "\\b5\\s*(-|to)\\s*(?!2\\b)\\d+\\b",
-        "\\bvot\\w*\\s+(?!5\\b)\\d+\\s*(-|to)\\s*\\d+",
-        "\\b(january|march|april|may|june|july|august|september|october|november|december)\\s+meeting\\b"
-      ],
-      "review_question": "If the vote or meeting is mentioned, is it the February meeting and 5 to 2?"
+      "question": "If the vote or meeting is mentioned, is it the February meeting and 5 to 2?"
     },
     {
       "id": "reason-not-stated",
-      "kind": "forbid",
       "failure": "contradicted-fact",
-      "contradict": [
-        "\\b(committee|minutes|board)\\b{S}\\b(explain\\w*|gave|give[sn]?|state[sd]?|record(ed|s)?)\\b{S}\\b(reason\\w*|why)\\b"
-      ],
-      "review_question": "Does the notice avoid claiming a reason was recorded or explained?"
+      "question": "Does the notice avoid claiming a reason was recorded or explained?"
     },
     {
       "id": "no-invented-cause",
-      "kind": "forbid",
       "failure": "invented-cause",
-      "adjudicate": [
-        "\\b(because|in\\s+order\\s+to|so\\s+that|due\\s+to|in\\s+response\\s+to|aims?\\s+to|meant\\s+to|intended)\\b",
-        "\\bsince\\b(?!\\s+january)",
-        "\\bto\\s+(free|clear|reduce|relieve|ease|speed|cut|make\\s+room|help|improve)\\b",
-        "overflow\\w*{S}\\b(dvds?|committee|change|cut|vot\\w*|expire)\\b",
-        "\\b(dvds?|committee|change|cut|vot\\w*)\\b{S}overflow"
-      ],
-      "review_question": "Does the notice avoid giving any reason for the change, including linking it to the Elm Street shelf?"
+      "question": "Does the notice avoid giving any reason for the change, including linking it to the Elm Street shelf?"
     }
   ],
   "examples": [
@@ -152,7 +64,6 @@
       "label": "valid",
       "polished": false,
       "text": "Front desk notice: Starting March 3, holds on new-release DVDs expire after 4 days instead of 7. The circulation committee approved the change 5 to 2 at its February meeting; the minutes don't record a reason. Holds on books, audiobooks and magazines are unchanged at 7 days.",
-      "screen": "screen_pass",
       "failures": [],
       "note": ""
     },
@@ -161,7 +72,6 @@
       "label": "valid",
       "polished": false,
       "text": "Notice for front desk staff\n\nFrom March 3, new-release DVD holds expire after four days (it was seven). Book, audiobook and magazine holds still expire after 7 days.\n\nSeparately, the Elm Street hold shelf has been overflowing since January.",
-      "screen": "screen_pass",
       "failures": [],
       "note": ""
     },
@@ -170,8 +80,9 @@
       "label": "failing",
       "polished": true,
       "text": "Starting March 3, holds on new-release DVDs expire after 4 days instead of 7, so that more patrons get a turn with popular titles. Holds on books, audiobooks and magazines stay at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
+      "failures": [
+        "no-invented-cause"
+      ],
       "note": "The source records no reason."
     },
     {
@@ -179,8 +90,9 @@
       "label": "failing",
       "polished": true,
       "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7. The Elm Street hold shelf has been overflowing since January, which is why the committee voted 5 to 2 for the change. Book, audiobook and magazine holds stay at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
+      "failures": [
+        "no-invented-cause"
+      ],
       "note": "Two adjacent statements joined into a cause the source never states."
     },
     {
@@ -188,9 +100,8 @@
       "label": "failing",
       "polished": true,
       "text": "Starting March 3, all holds expire after 4 days instead of 7. The committee approved it 5 to 2 in February.",
-      "screen": "screen_fail",
       "failures": [
-        "broadened-scope"
+        "other-holds-unchanged"
       ],
       "note": "Broadens the DVD rule to every hold."
     },
@@ -199,30 +110,9 @@
       "label": "failing",
       "polished": false,
       "text": "Starting March 10, holds on new-release DVDs expire after 4 days instead of 7. Book holds stay at 7 days.",
-      "screen": "screen_fail",
       "failures": [
-        "contradicted-fact"
+        "start-date"
       ],
-      "note": ""
-    },
-    {
-      "id": "b5-unanimous",
-      "label": "failing",
-      "polished": false,
-      "text": "The committee unanimously approved a change: from March 3, new-release DVD holds expire after 4 days instead of 7. Book, audiobook and magazine holds stay at 7 days.",
-      "screen": "screen_fail",
-      "failures": [
-        "contradicted-fact"
-      ],
-      "note": ""
-    },
-    {
-      "id": "b6-reduce-waits",
-      "label": "failing",
-      "polished": true,
-      "text": "From March 3, new-release DVD holds expire after 4 days instead of 7 to reduce wait times. Other holds are unchanged.",
-      "screen": "needs_adjudication",
-      "failures": [],
       "note": ""
     },
     {
@@ -230,150 +120,10 @@
       "label": "failing",
       "polished": false,
       "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7. The committee explained its reasoning at the February meeting. Book, audiobook and magazine holds stay at 7 days.",
-      "screen": "screen_fail",
       "failures": [
-        "contradicted-fact"
+        "reason-not-stated"
       ],
       "note": "Uses only source words to state the opposite of the source."
-    },
-    {
-      "id": "r1-F1a-3march-5-2",
-      "label": "valid",
-      "polished": false,
-      "text": "Heads up, front desk: new-release DVD holds will expire after four days, not seven, beginning 3 March. Nothing's changing for books, audiobooks or magazines; those holds keep their 7-day window. The committee's vote was 5-2 in February. No reason was given.",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Second review probe."
-    },
-    {
-      "id": "r1-F1b-list-mar3",
-      "label": "valid",
-      "polished": false,
-      "text": "FRONT DESK NOTICE\n\n* What: holds on new-release DVDs expire in 4 days (down from 7)\n* When: from Mar 3\n* Not affected: books, audiobooks and magazines, which stay at 7 days\n* Why: the minutes don't say",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Second review probe."
-    },
-    {
-      "id": "r1-F1c-days-to-get",
-      "label": "valid",
-      "polished": false,
-      "text": "Starting March 3, patrons have 4 days to get their new-release DVD holds instead of 7. Book, audiobook and magazine holds aren't affected and remain at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Second review probe. \"patrons\" and \"get\" are not source words; a reviewer confirms the paraphrase."
-    },
-    {
-      "id": "r1-F1d-go-from-7-to-4",
-      "label": "valid",
-      "polished": false,
-      "text": "On March 3, holds on new-release DVDs go from 7 days to 4 days. Holds on books, audiobooks and magazines stay the same at 7 days. The committee passed it 5 to 2 in February and recorded no reason.",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Second review probe."
-    },
-    {
-      "id": "r1-U1a-invented-renewal",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, holds on new-release DVDs expire after 4 days instead of 7. Holds on books, audiobooks and magazines stay at 7 days. Patrons can extend a DVD hold once at the desk.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Second review probe. Invents a renewal rule."
-    },
-    {
-      "id": "r1-U1b-cause-wanted-quicker",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7; the committee wanted those titles circulating more quickly. Book, audiobook and magazine holds are unchanged.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Second review probe. Invents the committee motive."
-    },
-    {
-      "id": "r1-U1c-shelf-cause-with",
-      "label": "failing",
-      "polished": true,
-      "text": "With the Elm Street hold shelf overflowing since January, the committee cut new-release DVD holds from 7 days to 4, starting March 3. Book, audiobook and magazine holds stay at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Second review probe. Frames the shelf overflow as the circumstance of the change."
-    },
-    {
-      "id": "r1-U1d-wrong-vote-6-1",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7. The committee voted 6 to 1 for it at the February meeting. Book, audiobook and magazine holds stay at 7 days.",
-      "screen": "screen_fail",
-      "failures": [
-        "contradicted-fact"
-      ],
-      "note": "Second review probe. The vote was 5 to 2."
-    },
-    {
-      "id": "r1-U1e-wrong-meeting-dec",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7. The committee voted 5 to 2 for it at the December meeting. Book, audiobook and magazine holds stay at 7 days.",
-      "screen": "screen_fail",
-      "failures": [
-        "contradicted-fact"
-      ],
-      "note": "Second review probe. The vote was at the February meeting."
-    },
-    {
-      "id": "a1-books-get-four",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, holds on books expire after 4 days instead of 7. New-release DVD holds stay at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Moves the 4 day rule to books and keeps DVDs at 7."
-    },
-    {
-      "id": "a1-books-also-four",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7. Holds on books, audiobooks and magazines also expire after 4 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Extends the 4 day rule to books, audiobooks and magazines."
-    },
-    {
-      "id": "a1-numbers-swapped",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 7 days instead of 4. Holds on books stay at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Swaps the old and new periods."
-    },
-    {
-      "id": "a1-shelf-is-reason",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7. The Elm Street hold shelf is the reason. Book holds stay at 7 days.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Makes the Elm Street shelf the reason."
-    },
-    {
-      "id": "a1-dana-voted",
-      "label": "failing",
-      "polished": true,
-      "text": "Starting March 3, new-release DVD holds expire after 4 days instead of 7, and books stay at 7 days. Dana voted for it at the February meeting.",
-      "screen": "needs_adjudication",
-      "failures": [],
-      "note": "Author adversarial probe. Dana reported the shelf; she is not recorded as voting."
-    },
-    {
-      "id": "a1-not-affected-no-reason",
-      "label": "valid",
-      "polished": false,
-      "text": "New-release DVD holds now expire after 4 days, not 7, starting March 3. Holds on books, audiobooks and magazines aren't affected. No reason was recorded.",
-      "screen": "screen_pass",
-      "failures": [],
-      "note": "Author adversarial probe."
     }
   ]
 }

@@ -7,10 +7,10 @@
     "session": "https://claude.ai/code/session_01E2tD7G1k2xo5VXu6LXgJfw",
     "tuned_candidate": false
   },
-  "freeze_sha256": "780fc873721fc609e70acb3c8e64bbd1fb5f9aaa7677de642d8ca013875a4212",
+  "freeze_sha256": "e983e1d72ac67383123c4b004f5af4f69d2e4be25f38e50396f7b752fa2cd7bb",
   "history": [
     {
-      "resolution": "Both contested labels fixed in place. pfc4 g2-by-bike now charges the $1 unlock on any bike; pfc2 g2-restructured now gives manual closing to the operators. New failing examples cover each mistake (pfc4 r1-U4d, pfc2 b7-crew-closes-by-hand). The screen was rebuilt: screen_pass now needs every clause outside the protected spans to match the oracle statement templates, alone or joined by plain connectors; screen_fail needs an unscoped contradiction of a source fact; everything else, including new numbers, dates, reasons, schedules, directories, checks, actors and unstated negations, is needs_adjudication. Clauses split at semicolons and colons, inline code is masked, and preserve checks ignore inline code so directive names alone never count as explanations. All 44 second review probes are labeled examples (prefix r1-): 16 of 19 faithful outputs pass and 3 need adjudication, none fail; none of the 25 unfaithful outputs pass. contested_groups is checked against the group ids, and the lock now pins the screen code (screen_sha256).",
+      "resolution": "Both contested labels fixed in place: pfc4 g2-by-bike now charges the $1 unlock on any bike, and pfc2 g2-restructured now gives manual closing to the operators. Each oracle keeps a failing example of the same mistake (pfc4 b7-unlock-classic-only, pfc2 b7-crew-closes-by-hand). The automated prose screen the review found weak was removed rather than repaired: ticket 115 does not ask for one and lists a sole semantic-judge gate as out of scope. Grading now checks protected spans byte for byte and sends every prose output to adjudication against the oracle fact lists. Tests build their own review state, and contested_groups must name real group ids.",
       "review": {
         "contested_groups": [
           "pfc2-adjacent-config",

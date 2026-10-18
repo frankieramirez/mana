@@ -2,9 +2,10 @@
 """Independent confirmation cases for the first prose instruction ablation.
 
 Candidate-visible requests and raw sources sit apart from evaluator-only oracles.
-The lock freezes source, request, payload, oracle and schedule hashes, the screen
-grades a saved output offline, and the readiness gates keep a confirmation run
-from starting before the second review. Nothing here invokes a model."""
+The lock freezes source, request, payload, oracle and schedule hashes. Grading
+checks protected spans byte for byte and sends every prose output to adjudication
+against the oracle. The readiness gates keep a confirmation run from starting
+before the second review. Nothing here invokes a model."""
 import argparse
 import json
 from pathlib import Path
@@ -27,8 +28,6 @@ PARENT_SLOTS = 36
 GROUP_KINDS = ('absent-cause', 'adjacent-code-config', 'non-exhaustive-list', 'conditional-quantity',
                'supported-explanation', 'interpretation-verbatim')
 UNPINNED_MODEL = 'unpinned-until-execution-freeze'
-VERDICTS = ('screen_fail', 'needs_adjudication', 'screen_pass')
-SENTENCE = r'[^.!?;:\n]*?'
 SHINGLE_WORDS = 8
 # Development material. A confirmation input may share no run of SHINGLE_WORDS words with any of it.
 DEVELOPMENT_CORPORA = ('evals/0*-*/prompt.md', 'evals/semantic/cases.jsonl', 'evals/semantic/questions.json',
@@ -38,23 +37,10 @@ DEVELOPMENT_CORPORA = ('evals/0*-*/prompt.md', 'evals/semantic/cases.jsonl', 'ev
                        'docs/specs/debugging-procedure.md', 'docs/plans/comment-cleanup-contract.md', 'CHANGELOG.md')
 CASE_FIELDS = ('id', 'source_group', 'split', 'request', 'inputs', 'protected_spans', 'timeout_seconds')
 ORACLE_FIELDS = ('schema_version', 'group', 'case_id', 'group_kind', 'evaluator_only', 'canary', 'contract',
-                 'source_statements', 'legitimate_alternatives', 'statements', 'checks', 'examples')
-# Words that carry no fact on their own. A clause made only of these is skipped.
-STOPWORDS = frozenset('''a an the and or but if of to in on at by for from with as is are was were be been being it
-    its this that these those they them their there here we our us you your i he she his her has have had do does did
-    will would can could may might should must shall which who whom whose what when where how than into onto about up
-    out also q'''.split())
-# Register words. Style is never scored, so these never make an output pass or fail.
-FILLER = frozenset('''honestly basically truly really super actually quite pretty very just simply game changer okay
-    ok hey hi hello'''.split())
-NEGATIONS = frozenset('''not no never neither nor none nothing nobody without cannot'''.split())
-LIST_MARKER = re.compile(r'^[ \t]*(\d+[.)]|[-*\u2022])[ \t]+', re.MULTILINE)
-# Words that join two statements without a claim of their own. Causal and sequence words are absent on purpose.
-CONNECTOR = re.compile(r',\s*(?:(?:and|but|or|plus|though|while)\s+)?|\s+(?:and|but|or|plus|though|while)\s+')
-LEADING_CONNECTOR = re.compile(r'^(?:and|but|or|plus|though)\s+')
-# A statement template names its words. A wildcard would let an unstated fact map to the source.
-WILDCARD = re.compile(r'(?<!\\)\.|\\[wWSdD]|\[\^|\{S\}')
-EXAMPLE_FIELDS = ('id', 'label', 'polished', 'text', 'screen', 'failures', 'note')
+                 'supported_facts', 'invented_facts_that_fail', 'legitimate_alternatives', 'judgments', 'examples')
+JUDGMENT_FIELDS = ('id', 'failure', 'question')
+EXAMPLE_FIELDS = ('id', 'label', 'polished', 'text', 'failures', 'note')
+SPAN_LOST = 'protected-span-lost'
 REVIEW_FIELDS = ('status', 'reviewer', 'date', 'freeze_sha256', 'contested_groups', 'notes')
 
 
@@ -101,205 +87,65 @@ def render_manifest(case_set=CASE_SET, model=UNPINNED_MODEL, host=run.SUPPORTED_
 
 # Evaluator-only oracles --------------------------------------------------------
 
-def compiled(pattern):
-    return re.compile(pattern.replace('{S}', SENTENCE), re.IGNORECASE)
-
-
 def checked_oracle(oracle, case):
+    """An oracle is a fact list for the adjudicator. The only machine-checked judgment on its examples is whether
+    each protected span survived byte for byte."""
     conditions.keys(oracle, ORACLE_FIELDS, 'oracle')
-    if (oracle['schema_version'] != 2 or oracle['evaluator_only'] is not True
+    if (oracle['schema_version'] != 3 or oracle['evaluator_only'] is not True
             or oracle['group'] != case['source_group'] or oracle['case_id'] != case['id']
             or oracle['group_kind'] not in GROUP_KINDS):
         raise ValueError('oracle does not belong to its case: ' + case['id'])
     if not isinstance(oracle['canary'], str) or not oracle['canary'].startswith('mana-confirmation-canary-'):
         raise ValueError('oracle needs a canary: ' + case['id'])
-    for name in ('source_statements', 'legitimate_alternatives'):
+    if not isinstance(oracle['contract'], str) or not oracle['contract']:
+        raise ValueError('oracle needs a contract: ' + case['id'])
+    for name in ('supported_facts', 'invented_facts_that_fail', 'legitimate_alternatives'):
         if not isinstance(oracle[name], list) or not oracle[name] or not all(isinstance(s, str) and s for s in oracle[name]):
             raise ValueError('oracle needs ' + name + ': ' + case['id'])
-    if not isinstance(oracle['statements'], list) or not oracle['statements']:
-        raise ValueError('oracle needs statement templates: ' + case['id'])
-    for statement in oracle['statements']:
-        conditions.keys(statement, ('id', 'templates'), 'oracle statement')
-        if not statement['templates'] or not all(isinstance(t, str) and t for t in statement['templates']):
-            raise ValueError('a statement needs templates: ' + str(statement['id']))
-        for template in statement['templates']:
-            if WILDCARD.search(template) or template != template.lower():
-                raise ValueError('a template names lower-case words and holds no wildcard: ' + template)
-            re.compile(template)
+    judgments = set()
+    for judgment in oracle['judgments']:
+        conditions.keys(judgment, JUDGMENT_FIELDS, 'oracle judgment')
+        if judgment['id'] in judgments or not all(isinstance(judgment[k], str) and judgment[k] for k in JUDGMENT_FIELDS):
+            raise ValueError('invalid oracle judgment: ' + str(judgment['id']))
+        judgments.add(judgment['id'])
+    if not judgments:
+        raise ValueError('oracle needs adjudication questions: ' + case['id'])
+    known = judgments | {SPAN_LOST}
     ids = set()
-    for check in oracle['checks']:
-        allowed = {'id', 'kind', 'failure', 'review_question', 'present_all', 'contradict', 'adjudicate'}
-        if not isinstance(check, dict) or set(check) - allowed or not {'id', 'kind', 'failure', 'review_question'} <= set(check):
-            raise ValueError('invalid oracle check fields: ' + case['id'])
-        if check['id'] in ids or check['kind'] not in ('preserve', 'forbid'):
-            raise ValueError('invalid oracle check: ' + str(check['id']))
-        if check['kind'] == 'preserve' and not check.get('present_all'):
-            raise ValueError('a preserve check names what must stay: ' + check['id'])
-        if check['kind'] == 'forbid' and ('present_all' in check or not (check.get('contradict') or check.get('adjudicate'))):
-            raise ValueError('a forbid check names what must not appear: ' + check['id'])
-        for key in ('present_all', 'contradict', 'adjudicate'):
-            for pattern in check.get(key, []):
-                compiled(pattern)
-        ids.add(check['id'])
-    kinds = {c['kind'] for c in oracle['checks']}
-    if kinds != {'preserve', 'forbid'} or not any(c.get('contradict') for c in oracle['checks']):
-        raise ValueError('each group needs retained statements, contradictions and failure opportunities: ' + case['id'])
-    examples = oracle['examples']
-    for example in examples:
+    for example in oracle['examples']:
         conditions.keys(example, EXAMPLE_FIELDS, 'oracle example')
-        if example['label'] not in ('valid', 'failing') or example['screen'] not in VERDICTS:
-            raise ValueError('invalid example label: ' + example['id'])
-        if example['label'] == 'valid' and (example['screen'] == 'screen_fail' or example['failures']):
-            raise ValueError('a valid example may never screen as a failure: ' + example['id'])
-        if example['label'] == 'failing' and example['screen'] == 'screen_pass':
-            raise ValueError('a failing example may never screen as a pass: ' + example['id'])
-    valid = [e for e in examples if e['label'] == 'valid']
-    failing = [e for e in examples if e['label'] == 'failing']
-    if len(valid) < 2 or len(failing) < 3 or not any(e['screen'] == 'screen_pass' for e in valid):
-        raise ValueError('each group needs two legitimate alternatives, one that passes, and three failing outputs: '
-                         + case['id'])
-    if not any(e['polished'] and e['screen'] == 'screen_fail' and e['failures'] != ['protected-span-lost']
-               for e in failing):
-        raise ValueError('each group needs a polished output that still fails on fidelity: ' + case['id'])
-    if not any(e['polished'] and e['screen'] == 'needs_adjudication' for e in failing):
-        raise ValueError('each group needs a polished invented fact that the screen holds for review: ' + case['id'])
+        if example['id'] in ids or example['label'] not in ('valid', 'failing') or not isinstance(example['polished'], bool):
+            raise ValueError('invalid oracle example: ' + str(example['id']))
+        ids.add(example['id'])
+        if set(example['failures']) - known:
+            raise ValueError('example names an unknown judgment: ' + example['id'])
+        if (example['label'] == 'valid') == bool(example['failures']):
+            raise ValueError('a valid example names no failure and a failing example names at least one: '
+                             + example['id'])
+        if all(protected_spans(case, example['text']).values()) == (SPAN_LOST in example['failures']):
+            raise ValueError('example span label disagrees with its bytes: ' + example['id'])
+    valid = [e for e in oracle['examples'] if e['label'] == 'valid']
+    failing = [e for e in oracle['examples'] if e['label'] == 'failing']
+    if len(valid) < 2 or len(failing) < 3:
+        raise ValueError('each group needs two legitimate alternatives and three failing outputs: ' + case['id'])
+    if not any(e['polished'] and set(e['failures']) - {SPAN_LOST} for e in failing):
+        raise ValueError('each group needs a cleanly styled output that still fails on fidelity: ' + case['id'])
     return oracle
 
 
-def tokens(text):
-    """Lower-case words. A contraction keeps its stem, and n't becomes a separate negation."""
-    words = []
-    for raw in re.findall(r"[a-z0-9]+(?:'[a-z]+)?", text.lower().replace('’', "'")):
-        if raw.endswith("n't"):
-            stem = raw[:-3]
-            words += [{'ca': 'can', 'wo': 'will', 'sha': 'shall'}.get(stem, stem), 'not']
-        else:
-            words.append(raw.split("'")[0])
-    return [w for w in words if w]
+def protected_spans(case, output):
+    """Deterministic: each protected span is present byte for byte, or it is lost."""
+    return {span['id']: span['text'] in output for span in case['protected_spans']}
 
 
-def normalized(clause):
-    """One clause in the form templates are written against: lower case, plain apostrophes, no inline code ticks,
-    markdown marks or register filler, dashes and brackets as commas, single spaces, no edge punctuation."""
-    text = clause.lower().replace('’', "'").replace('‘', "'")
-    text = text.replace('`', '').replace('¢', ' cents')
-    text = re.sub(r'[()\[\]]', ',', text)
-    text = re.sub(r'[*_#>]', '', text)
-    text = re.sub(r'\s*[—–]\s*', ', ', text)
-    text = re.sub(r'\b(?:' + '|'.join(sorted(FILLER)) + r')\b', ' ', text)
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'\s*,[\s,]*', ', ', text)
-    text = text.strip(' ,.;:!?')
-    return LEADING_CONNECTOR.sub('', text)
-
-
-def mapped(text, statement):
-    """True when the clause is one template or several joined by connectors, every word accounted for."""
-    pieces, position = [], 0
-    for join in CONNECTOR.finditer(text):
-        pieces.append((position, join.start()))
-        position = join.end()
-    pieces.append((position, len(text)))
-    reached = [True] + [False] * len(pieces)
-    for first in range(len(pieces)):
-        if reached[first]:
-            for last in range(first, len(pieces)):
-                if not reached[last + 1] and statement.fullmatch(text, pieces[first][0], pieces[last][1]):
-                    reached[last + 1] = True
-    return reached[-1]
-
-
-def segments(text):
-    """Clauses: no check runs across a sentence end, a semicolon, a colon or a line break outside inline code."""
-    codes = re.findall(r'`[^`\n]*`', text)
-    masked = re.sub(r'`[^`\n]*`', '\x01', text)
-    out = []
-    for piece in re.split(r'(?<=[.!?;:])\s+|\n+', masked):
-        if piece.strip():
-            out.append(re.sub('\x01', lambda _: codes.pop(0), piece))
-    return out
-
-
-def strip_code(text):
-    return re.sub(r'`[^`\n]*`', ' ', text)
-
-
-def negates(segment, match):
-    """A negation inside the matched words or among the four words before them scopes over the match."""
-    window = tokens(segment[:match.start()])[-4:] + tokens(match.group())
-    return any(w in NEGATIONS for w in window)
-
-
-def screen(oracle, case, output):
-    """Advisory fidelity screen.
-
-    screen_fail: a protected span is lost, or a clause contradicts a fact the source states and no negation scopes
-    over the contradiction.
-    screen_pass: every clause outside the protected spans is one of the oracle's statement templates, or several
-    joined by plain connectors, so every factual sentence maps to source content; no cue fires; and every retained
-    statement is found outside inline code, so quoting a directive name never stands in for explaining it.
-    needs_adjudication: everything else. A clause no template covers (a new number, date, reason, cause, schedule,
-    directory, check or actor, or a negation the templates do not state) holds the output for a reviewer, and so
-    does a missing statement. Style is never scored."""
-    failures, unconfirmed, cues, exact, unmapped = [], set(), set(), {}, []
-    prose = output
-    for span in case['protected_spans']:
-        exact[span['id']] = span['text'] in output
-        if not exact[span['id']]:
-            failures.append('protected-span-lost')
-        prose = prose.replace(span['text'], '\n')
-    statement = re.compile('|'.join('(?:' + t + ')' for s in oracle['statements'] for t in s['templates']))
-    for segment in segments(LIST_MARKER.sub('', prose)):
-        text = normalized(segment)
-        if all(w in STOPWORDS for w in tokens(text)):
-            continue
-        known = mapped(text, statement)
-        if not known:
-            cues.add('unmapped-clause')
-            unmapped.append(segment.strip())
-        for check in oracle['checks']:
-            for pattern in check.get('contradict', []):
-                for match in compiled(pattern).finditer(segment):
-                    if not negates(segment, match):
-                        failures.append(check['failure'])
-                    elif not known:
-                        cues.add(check['id'])
-    for check in oracle['checks']:
-        if any(compiled(p).search(prose) for p in check.get('adjudicate', [])):
-            cues.add(check['id'])
-    plain = strip_code(prose)
-    for check in oracle['checks']:
-        if check['kind'] == 'preserve' and not all(compiled(p).search(plain) for p in check['present_all']):
-            unconfirmed.add(check['id'])
-    verdict = 'screen_fail' if failures else 'needs_adjudication' if unconfirmed or cues else 'screen_pass'
-    return {'verdict': verdict, 'failures': sorted(set(failures)), 'exact_spans': exact,
-            'unconfirmed': sorted(unconfirmed), 'cues': sorted(cues), 'unmapped_clauses': unmapped,
-            'style_scored': False}
-
-
-def stylize(text, spans=()):
-    """Register edits that change no fact: filler, an opener and a dash outside protected spans."""
-    protected = [s['text'] for s in spans]
-    marker = '\x00{}\x00'
-    for index, span in enumerate(protected):
-        text = text.replace(span, marker.format(index))
-    text = 'Honestly, basically, ' + text.replace(', ', ' — ', 1)
-    text += '\n\nTruly a game changer!!'
-    for index, span in enumerate(protected):
-        text = text.replace(marker.format(index), span)
-    return text
-
-
-def grade_examples(oracle, case):
-    problems = []
-    for example in oracle['examples']:
-        for variant, text in (('as written', example['text']), ('restyled', stylize(example['text'], case['protected_spans']))):
-            got = screen(oracle, case, text)
-            if got['verdict'] != example['screen'] or got['failures'] != sorted(example['failures']):
-                problems.append(f"{case['id']}/{example['id']} {variant}: expected {example['screen']} "
-                                f"{sorted(example['failures'])}, got {got['verdict']} {got['failures']} "
-                                f"cues={got['cues']} unconfirmed={got['unconfirmed']} unmapped={got['unmapped_clauses']}")
-    return problems
+def grade(oracle, case, output):
+    """Protected spans pass or fail on their bytes. Every prose output then goes to adjudication against the
+    oracle's facts and questions; nothing here decides a prose verdict."""
+    spans = protected_spans(case, output)
+    return {'protected_spans': spans, 'spans': 'fail' if not all(spans.values()) else 'pass',
+            'prose': 'adjudicate', 'automatic_prose_verdict': False,
+            'adjudication': {k: oracle[k] for k in ('contract', 'supported_facts', 'invented_facts_that_fail',
+                                                     'legitimate_alternatives', 'judgments')}}
 
 
 def load_oracles(case_set, cases):
@@ -381,9 +227,6 @@ def compute_lock(case_set=CASE_SET, payload_set=pa.PAYLOAD_SET):
             'cases_json_sha256': conditions.digest((case_set / 'cases.json').read_bytes()),
             'cases': entries, 'schedule': schedule, 'schedule_sha256': conditions.digest(conditions.encoded(schedule)),
             'exposures_sha256': conditions.digest(exposures_bytes),
-            # The screen and lock code itself, so a changed rule needs a refreeze and a new second review.
-            'screen_source': 'evals/workflows/prose_confirmation.py',
-            'screen_sha256': conditions.digest((HERE / 'prose_confirmation.py').read_bytes()),
             'development_screen': {'shingle_words': SHINGLE_WORDS, 'corpora': list(DEVELOPMENT_CORPORA)}}
     lock['freeze_sha256'] = conditions.digest(conditions.encoded(lock))
     return lock
@@ -442,7 +285,7 @@ def checked_review(case_set, freeze_sha256, group_ids):
 
 
 def verify(case_set=CASE_SET, payload_set=pa.PAYLOAD_SET, root=ROOT):
-    """Recompute the lock and every oracle verdict; report the open readiness gates."""
+    """Recompute the lock, recheck every oracle, and report the open readiness gates."""
     case_set = Path(case_set)
     stored = (case_set / 'freeze.json').read_bytes()
     lock = compute_lock(case_set, payload_set)
@@ -454,9 +297,6 @@ def verify(case_set=CASE_SET, payload_set=pa.PAYLOAD_SET, root=ROOT):
         raise ValueError('each source group holds one case')
     data, cases = load_cases(case_set)
     oracles = load_oracles(case_set, cases)
-    problems = [p for case in cases for p in grade_examples(oracles[case['id']], case)]
-    if problems:
-        raise ValueError('oracle examples disagree with their labels:\n' + '\n'.join(problems))
     leaks = leaked_canaries(case_set, cases, oracles)
     if leaks:
         raise ValueError('oracle canary appears in candidate-visible text: ' + ', '.join(leaks))
@@ -540,7 +380,7 @@ def main(argv=None):
     parser.add_argument('--resolution', help='with --refreeze: how the superseded completed review was addressed')
     parser.add_argument('--manifest', type=Path, help='write a prose_ablation manifest once every gate is closed')
     parser.add_argument('--model', help='requested model for --manifest')
-    parser.add_argument('--grade', nargs=2, metavar=('CASE', 'OUTPUT'), help='screen a saved final output')
+    parser.add_argument('--grade', nargs=2, metavar=('CASE', 'OUTPUT'), help='check protected spans in a saved final output and print its adjudication packet')
     parser.add_argument('--check-study', type=Path, help='compare a frozen prose study with the lock')
     args = parser.parse_args(argv)
     try:
@@ -553,9 +393,7 @@ def main(argv=None):
             if case is None:
                 raise ValueError('unknown confirmation case: ' + args.grade[0])
             oracle = load_oracles(CASE_SET, [case])[case['id']]
-            result = screen(oracle, case, Path(args.grade[1]).read_bytes().decode('utf-8'))
-            result['review_questions'] = {c['id']: c['review_question'] for c in oracle['checks']}
-            print(json.dumps(result, indent=2))
+            print(json.dumps(grade(oracle, case, Path(args.grade[1]).read_bytes().decode('utf-8')), indent=2))
             return 0
         if args.check_study:
             print(json.dumps(check_frozen_study(args.check_study), indent=2))

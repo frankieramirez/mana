@@ -1,12 +1,12 @@
-"""Offline confirmation-case freeze, oracle and gate controls; never invoke a model."""
+"""Offline confirmation-case freeze, oracle, protected-span and gate controls; never invoke a model."""
+import contextlib
 import copy
+import io
 import json
 from pathlib import Path
-import re
 import shutil
 import tempfile
 import unittest
-from unittest import mock
 
 import conditions
 import prose_ablation as pa
@@ -73,20 +73,6 @@ class LockTests(Workspace):
         report = pc.verify(case_set)
         self.assertEqual(report['open_gates'], [])
         self.assertTrue(report['confirmation_ready'])
-
-    def test_the_lock_pins_the_screen_code(self):
-        lock = json.loads((SET / 'freeze.json').read_text())
-        self.assertEqual(lock['screen_source'], 'evals/workflows/prose_confirmation.py')
-        self.assertEqual(lock['screen_sha256'], conditions.digest((pc.HERE / 'prose_confirmation.py').read_bytes()))
-        case_set = self.copy_set()
-        edited = self.root / 'edited'
-        edited.mkdir()
-        source = (pc.HERE / 'prose_confirmation.py').read_bytes()
-        (edited / 'prose_confirmation.py').write_bytes(source.replace(b'|though|while)', b'|though|while|so)'))
-        self.assertNotEqual((edited / 'prose_confirmation.py').read_bytes(), source)
-        with mock.patch.object(pc, 'HERE', edited):
-            with self.assertRaisesRegex(ValueError, 'freeze.json does not match'):
-                pc.verify(case_set)
 
     def test_lock_pins_payloads_sources_requests_oracles_and_schedule(self):
         lock = json.loads((SET / 'freeze.json').read_text())
@@ -204,8 +190,10 @@ class AdapterTests(Workspace):
             for visible in (text, controls, prompt):
                 self.assertNotIn(oracle['canary'], visible)
                 self.assertNotIn(oracle['contract'], visible)
-                for check in oracle['checks']:
-                    self.assertNotIn(check['review_question'], visible)
+                for judgment in oracle['judgments']:
+                    self.assertNotIn(judgment['question'], visible)
+                for fact in oracle['invented_facts_that_fail']:
+                    self.assertNotIn(fact, visible)
                 for example in oracle['examples']:
                     self.assertNotIn(example['text'], visible)
         for case in manifest['cases']:
@@ -234,104 +222,83 @@ class AdapterTests(Workspace):
 
 
 class OracleTests(Workspace):
-    def test_every_labeled_example_screens_as_labeled_as_written_and_restyled(self):
+    def test_every_oracle_is_a_fact_list_with_a_handful_of_labeled_outputs(self):
         for case in self.cases:
             oracle = pc.checked_oracle(oracle_for(case), case)
-            self.assertEqual(pc.grade_examples(oracle, case), [])
             labels = [e['label'] for e in oracle['examples']]
             self.assertGreaterEqual(labels.count('valid'), 2, case['id'])
             self.assertGreaterEqual(labels.count('failing'), 3, case['id'])
+            self.assertLessEqual(len(labels), 10, case['id'])
+            for name in ('supported_facts', 'invented_facts_that_fail', 'legitimate_alternatives', 'judgments'):
+                self.assertTrue(oracle[name], case['id'] + ' ' + name)
 
-    def test_style_never_offsets_an_invented_fact(self):
+    def test_each_group_has_a_cleanly_styled_output_that_fails_on_fidelity(self):
         for case in self.cases:
             oracle = oracle_for(case)
-            polished = [e for e in oracle['examples'] if e['polished'] and e['screen'] == 'screen_fail']
+            polished = [e for e in oracle['examples'] if e['label'] == 'failing' and e['polished']
+                        and set(e['failures']) - {pc.SPAN_LOST}]
             self.assertTrue(polished, case['id'])
             for example in polished:
-                result = pc.screen(oracle, case, example['text'])
-                self.assertEqual(result['verdict'], 'screen_fail')
-                self.assertFalse(result['style_scored'])
-        case = self.by_id['pfc-hold-expiry']
-        oracle = oracle_for(case)
-        valid = next(e['text'] for e in oracle['examples'] if e['id'] == 'g1-reason-absent-said')
-        self.assertEqual(pc.screen(oracle, case, valid)['verdict'], 'screen_pass')
-        self.assertEqual(pc.screen(oracle, case, pc.stylize(valid))['verdict'], 'screen_pass')
-        invented = valid.replace('instead of 7.', 'instead of 7 to give more patrons a turn.')
-        for text in (invented, pc.stylize(invented)):
-            result = pc.screen(oracle, case, text)
-            self.assertEqual(result['verdict'], 'needs_adjudication')
-            self.assertIn('unmapped-clause', result['cues'])
+                self.assertTrue(all(pc.protected_spans(case, example['text']).values()), example['id'])
 
-    def test_a_clause_passes_only_when_templates_cover_every_word(self):
-        case = self.by_id['pfc-bikeshare-pricing']
-        oracle = oracle_for(case)
-        valid = next(e['text'] for e in oracle['examples'] if e['id'] == 'g1-plain')
-        self.assertEqual(pc.screen(oracle, case, valid)['verdict'], 'screen_pass')
-        swaps = {
-            'riders swapped': valid.replace('Annual members ride', 'Casual riders ride'),
-            'added rider group': valid.replace('for everyone,', 'for everyone except students,'),
-            'causal join': valid.replace("; it may change", ", so it may change"),
-            'unlock narrowed': valid.replace('unlock any bike', 'unlock a classic bike'),
-        }
-        for name, text in swaps.items():
-            with self.subTest(name):
-                self.assertNotEqual(text, valid)
-                self.assertNotEqual(pc.screen(oracle, case, text)['verdict'], 'screen_pass')
-        self.assertTrue(pc.mapped('annual members ride classic bikes free for the first 30 minutes',
-                                  re.compile('|'.join(t for s in oracle['statements'] for t in s['templates']))))
-
-    def test_no_labeled_failing_output_ever_passes_and_no_valid_one_ever_fails(self):
-        probes = 0
-        for case in self.cases:
-            oracle = oracle_for(case)
-            for example in oracle['examples']:
-                probes += example['id'].startswith('r1-')
-                for text in (example['text'], pc.stylize(example['text'], case['protected_spans'])):
-                    verdict = pc.screen(oracle, case, text)['verdict']
-                    if example['label'] == 'failing':
-                        self.assertNotEqual(verdict, 'screen_pass', example['id'])
-                    else:
-                        self.assertNotEqual(verdict, 'screen_fail', example['id'])
-        self.assertEqual(probes, 44)
-
-    def test_quoting_a_directive_name_never_stands_in_for_explaining_it(self):
-        case = self.by_id['pfc-kiosk-logrotate']
-        oracle = oracle_for(case)
-        names = next(e['text'] for e in oracle['examples'] if e['id'] == 'b8-names-only')
-        result = pc.screen(oracle, case, names)
-        self.assertEqual(result['verdict'], 'needs_adjudication')
-        self.assertTrue({'weekly', 'compress', 'delaycompress', 'missingok', 'rotate-8-kept'} <= set(result['unconfirmed']))
-
-    def test_protected_spans_are_conclusive_and_excluded_from_prose_checks(self):
-        case = self.by_id['pfc-kiosk-logrotate']
-        oracle = oracle_for(case)
-        block = case['protected_spans'][0]['text']
-        bare = pc.screen(oracle, case, block)
-        self.assertTrue(bare['exact_spans']['logrotate-block'])
-        self.assertEqual(bare['failures'], [])
-        self.assertEqual(bare['verdict'], 'needs_adjudication')
-        self.assertTrue({'weekly', 'ask-imran', 'path-scope'} <= set(bare['unconfirmed']))
+    def test_protected_spans_pass_or_fail_on_their_bytes(self):
         case = self.by_id['pfc-dome-autoclose']
         oracle = oracle_for(case)
         valid = next(e['text'] for e in oracle['examples'] if e['id'] == 'g1-plain')
-        self.assertEqual(pc.screen(oracle, case, valid)['verdict'], 'screen_pass')
-        altered = valid.replace('wind_gust_kmh = 45', 'wind_gust_kmh = 50')
-        self.assertIn('protected-span-lost', pc.screen(oracle, case, altered)['failures'])
+        self.assertEqual(pc.grade(oracle, case, valid)['spans'], 'pass')
+        for name, text in {'value changed': valid.replace('wind_gust_kmh = 45', 'wind_gust_kmh = 50'),
+                           'space dropped': valid.replace('90  #', '90 #'),
+                           'block removed': valid.replace(case['protected_spans'][0]['text'], '')}.items():
+            with self.subTest(name):
+                result = pc.grade(oracle, case, text)
+                self.assertEqual(result['protected_spans'], {'autoclose-toml': False})
+                self.assertEqual(result['spans'], 'fail')
+
+    def test_no_prose_verdict_is_automatic(self):
+        for case in self.cases:
+            oracle = oracle_for(case)
+            for example in oracle['examples']:
+                result = pc.grade(oracle, case, example['text'])
+                self.assertEqual(result['prose'], 'adjudicate', example['id'])
+                self.assertFalse(result['automatic_prose_verdict'])
+                self.assertEqual(result['adjudication']['judgments'], oracle['judgments'])
+        case = self.by_id['pfc-hold-expiry']
+        result = pc.grade(oracle_for(case), case, 'All holds now expire after one day.')
+        self.assertEqual((result['spans'], result['prose']), ('pass', 'adjudicate'))
+
+    def test_grade_command_prints_spans_and_the_adjudication_packet(self):
+        case = self.by_id['pfc-kiosk-logrotate']
+        output = self.root / 'output.md'
+        output.write_text('# Kiosk logs\n\n' + case['protected_spans'][0]['text'] + '\n')
+        printed = io.StringIO()
+        with contextlib.redirect_stdout(printed):
+            self.assertEqual(pc.main(['--grade', case['id'], str(output)]), 0)
+        result = json.loads(printed.getvalue())
+        self.assertEqual(result['protected_spans'], {'logrotate-block': True})
+        self.assertEqual(result['prose'], 'adjudicate')
+        self.assertIn('supported_facts', result['adjudication'])
 
     def test_oracle_contract_requirements_are_enforced(self):
-        case = self.by_id['pfc-cfp-checks']
+        case = self.by_id['pfc-dome-autoclose']
         base = oracle_for(case)
         broken = {
-            'no failure opportunity': lambda o: o.update(checks=[c for c in o['checks'] if c['kind'] == 'preserve']),
             'one legitimate alternative': lambda o: o.update(examples=[
-                e for e in o['examples'] if e['label'] == 'failing' or e['id'] == 'g1-including']),
+                e for e in o['examples'] if e['label'] == 'failing' or e['id'] == 'g1-plain']),
+            'two failing outputs': lambda o: o.update(examples=[e for e in o['examples'] if e['label'] == 'valid']
+                                                      + [e for e in o['examples'] if e['label'] == 'failing'][:2]),
             'no polished failure': lambda o: [e.update(polished=False) for e in o['examples']],
-            'valid example screened as failure': lambda o: o['examples'][0].update(screen='screen_fail'),
-            'failing example screened as pass': lambda o: next(
-                e for e in o['examples'] if e['label'] == 'failing').update(screen='screen_pass'),
-            'no statement templates': lambda o: o.update(statements=[]),
-            'wildcard template': lambda o: o['statements'][0]['templates'].append('why did the form .*'),
-            'gap template': lambda o: o['statements'][0]['templates'].append(r'the form \w+ my proposal'),
+            'valid example with a failure': lambda o: o['examples'][0].update(failures=['manual-close']),
+            'failing example with no failure': lambda o: next(
+                e for e in o['examples'] if e['label'] == 'failing').update(failures=[]),
+            'unknown judgment': lambda o: next(
+                e for e in o['examples'] if e['label'] == 'failing').update(failures=['made-up']),
+            'span loss not in the bytes': lambda o: next(
+                e for e in o['examples'] if e['id'] == 'b3-closes-on-lost-contact').update(failures=[pc.SPAN_LOST]),
+            'span loss unlabeled': lambda o: next(
+                e for e in o['examples'] if e['id'] == 'b6-block-reformatted').update(failures=['no-config-values']),
+            'no invented facts': lambda o: o.update(invented_facts_that_fail=[]),
+            'no judgments': lambda o: o.update(judgments=[]),
+            'automatic verdict field': lambda o: o['examples'][0].update(screen='screen_pass'),
             'not evaluator only': lambda o: o.update(evaluator_only=False),
             'wrong group kind': lambda o: o.update(group_kind='anything'),
             'extra field': lambda o: o.update(expected_rewrite='x'),

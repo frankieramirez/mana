@@ -2,7 +2,7 @@
 
 [Ticket 115](https://github.com/frankieramirez/mana/issues/115) adds the six confirmation source groups that the [instruction-ablation decision](../../docs/specs/instruction-ablations.md#first-experiment-prose-fidelity) requires for the first prose experiment. They were written after the [payload freeze](prose-ablation.md) by an evaluator who did not tune the candidate, and they are frozen against that exact payload set.
 
-Status: refrozen by the case author after the first second review, and a fresh second review is pending. The first review contested `pfc2-adjacent-config` and `pfc4-conditional-quantity` on one mislabeled valid output each and found the screen weak in both directions. Both labels are fixed, the screen is rebuilt, and `review.json` keeps that review and its resolution in `history`. `--check` reports the open gate, and `--manifest` refuses to write a runnable study until it closes. No model has seen these inputs.
+Status: refrozen by the case author after the first second review, and a fresh second review is pending. The first review contested `pfc2-adjacent-config` and `pfc4-conditional-quantity` on one mislabeled valid output each. Both labels are fixed, and `review.json` keeps that review and its resolution in `history`. `--check` reports the open gate, and `--manifest` refuses to write a runnable study until it closes. No model has seen these inputs.
 
 ## The six groups
 
@@ -25,7 +25,7 @@ None of the subjects, contracts or sentences come from the development material:
 |---|---|
 | `prose-confirmation/cases.json` | The ordinary request, protected spans and split for each case. Requests reach the candidate. |
 | `prose-confirmation/inputs/<case>/` | Raw source files, mounted byte for byte into the candidate workspace. |
-| `prose-confirmation/oracles/<group>.json` | Evaluator only: contract, source statements, legitimate alternatives, statement templates, screen checks with reviewer questions, and labeled outputs. |
+| `prose-confirmation/oracles/<group>.json` | Evaluator only: contract, supported facts, invented facts that fail, legitimate alternatives, adjudication questions, and a handful of labeled outputs. |
 | `prose-confirmation/freeze.json` | Evaluator only: the lock. |
 | `prose-confirmation/exposures.json` | The exposure rule and every recorded exposure. |
 | `prose-confirmation/review.json` | The author record, the current second-review slot, and every earlier second review with its resolution. |
@@ -34,16 +34,16 @@ Oracle text never enters the manifest, the frozen controls or the prompt. Each o
 
 ## Freeze
 
-`freeze.json` pins the payload set digest, the baseline revision, each arm's inventory and patch digest, each case's request digest, raw source inventory, protected span offsets and digests, and oracle digest, plus the 36-slot schedule and its digest, the exposure record digest, the digest of `prose_confirmation.py` itself (`screen_sha256`, so a changed screen rule or gate needs a refreeze and a new second review) and the development screen settings. `freeze_sha256` covers all of it.
+`freeze.json` pins the payload set digest, the baseline revision, each arm's inventory and patch digest, each case's request digest, raw source inventory, protected span offsets and digests, and oracle digest, plus the 36-slot schedule and its digest, the exposure record digest and the development screen settings. `freeze_sha256` covers all of it.
 
 The schedule comes from `prose_ablation.build_schedule` with seed `20261017` and two repetitions: six groups in sorted order, each a shuffled block of three conditions times two repetitions. `prose_ablation.py --freeze-study` produces the same schedule bytes from the rendered manifest, and the tests check that.
 
 ```bash
 python3 -B evals/workflows/prose_confirmation.py --check
-python3 -B evals/workflows/prose_confirmation.py --grade pfc-pool-closure saved-final-output.md
+python3 -B evals/workflows/prose_confirmation.py --grade pfc-kiosk-logrotate saved-final-output.md
 ```
 
-`--check` recomputes the lock from the committed files and fails on any difference, regrades every labeled output, and runs the canary and development screens. It then reports the open readiness gates. Changing an input, a request, an oracle, the exposure record or the screen code needs a deliberate `--refreeze`. A refreeze moves a completed second review into `history`, with the text passed as `--resolution`, and sends the slot back to pending.
+`--check` recomputes the lock from the committed files and fails on any difference, rechecks every oracle and the protected spans in its labeled outputs, and runs the canary and development screens. It then reports the open readiness gates. Changing an input, a request, an oracle or the exposure record needs a deliberate `--refreeze`. A refreeze moves a completed second review into `history`, with the text passed as `--resolution`, and sends the slot back to pending.
 
 Once every gate is closed, the run uses the existing adapter:
 
@@ -55,24 +55,18 @@ python3 -B evals/workflows/prose_confirmation.py --check-study /absolute/study
 
 `--check-study` confirms that the frozen study carries the locked cases, payload digest and schedule, and that no oracle material reached it. Keep the `controls_sha256` it prints with the run record.
 
-## Oracles and the screen
+## Oracles and grading
 
-Every group has statements the rewrite must keep, failure opportunities, at least two legitimate alternatives that use different wording or structure, and at least three failing outputs. At least one failing output per group is written in clean, plain style and still fails, because the decision rules that style cannot compensate for an invented fact.
+Each oracle is a fact list for the adjudicator:
 
-`--grade` applies an advisory screen with three verdicts.
+- `supported_facts`: what the source states, which a rewrite may keep.
+- `invented_facts_that_fail`: concrete claims that fail the group, such as a reason the source never gives.
+- `legitimate_alternatives`: different wording or structure that still passes.
+- `judgments`: one adjudication question per fact or failure opportunity, each with the failure it names.
 
-- `screen_fail` needs an unambiguous contradiction of a fact the source states, or a lost protected span (`protected-span-lost`). A contradiction pattern counts only when no negation sits inside the match or in the four words before it.
-- `screen_pass` needs every factual clause to map to source content. The screen removes protected spans, so block values never count as prose claims. It splits the rest at sentence ends, semicolons, colons and line breaks outside inline code, then normalizes each clause: lower case, plain apostrophes, no code ticks, markdown marks or filler words, and dashes and brackets read as commas. A clause maps only when it is one of the oracle's statement templates, or several joined by `and`, `but`, `or`, `plus`, `though` or `while`. Causal and sequence words such as `so`, `because` and `then` never join two templates; a template must state that link itself. Templates name their words and may not hold a wildcard (`.`, `\w`, `\S`, `\d` or a negated class), so an unstated number, actor or reason has nowhere to hide. A passing output also raises no cue, and every `preserve` statement must be found outside inline code, so quoting a directive name never stands in for explaining it.
-- `needs_adjudication` covers everything else: a clause no template covers (a new number, date, reason, cause, schedule, directory, check or actor, or a negation the templates do not state), a retained statement the screen cannot find, or a cue such as `because`.
+Each group also carries a handful of labeled outputs: at least two valid rewrites and at least three failing ones. At least one failing output per group is written in clean, plain style and still fails, because the decision rules that style cannot compensate for an invented fact. `--check` confirms that every failing label names a known judgment and that each label agrees with the output's protected-span bytes.
 
-The templates follow the source, so a faithful rewrite in unusual words can land in `needs_adjudication`; that costs a reviewer's time and never a verdict. The screen does not resolve pronouns: a template that accepts `it` accepts it wherever it appears.
-
-The screen never scores register, and its output records `style_scored: false`. `--check` regrades each labeled output after adding filler, an opener and a dash outside the protected spans, and no verdict may change. A known-good output may never screen as a failure and a known-bad output may never screen as a pass.
-
-Each oracle labels the first second reviewer's 44 outputs (prefix `r1-`) and 25 author-written adversarial outputs (prefix `a1-`) with their intended verdicts. On the reviewer's outputs, 16 of 19 faithful ones pass and 3 need adjudication, none fail, and none of the 25 unfaithful ones pass. Across all 124 labeled outputs, 31 of 38 valid outputs pass and no failing output passes, as written or restyled.
-
-The screen does not decide a confirmation outcome. Two blinded reviewers judge source entailment, added claims and lost conditions with the review questions stored in each oracle, and adjudicate disagreements, as the decision requires. Style is judged separately.
-
+`--grade` makes one deterministic check. Each protected span is either present byte for byte or lost, and a lost span fails the output (`protected-span-lost`). Every prose output then goes to adjudication against the oracle, and `--grade` prints the oracle's facts and questions for that purpose. No prose verdict is automatic. Two blinded reviewers judge source entailment, added claims and lost conditions, and adjudicate disagreements, as the decision requires. Style is judged separately.
 ## Exposure and review
 
 Any group that anyone tuning, editing or selecting a candidate reads before the candidate is fixed becomes development material. Record the group, reader, date and reason in `exposures.json`, move the group's case to the `development` split and refreeze. Verification rejects an exposed group still marked `confirmation`, and readiness stays open until a new group of the same kind, from new subject matter, replaces it and passes the second review. The case author and the second reviewer are evaluators and do not expose a group by reading it.
@@ -81,7 +75,7 @@ Any group that anyone tuning, editing or selecting a candidate reads before the 
 
 ## Limits
 
-These groups are held out from candidate tuning; they are not secret. The repository is public. The offline tests prove freeze integrity, schedule identity, oracle isolation and screen behavior on labeled outputs. They say nothing about which arm is better, and no confirmation slot has run.
+These groups are held out from candidate tuning; they are not secret. The repository is public. The offline tests prove freeze integrity, schedule identity, oracle isolation, oracle structure and protected-span checks. They say nothing about which arm is better, and no confirmation slot has run.
 
 ```bash
 python3 -B -m unittest discover -s evals/workflows -p test_prose_confirmation.py

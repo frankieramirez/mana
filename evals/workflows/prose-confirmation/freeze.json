@@ -6,7 +6,7 @@
       "id": "pfc-hold-expiry",
       "inputs": "inputs/pfc-hold-expiry",
       "oracle": "oracles/pfc1-absent-cause.json",
-      "oracle_sha256": "426d11c4282c101a8138fc9f8f4a14ebcc15becd8f826a025b3ff1461b0c2edc",
+      "oracle_sha256": "3476d0762020e52b17547f6e8ef61e68d5633bd3032384aa6f36ff40c85a2b1c",
       "protected_spans": [],
       "request_sha256": "6cffe8485d3f77711dee64cccf95c95d8801472fd2e65a00ddaf673b16250ddc",
       "source_group": "pfc1-absent-cause",
@@ -25,7 +25,7 @@
       "id": "pfc-dome-autoclose",
       "inputs": "inputs/pfc-dome-autoclose",
       "oracle": "oracles/pfc2-adjacent-config.json",
-      "oracle_sha256": "f6d152be0bb0a344fce731787361926aa973a53c6460d9dfa432bf7c98f77f87",
+      "oracle_sha256": "b82e7f205812a1ab609f2d4cafc6436fda3fb3d48bad954b897587f09497c9cf",
       "protected_spans": [
         {
           "file": "docs/dome.md",
@@ -51,7 +51,7 @@
       "id": "pfc-cfp-checks",
       "inputs": "inputs/pfc-cfp-checks",
       "oracle": "oracles/pfc3-nonexhaustive-list.json",
-      "oracle_sha256": "499d338803435dff68ad11b2da2f4e8afd0ae6dc4f4c4f04bbaf87441ce335d0",
+      "oracle_sha256": "14f46bef26e83f15a9b57c42cc4939180f8e0b87c97eef18e64a4a79b1a8dc79",
       "protected_spans": [],
       "request_sha256": "a074cc13308cef823b92f2e70ea9b2644a3277cce62f15989000cef7a1f64964",
       "source_group": "pfc3-nonexhaustive-list",
@@ -70,7 +70,7 @@
       "id": "pfc-bikeshare-pricing",
       "inputs": "inputs/pfc-bikeshare-pricing",
       "oracle": "oracles/pfc4-conditional-quantity.json",
-      "oracle_sha256": "d811c8e1d42b3d9630529551bc3530e94de01e73dc0f590e1e7da936b6ce2f94",
+      "oracle_sha256": "c66e94e1de6012f6939155a22f494a9089247bc63ac19f2b180b141e190e25e5",
       "protected_spans": [],
       "request_sha256": "4a650a4c1743730f6310c31e739d9df2dab8a34336c2fd6fa610017e302061b8",
       "source_group": "pfc4-conditional-quantity",
@@ -89,7 +89,7 @@
       "id": "pfc-pool-closure",
       "inputs": "inputs/pfc-pool-closure",
       "oracle": "oracles/pfc5-supported-explanation.json",
-      "oracle_sha256": "39e7f968d3f6afdf4c0d23edd2ba7d2caebd3e6ae6766f9662a7d4727d222fc9",
+      "oracle_sha256": "2fcdd1f73445723a447766f86370deb0b08a41595560f279dd6b9bcb44f03359",
       "protected_spans": [],
       "request_sha256": "fe50c6e26eb1c01266a1c31732cacb830b1038f51fd2846dfbf9d6151c2221a2",
       "source_group": "pfc5-supported-explanation",
@@ -108,7 +108,7 @@
       "id": "pfc-kiosk-logrotate",
       "inputs": "inputs/pfc-kiosk-logrotate",
       "oracle": "oracles/pfc6-interpretation-verbatim.json",
-      "oracle_sha256": "e405bf0c8a6a801755502211613867491ad584531ccb89a0c6519cc0cafe9e06",
+      "oracle_sha256": "ddb8eacc31b1b1fab63bb1af4fe5dd54b00b81ecc86b884b435a1708bc862b66",
       "protected_spans": [
         {
           "file": "kiosk-logs.md",
@@ -155,7 +155,7 @@
   },
   "experiment": "prose-fidelity-1",
   "exposures_sha256": "a132655a3aa6b3037b77923d08ec43881de5c01a5f1eb281e3bf4715ddbfe4da",
-  "freeze_sha256": "780fc873721fc609e70acb3c8e64bbd1fb5f9aaa7677de642d8ca013875a4212",
+  "freeze_sha256": "e983e1d72ac67383123c4b004f5af4f69d2e4be25f38e50396f7b752fa2cd7bb",
   "parent_slots": 36,
   "payload_arms": {
     "current-fidelity": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
@@ -425,8 +425,6 @@
     }
   ],
   "schedule_sha256": "048bd78bc2555b79ffbbb71198f7e9b6cc10b34c7e0186f5e8dfa25d8be226f7",
-  "screen_sha256": "c3bd0b66cca88b15e25bb9ab1818bfdcdf9ff9ef7af7ba8ce2846e91a0907f5f",
-  "screen_source": "evals/workflows/prose_confirmation.py",
   "seed": 20261017,
   "study": "prose-fidelity-confirmation-1",
   "version": 1
