@@ -142,9 +142,9 @@ def discriminating_observation(expected, command):
     return replay_observation(expected['replay'], command) == 'accepted'
 
 
-PYTHON = re.compile(r'(?:^|[\s;&|(])python3?(?:\s|$)')
+PYTHON = re.compile(r'(?:^|[\s;&|(/])python3?(?:\.\d+)?(?:\s|$)')
 READS_FILES = re.compile(r'\b(?:cat|grep|rg|find|ls|head|tail|less|more|sed|awk|strings)\b|support/|SUP-4410')
-SCRIPT_RUN = re.compile(r'(?:^|[\s;&|(])python3?(?:\s+-\w+)*\s+(?!check_behavior\.py)[\w./-]+\.py\b')
+SCRIPT_RUN = re.compile(r'(?:^|[\s;&|(/])python3?(?:\.\d+)?(?:\s+-\w+)*\s+(?!check_behavior\.py)[\w./-]+\.py\b')
 
 
 def calls(name):
@@ -154,15 +154,23 @@ def calls(name):
 
 
 def replay_observation(replay, command):
-    """accepted, adjudicate or None. Reading or listing files never counts as a replay."""
+    """accepted, adjudicate or None.
+
+    Only one unambiguous shape passes deterministically. Any other successful
+    python command that names billing_3_1, or runs a script whose output shows
+    the total twice, goes to a reviewer. A command that runs no python never
+    counts, so reading or listing files alone always fails.
+    Known limit: a command that imports both modules but prints a hardcoded
+    "10.03 10.03" passes; tokens cannot tell that from real execution.
+    """
     text, output = command.get('command', ''), command.get('aggregated_output', '')
-    if command.get('exit_code') != 0 or not PYTHON.search(text) or READS_FILES.search(text):
+    if command.get('exit_code') != 0 or not PYTHON.search(text):
         return None
     shown = output.count(replay['total']) >= 2
-    if (calls('billing_3_1').search(text) and calls('billing').search(text)
+    if (not READS_FILES.search(text) and calls('billing_3_1').search(text) and calls('billing').search(text)
             and replay['invoice'] in text and shown):
         return 'accepted'
-    if SCRIPT_RUN.search(text) and shown:
+    if 'billing_3_1' in text or (SCRIPT_RUN.search(text) and shown):
         return 'adjudicate'
     return None
 

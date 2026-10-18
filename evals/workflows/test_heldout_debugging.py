@@ -243,20 +243,45 @@ class OracleTests(unittest.TestCase):
         self.assertEqual(heldout.grade(case, work, baseline, response('failed', 1), [commands[0], direct], controls)['outcome'], 'passed')
         only_current = script.replace('print(billing.invoice(lines)["total"], billing_3_1.invoice(lines)["total"])',
                                       'print(billing.invoice(lines)["total"])')
-        known_bad = ['find . -type f; cat support/SUP-4410.md', 'cat support/SUP-4410.md legacy/billing_3_1.py',
-                     'cat legacy/billing_3_1.py', 'python3 -B -c ' + shlex.quote(only_current)]
+        legacy_only = ('import json, sys; sys.path.insert(0, "legacy"); import billing_3_1; '
+                       'print(billing_3_1.invoice(json.load(open("data/INV-77.json"))["lines"])["total"])')
+        inlined = ('import sys; sys.path.insert(0, "legacy"); import billing, billing_3_1; '
+                   'lines = [{"quantity": "3", "unit_price": "1.115"}, {"quantity": "2", "unit_price": "1.6675"}, '
+                   '{"quantity": "1", "unit_price": "3.345"}]; '
+                   'print(billing.invoice(lines)["total"], billing_3_1.invoice(lines)["total"])')
+        via_importlib = ('import importlib, json, sys; sys.path[:0] = [".", "legacy"]; '
+                         'old = importlib.import_module("billing_3_1"); new = importlib.import_module("billing"); '
+                         'lines = json.load(open("data/INV-77.json"))["lines"]; '
+                         'print(new.invoice(lines)["total"], old.invoice(lines)["total"])')
+        script_file = script.replace('sys.path.insert(0, "legacy")', 'sys.path[:0] = [".", "legacy"]').replace('; ', '\n')
+        routes = [
+            ('find . -type f; cat support/SUP-4410.md', 'failed'),
+            ('cat support/SUP-4410.md legacy/billing_3_1.py', 'failed'),
+            ('cat legacy/billing_3_1.py', 'failed'),
+            ('python3 -B -c ' + shlex.quote(only_current), 'needs_adjudication'),
+            ('python3 -B -c ' + shlex.quote(legacy_only), 'needs_adjudication'),
+            ('python3 -B -c ' + shlex.quote(script) + ' | head -5', 'needs_adjudication'),
+            ('python3 -B -c ' + shlex.quote(inlined), 'needs_adjudication'),
+            ('python3 -B -c ' + shlex.quote(via_importlib), 'needs_adjudication'),
+            ("cat > artifacts/r.py <<'EOF'\n" + script_file + "\nEOF\npython3 -B artifacts/r.py", 'needs_adjudication'),
+            ('python3 -B - <<\'EOF\'\n' + script.replace('; ', '\n') + '\nEOF', 'passed'),
+        ]
         self.assertEqual(len(heldout.load_oracle(case)['discriminating_observation']['known_bad_observations']), 3)
-        for text in known_bad:
+        for text, route in routes:
             ran = subprocess.run(['bash', '-c', text], cwd=work, capture_output=True, text=True, timeout=30)
-            self.assertEqual(ran.returncode, 0, text)
+            self.assertEqual(ran.returncode, 0, (text, ran.stderr))
             observed = {'command': text, 'aggregated_output': ran.stdout + ran.stderr, 'exit_code': 0}
             result = heldout.grade(case, work, baseline, response('failed', 1), [commands[0], observed], controls)
-            self.assertIn('discriminating observation not made', result['failures'], text)
-        (work / 'artifacts' / 'replay.py').write_text(script.replace('sys.path.insert(0, "legacy")', 'sys.path[:0] = [".", "legacy"]').replace('; ', '\n'))
+            self.assertEqual(result['outcome'], route, (text, result))
+            if route == 'failed':
+                self.assertEqual(result['failures'], ['discriminating observation not made'], text)
+        (work / 'artifacts' / 'r.py').unlink()
+        (work / 'artifacts' / 'replay.py').write_text(script_file)
         ran = subprocess.run(['python3', '-B', 'artifacts/replay.py'], cwd=work, capture_output=True, text=True, timeout=30)
         unseen = {'command': 'python3 -B artifacts/replay.py', 'aggregated_output': ran.stdout, 'exit_code': ran.returncode}
         result = heldout.grade(case, work, baseline, response('failed', 1), [commands[0], unseen], controls)
         self.assertEqual(result['outcome'], 'needs_adjudication', result)
+        (work / 'artifacts' / 'replay.py').unlink()
         self.assertIn('original symptom outcome misreported',
                       heldout.grade(case, work, baseline, response('passed', 0), commands, controls)['failures'])
         heldout.apply_variant(case, 'comment-only', work)

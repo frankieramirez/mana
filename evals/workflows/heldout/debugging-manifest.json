@@ -7,7 +7,7 @@
   "status": "authored and hash-locked; refrozen after second-review findings; re-review pending; not yet frozen into a study directory; no outcomes collected",
   "ready_for_study_freeze": false,
   "blockers": [
-    "Second review round 3 (2026-10-17) returned changes required on the 1ccf973 oracles: see review.second_review.findings.",
+    "Re-review of the round 3 fixes (replay adjudication routes, full ConnectionError family) is pending.",
     "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
   ],
   "exposure_rule": "A source group whose request, workspace or oracle a candidate-instruction author reads while tuning becomes development. Record it in exposures, set its split to development and author an untouched replacement group for confirmation.",
@@ -66,7 +66,7 @@
       "timeout_seconds": 600,
       "delegation_allowed": true,
       "oracle_id": "oracle-debug-regression-claim-01",
-      "oracle_sha256": "c9b2b35be59f8da64ba291f2cd4a340dfbc3bae48fc26f20e631e42c38ed0fb1"
+      "oracle_sha256": "e654fc0e1bca7dd408a9167e6edb399690cb462ad9935c587a6cf45b1c0dc0cd"
     },
     {
       "id": "debug-partial-retry",
@@ -93,7 +93,7 @@
       "timeout_seconds": 600,
       "delegation_allowed": true,
       "oracle_id": "oracle-debug-retry-01",
-      "oracle_sha256": "ac4122cf2a5b6dcabd6fa0ce890941042b37c48defdef9d9cf1a0f5d1f349a18"
+      "oracle_sha256": "e678cc96e80e0118fc718d6f526591e90a603cce7e347657be6f22817409bafd"
     }
   ],
   "conditions": {
@@ -131,10 +131,11 @@
     }
   },
   "freeze": {
-    "frozen_on": "2026-10-17",
+    "frozen_on": "2026-10-18",
     "method": "freeze_sha256 is conditions.digest(conditions.encoded({cases, conditions})). Review records sit outside it so the second reviewer can sign without changing the freeze.",
-    "freeze_sha256": "3b08d84d3da5687d319e7b5452fb000dc85ff8329a16e4017de4be5ca847edba",
+    "freeze_sha256": "36dfb4da0540a13833bbea0a2fdb3b8a0047d4ba995042a3baefe5a683626d62",
     "supersedes": [
+      "3b08d84d3da5687d319e7b5452fb000dc85ff8329a16e4017de4be5ca847edba",
       "3a13b73b794ed1cc5779af8e8b3f56a2ebe269c4cc3a53dd5d6fdd9969ab4547",
       "2e4e6c078d4b37073f0fe46bfc8728c9c72df1fc15d94591e66cfa5603eb1949"
     ]

@@ -152,8 +152,10 @@ def independent_orders_same_sku():
 @control
 def programming_error_propagates():
     # Builtin timeouts and connection errors, leaf classes included, are not carrier timeouts under the contract.
-    for injected in (KeyError("label_format"), TimeoutError("socket read"), ConnectionError("refused"),
-                     ConnectionResetError("reset by peer"), BrokenPipeError("broken pipe")):
+    for injected in (KeyError("label_format"), TimeoutError("socket read"), InterruptedError("signal"),
+                     ConnectionError("connection lost"), ConnectionResetError("reset by peer"),
+                     BrokenPipeError("broken pipe"), ConnectionRefusedError("refused"),
+                     ConnectionAbortedError("aborted")):
         store, carrier = fresh(stock=100), Carrier(["bug", "ok"], other=injected)
         error = raises(type(injected), lambda: shipping.ship(store, dict(ORDER), carrier))
         assert error is injected, "exception was replaced: %r" % (error,)
