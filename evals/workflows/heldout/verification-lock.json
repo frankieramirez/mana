@@ -1,7 +1,7 @@
 {
   "area": "verification-judgment",
   "frozen_on": "2026-10-17",
-  "grader_sha256": "629f7f2786395eda90a9ac195b6c407efd58cc8fc9deda74c4fdf3652bca10a2",
+  "grader_sha256": "e0baf0a8b1b8fe40372750d1c10195353e74d7d913128a6386d5804de848b298",
   "groups": {
     "verify-contract-test": {
       "allowed_effects": {
@@ -17,7 +17,7 @@
         "head": "7315b201600e4acc71cc4022dab13884a5555b0e",
         "product_sha256": "07fd1bb2c6b9609981a3f31f5f258157f95ac16c8309fa32419fa3f1057f61dd"
       },
-      "oracle_sha256": "1b2facac6ac0b6873000e0216831d5212b685afb428aa154f62799dbd1a86ffa",
+      "oracle_sha256": "dbb077f414572e9733ce6153a50ccaed5d2c7447e5f521ae2b58265410496c7e",
       "oracle_support_sha256": "2d692aa1ed813ae7e818bb65a0407ad606e04f41919a84e42d1b581af0ad9b28",
       "request_sha256": "8026ec77770d9db59c3633cc3881d753ba9d01260b82169890783cfdda38f6b7",
       "source_group": "sealed-verify-contract-01",
@@ -35,7 +35,7 @@
         "head": "897e01ea4911c9f41199ed0bd1894a01d9e57ccd",
         "product_sha256": "5ac185073d2dd7ecb9c3fc95d4428c5936c6681d57ba450c1d1fc8d73b66b220"
       },
-      "oracle_sha256": "37583ee864c18613f34099668b3d02eac207bf69da4deb520b6b112ef0f174fa",
+      "oracle_sha256": "b2d856aae42336a21ec23958c8b0fd4d899ac94005d193a10d6eeb7e46b23e23",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
       "source_group": "sealed-verify-stale-01",
@@ -53,7 +53,7 @@
         "head": "fcf7a5ef4cf9e803f56eeda33cd38b23ecafdfe4",
         "product_sha256": "d28ce187b23871f7e75f43fd854c2f0823df80028f7bd562a3b0b64eda505314"
       },
-      "oracle_sha256": "e7ab71c3d8c17e2f308ba5be59cef63a5bc7e596d91b35274c7234e504a8787a",
+      "oracle_sha256": "2fbe90020af0c49dcb89b2a59717fa4b4e9aaaf07ce40dbd4ab74352a300a7ab",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "c7ea364024f979795613502646f7e5958adf36efd9d187bac2e04404afa957bd",
       "source_group": "sealed-verify-unavailable-01",
@@ -2069,6 +2069,27 @@
         },
         "recorded_in": "08c2d90",
         "round": 4
+      },
+      {
+        "note": "The second review of 5fcc99c requested changes: forged passes A1 (python3 -c printing the pass line), A2 (a fake artifacts/check_totals.py), A4 (an escaped quote hiding a semicolon) and A6 (fix, run, restore) came back passed and credited. The coordinator relayed the findings; the reviewer did not write them to the lock, so the record below is the pending slot that review answered.",
+        "record": {
+          "checked": {
+            "condition_mappings": null,
+            "contracts": null,
+            "known_bad": null,
+            "known_good": null,
+            "valid_alternatives": null
+          },
+          "findings": [],
+          "note": "Reset to pending after the grader was cut back to controls and directly observed runs, with every written report routed to a human. Review the inputs whose review_subject_digest() is requested_subject_sha256.",
+          "requested_subject_sha256": "0145a09edf55d07059c5365c83425b9207a94f4bc852228c72efee6a47278f02",
+          "reviewer": null,
+          "signed_on": null,
+          "status": "pending",
+          "subject_sha256": null
+        },
+        "recorded_in": "5fcc99c",
+        "round": 5
       }
     ],
     "reviewer_record": {
@@ -2080,8 +2101,8 @@
         "valid_alternatives": null
       },
       "findings": [],
-      "note": "Reset to pending after the grader was cut back to controls and directly observed runs, with every written report routed to a human. Review the inputs whose review_subject_digest() is requested_subject_sha256.",
-      "requested_subject_sha256": "0145a09edf55d07059c5365c83425b9207a94f4bc852228c72efee6a47278f02",
+      "note": "Reset to pending after automatic execution credit was removed: task_outcome now comes only from the suite controls and product and protected state, and claims, report and observed events go to report_review. Review the inputs whose review_subject_digest() is requested_subject_sha256.",
+      "requested_subject_sha256": "eaa978564d8bf17070ebe7e555adeb0535b386c889b44e9dbfc8b403b6eb456b",
       "reviewer": null,
       "signed_on": null,
       "status": "pending",
