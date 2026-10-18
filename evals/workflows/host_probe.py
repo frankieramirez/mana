@@ -96,28 +96,83 @@ def child_peak(threads, parent):
     return peak
 
 
+def tool_output(value):
+    """Text of a rollout function_call_output, whether stored as a string or as content parts."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return ''.join(part.get('text', '') for part in value if isinstance(part, dict) and isinstance(part.get('text'), str))
+    return ''
+
+
+# Codex's own tool output for a spawn refused at agents.max_threads. Other spawn failures say nothing about the cap.
+LIMIT_REFUSAL = 'collab spawn failed: agent thread limit reached'
+
+
+def rollout_refusals(path, parent):
+    """spawn_agent calls whose host-written tool output starts with the thread-limit refusal.
+
+    This reads Codex's on-disk session format: one JSON record per line, with `response_item`
+    payloads of type `function_call` and `function_call_output` joined by `call_id`. The file
+    must belong to the parent thread, by its name or its `session_meta` id. Model messages never
+    count. A missing, unreadable or foreign file gives no refusals.
+    """
+    try:
+        lines = Path(path).read_text().splitlines()
+    except (OSError, TypeError, ValueError):
+        return []
+    entries = []
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(entry, dict) and isinstance(entry.get('payload'), dict):
+            entries.append(entry)
+    owned = parent in Path(path).name or any(
+        entry.get('type') == 'session_meta' and entry['payload'].get('id') == parent for entry in entries)
+    if not owned:
+        return []
+    spawns, outputs = [], {}
+    for entry in entries:
+        payload = entry['payload']
+        if entry.get('type') != 'response_item':
+            continue
+        if payload.get('type') == 'function_call' and payload.get('name') == 'spawn_agent':
+            spawns.append(payload.get('call_id'))
+        elif payload.get('type') == 'function_call_output':
+            outputs[payload.get('call_id')] = tool_output(payload.get('output'))
+    return [call for call in spawns if call is not None and outputs.get(call, '').startswith(LIMIT_REFUSAL)]
+
+
 def refused_spawns(events, threads, parent):
-    """Failed agent-spawn items in the parent's stream or persisted history."""
-    items = [e.get('item') for e in events if e.get('type') == 'item.completed']
-    items += [item for turn in threads.get(parent, {}).get('turns', []) for item in turn.get('items', [])]
-    return sum(1 for item in items if isinstance(item, dict)
-               and any(word in str(item.get('type', '')).lower() for word in ('agent', 'collab', 'spawn'))
-               and (item.get('status') == 'failed' or item.get('error')))
+    """Refused spawns and their call ids, read only from the parent's rollout file.
+
+    Codex 0.163.0 writes no spawn record to the CLI stream (`events`) or the saved turns,
+    refused or not, and those records would not say why a spawn failed, so neither counts.
+    """
+    path = threads.get(parent, {}).get('path') if parent else None
+    calls = rollout_refusals(path, parent) if path else []
+    return len(calls), calls
 
 
 def thread_cap(peak, collected, refused, configured):
-    """Judge agents.max_threads only when the probe pushed past it. Returns (capability or None, detail)."""
+    """Judge agents.max_threads only from an actual refusal or children above it. Returns (capability or None, detail)."""
     detail = ('configured agents.max_threads=%d; requested %d children at once; collected %d; '
               'peak concurrent children %s; refused spawns %d' % (configured, configured + 1, collected, peak, refused))
     if peak is None:
         return None, detail + '; persisted turns carry no timing'
     if peak > configured:
         return cap('failed', detail + '; children exceeded the configured cap'), detail
-    if peak == configured and (collected > configured or refused):
-        return cap('verified', detail + '; the cap counts child threads only', counts='children'), detail
-    if peak == configured - 1 and refused:
-        return cap('verified', detail + '; the cap also counts the parent', counts='including_parent'), detail
-    return None, detail + '; the cap was not challenged, so its meaning stays unknown'
+    if refused and peak == configured:
+        return cap('verified', detail + '; the host refused a spawn with the cap full of children, '
+                   'so the cap counts child threads only', counts='children'), detail
+    # A finished child still counts against the cap until it is closed, so a low peak alone
+    # cannot show the parent counts. Only a run whose sole child stayed alone can.
+    if refused and peak == collected == configured - 1:
+        return cap('verified', detail + '; the host refused a spawn while its only child was open, '
+                   'so the cap also counts the parent', counts='including_parent'), detail
+    return None, detail + '; no refusal at a full cap and no child above it, so the cap stays unknown'
 
 
 def probe(executable, out, model, reasoning='medium', timeout=120, prepare=None, permission_config=None,
@@ -240,10 +295,11 @@ def probe(executable, out, model, reasoning='medium', timeout=120, prepare=None,
         threads_path = out / 'threads.json'
         threads = json.loads(threads_path.read_text()) if threads_path.is_file() else {}
         peak = child_peak(threads, family['parent_thread']) if threads else None
-        refused = refused_spawns(events, threads, family['parent_thread'])
+        refused, refusals = refused_spawns(events, threads, family['parent_thread'])
         verdict, detail = thread_cap(peak, children, refused, CAP)
         record['probes'].append({'name': 'thread-cap', 'detail': detail, 'peak_children': peak,
-                                 'collected_children': children, 'refused_spawns': refused})
+                                 'collected_children': children, 'refused_spawns': refused,
+                                 'refused_spawn_calls': refusals})
         if verdict is None:
             record['unknown'].append('active_thread_cap: ' + detail)
         else:
