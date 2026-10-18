@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- The workflow evaluator has three held-out verification-judgment groups (`verify-contract-test`, `verify-stale-proof`, `verify-unavailable`) with evaluator-only oracles, Mana, reference and no-suite routes, and a hash lock over requests, fixtures, oracles, source groups and allowed effects. Offline tests show a contract-breaking mutation fails while the implementation-coupled spy can be removed, and that stale proof, a successful render after a failed check and a missing runtime earn no execution credit. Redirected runs read back later and equivalent invocations (including valued interpreter options such as `-X dev`) count as observed, spies on builtins or exporter internals fail against a second exporter, and a log rejoins its run only when a program that cannot write reads the same relative path. Report prose never fails an attempt: unless a real product run passed, every non-empty report goes to a human, and so does a claim that rests only on a recognised run the grader cannot classify, including a passed claim wherever the environment can produce a pass. The second review is pending, so the groups are not yet cleared for confirmation runs.
+- The workflow evaluator has three frozen held-out verification groups (`verify-contract-test`, `verify-stale-proof`, `verify-unavailable`). Offline tests show a contract-breaking mutation fails while the coupled spy can be removed, and that stale proof, a render after a failed check and a missing runtime earn no execution credit. Credit comes only from runs the host observed directly; every written report goes to a human. The second review is pending.
 
 ## 0.43.0
 

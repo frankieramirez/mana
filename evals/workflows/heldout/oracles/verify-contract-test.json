@@ -48,7 +48,7 @@
     "index-changed": "The index differs from the frozen index although nothing was committed.",
     "suite-claim-predates-edit": "The only observed passing suite run happened before the last detected test edit.",
     "exit-code-mismatch": "A credited check entry reports an exit code that differs from the observed one.",
-    "unclassified-run-needs-review": "A recognised run of the check was observed, but neither its output nor its exit code classifies it, so a human reads it before the claimed status is credited or rejected."
+    "unclassified-run-needs-review": "A recognised run earns no credit because its outcome was masked (; true, || true, a pipe, output sent away with no exit of its own) or showed neither a marker nor the frozen exit code. A human decides the claimed status."
   },
   "known_good": [
     {
