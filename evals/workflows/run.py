@@ -2,7 +2,11 @@
 """Bounded Codex workflow pilot. Offline grading is separate from actual agent execution."""
 import argparse
 import conditions
+import delegation
 import hashlib
+import hosts
+import probes
+import process_family
 import json
 import os
 from pathlib import Path
@@ -15,7 +19,6 @@ from ultima_fixtures import prepare_ultima_fixture, grade_ultima_fixture
 import re
 import shlex
 import shutil
-import signal
 import socket
 import subprocess
 import sys
@@ -26,7 +29,8 @@ import xml.etree.ElementTree as ET
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 SUPPORTED_HOST = "codex-cli 0.159.2"
-SUPPORTED_HOSTS = {"codex-cli 0.155.1", SUPPORTED_HOST}
+# Accepted versions come from recorded probe evidence in host-evidence/, never a hand-edited list.
+SUPPORTED_HOSTS = hosts.accepted_versions('focused')
 
 
 def load_cases():
@@ -107,9 +111,13 @@ def file_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'conditions.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py', 'cleanup_fixtures.py', 'ultima_fixtures.py', 'debugging_fixtures.py')}
-STUDY_SOURCES = {**LOADED_SOURCES, **{name: file_hash(HERE / name) for name in (
+LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'conditions.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py', 'cleanup_fixtures.py', 'ultima_fixtures.py', 'debugging_fixtures.py',
+                                                         'hosts.py', 'process_family.py', 'probes.py', 'delegation.py', 'child_events.py', 'host_probe.py')}
+HOST_EVIDENCE = {path.relative_to(HERE).as_posix(): file_hash(path) for path in sorted((HERE / 'host-evidence').glob('*.json'))}
+STUDY_SOURCES = {**LOADED_SOURCES, **HOST_EVIDENCE, **{name: file_hash(HERE / name) for name in (
     'cases.json', 'response-schema.json', 'archive_delegated.py')}}
+# Frozen studies seal and review attempts with the archived copies of these modules.
+STUDY_SOURCES.update({name: file_hash(HERE / name) for name in ('attempts.py', 'adjudication.py')})
 
 
 def snapshot_runner_source(destination, delegated=False):
@@ -118,6 +126,7 @@ def snapshot_runner_source(destination, delegated=False):
     if delegated:
         names += ["child_events.py", "delegated_review.py", "delegated-grading.json"]
     for name in names:
+        (destination / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(HERE / name, destination / name)
 
 
@@ -269,6 +278,8 @@ def preflight(work, executable, config, read_only_inputs=()):
         "\nexcept OSError: pass\nelse: raise AssertionError('network available')\n"
         "try: pathlib.Path('installed/forbidden').write_text('forbidden')"
         "\nexcept OSError: pass\nelse: raise AssertionError('skill mount writable')\n"
+        "try: pathlib.Path('bin/forbidden').write_text('forbidden')"
+        "\nexcept OSError: pass\nelse: raise AssertionError('tool mount writable')\n"
     )
     for relative in read_only_inputs:
         probe += (f"\ntry: pathlib.Path({relative!r}).open('ab').close()"
@@ -283,7 +294,8 @@ def preflight(work, executable, config, read_only_inputs=()):
         listener.close()
     if result.returncode or "isolation verified" not in result.stdout:
         raise ValueError("isolation preflight failed: " + result.stderr[-1500:])
-    return {"outside_read": "denied", "network": "denied", "skill_write": "denied", "workspace_write": "allowed"}
+    return {"outside_read": "denied", "network": "denied", "skill_write": "denied", "tool_write": "denied",
+            "workspace_write": "allowed", "checked_at": process_family.now()}
 
 
 def command_events(events):
@@ -487,7 +499,10 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
         result['skill_root'] = str(condition['root']) if condition['kind'] != 'none' else None
         result['payload_inventory'] = condition['inventory']
     started = time.monotonic()
+    result['started_at'] = process_family.now()
     work = None
+    listener = None
+    limits = condition.get('delegation') if condition is not None else None
     try:
         if frozen_study is not None:
             frozen_study.verify()
@@ -497,8 +512,13 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
         executable = executable.resolve()
         version = subprocess.check_output([str(executable), "--version"], text=True).strip()
         result["host"] = version
-        if version not in SUPPORTED_HOSTS:
-            raise ValueError(f"unvalidated host {version}; this pilot accepts {sorted(SUPPORTED_HOSTS)}")
+        # Acceptance needs recorded, verified capability evidence for this exact version and mode.
+        mode = 'comparative-delegated' if limits else 'focused'
+        result['host_capability'] = hosts.assess(version, mode)
+        if not result['host_capability']['accepted']:
+            gaps = result['host_capability']['missing'] + [k + '=stale' for k in result['host_capability']['stale']]
+            raise ValueError(f"unvalidated host {version} for {mode} ({', '.join(gaps)}); "
+                             f"this pilot accepts {sorted(hosts.accepted_versions(mode))}")
         if frozen_study is not None and version != frozen_study.controls['host']:
             raise ValueError('host differs from frozen study controls')
         result["skill_revision"] = None if condition is not None else git(ROOT, "rev-parse", "HEAD")
@@ -525,16 +545,23 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
                     raise ValueError('prepared fixture differs from frozen inputs')
         config = permission_config(work, executable)
         result["isolation"] = preflight(work, executable, config)
+        if limits:
+            # Every thread in the family must run this probe itself, against a live listener.
+            listener = probes.Listener()
+            nonce = probes.new_nonce()
+            probes.install(work, out / 'probe-canary', listener.port, nonce)
+            result['probe'] = {'nonce': nonce, 'listener_port': listener.port, 'installed_at': process_family.now()}
         # Freeze the pilot's exposed surfaces: native filesystem tools only, no MCP or host integrations.
-        disabled = ["apps", "plugins", "remote_plugin", "hooks", "memories", "multi_agent", "multi_agent_v2",
-                    "browser_use", "browser_use_external", "computer_use", "image_generation", "in_app_browser",
-                    "workspace_dependencies", "shell_snapshot", "skill_mcp_dependency_install", "goals"]
-        config += [f"features.{feature}=false" for feature in disabled]
-        config += ["features.skip_host_skill_discovery=true", "web_search=\"disabled\"", "project_doc_max_bytes=0", "mcp_servers={}"]
-        config += [f'model_reasoning_effort="{reasoning}"']
-        if model:
-            config += ["model=" + json.dumps(model)]
-        command = [str(executable), "exec", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--json", "--color", "never",
+        # Every arm of a study gets this same configuration; delegation limits never vary by condition.
+        cap = None
+        if limits:
+            # Translate the protocol limit into this host's recorded meaning of agents.max_threads.
+            cap = delegation.thread_cap(limits, result['host_capability']['capabilities']['active_thread_cap'].get('counts'))
+            result['host_thread_cap'] = cap
+        config += delegation.host_config(limits, model, reasoning, thread_cap=cap)
+        # Saved sessions are required to read descendant history after the parent exits.
+        session = [] if limits else ["--ephemeral"]
+        command = [str(executable), "exec", "--ignore-user-config", "--ignore-rules", *session, "--json", "--color", "never",
                    "-C", str(work), *config_args(config), "--output-schema", str(HERE / "response-schema.json"),
                    "-o", str(out / "response.json"), "-"]
         result["command"] = command
@@ -547,15 +574,20 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
             frozen_study.verify()
         with (out / "events.jsonl").open("w") as stdout, (out / "stderr.txt").open("w") as stderr:
             # The trusted CLI retains its login for model traffic. Tool environments are separately scrubbed.
-            with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr, text=True, start_new_session=True) as process:
-                try:
-                    process.communicate(prompt, timeout=timeout)
-                    result["exit_code"] = process.returncode
-                    result["execution"] = "completed" if process.returncode == 0 else "agent_failed"
-                except subprocess.TimeoutExpired:
-                    os.killpg(process.pid, signal.SIGKILL)
-                    process.communicate()
-                    result["execution"] = "timeout"
+            invocation = process_family.run_bounded(command, prompt, stdout, stderr, timeout)
+        result['process_family'] = invocation
+        if invocation['outcome'] == 'completed':
+            result["exit_code"] = invocation['exit_code']
+            result["execution"] = "completed" if invocation['exit_code'] == 0 else "agent_failed"
+        elif invocation['outcome'] == 'timeout':
+            result["execution"] = "timeout"
+        else:
+            result['execution'] = 'collection_failed'
+            result['harness_failure'] = True
+            result['failures'].append('invocation cancelled: ' + invocation.get('cancel_reason', 'unknown'))
+        if not invocation['family_terminated']:
+            result['harness_failure'] = True
+            result['failures'].append('process family survived termination: ' + ', '.join(map(str, invocation['surviving_pids'])))
         if condition is not None:
             events, event_failures = conditions.parse_events((out / 'events.jsonl').read_text())
             result['failures'] += event_failures
@@ -568,10 +600,35 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
                     events.append(json.loads(line))
                 except json.JSONDecodeError:
                     result["failures"].append("unparseable event")
+        if limits:
+            family = delegation.collect(executable, out, events, work, nonce, limits, model)
+            result['delegation'] = {'limits': limits, **{key: family[key] for key in (
+                'parent_thread', 'threads', 'children', 'nested', 'probes', 'reported_models')}}
+            result['reported_model'] = family['reported_model']
+            result['probe']['inbound_connections'] = listener.inbound()
+            if result['probe']['inbound_connections']:
+                family['failures'].append('network connection reached the evaluator listener')
+            (out / 'attributed-events.jsonl').write_text(''.join(
+                json.dumps({'type': 'item.completed', 'item': item}) + '\n' for item in family['commands']))
+            if family['failures']:
+                # Missing descendant history or an unproven child boundary makes the attempt unusable.
+                result['failures'] += family['failures']
+                result['harness_failure'] = True
+                if result['execution'] == 'completed':
+                    result['execution'] = 'collection_failed'
+            else:
+                # Grade the attributed family history: parent and child commands with thread identity.
+                events = [e for e in events if not (e.get('type') == 'item.completed'
+                          and e.get('item', {}).get('type') == 'command_execution')]
+                events += [{'type': 'item.completed', 'item': item} for item in family['commands']]
+        else:
+            result['reported_model'] = next((e['model'] for e in events if isinstance(e.get('model'), str)), None)
         result["commands"] = command_events(events)
-        result["usage"] = [e for e in events if e.get("type") == "turn.completed"]
+        # Missing usage is recorded as null, never as an empty measurement.
+        result["usage"] = [e for e in events if e.get("type") == "turn.completed"] or None
         result["requested_model"] = model or "host default with user configuration disabled"
         result["reasoning"] = reasoning
+        # Backend identity is never inferred from requested or host-reported names.
         result["actual_model"] = None
         result["context"] = context_metrics(events, work / "installed" / case["skill"]) if condition is None else context_metrics(
             events, work / 'installed' / 'payload', condition['entrypoint'])
@@ -591,12 +648,15 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
         if result["execution"] == "completed":
             result["execution"] = "grading_failed"
     finally:
+        if listener is not None:
+            listener.close()
         if frozen_study is not None:
             try:
                 frozen_study.verify()
             except (OSError, ValueError) as exc:
                 result['failures'].append('frozen study invalid after invocation: ' + str(exc))
         result["seconds"] = round(time.monotonic() - started, 2)
+        result['ended_at'] = process_family.now()
         result["passed"] = result["execution"] == "completed" and not result["failures"]
         if work is not None:
             try:
@@ -608,6 +668,17 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
                 result["passed"] = False
         (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
+
+
+def capability_summary(assessment):
+    """The registry decision and the evidence records it rested on, without repeating every note."""
+    if not assessment:
+        return None
+    return {'mode': assessment['mode'], 'accepted': assessment['accepted'], 'assessed_at': assessment['assessed_at'],
+            'missing': assessment['missing'], 'stale': assessment['stale'],
+            'evidence': {key: None if value is None else {'status': value['status'], 'observed_at': value['observed_at'],
+                                                          'record': value['record'], 'record_sha256': value['record_sha256']}
+                         for key, value in assessment['capabilities'].items()}}
 
 
 def execute_study(study, slot):
@@ -627,12 +698,15 @@ def execute_study(study, slot):
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         report['failures'].append('study attempt failed: ' + str(exc))
     finally:
-        incomplete = (any(c.get('exit_code') == 97 for c in report.get('commands', []))
+        incomplete = (report.get('harness_failure')
+                      or any(c.get('exit_code') == 97 for c in report.get('commands', []))
                       or any(any(word in failure for word in ('frozen', 'missing command', 'missing turn',
                                                                'final state unavailable'))
                              for failure in report['failures']))
         if incomplete:
-            report['execution'] = 'collection_failed'
+            # A timeout stays a timeout; its missing histories still stop the schedule below.
+            if report['execution'] != 'timeout':
+                report['execution'] = 'collection_failed'
             report['passed'] = False
             report['failures'].append('incomplete condition execution or unsupported tool operation')
         metadata.update({'execution_status': report['execution'],
@@ -644,7 +718,15 @@ def execute_study(study, slot):
                          'tool_operations': None,
                          'observed_command_operations': len(report['commands']) if 'commands' in report else None,
                          'usage': {'parent': report.get('usage'), 'children': None, 'family_total': None},
-                         'failures': report['failures']})
+                         'failures': report['failures'],
+                         # Additive host evidence: requested and host-reported identity stay separate.
+                         'reported_model': report.get('reported_model'),
+                         'host': report.get('host'),
+                         'host_capability': capability_summary(report.get('host_capability')),
+                         'started_at': report.get('started_at'), 'ended_at': report.get('ended_at'),
+                         'process_family': report.get('process_family'),
+                         'isolation': report.get('isolation'),
+                         'delegation_observed': report.get('delegation')})
         (out / 'evaluation.json').write_bytes(conditions.encoded(metadata))
         (out / 'result.json').write_bytes(conditions.encoded(report))
         # Unsupported double operations and missing observations are harness failures,
@@ -672,6 +754,17 @@ def execute_study(study, slot):
             (study.root / 'results/STOP.json').write_bytes(conditions.encoded({
                 'slot': slot, 'execution': report['execution'], 'failures': report['failures'],
                 'reason': 'incomplete execution, containment/input/collection failure, publication attempt or unsupported tool operation'}))
+        try:
+            import attempts
+            sealed = attempts.seal(study, slot)
+            print(json.dumps({'sealed_attempt': sealed}))
+        except (OSError, ValueError) as exc:
+            report['passed'] = False
+            report['failures'].append('attempt seal failed: ' + str(exc))
+            if not (study.root / 'results/STOP.json').exists():
+                (study.root / 'results/STOP.json').write_bytes(conditions.encoded({
+                    'slot': slot, 'execution': report['execution'], 'failures': report['failures'],
+                    'reason': 'allocated attempt could not be sealed'}))
         study.release()
     print(out)
     print(json.dumps({k: report[k] for k in ('execution', 'passed', 'failures')}))
@@ -725,7 +818,27 @@ def main():
     parser.add_argument('--study', type=Path, help='check or execute a frozen study')
     parser.add_argument('--controls-sha256', help='external digest printed by --freeze-study')
     parser.add_argument('--slot', type=int, help='one allocated slot in the frozen schedule')
+    parser.add_argument('--probe-host', action='store_true',
+                        help='record candidate host capability evidence; at most one bounded model call')
     args = parser.parse_args()
+    if args.probe_host:
+        allowed = {'--probe-host', '--out', '--model', '--timeout', '--reasoning'}
+        given = [token.split('=')[0] for token in sys.argv[1:] if token.startswith('--')]
+        if any(token not in allowed for token in given) or not args.out or not args.model:
+            parser.error('--probe-host takes only --out, --model, --timeout and --reasoning, with --out and --model required')
+        if not 1 <= args.timeout <= 120:
+            parser.error('host probe timeout must be 1..120 seconds')
+        import host_probe
+        executable = shutil.which('codex')
+        if not executable:
+            parser.error('Codex CLI is unavailable; no probe was run')
+        record = host_probe.probe(executable, args.out, args.model, args.reasoning, args.timeout, prepare=prepare,
+                                  permission_config=permission_config, config_args=config_args,
+                                  case=next(c for c in load_cases() if c['id'] == 'review-report-only'))
+        print(json.dumps({'host': record['host'], 'model_invocations': record['model_invocations'],
+                          'capabilities': {k: v['status'] for k, v in record['capabilities'].items()},
+                          'unknown': record['unknown'], 'evidence': str(args.out / 'host-evidence.json')}, indent=2))
+        return 0 if all(v['status'] == 'verified' for v in record['capabilities'].values()) else 1
     special = sum(bool(x) for x in (args.payload_inventory, args.freeze_study, args.study))
     if special:
         # Reject even redundant overrides: controls have one unambiguous owner.

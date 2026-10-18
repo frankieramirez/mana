@@ -1,8 +1,28 @@
 # Changelog
 
-## Unreleased
+## 0.43.6
 
 - The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. A re-review of the revised oracles and runner integration are still pending.
+
+## 0.43.5
+
+- The workflow evaluator accepts a host only from recorded probe evidence in `evals/workflows/host-evidence/`, per exact version and mode. Comparative delegated studies need fresh evidence for family termination and the thread cap, so Codex CLI 0.159.2 stays limited to its focused and delegated record until a new probe passes. Frozen studies can declare one delegation limit for every arm. Each thread runs its own containment probe, missing child history stops the schedule, and a timeout or cancellation kills the whole process family. `run.py --probe-host` records candidate evidence with at most one model call; it challenges the thread cap with one child more than the cap allows and records whether the host's setting counts the parent, which delegated runs then translate. Offline tests use a fake host. A live probe of Codex CLI 0.163.0 adds a record that supports focused and delegated attempts, including verified process-family termination. It does not support comparative delegated studies, because only two children ran against a cap of two and the cap stays unknown.
+
+## 0.43.4
+
+- Leyline gains a challenge stage. `challenge.sh` runs an installed control from committed bytes in disposable worktrees through baseline, declared break, restore, concurrent runs, SIGINT and SIGTERM cancellation, and plan-declared faults such as a missing browser, zero executed cases, source mutation and teardown failure. Each probe checks that an unknown listener survives, that no started process outlives its run, and that HEAD, index, tracked and untracked bytes are unchanged. Reports and control evidence are retained outside the checkout with a SHA-256 manifest that is checked again after cleanup. The generated Node control adds prerequisite probes, owned process verification, artifact digests, and treats suite errors such as a failed teardown as incomplete while keeping failed assertions. A synthetic acceptance fixture exercises every path; no consumer conformance is claimed.
+
+## 0.43.3
+
+- Leyline's dynamic conformance check keeps the reports it judged. Each feature probe records its run id, and the checker copies every report with its SHA-256 into a retained folder (`--out`) before it removes the worktree. An incomplete run under the break patch now blocks the `break` probe instead of failing the checker. A probe that does not pass keeps the tail of stdout as well as stderr, and every probe appears with a reason when it never ran. The report check rejects a report with no `source.identity.head`. Regressions for all five cases from the Ultima refresh are in `scripts/test-leyline.sh`.
+
+## 0.43.2
+
+- Frozen condition studies seal every allocated slot as a write-once attempt record that keeps execution status apart from task outcome, inventories each artifact with its hash, and rejects hidden replacements. Completed attempts export to anonymized review packets that withhold condition names and instruction text and record what masking could not hide. Two independent judgments, a human adjudication and append-only regrades preserve the original evidence hashes. Unobserved model identity, child usage and human review time stay null. No reviewer cohort or live study has run.
+
+## 0.43.1
+
+- The evaluator freezes the dispel payloads for the first prose instruction ablation. Beside the current Fidelity rules, one arm swaps in the narrow source-and-scope candidate and another removes the Fidelity section and its self-check item. Each arm is a complete standalone skill with a hashed file inventory, and each changed arm keeps its exact patch. A prose adapter freezes studies over those arms and archives the raw source, protected spans, final output and observed instruction reads for every attempt. Offline checks prove that only the two selected blocks differ between arms. The installed dispel skill does not change, and no confirmation cases or live runs are included.
 
 ## 0.43.0
 

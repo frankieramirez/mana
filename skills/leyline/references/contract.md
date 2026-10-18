@@ -80,7 +80,7 @@ A run verb with `--json` prints the report. The report states the exit code the 
 - `status` is `passed`, `failed`, `incomplete`, or `cancelled`, and `exit` must agree with it.
 - A check's `status` is one of `passed`, `failed`, `unavailable`, `timed_out`, `cancelled`, `blocked`, `skipped`, or `not_run`.
 - A prerequisite's `status` is `present`, `missing`, or `not_probed`.
-- Extra fields are welcome. Artifacts, logs, timings, and environment details belong in the report too.
+- Extra fields are welcome. Artifacts, logs, timings, and environment details belong in the report too. The generated Node control adds `processes` (each owned process group and any survivors), `teardown`, and `artifactDigests` (SHA-256 of each retained artifact).
 
 ## Judge rules
 
