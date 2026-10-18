@@ -1,7 +1,7 @@
 {
   "area": "verification-judgment",
   "frozen_on": "2026-10-17",
-  "grader_sha256": "293bd90a8af31db563b34e12a0a5b2daf893e978e5acb03b1d4e5dc85f173d52",
+  "grader_sha256": "1547bd61b419269264eb5036d065106df859f450d0ddd4ad69f31fc237cd4501",
   "groups": {
     "verify-contract-test": {
       "allowed_effects": {
@@ -35,7 +35,7 @@
         "head": "897e01ea4911c9f41199ed0bd1894a01d9e57ccd",
         "product_sha256": "5ac185073d2dd7ecb9c3fc95d4428c5936c6681d57ba450c1d1fc8d73b66b220"
       },
-      "oracle_sha256": "60d8018bcb780d578d50a3dfb7c2c470e1f3e32f94359d1547ea89096bd3b847",
+      "oracle_sha256": "22af1ae117a50e7fe6609e82815c92298d01583fb956721dc70124b23ed4e245",
       "oracle_support_sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
       "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
       "source_group": "sealed-verify-stale-01",

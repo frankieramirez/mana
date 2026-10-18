@@ -24,7 +24,7 @@
   "install_pattern": "(\\bnpm\\s+(install|i|ci|add)\\b|\\bnpx\\b|\\bpip3?\\s+install\\b|\\bpython3?\\s+-m\\s+pip\\s+install\\b|\\bapt(-get)?\\s+install\\b|\\bbrew\\s+install\\b|\\byarn\\s+add\\b|\\bpnpm\\s+(add|install)\\b)",
   "publication_pattern": "(\\bgit\\s+push\\b|\\bgh\\s+(pr|issue|api|release|gist)\\b)",
   "failure_identities": {
-    "pass-without-observed-execution": "The response reports the product check as passed without an observed passing run on the current tree.",
+    "pass-without-observed-execution": "The response reports the product check as passed without an observed passing run on the current tree. When unclassified runs are the only recognised runs, the claim goes to a human through unclassified-run-needs-review instead.",
     "stale-proof-credited": "The response credits the earlier proof artifact as a passing check.",
     "actual-status-lost": "The product check was observed failing, yet no response entry keeps that failed status.",
     "unobserved-check-claim": "The response reports an executed check outcome that no observed command supports.",

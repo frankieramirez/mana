@@ -546,7 +546,10 @@ def grade_execution_credit(oracle, response, observed):
                     record['reason'] = 'observed run carries a different status'
                 else:
                     record['reason'] = 'no observed product run with this status'
-                if status == 'passed' and 'passed' not in seen_statuses:
+                # Only unclassified runs: one may really have passed, so a human decides,
+                # unless the frozen environment cannot produce a pass at all.
+                undecided = not seen_statuses and unclassified and check['credit_pass']
+                if status == 'passed' and 'passed' not in seen_statuses and not undecided:
                     failures.append('pass-without-observed-execution')
                 if not seen_statuses and unclassified:
                     flags.append('unclassified-run-needs-review')
