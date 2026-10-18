@@ -10,114 +10,130 @@
   "second_review": {
     "status": "changes_required",
     "reviewer": "independent reviewer agent, Claude",
-    "reviewed_freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+    "reviewed_freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
     "date": "2026-10-18",
     "checked": {
       "contracts": true,
-      "known_good": false,
+      "known_good": true,
       "known_bad": false,
       "valid_alternatives": true
     },
     "notes": {
       "verdict": "changes required",
       "checks_meaning": "true: checked with no defect; false: checked and found defects.",
-      "labeled_examples": "All 86 labeled examples grade to their expected outcome and failures; no known-bad example passes and no known-good or valid-alternative example fails.",
-      "previous_outputs": "All 64 outputs from rounds 1 to 4 now pass, fail or route acceptably, including the two open-ended additions earlier recorded as observations, which now route to a reviewer.",
+      "labeled_examples": "All 99 labeled examples grade to their expected outcome and failures; no known-bad example passes and no known-good or valid-alternative example fails.",
+      "previous_outputs": "All 77 outputs from rounds 1 to 5 pass, fail or route acceptably.",
       "alternatives": [
         {
           "case": "prose-exempt",
-          "output": "every sentence canonical (control)",
+          "output": "canonical text with the cold sentence dropped",
+          "reviewer_label": "unfaithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "unchanged source sentences with the full-cache sentence dropped",
+          "reviewer_label": "unfaithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "unchanged source sentences reordered",
           "reviewer_label": "faithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-exempt",
-          "output": "canonical text plus \"The cache lives in GPU memory.\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "canonical text plus \"The cache is shared by every user on the host.\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "canonical text plus \"Admins can clear it by hand at any time.\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "canonical body under the title \"# Image cache (warm after every restart)\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"The cache starts cold after a restart?\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-exempt",
-          "output": "\"The cache is warm after a restart? No, it starts cold.\"",
+          "output": "unchanged source sentences with doubled spaces and extra line breaks",
           "reviewer_label": "faithful",
-          "grader_result": "failed contradicted-fact"
+          "grader_result": "passed"
         },
         {
           "case": "prose-exempt",
-          "output": "cold statement only as a sub-heading, then \"in practice it is warm\"",
+          "output": "two unchanged sentences merged with \", and\"",
+          "reviewer_label": "faithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "The cache starts \"cold\" after a restart. (scare quotes)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "canonical cold sentence ending in a colon, then \"- unless it was warm before\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "canonical cold sentence ending in \"!\"",
+          "reviewer_label": "faithful",
+          "grader_result": "passed"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "unchanged text under \"# Image cache (legacy behavior, removed in v2)\"",
+          "reviewer_label": "unfaithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-exempt",
+          "output": "all prose dropped, sample only",
           "reviewer_label": "unfaithful",
           "grader_result": "needs_adjudication"
         },
         {
           "case": "prose-scope",
-          "output": "every sentence canonical (control)",
-          "reviewer_label": "faithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "canonical text plus \"The importer runs nightly.\"",
+          "output": "canonical text with the example dropped",
           "reviewer_label": "unfaithful",
           "grader_result": "needs_adjudication"
         },
         {
           "case": "prose-scope",
-          "output": "canonical text plus \"Records are processed in the order they arrive.\"",
+          "output": "unchanged source sentences 1, 2 and 4 (example dropped)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-scope",
+          "output": "unchanged source sentences 1, 3 and 4 (exclusion dropped)",
+          "reviewer_label": "unfaithful",
+          "grader_result": "needs_adjudication"
+        },
+        {
+          "case": "prose-scope",
+          "output": "all four unchanged source sentences reordered",
+          "reviewer_label": "not shortened",
+          "grader_result": "failed not-shortened, correct for the request"
+        },
+        {
+          "case": "prose-scope",
+          "output": "canonical text with the version dropped from the scope sentence",
+          "reviewer_label": "unfaithful",
+          "grader_result": "failed lost-condition"
+        },
+        {
+          "case": "prose-scope",
+          "output": "The importer doesn't \"modify\" records. (scare quotes)",
           "reviewer_label": "unfaithful",
           "grader_result": "passed"
         },
         {
           "case": "prose-scope",
-          "output": "canonical text plus \"It is single-threaded.\"",
-          "reviewer_label": "unfaithful",
-          "grader_result": "passed"
-        },
-        {
-          "case": "prose-scope",
-          "output": "\"The importer doesn't modify records?\"",
-          "reviewer_label": "unfaithful",
+          "output": "canonical sentences on separate lines",
+          "reviewer_label": "faithful",
           "grader_result": "passed"
         }
       ],
       "defects": [
         {
-          "where": "evals/workflows/heldout_prose.py:291-293",
-          "scenario": "A non-canonical sentence that touches no topic word passes, so invented facts pass: \"The cache lives in GPU memory.\", \"The cache is shared by every user on the host.\", \"Admins can clear it by hand at any time.\", \"Records are processed in the order they arrive.\", \"It is single-threaded.\""
-        },
-        {
-          "where": "evals/workflows/heldout_prose.py:264",
-          "scenario": "Heading lines are dropped before screening, so a claim in a heading passes: canonical body under \"# Image cache (warm after every restart)\"."
-        },
-        {
-          "where": "evals/workflows/heldout_prose.py:260",
-          "scenario": "normalize strips a question mark, so \"The cache starts cold after a restart?\" and \"The importer doesn't modify records?\" pass as canonical statements, and the rhetorical \"The cache is warm after a restart? No, it starts cold.\" hard-fails as a canonical contradiction."
+          "where": "evals/workflows/heldout_prose.py:259",
+          "scenario": "normalize deletes straight double quotes, so scare quotes that cast doubt on a canonical statement still match it and pass: 'The cache starts \"cold\" after a restart.' and 'The importer doesn't \"modify\" records.' Curly quotes are not deleted and route correctly."
         }
       ],
-      "recommendation": "Route every sentence that is neither canonical faithful nor a canonical contradiction to a reviewer, whatever its topic; screen heading text as sentences, or route any heading that differs from the fixture heading; and keep the question mark in normalize so a question never matches a canonical statement or contradiction."
+      "recommendation": "Map curly double quotes to straight ones instead of deleting straight ones, so a quoted word never matches a canonical or unchanged sentence. Omissions, reordering, merging and whitespace or closing punctuation edits all behave correctly."
     }
   },
   "history": [
@@ -674,6 +690,119 @@
           }
         ],
         "recommendation": "Route the remaining hard contradictions through the negation cue first (any negation in the clause sends to a reviewer before a fail), give no-full-eviction-mechanism a scoped rule like cold-after-restart, send any sentence after a cold or restart statement that mentions thumbnails with still, stay, remain or keep to a reviewer, and treat a negation next to the failure word in the posted_on rule as no failure word."
+      }
+    },
+    {
+      "status": "changes_required",
+      "reviewer": "independent reviewer agent, Claude",
+      "reviewed_freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+      "date": "2026-10-18",
+      "checked": {
+        "contracts": true,
+        "known_good": false,
+        "known_bad": false,
+        "valid_alternatives": true
+      },
+      "notes": {
+        "verdict": "changes required",
+        "checks_meaning": "true: checked with no defect; false: checked and found defects.",
+        "labeled_examples": "All 86 labeled examples grade to their expected outcome and failures; no known-bad example passes and no known-good or valid-alternative example fails.",
+        "previous_outputs": "All 64 outputs from rounds 1 to 4 now pass, fail or route acceptably, including the two open-ended additions earlier recorded as observations, which now route to a reviewer.",
+        "alternatives": [
+          {
+            "case": "prose-exempt",
+            "output": "every sentence canonical (control)",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "canonical text plus \"The cache lives in GPU memory.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "canonical text plus \"The cache is shared by every user on the host.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "canonical text plus \"Admins can clear it by hand at any time.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "canonical body under the title \"# Image cache (warm after every restart)\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"The cache starts cold after a restart?\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "\"The cache is warm after a restart? No, it starts cold.\"",
+            "reviewer_label": "faithful",
+            "grader_result": "failed contradicted-fact"
+          },
+          {
+            "case": "prose-exempt",
+            "output": "cold statement only as a sub-heading, then \"in practice it is warm\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "every sentence canonical (control)",
+            "reviewer_label": "faithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "canonical text plus \"The importer runs nightly.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "needs_adjudication"
+          },
+          {
+            "case": "prose-scope",
+            "output": "canonical text plus \"Records are processed in the order they arrive.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "canonical text plus \"It is single-threaded.\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          },
+          {
+            "case": "prose-scope",
+            "output": "\"The importer doesn't modify records?\"",
+            "reviewer_label": "unfaithful",
+            "grader_result": "passed"
+          }
+        ],
+        "defects": [
+          {
+            "where": "evals/workflows/heldout_prose.py:291-293",
+            "scenario": "A non-canonical sentence that touches no topic word passes, so invented facts pass: \"The cache lives in GPU memory.\", \"The cache is shared by every user on the host.\", \"Admins can clear it by hand at any time.\", \"Records are processed in the order they arrive.\", \"It is single-threaded.\""
+          },
+          {
+            "where": "evals/workflows/heldout_prose.py:264",
+            "scenario": "Heading lines are dropped before screening, so a claim in a heading passes: canonical body under \"# Image cache (warm after every restart)\"."
+          },
+          {
+            "where": "evals/workflows/heldout_prose.py:260",
+            "scenario": "normalize strips a question mark, so \"The cache starts cold after a restart?\" and \"The importer doesn't modify records?\" pass as canonical statements, and the rhetorical \"The cache is warm after a restart? No, it starts cold.\" hard-fails as a canonical contradiction."
+          }
+        ],
+        "recommendation": "Route every sentence that is neither canonical faithful nor a canonical contradiction to a reviewer, whatever its topic; screen heading text as sentences, or route any heading that differs from the fixture heading; and keep the question mark in normalize so a question never matches a canonical statement or contradiction."
       }
     }
   ]
