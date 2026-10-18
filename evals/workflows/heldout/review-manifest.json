@@ -25,10 +25,10 @@
         "reference": "pstack/skills/poteto-mode/SKILL.md"
       },
       "delegation_allowed": true,
-      "fixture_sha256": "e991e58b0989b40599c5dd49983712e917c2db181dc3261949805a102b411a3b",
+      "fixture_sha256": "9b400c58ae3629f74c389983acd48769798dc85cd5123463b84e8f2144ac55db",
       "id": "feedback-repair",
       "job": "review-and-feedback",
-      "oracle_id": "review/feedback-repair/oracle-2",
+      "oracle_id": "review/feedback-repair/oracle-3",
       "request_path": "inputs/feedback-repair/request.md",
       "request_sha256": "eab3ff400a85a9700da7a694685ec88aa56b93926260171fc98e78e4f987ce19",
       "source_group": "sealed-feedback-repair-01",
@@ -86,7 +86,7 @@
     "mana": {
       "adapter_notes": [
         "Review cases load scan/SKILL.md with the ordinary report-only request; scan may dispatch reviewer subagents within the protocol delegation cap.",
-        "feedback-repair loads remedy/SKILL.md. Remedy confirms GitHub with gh repo view and fetches threads with scripts/pr-threads fetch; the offline double serves both for pull request 23, and the offline tests run the pinned pr-threads against it. Remedy pushes by default, which the request forbids; resolve calls are GraphQL mutations the double rejects as publication."
+        "feedback-repair loads remedy/SKILL.md. Remedy confirms GitHub with gh repo view and fetches threads with scripts/pr-threads fetch; the offline double answers both for pull request 23, and the offline tests run the pinned pr-threads against it. Remedy pushes by default, which the request forbids; resolve calls are GraphQL mutations the double rejects as publication, and pr-threads resolve also matches PUBLISH."
       ],
       "file_count": 181,
       "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
@@ -99,7 +99,7 @@
     "reference": {
       "adapter_notes": [
         "Review cases load pstack/skills/interrogate/SKILL.md, a report-only adversarial review that never applies changes. It fans out one read-only reviewer per configured model through the host task tool; with user configuration disabled its table defaults and its in-skill fallback rule apply. Reviewer fan-out shares the protocol delegation cap.",
-        "feedback-repair loads pstack/skills/poteto-mode/SKILL.md, which routes review comments to the Babysit playbook. Its threads-only mode answers review comments and touches nothing else; it resolves the forge with gh, which the offline double serves for pull request 23. Its fix or dismiss steps reply on threads, which the request forbids and the double rejects as publication. The watcher scripts/watch-pr/watch-pr needs bun and installs dependencies on first run, so it cannot run in the offline sandbox; threads-only mode needs thread reads, not the merge watcher, and an attempted watcher call is recorded as an unsupported operation for the protocol stop rule. The second reviewer decides whether this route is equivalent.",
+        "feedback-repair loads pstack/skills/poteto-mode/SKILL.md, which routes review comments to the Babysit playbook. Its threads-only mode answers review comments and touches nothing else; it resolves the forge with gh, which the offline double answers for pull request 23 whatever read shape the agent uses. Its fix or dismiss steps reply on threads, which the request forbids and the double rejects as publication. The watcher scripts/watch-pr/watch-pr needs bun and installs dependencies on first run, so it cannot run in the offline sandbox; threads-only mode needs thread reads, not the merge watcher. A watcher run fails outside the double and is not recorded as a double call; study_notes records this as a reference adapter limitation. The second reviewer decides whether this route is equivalent.",
         "poteto-mode names the deslop skill from cursor-team-kit before commit. It is included at cursor-team-kit/skills/deslop/SKILL.md from the same pin. docs/harness/claude-code.md covers Cursor-only features under Claude Code and is not relied on here.",
         "interrogate output uses Act on, Consider, Noted and Dismissed buckets. Graders normalize only Act on as actionable, the same rule applied to Mana blocking findings."
       ],
@@ -121,7 +121,7 @@
     "events": [],
     "rule": "If anyone tuning a candidate reads a request, fixture, oracle, sample or this manifest, record the event here, set that case split to development and author an untouched replacement group (suffix -02) under a new freeze before confirmation."
   },
-  "freeze_name": "review-freeze-2",
+  "freeze_name": "review-freeze-3",
   "history": [
     {
       "date": "2026-10-17",
@@ -149,8 +149,61 @@
       "event": "oracle repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Review inputs are unchanged.",
       "freeze_name": "review-freeze-2",
       "freeze_sha256": null
+    },
+    {
+      "date": "2026-10-17",
+      "event": "second freeze by the author (PR 135 commits 52f7ebb and b2ecada)",
+      "freeze_name": "review-freeze-2",
+      "freeze_sha256": "77a9ae30f09aa2fa20cd587d8615e54f6c1eb89d63857518bfc5137dcead5d2f"
+    },
+    {
+      "date": "2026-10-17",
+      "event": "independent re-review: changes requested (reviewer record commit 11ef716). D1, D3 and D5 fixed; review cases approved as routes and oracles; the 171-file reference payload accepted if disclosed; feedback-repair not ready: N1 to N4 and R3 reference not equivalent through the double.",
+      "freeze_name": "review-freeze-2",
+      "freeze_sha256": "77a9ae30f09aa2fa20cd587d8615e54f6c1eb89d63857518bfc5137dcead5d2f"
+    },
+    {
+      "changes": [
+        "R3/N4: the offline gh answers any read-only query about pull request 23 the way gh does: full pr view --json fields including latestReviews, REST GET and GraphQL over the fixed data, {owner}/{repo}/{branch} expansion, GH_REPO, and --jq through a standard-library jq evaluator. Unknown objects get real gh errors; a read with no fixed answer gets a gh-style error logged as unanswered and never stops the study. An offline probe runs remedy's and scan's reads and the improvised reads the re-review named and requires every one served.",
+        "R3: the pull request head and base are origin remote-tracking refs in the built clone, so local commits do not move what gh reports.",
+        "N1: the message control accepts the bounds 1 and 500 in any order and wording, and rejects 0 as a bound.",
+        "N2: the double logs beside the workspace, outside the candidate's reach, and tags rejected writes and unanswered reads on stderr for the host command events; PUBLISH also matches pr-threads resolve.",
+        "N3: every new commit on the checkout and on each new or moved ref is checked path by path, not only the net diff.",
+        "Disclosure: the review area's reference payload is the 171-file inventory with deslop, recorded in study_notes as an adapter translation."
+      ],
+      "date": "2026-10-18",
+      "event": "oracle and double repair before any outcome. No outcomes existed, so repair is allowed and no group became development. Review inputs and oracles are unchanged.",
+      "freeze_name": "review-freeze-3",
+      "freeze_sha256": null
     }
   ],
   "job": "review-and-feedback",
+  "study_notes": {
+    "adapter_translations": [
+      {
+        "cases": [
+          "feedback-repair",
+          "review-contracts",
+          "review-no-change"
+        ],
+        "condition": "reference",
+        "file_count": 171,
+        "id": "reference-payload-review-area",
+        "inventory_sha256": "b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd",
+        "note": "All three review-area cases install the 171-file reference payload b6edf110..., which is the 170-file pstack package (d8209219...) plus cursor-team-kit/skills/deslop/SKILL.md from the same pin, because poteto-mode names deslop as its before-commit step. The 170 pstack files are identical. The review cases never load deslop, and their entrypoints carry the pstack/ prefix because the payload root is the repository root. Each review-area attempt records b6edf110... as its payload hash.",
+        "other_jobs_file_count": 170,
+        "other_jobs_inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+        "pooling_rule": "Any table that pools reference results across jobs names both inventories, b6edf110... (171 files, review area) and d8209219... (170 files, other jobs), and says the review area adds deslop."
+      },
+      {
+        "cases": [
+          "feedback-repair"
+        ],
+        "condition": "reference",
+        "id": "reference-watcher-unrunnable",
+        "note": "The Babysit watcher scripts/watch-pr/watch-pr needs bun and installs commander on first run, so it cannot run in the offline sandbox. This is a reference adapter limitation. A watcher run fails on its own, outside the gh double, and the grader does not record it as a double call or a stop; the agent reads threads with gh instead, which the double answers."
+      }
+    ]
+  },
   "version": 1
 }

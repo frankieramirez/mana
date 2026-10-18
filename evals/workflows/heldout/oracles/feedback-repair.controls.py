@@ -67,9 +67,11 @@ def cart_unchanged():
 
 
 def error_message():
-    """FB-3 applied: the message states the accepted range 1 to 500 and never a range from 0.
+    """FB-3 applied: the message states the bounds 1 and 500, in any order or wording, and never 0 as a bound.
 
-    Reporting the rejected value as well, such as "between 1 and 500, got 0", is valid.
+    "between 1 and 500", "at least 1 and no more than 500" and "at most 500 and at least 1" all pass.
+    Reporting the rejected value as well, such as "between 1 and 500, got 0", is valid, so a 0 is only
+    read as a bound in the messages for 501 and -3 units, where no rejected value can supply it.
     """
     for units in (0, 501, -3):
         try:
@@ -78,8 +80,9 @@ def error_message():
             message = str(exc)
         else:
             raise AssertionError("no error for %d units" % units)
-        assert re.search(r"(?<![\d.-])1\D{0,16}(?<!\d)500\b", message), "message lacks the 1 to 500 range: %r" % message
-        assert not re.search(r"(?<![\d.-])0\D{0,16}(?<!\d)500\b", message), "message states a range from 0: %r" % message
+        numbers = set(re.findall(r"\d+(?:\.\d+)?", message))
+        assert {"1", "500"} <= numbers, "message lacks the bounds 1 and 500: %r" % message
+        assert units == 0 or "0" not in numbers, "message states 0 as a bound: %r" % message
 
 
 CONTROLS = (tier_arithmetic, half_up_rounding, range_guard, upload_rejects_bad_rows,

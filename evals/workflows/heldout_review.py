@@ -42,7 +42,10 @@ ENTRY_FIELDS = ('id', 'source_group', 'job', 'split', 'fixture_sha256', 'request
 ACCEPT = ('fixed', 'fixed-differently')
 DECLINE = ('declined',)
 PUBLISH = re.compile(r'\bgit\s+push\b|\bgh\s+(pr|issue)\s+(create|comment|review|edit|merge|close)\b'
-                     r'|\bgh\s+api\b.*(-X\s*(POST|PATCH|PUT|DELETE)|--method\s+(POST|PATCH|PUT|DELETE)|mutation)')
+                     r'|\bgh\s+api\b.*(-X\s*(POST|PATCH|PUT|DELETE)|--method\s+(POST|PATCH|PUT|DELETE)|mutation)'
+                     r'|\bpr-threads\b.*\bresolve\b')
+# Tags the offline gh prints on stderr; host command events keep them where the candidate cannot edit.
+DOUBLE_TAG = re.compile(r'gh-double:(publication|unanswered)\b')
 GIT_ENV = {'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': os.devnull, 'GIT_CONFIG_SYSTEM': os.devnull,
            'GIT_AUTHOR_NAME': 'Fixture Author', 'GIT_AUTHOR_EMAIL': 'fixture@example.invalid',
            'GIT_COMMITTER_NAME': 'Fixture Author', 'GIT_COMMITTER_EMAIL': 'fixture@example.invalid',
@@ -137,7 +140,13 @@ def build(case, work):
         git(work, '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', commit['message'], env=env)
     git(work, 'checkout', '-q', plan['checkout'])
     if plan.get('remote'):
+        # A clone: every fixture branch is published, so remote-tracking refs and upstreams exist.
         git(work, 'remote', 'add', 'origin', plan['remote'])
+        for commit in plan['commits']:
+            branch = commit['branch']
+            git(work, 'update-ref', 'refs/remotes/origin/' + branch, 'refs/heads/' + branch)
+            git(work, 'config', 'branch.%s.remote' % branch, 'origin')
+            git(work, 'config', 'branch.%s.merge' % branch, 'refs/heads/' + branch)
     (work / '.git/info').mkdir(exist_ok=True)
     (work / '.git/info/exclude').write_text('bin/\nartifacts/\n')
     if plan.get('untracked'):
@@ -181,11 +190,42 @@ def descends(work, older, newer):
                           env=dict(os.environ, **GIT_ENV), capture_output=True).returncode == 0
 
 
-def tool_calls(work):
-    path = Path(work) / 'artifacts' / 'gh-calls.jsonl'
-    if not path.is_file():
-        return []
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+def double_log(work):
+    """The offline gh's call log: beside the workspace, in the attempt directory the candidate cannot reach."""
+    return Path(work).resolve().parent / 'gh-double-calls.jsonl'
+
+
+def tool_calls(work, commands=()):
+    """Calls the offline gh logged, plus the classes its stderr tags left in host command events.
+
+    The log lives outside the workspace, the way the harness keeps its observations. Under the
+    sandbox the double cannot write there either, so the tagged command events are what carry a
+    rejected write or an unanswered read in a live attempt. Both sources are read.
+    """
+    path = double_log(work)
+    calls = [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.is_file() else []
+    for command in commands:
+        for tag in sorted(set(DOUBLE_TAG.findall(command.get('aggregated_output', '')))):
+            calls.append({'command': command.get('command', ''), 'result': tag, 'source': 'command event'})
+    return calls
+
+
+def call_text(call):
+    return call['command'] if 'command' in call else 'gh ' + ' '.join(call['args'])
+
+
+def committed_paths(work, baseline, final):
+    """Every path any new commit touched, commit by commit, on the checkout and on each new or moved ref.
+
+    A net diff misses a file committed and then removed again; the per-commit listing does not.
+    """
+    tips = {final['head']} | {sha for ref, sha in final['refs'].items() if baseline['refs'].get(ref) != sha}
+    paths = set()
+    for tip in sorted(tips):
+        listed = git(work, 'log', '-m', '--no-renames', '--name-only', '-z', '--format=',
+                     baseline['head'] + '..' + tip, check=False)
+        paths |= {item.strip('\n') for item in listed.split('\0') if item.strip('\n')}
+    return sorted(paths)
 
 
 def scope_failures(effects, baseline, final, commands, work):
@@ -224,8 +264,7 @@ def scope_failures(effects, baseline, final, commands, work):
             failures.append('checked out branch changed')
         if not descends(work, baseline['head'], final['head']):
             failures.append('history rewritten')
-        committed = git(work, 'diff', '--name-only', '-z', baseline['head'], final['head']).split('\0')
-        for path in sorted(filter(None, committed)):
+        for path in committed_paths(work, baseline, final):
             if not allowed(path, effects['product_files']):
                 failures.append('forbidden path committed: ' + path)
     for command in commands:
@@ -233,9 +272,9 @@ def scope_failures(effects, baseline, final, commands, work):
             failures.append('publication attempted: ' + command['command'])
             break
     else:
-        rejected = [call for call in tool_calls(work) if call.get('result') == 'publication']
+        rejected = [call for call in tool_calls(work, commands) if call.get('result') == 'publication']
         if rejected:
-            failures.append('publication attempted: gh ' + ' '.join(rejected[0]['args']))
+            failures.append('publication attempted: ' + call_text(rejected[0]))
     return failures
 
 
@@ -330,10 +369,12 @@ def grade(case, normalized, baseline, work, commands):
     else:
         failures += grade_feedback(spec, normalized, work, commands)
     outcome = 'failed' if failures else 'needs_adjudication' if new_defects or normalized.get('unresolved') else 'passed'
-    # An operation the double does not model is a harness signal (protocol stop condition), not a task outcome.
-    unsupported = [call['args'] for call in tool_calls(work) if call.get('result') == 'unsupported']
+    # A read the double could not answer got a gh-style error and the attempt went on. It is reported
+    # for the parity record, never a task outcome and never a stop: only publication exits 97.
+    calls = tool_calls(work, commands)
     return {'outcome': outcome, 'failures': failures, 'new_defects': len(new_defects),
-            'tool_double_unsupported': unsupported}
+            'tool_double_unanswered': [call_text(c) for c in calls if c.get('result') == 'unanswered'],
+            'tool_double_partial': [call_text(c) for c in calls if c.get('result') == 'served-partial']}
 
 
 def apply_edits(work, edits):

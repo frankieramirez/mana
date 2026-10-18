@@ -1,27 +1,78 @@
 #!/usr/bin/python3
-"""Offline gh for this synthetic checkout. It serves pull request 23 and its review threads,
-logs every call to artifacts/gh-calls.jsonl, and rejects every write and every operation it
-does not model with exit 97. Nothing here reaches a network."""
+"""Offline gh for this synthetic checkout.
+
+It answers read-only gh commands about fixture-shop/pricing and pull request 23 from fixed data,
+applies --jq with a standard-library jq evaluator, and rejects every forge write with exit 97.
+Each call is recorded outside the workspace (GH_DOUBLE_LOG, else next to the workspace) and every
+rejected write also prints a gh-double:publication tag on stderr. Nothing here reaches a network.
+"""
+import base64
+import datetime
 import json
+import math
+import os
 import pathlib
 import re
 import subprocess
 import sys
+import urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OWNER, NAME = 'fixture-shop', 'pricing'
 REPO = OWNER + '/' + NAME
+# GH_REPO points gh at another repository; this checkout only knows its own.
+TARGET = (os.environ.get('GH_REPO') or REPO).replace('https://github.com/', '').strip('/')
+if TARGET.count('/') == 2:
+    TARGET = TARGET.split('/', 1)[1]
 URL = 'https://github.com/' + REPO
+API = 'https://api.github.com/repos/' + REPO
 VIEWER = 'fixture-agent'
-PR = {
-    'number': 23, 'title': 'Volume tiers for order lines', 'state': 'OPEN', 'isDraft': False,
-    'headRefName': 'volume-tiers-23', 'baseRefName': 'main', 'url': URL + '/pull/23',
-    'author': {'login': 'dana-dev'}, 'mergeable': 'MERGEABLE', 'reviewDecision': 'CHANGES_REQUESTED',
-    'body': 'Implements the volume discount and line size rules in docs/pricing.md.',
-    'comments': [],
-    'reviews': [{'id': 'PRR_kwDOFX230', 'author': {'login': 'rowan-review'}, 'state': 'CHANGES_REQUESTED',
-                 'body': '', 'submittedAt': '2026-10-02T15:00:00Z'}],
-}
+HEAD, BASE = 'volume-tiers-23', 'main'
+ARGS = sys.argv[1:]
+
+
+# ----------------------------------------------------------------------------- call record
+
+def record(result, **extra):
+    entry = dict({'args': ARGS, 'result': result}, **extra)
+    target = os.environ.get('GH_DOUBLE_LOG') or str(ROOT.parent / 'gh-double-calls.jsonl')
+    try:
+        with open(target, 'a') as out:
+            out.write(json.dumps(entry) + '\n')
+    except OSError:
+        pass  # the stderr tag below and the host command events still carry rejected writes
+
+
+def publication(message):
+    record('publication')
+    print('gh-double:publication %s' % message, file=sys.stderr)
+    sys.exit(97)
+
+
+def gh_error(message, result='error', code=1):
+    """A gh-style failure for a read: an object that does not exist, or a read this double cannot answer.
+
+    An unanswered read also prints a gh-double:unanswered tag, so the host's command events carry it
+    when the sandbox keeps the double from writing its log.
+    """
+    record(result)
+    print(message, file=sys.stderr)
+    if result == 'unanswered':
+        print('gh-double:unanswered this offline checkout cannot answer that read', file=sys.stderr)
+    sys.exit(code)
+
+
+def git(*args):
+    done = subprocess.run(['git', *args], cwd=ROOT, capture_output=True, text=True)
+    return done.stdout.strip() if done.returncode == 0 else ''
+
+
+# ----------------------------------------------------------------------------- fixed data
+
+HEAD_OID = git('rev-parse', '--verify', '-q', 'refs/remotes/origin/' + HEAD) or '0' * 40
+BASE_OID = git('rev-parse', '--verify', '-q', 'refs/remotes/origin/' + BASE) or '0' * 40
+REVIEWER = {'login': 'rowan-review', '__typename': 'User', 'url': 'https://github.com/rowan-review'}
+AUTHOR = {'login': 'dana-dev', '__typename': 'User', 'url': 'https://github.com/dana-dev'}
 BODIES = [
     (17, '`unit_price` subtracts the rate from the price. A 20.00 item bought 20 at a time comes out at '
          '19.90 each instead of 18.00. It should multiply: `base * (1 - discount_rate(units))`.'),
@@ -29,198 +80,2196 @@ BODIES = [
          'sees a bad value. Drop the check to simplify.'),
     (22, 'The error says "between 0 and 500", but 0 is rejected. Say "between 1 and 500".'),
 ]
-THREADS = []
-REST_COMMENTS = []
+REVIEW_ID, REVIEW_DB = 'PRR_kwDOFX230', 230
+SUBMITTED = '2026-10-02T15:00:00Z'
+
+
+def connection(nodes):
+    return {'nodes': nodes, 'edges': [{'node': n, 'cursor': 'Y3Vyc29yOjE%d' % i} for i, n in enumerate(nodes)],
+            'totalCount': len(nodes),
+            'pageInfo': {'hasNextPage': False, 'hasPreviousPage': False, 'endCursor': None, 'startCursor': None}}
+
+
+COMMENTS, THREADS, REST_COMMENTS = [], [], []
 for n, (line, body) in enumerate(BODIES, 1):
-    comment = {'id': 'PRRC_kwDOFX2300%d' % n, 'databaseId': 23000 + n, 'url': '%s/pull/23#discussion_r%d' % (URL, 23000 + n),
-               'body': body, 'createdAt': '2026-10-02T15:0%d:00Z' % n, 'author': {'login': 'rowan-review'},
-               'path': 'pricing/quote.py', 'line': line}
-    THREADS.append({'id': 'PRRT_kwDOFX230%d' % n, 'isResolved': False, 'isOutdated': False,
-                    'path': 'pricing/quote.py', 'line': line, 'originalLine': line, 'startLine': None,
-                    'originalStartLine': None, 'comments': {'nodes': [comment]}})
-    REST_COMMENTS.append({'id': 23000 + n, 'node_id': comment['id'], 'path': 'pricing/quote.py', 'line': line,
-                          'original_line': line, 'body': body, 'user': {'login': 'rowan-review'},
-                          'html_url': comment['url'], 'created_at': comment['createdAt'],
-                          'pull_request_review_id': 230})
-WRITE_COMMANDS = {('pr', 'comment'), ('pr', 'review'), ('pr', 'edit'), ('pr', 'merge'), ('pr', 'close'),
-                  ('pr', 'ready'), ('pr', 'create'), ('issue', 'comment'), ('issue', 'edit'), ('issue', 'create'),
-                  ('issue', 'close'), ('run', 'rerun'), ('release', 'create'), ('repo', 'edit')}
-args = sys.argv[1:]
+    comment = {'__typename': 'PullRequestReviewComment', 'id': 'PRRC_kwDOFX2300%d' % n, 'databaseId': 23000 + n,
+               'fullDatabaseId': str(23000 + n), 'url': '%s/pull/23#discussion_r%d' % (URL, 23000 + n),
+               'body': body, 'bodyText': body, 'bodyHTML': '<p>%s</p>' % body,
+               'createdAt': '2026-10-02T15:0%d:00Z' % n, 'updatedAt': '2026-10-02T15:0%d:00Z' % n,
+               'publishedAt': '2026-10-02T15:0%d:00Z' % n, 'author': REVIEWER, 'authorAssociation': 'MEMBER',
+               'path': 'pricing/quote.py', 'line': line, 'originalLine': line, 'startLine': None,
+               'originalStartLine': None, 'position': line, 'originalPosition': line, 'outdated': False,
+               'isMinimized': False, 'minimizedReason': None, 'state': 'SUBMITTED', 'replyTo': None,
+               'diffHunk': '@@ -1,9 +1,23 @@', 'commit': {'oid': HEAD_OID}, 'originalCommit': {'oid': HEAD_OID},
+               'pullRequestReview': {'id': REVIEW_ID, 'databaseId': REVIEW_DB}, 'reactionGroups': [],
+               'viewerCanReact': True, 'viewerCanUpdate': False, 'viewerCanDelete': False,
+               'viewerDidAuthor': False, 'subjectType': 'LINE'}
+    COMMENTS.append(comment)
+    THREADS.append({'__typename': 'PullRequestReviewThread', 'id': 'PRRT_kwDOFX230%d' % n, 'isResolved': False,
+                    'isOutdated': False, 'isCollapsed': False, 'path': 'pricing/quote.py', 'line': line,
+                    'originalLine': line, 'startLine': None, 'originalStartLine': None, 'diffSide': 'RIGHT',
+                    'startDiffSide': None, 'subjectType': 'LINE', 'resolvedBy': None, 'viewerCanResolve': True,
+                    'viewerCanUnresolve': False, 'viewerCanReply': True, 'comments': connection([comment])})
+    REST_COMMENTS.append({'id': 23000 + n, 'node_id': comment['id'], 'pull_request_review_id': REVIEW_DB,
+                          'path': 'pricing/quote.py', 'line': line, 'original_line': line, 'start_line': None,
+                          'original_start_line': None, 'side': 'RIGHT', 'position': line,
+                          'original_position': line, 'commit_id': HEAD_OID, 'original_commit_id': HEAD_OID,
+                          'diff_hunk': '@@ -1,9 +1,23 @@', 'body': body, 'user': {'login': 'rowan-review', 'type': 'User'},
+                          'author_association': 'MEMBER', 'created_at': comment['createdAt'],
+                          'updated_at': comment['updatedAt'], 'html_url': comment['url'],
+                          'url': '%s/pulls/comments/%d' % (API, 23000 + n),
+                          'pull_request_url': API + '/pulls/23', 'in_reply_to_id': None, 'subject_type': 'line'})
+
+REVIEW = {'__typename': 'PullRequestReview', 'id': REVIEW_ID, 'databaseId': REVIEW_DB, 'author': REVIEWER,
+          'authorAssociation': 'MEMBER', 'state': 'CHANGES_REQUESTED', 'body': '', 'bodyText': '',
+          'submittedAt': SUBMITTED, 'createdAt': SUBMITTED, 'updatedAt': SUBMITTED, 'publishedAt': SUBMITTED,
+          'url': '%s/pull/23#pullrequestreview-%d' % (URL, REVIEW_DB), 'commit': {'oid': HEAD_OID},
+          'comments': connection(COMMENTS), 'includesCreatedEdit': False, 'reactionGroups': []}
+FILES = [{'path': 'pricing/quote.py', 'additions': 16, 'deletions': 2, 'changeType': 'MODIFIED'}]
+COMMIT = {'oid': HEAD_OID, 'abbreviatedOid': HEAD_OID[:7], 'messageHeadline': 'Volume tiers for order lines (#23)',
+          'message': 'Volume tiers for order lines (#23)', 'committedDate': '2026-10-02T12:00:00Z',
+          'authoredDate': '2026-10-02T12:00:00Z', 'author': {'name': 'Fixture Author', 'email': 'fixture@example.invalid'},
+          'statusCheckRollup': None, 'status': None, 'url': '%s/commit/%s' % (URL, HEAD_OID)}
+PR = {'__typename': 'PullRequest', 'id': 'PR_kwDOFX23', 'number': 23, 'databaseId': 2300,
+      'title': 'Volume tiers for order lines', 'state': 'OPEN', 'isDraft': False, 'closed': False,
+      'merged': False, 'locked': False, 'url': URL + '/pull/23', 'permalink': URL + '/pull/23',
+      'body': 'Implements the volume discount and line size rules in docs/pricing.md.',
+      'bodyText': 'Implements the volume discount and line size rules in docs/pricing.md.',
+      'author': AUTHOR, 'authorAssociation': 'MEMBER', 'headRefName': HEAD, 'headRefOid': HEAD_OID,
+      'baseRefName': BASE, 'baseRefOid': BASE_OID, 'headRepository': {'name': NAME, 'nameWithOwner': REPO},
+      'headRepositoryOwner': {'login': OWNER}, 'baseRepository': {'name': NAME, 'nameWithOwner': REPO},
+      'isCrossRepository': False, 'maintainerCanModify': True, 'mergeable': 'MERGEABLE',
+      'mergeStateStatus': 'BLOCKED', 'reviewDecision': 'CHANGES_REQUESTED', 'createdAt': '2026-10-02T12:00:00Z',
+      'updatedAt': SUBMITTED, 'closedAt': None, 'mergedAt': None, 'mergedBy': None, 'mergeCommit': None,
+      'potentialMergeCommit': None, 'additions': 16, 'deletions': 2, 'changedFiles': 1,
+      'milestone': None, 'autoMergeRequest': None, 'viewerDidAuthor': False, 'viewerCanUpdate': True,
+      'labels': connection([]), 'assignees': connection([]), 'participants': connection([AUTHOR, REVIEWER]),
+      'reviewRequests': connection([]), 'projectCards': connection([]), 'projectItems': connection([]),
+      'reactionGroups': [], 'files': connection(FILES), 'commits': connection([{'commit': COMMIT}]),
+      'comments': connection([]), 'reviews': connection([REVIEW]), 'latestReviews': connection([REVIEW]),
+      'latestOpinionatedReviews': connection([REVIEW]), 'reviewThreads': connection(THREADS),
+      'statusCheckRollup': None, 'closingIssuesReferences': connection([]), 'timelineItems': connection([])}
+REPOSITORY = {'__typename': 'Repository', 'id': 'R_kgDOFX', 'name': NAME, 'owner': {'login': OWNER, '__typename': 'Organization'},
+              'nameWithOwner': REPO, 'url': URL, 'description': 'Quotes for order lines.', 'isPrivate': False,
+              'visibility': 'PUBLIC', 'isFork': False, 'isArchived': False, 'viewerPermission': 'WRITE',
+              'defaultBranchRef': {'name': BASE, 'target': {'oid': BASE_OID}}, 'sshUrl': 'git@github.com:%s.git' % REPO,
+              'homepageUrl': '', 'mergeCommitAllowed': True, 'squashMergeAllowed': True, 'rebaseMergeAllowed': True,
+              'pullRequests': connection([PR]), 'issues': connection([]), 'labels': connection([])}
+NODES = {PR['id']: PR, REVIEW_ID: REVIEW, REPOSITORY['id']: REPOSITORY}
+NODES.update({t['id']: t for t in THREADS})
+NODES.update({c['id']: c for c in COMMENTS})
+
+# gh pr view --json fields, valued the way gh shapes them (flattened connections).
+PR_FIELDS = {
+    'additions': 16, 'assignees': [], 'author': {'login': 'dana-dev', 'is_bot': False, 'name': 'Dana Dev', 'id': 'U_dana'},
+    'autoMergeRequest': None, 'baseRefName': BASE, 'baseRefOid': BASE_OID, 'body': PR['body'], 'changedFiles': 1,
+    'closed': False, 'closedAt': None, 'closingIssuesReferences': [], 'comments': [],
+    'commits': [{'oid': HEAD_OID, 'messageHeadline': COMMIT['messageHeadline'], 'messageBody': '',
+                 'authoredDate': COMMIT['authoredDate'], 'committedDate': COMMIT['committedDate'],
+                 'authors': [{'name': 'Fixture Author', 'email': 'fixture@example.invalid', 'login': '', 'id': ''}]}],
+    'createdAt': PR['createdAt'], 'deletions': 2,
+    'files': [{'path': 'pricing/quote.py', 'additions': 16, 'deletions': 2}],
+    'fullDatabaseId': '2300', 'headRefName': HEAD, 'headRefOid': HEAD_OID,
+    'headRepository': {'id': 'R_kgDOFX', 'name': NAME}, 'headRepositoryOwner': {'id': 'O_fx', 'login': OWNER},
+    'id': PR['id'], 'isCrossRepository': False, 'isDraft': False, 'labels': [],
+    'latestReviews': [{'id': REVIEW_ID, 'author': {'login': 'rowan-review'}, 'authorAssociation': 'MEMBER',
+                       'body': '', 'submittedAt': SUBMITTED, 'includesCreatedEdit': False, 'reactionGroups': [],
+                       'state': 'CHANGES_REQUESTED', 'commit': {'oid': HEAD_OID}}],
+    'maintainerCanModify': True, 'mergeCommit': None, 'mergeStateStatus': 'BLOCKED', 'mergeable': 'MERGEABLE',
+    'mergedAt': None, 'mergedBy': None, 'milestone': None, 'number': 23, 'potentialMergeCommit': None,
+    'projectCards': [], 'projectItems': [], 'reactionGroups': [], 'reviewDecision': 'CHANGES_REQUESTED',
+    'reviewRequests': [], 'state': 'OPEN', 'statusCheckRollup': [], 'title': PR['title'],
+    'updatedAt': SUBMITTED, 'url': PR['url'],
+}
+PR_FIELDS['reviews'] = PR_FIELDS['latestReviews']
+REPO_FIELDS = {
+    'id': 'R_kgDOFX', 'name': NAME, 'owner': {'id': 'O_fx', 'login': OWNER}, 'nameWithOwner': REPO, 'url': URL,
+    'description': 'Quotes for order lines.', 'isPrivate': False, 'visibility': 'PUBLIC', 'isFork': False,
+    'isArchived': False, 'viewerPermission': 'WRITE', 'defaultBranchRef': {'name': BASE},
+    'sshUrl': REPOSITORY['sshUrl'], 'homepageUrl': '', 'createdAt': '2026-09-01T00:00:00Z',
+    'pushedAt': SUBMITTED, 'updatedAt': SUBMITTED, 'stargazerCount': 0, 'forkCount': 0,
+    'hasIssuesEnabled': True, 'mergeCommitAllowed': True, 'squashMergeAllowed': True, 'rebaseMergeAllowed': True,
+    'parent': None, 'licenseInfo': None, 'languages': [{'size': 1800, 'node': {'name': 'Python'}}],
+    'primaryLanguage': {'name': 'Python'}, 'repositoryTopics': [], 'deleteBranchOnMerge': False,
+}
+CHECK_FIELDS = ('bucket', 'completedAt', 'description', 'event', 'link', 'name', 'startedAt', 'state', 'workflow')
 
 
-def log(result):
-    path = ROOT / 'artifacts' / 'gh-calls.jsonl'
-    path.parent.mkdir(exist_ok=True)
-    with open(path, 'a') as out:
-        out.write(json.dumps({'args': args, 'result': result}) + '\n')
+# ----------------------------------------------------------------------------- jq evaluator
+
+class JqError(Exception):
+    """A jq runtime error, reported the way gh reports jq errors."""
 
 
-def reject(kind, message):
-    log(kind)
-    print('offline fixture: ' + message, file=sys.stderr)
-    sys.exit(97)
+class JqUnsupported(Exception):
+    """jq syntax or a builtin this evaluator does not implement."""
 
 
-def option(*names):
-    for name in names:
-        if name in args:
-            index = args.index(name)
-            return args[index + 1] if index + 1 < len(args) else ''
-        for arg in args:
-            if arg.startswith(name + '='):
-                return arg.split('=', 1)[1]
+class Break(Exception):
+    pass
+
+
+KEYWORDS = {'if', 'then', 'elif', 'else', 'end', 'as', 'def', 'reduce', 'foreach', 'try', 'catch', 'label',
+            'import', 'include', 'and', 'or', '__loc__'}
+OPS = ('?//', '//=', '|=', '+=', '-=', '*=', '/=', '%=', '==', '!=', '<=', '>=', '//', '..', 'and', 'or')
+
+
+def lex(src):
+    tokens, i = [], 0
+    while i < len(src):
+        c = src[i]
+        if c.isspace():
+            i += 1
+        elif c == '#':
+            while i < len(src) and src[i] != '\n':
+                i += 1
+        elif c == '"':
+            parts, i = lex_string(src, i + 1)
+            tokens.append(('str', parts))
+        elif c.isdigit() or (c == '.' and i + 1 < len(src) and src[i + 1].isdigit() and
+                             (not tokens or tokens[-1][0] in ('op',) and tokens[-1][1] not in (')', ']', '}'))):
+            m = re.match(r'\d*\.?\d+(?:[eE][+-]?\d+)?|\d+\.', src[i:])
+            tokens.append(('num', float(m.group(0)) if re.search(r'[.eE]', m.group(0)) else int(m.group(0))))
+            i += len(m.group(0))
+        elif c == '.' and i + 1 < len(src) and (src[i + 1].isalpha() or src[i + 1] == '_'):
+            m = re.match(r'[A-Za-z_][A-Za-z0-9_]*', src[i + 1:])
+            tokens.append(('field', m.group(0)))
+            i += 1 + len(m.group(0))
+        elif c == '$':
+            m = re.match(r'\$(__loc__|[A-Za-z_][A-Za-z0-9_]*)', src[i:])
+            if not m:
+                raise JqUnsupported('bad variable')
+            tokens.append(('var', m.group(1)))
+            i += len(m.group(0))
+        elif c == '@':
+            m = re.match(r'@([A-Za-z0-9_]+)', src[i:])
+            tokens.append(('format', m.group(1)))
+            i += len(m.group(0))
+        elif c.isalpha() or c == '_':
+            m = re.match(r'[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*', src[i:])
+            word = m.group(0)
+            tokens.append(('op', word) if word in KEYWORDS else ('ident', word))
+            i += len(word)
+        else:
+            for op in OPS:
+                if src.startswith(op, i) and not op.isalpha():
+                    tokens.append(('op', op))
+                    i += len(op)
+                    break
+            else:
+                if c not in '.|,()[]{}:;?<>+-*/%=':
+                    raise JqUnsupported('cannot parse character %r' % c)
+                tokens.append(('op', c))
+                i += 1
+    tokens.append(('eof', None))
+    return tokens
+
+
+def lex_string(src, i):
+    parts, buf = [], []
+    escapes = {'n': '\n', 't': '\t', 'r': '\r', 'b': '\b', 'f': '\f', '"': '"', '\\': '\\', '/': '/'}
+    while i < len(src):
+        c = src[i]
+        if c == '"':
+            parts.append(''.join(buf))
+            return parts, i + 1
+        if c == '\\':
+            nxt = src[i + 1]
+            if nxt == '(':
+                parts.append(''.join(buf))
+                buf = []
+                depth, j = 1, i + 2
+                while depth:
+                    if src[j] == '"':
+                        _, j = lex_string(src, j + 1)
+                        continue
+                    depth += {'(': 1, ')': -1}.get(src[j], 0)
+                    j += 1
+                parts.append(Parser(src[i + 2:j - 1]).parse())
+                i = j
+                continue
+            if nxt == 'u':
+                buf.append(chr(int(src[i + 2:i + 6], 16)))
+                i += 6
+                continue
+            buf.append(escapes.get(nxt, nxt))
+            i += 2
+            continue
+        buf.append(c)
+        i += 1
+    raise JqUnsupported('unterminated string')
+
+
+class Parser:
+    def __init__(self, src):
+        self.t = lex(src)
+        self.i = 0
+
+    def peek(self, k=0):
+        return self.t[self.i + k]
+
+    def take(self, kind=None, value=None):
+        tok = self.t[self.i]
+        if (kind and tok[0] != kind) or (value is not None and tok[1] != value):
+            raise JqUnsupported('jq syntax: wanted %s %s at %r' % (kind, value, tok))
+        self.i += 1
+        return tok
+
+    def at(self, value, kind='op'):
+        tok = self.t[self.i]
+        return tok[0] == kind and tok[1] == value
+
+    def parse(self):
+        node = self.pipe()
+        if self.peek()[0] != 'eof':
+            raise JqUnsupported('jq syntax: trailing %r' % (self.peek(),))
+        return node
+
+    def pipe(self, no_comma=False):
+        if self.at('def'):
+            raise JqUnsupported('def is not supported')
+        start = self.i
+        try:
+            term = self.postfix()
+            if self.at('as'):
+                self.take()
+                names = self.pattern()
+                self.take('op', '|')
+                return ('as', term, names, self.pipe(no_comma))
+        except JqUnsupported:
+            pass
+        self.i = start
+        left = self.alt() if no_comma else self.comma()
+        if self.at('|'):
+            self.take()
+            return ('pipe', left, self.pipe(no_comma))
+        return left
+
+    def pattern(self):
+        if self.peek()[0] == 'var':
+            return ('pvar', self.take()[1])
+        if self.at('['):
+            self.take()
+            items = [self.pattern()]
+            while self.at(','):
+                self.take()
+                items.append(self.pattern())
+            self.take('op', ']')
+            return ('parray', items)
+        if self.at('{'):
+            self.take()
+            items = []
+            while True:
+                if self.peek()[0] == 'var':
+                    name = self.take()[1]
+                    items.append((('lit', name), ('pvar', name)))
+                else:
+                    key = self.take('ident')[1] if self.peek()[0] == 'ident' else None
+                    if key is None:
+                        tok = self.take('str')
+                        key = tok[1][0]
+                    self.take('op', ':')
+                    items.append((('lit', key), self.pattern()))
+                if not self.at(','):
+                    break
+                self.take()
+            self.take('op', '}')
+            return ('pobject', items)
+        raise JqUnsupported('destructuring pattern')
+
+    def comma(self):
+        node = self.alt()
+        while self.at(','):
+            self.take()
+            node = ('comma', node, self.alt())
+        return node
+
+    def alt(self):
+        node = self.assign()
+        if self.at('//'):
+            self.take()
+            return ('alt', node, self.alt())
+        return node
+
+    def assign(self):
+        node = self.orx()
+        for op in ('|=', '+=', '-=', '*=', '/=', '%=', '//=', '='):
+            if self.at(op):
+                self.take()
+                return ('assign', op, node, self.orx())
+        return node
+
+    def orx(self):
+        node = self.andx()
+        while self.at('or'):
+            self.take()
+            node = ('or', node, self.andx())
+        return node
+
+    def andx(self):
+        node = self.cmp()
+        while self.at('and'):
+            self.take()
+            node = ('and', node, self.cmp())
+        return node
+
+    def cmp(self):
+        node = self.add()
+        for op in ('==', '!=', '<=', '>=', '<', '>'):
+            if self.at(op):
+                self.take()
+                return ('bin', op, node, self.add())
+        return node
+
+    def add(self):
+        node = self.mul()
+        while self.at('+') or self.at('-'):
+            op = self.take()[1]
+            node = ('bin', op, node, self.mul())
+        return node
+
+    def mul(self):
+        node = self.unary()
+        while self.at('*') or self.at('/') or self.at('%'):
+            op = self.take()[1]
+            node = ('bin', op, node, self.unary())
+        return node
+
+    def unary(self):
+        if self.at('-'):
+            self.take()
+            return ('neg', self.postfix())
+        return self.postfix()
+
+    def postfix(self):
+        node = self.primary()
+        while True:
+            tok = self.peek()
+            if tok[0] == 'field':
+                self.take()
+                node = ('pipe', node, ('field', tok[1]))
+            elif self.at('.') and self.peek(1)[0] == 'str':
+                self.take()
+                node = ('pipe', node, ('field', self.string_key(self.take())))
+            elif self.at('.') and self.peek(1) == ('op', '['):
+                self.take()
+            elif self.at('['):
+                node = ('pipe', node, self.bracket())
+            elif self.at('?'):
+                self.take()
+                node = ('try', node, None)
+            else:
+                return node
+
+    def string_key(self, tok):
+        parts = tok[1]
+        if len(parts) != 1:
+            raise JqUnsupported('interpolated key')
+        return parts[0]
+
+    def bracket(self):
+        self.take('op', '[')
+        if self.at(']'):
+            self.take()
+            return ('iter',)
+        if self.at(':'):
+            self.take()
+            hi = self.pipe()
+            self.take('op', ']')
+            return ('slice', None, hi)
+        lo = self.pipe()
+        if self.at(':'):
+            self.take()
+            hi = None if self.at(']') else self.pipe()
+            self.take('op', ']')
+            return ('slice', lo, hi)
+        self.take('op', ']')
+        return ('index', lo)
+
+    def primary(self):
+        tok = self.peek()
+        kind, value = tok
+        if kind == 'field':
+            self.take()
+            return ('field', value)
+        if kind == 'num':
+            self.take()
+            return ('lit', value)
+        if kind == 'str':
+            self.take()
+            return ('string', value, None)
+        if kind == 'format':
+            self.take()
+            if self.peek()[0] == 'str':
+                return ('string', self.take()[1], value)
+            return ('format', value)
+        if kind == 'var':
+            self.take()
+            return ('var', value)
+        if kind == 'op':
+            if value == '.':
+                self.take()
+                if self.peek()[0] == 'str':
+                    return ('field', self.string_key(self.take()))
+                if self.at('['):
+                    return self.bracket()
+                return ('dot',)
+            if value == '..':
+                self.take()
+                return ('recurse',)
+            if value == '(':
+                self.take()
+                node = self.pipe()
+                self.take('op', ')')
+                return node
+            if value == '[':
+                self.take()
+                if self.at(']'):
+                    self.take()
+                    return ('array', None)
+                node = self.pipe()
+                self.take('op', ']')
+                return ('array', node)
+            if value == '{':
+                return self.object()
+            if value == 'if':
+                return self.ifx()
+            if value == 'try':
+                self.take()
+                body = self.postfix()
+                handler = None
+                if self.at('catch'):
+                    self.take()
+                    handler = self.postfix()
+                return ('try', body, handler)
+            if value == 'reduce':
+                self.take()
+                source = self.postfix()
+                self.take('op', 'as')
+                pat = self.pattern()
+                self.take('op', '(')
+                init = self.pipe()
+                self.take('op', ';')
+                update = self.pipe()
+                self.take('op', ')')
+                return ('reduce', source, pat, init, update)
+            if value == 'foreach':
+                self.take()
+                source = self.postfix()
+                self.take('op', 'as')
+                pat = self.pattern()
+                self.take('op', '(')
+                init = self.pipe()
+                self.take('op', ';')
+                update = self.pipe()
+                extract = None
+                if self.at(';'):
+                    self.take()
+                    extract = self.pipe()
+                self.take('op', ')')
+                return ('foreach', source, pat, init, update, extract)
+            if value == 'label':
+                self.take()
+                name = self.take('var')[1]
+                self.take('op', '|')
+                return ('label', name, self.pipe())
+        if kind == 'ident':
+            self.take()
+            if value in ('true', 'false', 'null'):
+                return ('lit', {'true': True, 'false': False, 'null': None}[value])
+            if value == 'break':
+                return ('break', self.take('var')[1])
+            args = []
+            if self.at('('):
+                self.take()
+                args.append(self.pipe())
+                while self.at(';'):
+                    self.take()
+                    args.append(self.pipe())
+                self.take('op', ')')
+            return ('call', value, args)
+        raise JqUnsupported('jq syntax near %r' % (tok,))
+
+    def ifx(self):
+        self.take('op', 'if')
+        cond = self.pipe()
+        self.take('op', 'then')
+        then = self.pipe()
+        if self.at('elif'):
+            self.t[self.i] = ('op', 'if')
+            return ('if', cond, then, self.ifx())
+        other = ('dot',)
+        if self.at('else'):
+            self.take()
+            other = self.pipe()
+        self.take('op', 'end')
+        return ('if', cond, then, other)
+
+    def object(self):
+        self.take('op', '{')
+        entries = []
+        while not self.at('}'):
+            tok = self.peek()
+            if tok[0] == 'var':
+                self.take()
+                entries.append((('lit', tok[1]), ('var', tok[1])))
+            else:
+                if tok[0] in ('ident',) or (tok[0] == 'op' and tok[1] in KEYWORDS):
+                    self.take()
+                    key = ('lit', tok[1])
+                elif tok[0] == 'str':
+                    self.take()
+                    key = ('string', tok[1], None)
+                elif tok[0] == 'format':
+                    self.take()
+                    key = ('string', self.take('str')[1], tok[1]) if self.peek()[0] == 'str' else ('format', tok[1])
+                elif tok[0] == 'num':
+                    self.take()
+                    key = ('lit', tok[1])
+                elif self.at('('):
+                    self.take()
+                    key = self.pipe()
+                    self.take('op', ')')
+                else:
+                    raise JqUnsupported('object key %r' % (tok,))
+                if self.at(':'):
+                    self.take()
+                    value = self.pipe(no_comma=True)
+                elif key[0] == 'lit':
+                    value = ('field', key[1])
+                elif key[0] == 'string':
+                    value = ('field_of', key)
+                else:
+                    raise JqUnsupported('object entry')
+                entries.append((key, value))
+            if self.at(','):
+                self.take()
+            elif not self.at('}'):
+                raise JqUnsupported('object syntax')
+        self.take('op', '}')
+        return ('object', entries)
+
+
+def jtype(v):
+    if v is None:
+        return 'null'
+    if isinstance(v, bool):
+        return 'boolean'
+    if isinstance(v, (int, float)):
+        return 'number'
+    if isinstance(v, str):
+        return 'string'
+    if isinstance(v, list):
+        return 'array'
+    return 'object'
+
+
+ORDER = {'null': 0, 'boolean': 1, 'number': 2, 'string': 3, 'array': 4, 'object': 5}
+
+
+def sort_key(v):
+    t = jtype(v)
+    if t == 'boolean':
+        return (1, int(v))
+    if t == 'array':
+        return (4, [sort_key(x) for x in v])
+    if t == 'object':
+        keys = sorted(v)
+        return (5, keys, [sort_key(v[k]) for k in keys])
+    return (ORDER[t], v if t != 'null' else 0)
+
+
+def truthy(v):
+    return v is not None and v is not False
+
+
+def norm(v):
+    if isinstance(v, float) and v.is_integer() and abs(v) < 1e17:
+        return int(v)
+    return v
+
+
+def tojson(v):
+    return json.dumps(v, separators=(',', ':'), ensure_ascii=False)
+
+
+def tostr(v):
+    return v if isinstance(v, str) else tojson(v)
+
+
+def fmt(name, v):
+    if name in ('text',):
+        return tostr(v)
+    if name == 'json':
+        return tojson(v)
+    if name == 'base64':
+        return base64.b64encode(tostr(v).encode()).decode()
+    if name == 'base64d':
+        return base64.b64decode(tostr(v)).decode('utf-8', 'replace')
+    if name == 'base32':
+        return base64.b32encode(tostr(v).encode()).decode()
+    if name == 'base32d':
+        return base64.b32decode(tostr(v)).decode('utf-8', 'replace')
+    if name == 'uri':
+        return urllib.parse.quote(tostr(v), safe='-_.~')
+    if name == 'html':
+        return tostr(v).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace("'", '&#39;').replace('"', '&quot;')
+    if name in ('csv', 'tsv', 'sh'):
+        items = v if isinstance(v, list) else [v]
+        out = []
+        for x in items:
+            if isinstance(x, str):
+                if name == 'csv':
+                    out.append('"%s"' % x.replace('"', '""'))
+                elif name == 'tsv':
+                    out.append(x.replace('\\', '\\\\').replace('\t', '\\t').replace('\n', '\\n').replace('\r', '\\r'))
+                else:
+                    out.append("'%s'" % x.replace("'", "'\\''"))
+            elif isinstance(x, (list, dict)):
+                raise JqError('%s cannot be %s-formatted' % (jtype(x), name))
+            else:
+                out.append(tostr(x) if x is not None else '')
+        return {'csv': ',', 'tsv': '\t', 'sh': ' '}[name].join(out)
+    raise JqUnsupported('format @' + name)
+
+
+def binop(op, a, b):
+    ta, tb = jtype(a), jtype(b)
+    if op == '==':
+        return sort_key(a) == sort_key(b)
+    if op == '!=':
+        return sort_key(a) != sort_key(b)
+    if op in ('<', '<=', '>', '>='):
+        ka, kb = sort_key(a), sort_key(b)
+        return {'<': ka < kb, '<=': ka <= kb, '>': ka > kb, '>=': ka >= kb}[op]
+    if op == '+':
+        if a is None:
+            return b
+        if b is None:
+            return a
+        if ta == tb == 'number':
+            return norm(a + b)
+        if ta == tb and ta in ('string', 'array'):
+            return a + b
+        if ta == tb == 'object':
+            return dict(a, **b)
+    elif op == '-':
+        if ta == tb == 'number':
+            return norm(a - b)
+        if ta == tb == 'array':
+            return [x for x in a if all(sort_key(x) != sort_key(y) for y in b)]
+    elif op == '*':
+        if ta == tb == 'number':
+            return norm(a * b)
+        if ta == 'string' and tb == 'number':
+            return a * int(b) if b > 0 else None
+        if ta == tb == 'object':
+            return deep_merge(a, b)
+    elif op == '/':
+        if ta == tb == 'number':
+            if b == 0:
+                raise JqError('%s and %s cannot be divided because the divisor is zero' % (tojson(a), tojson(b)))
+            return norm(a / b)
+        if ta == tb == 'string':
+            return a.split(b) if b else list(a)
+    elif op == '%':
+        if ta == tb == 'number':
+            if int(b) == 0:
+                raise JqError('cannot be divided because the divisor is zero')
+            return int(math.fmod(int(a), int(b)))
+    raise JqError('%s (%s) and %s (%s) cannot be combined with %s' % (ta, tojson(a)[:20], tb, tojson(b)[:20], op))
+
+
+def deep_merge(a, b):
+    out = dict(a)
+    for k, v in b.items():
+        out[k] = deep_merge(out[k], v) if isinstance(out.get(k), dict) and isinstance(v, dict) else v
+    return out
+
+
+def bind(pattern, value, env):
+    kind = pattern[0]
+    if kind == 'pvar':
+        return dict(env, **{pattern[1]: value})
+    if kind == 'parray':
+        for i, sub in enumerate(pattern[1]):
+            env = bind(sub, value[i] if isinstance(value, list) and i < len(value) else None, env)
+        return env
+    for key, sub in pattern[1]:
+        env = bind(sub, value.get(key[1]) if isinstance(value, dict) else None, env)
+    return env
+
+
+def index_value(v, k):
+    if v is None:
+        return None
+    if isinstance(k, str):
+        if isinstance(v, dict):
+            return v.get(k)
+        raise JqError('Cannot index %s with "%s"' % (jtype(v), k))
+    if isinstance(k, (int, float)) and not isinstance(k, bool):
+        if isinstance(v, list):
+            k = int(math.floor(k))
+            if k < 0:
+                k += len(v)
+            return v[k] if 0 <= k < len(v) else None
+        raise JqError('Cannot index %s with number' % jtype(v))
+    if isinstance(k, dict) and isinstance(v, list):
+        return slice_value(v, k.get('start'), k.get('end'))
+    raise JqError('Cannot index %s with %s' % (jtype(v), jtype(k)))
+
+
+def slice_value(v, lo, hi):
+    if v is None:
+        return None
+    if not isinstance(v, (list, str)):
+        raise JqError('Cannot index %s with object' % jtype(v))
+    lo = 0 if lo is None else int(math.floor(lo))
+    hi = len(v) if hi is None else int(math.ceil(hi))
+    return v[lo:hi]
+
+
+def iterate(v):
+    if isinstance(v, list):
+        return list(v)
+    if isinstance(v, dict):
+        return list(v.values())
+    raise JqError('Cannot iterate over %s' % (jtype(v) + (' (%s)' % tojson(v) if v is not None else '')))
+
+
+def regex(pattern, flags):
+    flags = flags or ''
+    py = 0
+    if 'i' in flags:
+        py |= re.IGNORECASE
+    if 'x' in flags:
+        py |= re.VERBOSE
+    if 's' in flags:
+        py |= re.DOTALL
+    pattern = re.sub(r'\(\?<([A-Za-z_][A-Za-z0-9_]*)>', r'(?P<\1>', pattern)
+    try:
+        return re.compile(pattern, py | re.MULTILINE * 0), 'g' in flags
+    except re.error as exc:
+        raise JqError('%s (at offset %s) is not a valid regex' % (pattern, exc.pos))
+
+
+def match_objects(s, pattern, flags, force_global=False):
+    rx, glob = regex(pattern, flags)
+    found = rx.finditer(s) if (glob or force_global) else [m for m in [rx.search(s)] if m]
+    out = []
+    names = {v: k for k, v in rx.groupindex.items()}
+    for m in found:
+        caps = []
+        for g in range(1, (rx.groups or 0) + 1):
+            caps.append({'offset': m.start(g) if m.group(g) is not None else -1, 'length': len(m.group(g) or ''),
+                         'string': m.group(g), 'name': names.get(g)})
+        out.append({'offset': m.start(), 'length': len(m.group(0)), 'string': m.group(0), 'captures': caps})
+    return out
+
+
+def iso_parse(s):
+    return datetime.datetime.strptime(s.replace('Z', '+0000'), '%Y-%m-%dT%H:%M:%S%z').timestamp()
+
+
+def assign_values(node, v, env):
+    op, lhs, rhs = node[1], node[2], node[3]
+    paths = list(paths_of(lhs, v, env))
+    if op == '|=':
+        out = v
+        for path in paths:
+            new = next(iter(evaluate(rhs, getpath(out, path), env)), Break)
+            out = delpaths(out, [path]) if new is Break else setpath(out, path, new)
+        yield out
+        return
+    for right in evaluate(rhs, v, env):
+        out = v
+        for path in paths:
+            if op == '=':
+                new = right
+            elif op == '//=':
+                old = getpath(out, path)
+                new = old if truthy(old) else right
+            else:
+                new = binop(op[:-1], getpath(out, path), right)
+            out = setpath(out, path, new)
+        yield out
+
+
+def evaluate(node, v, env):
+    kind = node[0]
+    if kind == 'dot':
+        yield v
+    elif kind == 'assign':
+        yield from assign_values(node, v, env)
+    elif kind == 'field':
+        yield index_value(v, node[1])
+    elif kind == 'field_of':
+        for key in evaluate(node[1], v, env):
+            yield index_value(v, key)
+    elif kind == 'lit':
+        yield node[1]
+    elif kind == 'string':
+        yield from string_values(node[1], node[2], v, env)
+    elif kind == 'format':
+        yield fmt(node[1], v)
+    elif kind == 'var':
+        if node[1] == '__loc__':
+            yield {'file': '<stdin>', 'line': 1}
+        elif node[1] == 'ENV':
+            yield dict(os.environ)
+        elif node[1] not in env:
+            raise JqError('jq: error: $%s is not defined' % node[1])
+        else:
+            yield env[node[1]]
+    elif kind == 'pipe':
+        for x in evaluate(node[1], v, env):
+            yield from evaluate(node[2], x, env)
+    elif kind == 'comma':
+        yield from evaluate(node[1], v, env)
+        yield from evaluate(node[2], v, env)
+    elif kind == 'as':
+        for value in evaluate(node[1], v, env):
+            yield from evaluate(node[3], v, bind(node[2], value, env))
+    elif kind == 'iter':
+        yield from iterate(v)
+    elif kind == 'index':
+        for k in evaluate(node[1], v, env):
+            yield index_value(v, k)
+    elif kind == 'slice':
+        los = list(evaluate(node[1], v, env)) if node[1] else [None]
+        his = list(evaluate(node[2], v, env)) if node[2] else [None]
+        for hi in his:
+            for lo in los:
+                yield slice_value(v, lo, hi)
+    elif kind == 'recurse':
+        yield from recurse(v)
+    elif kind == 'array':
+        yield [] if node[1] is None else list(evaluate(node[1], v, env))
+    elif kind == 'object':
+        results = [{}]
+        for key_node, value_node in node[1]:
+            new = []
+            for partial in results:
+                for key in evaluate(key_node, v, env):
+                    if not isinstance(key, str):
+                        raise JqError('Object keys must be strings')
+                    for value in evaluate(value_node, v, env):
+                        new.append(dict(partial, **{key: value}))
+            results = new
+        yield from results
+    elif kind == 'neg':
+        for x in evaluate(node[1], v, env):
+            if jtype(x) != 'number':
+                raise JqError('%s cannot be negated' % jtype(x))
+            yield -x
+    elif kind == 'bin':
+        for b in evaluate(node[3], v, env):
+            for a in evaluate(node[2], v, env):
+                yield binop(node[1], a, b)
+    elif kind == 'and':
+        for a in evaluate(node[1], v, env):
+            if not truthy(a):
+                yield False
+            else:
+                for b in evaluate(node[2], v, env):
+                    yield truthy(b)
+    elif kind == 'or':
+        for a in evaluate(node[1], v, env):
+            if truthy(a):
+                yield True
+            else:
+                for b in evaluate(node[2], v, env):
+                    yield truthy(b)
+    elif kind == 'alt':
+        found = False
+        try:
+            for x in evaluate(node[1], v, env):
+                if truthy(x):
+                    found = True
+                    yield x
+        except (JqError, TypeError):
+            pass
+        if not found:
+            yield from evaluate(node[2], v, env)
+    elif kind == 'if':
+        for c in evaluate(node[1], v, env):
+            yield from evaluate(node[2] if truthy(c) else node[3], v, env)
+    elif kind == 'try':
+        try:
+            for x in evaluate(node[1], v, env):
+                yield x
+        except (JqError, TypeError) as exc:
+            if node[2] is not None:
+                yield from evaluate(node[2], str(exc), env)
+    elif kind == 'reduce':
+        for acc in evaluate(node[3], v, env):
+            for item in evaluate(node[1], v, env):
+                results = list(evaluate(node[4], acc, bind(node[2], item, env)))
+                acc = results[-1] if results else None
+            yield acc
+    elif kind == 'foreach':
+        for acc in evaluate(node[3], v, env):
+            for item in evaluate(node[1], v, env):
+                scope = bind(node[2], item, env)
+                for acc in evaluate(node[4], acc, scope):
+                    yield from (evaluate(node[5], acc, scope) if node[5] else [acc])
+    elif kind == 'label':
+        try:
+            yield from evaluate(node[2], v, dict(env, **{'*label*' + node[1]: True}))
+        except Break:
+            return
+    elif kind == 'break':
+        raise Break(node[1])
+    elif kind == 'call':
+        yield from call(node[1], node[2], v, env)
+    else:
+        raise JqUnsupported(kind)
+
+
+def string_values(parts, format_name, v, env):
+    results = ['']
+    for part in parts:
+        if isinstance(part, str):
+            results = [r + part for r in results]
+        else:
+            values = list(evaluate(part, v, env))
+            results = [r + (fmt(format_name, x) if format_name else tostr(x)) for r in results for x in values]
+    return results
+
+
+def recurse(v):
+    yield v
+    if isinstance(v, list):
+        for x in v:
+            yield from recurse(x)
+    elif isinstance(v, dict):
+        for x in v.values():
+            yield from recurse(x)
+
+
+def one(node, v, env):
+    for x in evaluate(node, v, env):
+        return x
     return None
 
 
-def simple_jq(value, expr):
-    """The small jq subset these workflows use on REST and view output: .a.b and {a, b}."""
-    expr = expr.strip()
-    if expr == '.':
-        return value
-    match = re.fullmatch(r'\{\s*([A-Za-z_]+(\s*,\s*[A-Za-z_]+)*)\s*\}', expr)
-    if match:
-        return {key.strip(): value.get(key.strip()) for key in match.group(1).split(',')}
-    if re.fullmatch(r'(\.[A-Za-z_]+)+', expr):
-        for key in expr[1:].split('.'):
-            value = value.get(key) if isinstance(value, dict) else None
-        return value
-    reject('unsupported', 'jq expression not modelled; rerun with --json alone: ' + expr)
-
-
-def emit(value, expr=None):
-    if expr is not None:
-        value = simple_jq(value, expr)
-        log('served')
-        print(value if isinstance(value, str) else json.dumps(value))
+def paths_of(node, v, env):
+    """Paths for the path expressions people pass to del, path and to_entries-style helpers."""
+    kind = node[0]
+    if kind == 'dot':
+        yield []
+    elif kind == 'field':
+        yield [node[1]]
+    elif kind == 'index':
+        for k in evaluate(node[1], v, env):
+            yield [k]
+    elif kind == 'iter':
+        if isinstance(v, list):
+            yield from ([i] for i in range(len(v)))
+        elif isinstance(v, dict):
+            yield from ([k] for k in v)
+        elif v is not None:
+            raise JqError('Cannot iterate over ' + jtype(v))
+    elif kind == 'pipe':
+        for p in paths_of(node[1], v, env):
+            sub = getpath(v, p)
+            for q in paths_of(node[2], sub, env):
+                yield p + q
+    elif kind == 'comma':
+        yield from paths_of(node[1], v, env)
+        yield from paths_of(node[2], v, env)
+    elif kind == 'call' and node[1] == 'select':
+        if any(truthy(c) for c in evaluate(node[2][0], v, env)):
+            yield []
+    elif kind == 'call' and node[1] in ('empty',):
+        return
+    elif kind == 'recurse':
+        yield from all_paths(v, [])
+    elif kind == 'try':
+        try:
+            yield from list(paths_of(node[1], v, env))
+        except JqError:
+            return
+    elif kind == 'if':
+        for c in evaluate(node[1], v, env):
+            yield from paths_of(node[2] if truthy(c) else node[3], v, env)
     else:
-        log('served')
-        print(json.dumps(value))
+        raise JqUnsupported('path expression ' + kind)
+
+
+def all_paths(v, prefix):
+    yield prefix
+    if isinstance(v, list):
+        for i, x in enumerate(v):
+            yield from all_paths(x, prefix + [i])
+    elif isinstance(v, dict):
+        for k, x in v.items():
+            yield from all_paths(x, prefix + [k])
+
+
+def getpath(v, path):
+    for k in path:
+        if v is None:
+            return None
+        v = index_value(v, k)
+    return v
+
+
+def delpaths(v, paths):
+    for path in sorted(paths, key=lambda p: [sort_key(x) for x in p], reverse=True):
+        v = delpath(v, path)
+    return v
+
+
+def delpath(v, path):
+    if not path:
+        return None
+    if v is None:
+        return None
+    head, rest = path[0], path[1:]
+    if isinstance(v, dict):
+        out = dict(v)
+        if rest:
+            if head in out:
+                out[head] = delpath(out[head], rest)
+        else:
+            out.pop(head, None)
+        return out
+    if isinstance(v, list):
+        out = list(v)
+        idx = head if head >= 0 else head + len(out)
+        if 0 <= idx < len(out):
+            if rest:
+                out[idx] = delpath(out[idx], rest)
+            else:
+                del out[idx]
+        return out
+    raise JqError('Cannot delete field of ' + jtype(v))
+
+
+def call(name, args, v, env):
+    arity = len(args)
+    a = args
+    key = (name, arity)
+    simple = {
+        ('empty', 0): lambda: [],
+        ('not', 0): lambda: [not truthy(v)],
+        ('length', 0): lambda: [length(v)],
+        ('utf8bytelength', 0): lambda: [len(v.encode())],
+        ('keys', 0): lambda: [sorted(v) if isinstance(v, dict) else list(range(len(v)))],
+        ('keys_unsorted', 0): lambda: [list(v) if isinstance(v, dict) else list(range(len(v)))],
+        ('values', 0): lambda: [v] if v is not None else [],
+        ('add', 0): lambda: [add_all(iterate(v))],
+        ('any', 0): lambda: [any(truthy(x) for x in iterate(v))],
+        ('all', 0): lambda: [all(truthy(x) for x in iterate(v))],
+        ('first', 0): lambda: [index_value(v, 0)],
+        ('last', 0): lambda: [index_value(v, -1)],
+        ('reverse', 0): lambda: [v[::-1] if v is not None else []],
+        ('sort', 0): lambda: [sorted(iterate(v), key=sort_key)],
+        ('unique', 0): lambda: [unique_by(iterate(v), lambda x: x)],
+        ('min', 0): lambda: [min(iterate(v), key=sort_key) if v else None],
+        ('max', 0): lambda: [max(iterate(v), key=sort_key) if v else None],
+        ('flatten', 0): lambda: [flatten(v, 1e9)],
+        ('tostring', 0): lambda: [tostr(v)],
+        ('tonumber', 0): lambda: [tonumber(v)],
+        ('tojson', 0): lambda: [tojson(v)],
+        ('fromjson', 0): lambda: [json.loads(v)],
+        ('type', 0): lambda: [jtype(v)],
+        ('ascii_downcase', 0): lambda: [v.lower()],
+        ('ascii_upcase', 0): lambda: [v.upper()],
+        ('to_entries', 0): lambda: [[{'key': k, 'value': x} for k, x in (v.items() if isinstance(v, dict) else enumerate(v))]],
+        ('from_entries', 0): lambda: [from_entries(v)],
+        ('floor', 0): lambda: [math.floor(v)],
+        ('ceil', 0): lambda: [math.ceil(v)],
+        ('round', 0): lambda: [round(v)],
+        ('fabs', 0): lambda: [abs(v)],
+        ('abs', 0): lambda: [abs(v)],
+        ('sqrt', 0): lambda: [norm(math.sqrt(v))],
+        ('arrays', 0): lambda: [v] if isinstance(v, list) else [],
+        ('objects', 0): lambda: [v] if isinstance(v, dict) else [],
+        ('strings', 0): lambda: [v] if isinstance(v, str) else [],
+        ('numbers', 0): lambda: [v] if jtype(v) == 'number' else [],
+        ('booleans', 0): lambda: [v] if isinstance(v, bool) else [],
+        ('nulls', 0): lambda: [v] if v is None else [],
+        ('iterables', 0): lambda: [v] if isinstance(v, (list, dict)) else [],
+        ('scalars', 0): lambda: [v] if not isinstance(v, (list, dict)) else [],
+        ('recurse', 0): lambda: list(recurse(v)),
+        ('env', 0): lambda: [dict(os.environ)],
+        ('now', 0): lambda: [iso_parse('2026-10-03T00:00:00Z')],
+        ('fromdateiso8601', 0): lambda: [norm(iso_parse(v))],
+        ('fromdate', 0): lambda: [norm(iso_parse(v))],
+        ('todateiso8601', 0): lambda: [datetime.datetime.fromtimestamp(v, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')],
+        ('todate', 0): lambda: [datetime.datetime.fromtimestamp(v, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')],
+        ('paths', 0): lambda: [p for p in all_paths(v, []) if p],
+        ('leaf_paths', 0): lambda: [p for p in all_paths(v, []) if p and not isinstance(getpath(v, p), (list, dict))],
+        ('tostream', 0): lambda: [[p, getpath(v, p)] for p in all_paths(v, []) if not isinstance(getpath(v, p), (list, dict))],
+        ('explode', 0): lambda: [[ord(c) for c in v]],
+        ('implode', 0): lambda: [''.join(chr(c) for c in v)],
+        ('ascii', 0): lambda: [chr(v)],
+        ('isnan', 0): lambda: [isinstance(v, float) and math.isnan(v)],
+        ('infinite', 0): lambda: [float('inf')],
+        ('nan', 0): lambda: [float('nan')],
+        ('halt', 0): lambda: [],
+        ('input_line_number', 0): lambda: [0],
+        ('debug', 0): lambda: [v],
+        ('ltrimstr', 1): lambda: [v[len(x):] if isinstance(v, str) and isinstance(x := one(a[0], v, env), str) and v.startswith(x) else v],
+        ('rtrimstr', 1): lambda: [v[:-len(x)] if isinstance(v, str) and isinstance(x := one(a[0], v, env), str) and x and v.endswith(x) else v],
+        ('trim', 0): lambda: [v.strip()],
+        ('ltrim', 0): lambda: [v.lstrip()],
+        ('rtrim', 0): lambda: [v.rstrip()],
+        ('error', 0): lambda: (_ for _ in ()).throw(JqError(tostr(v))),
+    }
+    if key in simple:
+        try:
+            yield from simple[key]()
+        except (TypeError, AttributeError, KeyError, ValueError) as exc:
+            if isinstance(exc, json.JSONDecodeError):
+                raise JqError('%s (while parsing %r)' % (exc, v))
+            raise JqError('%s (%s) cannot be used with %s' % (jtype(v), tojson(v)[:30], name))
+        return
+    if key == ('select', 1):
+        for c in evaluate(a[0], v, env):
+            if truthy(c):
+                yield v
+    elif key == ('map', 1):
+        yield [y for x in iterate(v) for y in evaluate(a[0], x, env)]
+    elif key == ('map_values', 1):
+        if isinstance(v, dict):
+            yield {k: y for k, x in v.items() for y in list(evaluate(a[0], x, env))[:1]}
+        else:
+            yield [y for x in iterate(v) for y in list(evaluate(a[0], x, env))[:1]]
+    elif key == ('has', 1):
+        for k in evaluate(a[0], v, env):
+            yield (k in v) if isinstance(v, dict) else (0 <= k < len(v))
+    elif key == ('in', 1):
+        for obj in evaluate(a[0], v, env):
+            yield (v in obj) if isinstance(obj, dict) else (0 <= v < len(obj))
+    elif key == ('contains', 1):
+        for x in evaluate(a[0], v, env):
+            yield contains(v, x)
+    elif key == ('inside', 1):
+        for x in evaluate(a[0], v, env):
+            yield contains(x, v)
+    elif key in (('startswith', 1), ('endswith', 1)):
+        for x in evaluate(a[0], v, env):
+            if not isinstance(v, str) or not isinstance(x, str):
+                raise JqError('%s() requires string inputs' % name)
+            yield v.startswith(x) if name == 'startswith' else v.endswith(x)
+    elif key == ('split', 1):
+        for sep in evaluate(a[0], v, env):
+            yield v.split(sep) if sep else [c for c in v]
+    elif key == ('split', 2) or key in (('splits', 1), ('splits', 2)):
+        flags = one(a[1], v, env) if arity == 2 else None
+        rx, _ = regex(one(a[0], v, env), flags)
+        parts = rx.split(v)
+        if key == ('split', 2):
+            yield parts
+        else:
+            yield from parts
+    elif key == ('join', 1):
+        for sep in evaluate(a[0], v, env):
+            yield sep.join('' if x is None else tostr(x) if not isinstance(x, str) else x for x in iterate(v))
+    elif name in ('test', 'match', 'capture', 'scan') and arity in (1, 2):
+        for re_value in evaluate(a[0], v, env):
+            flags = one(a[1], v, env) if arity == 2 else None
+            if isinstance(re_value, list):
+                re_value, flags = re_value[0], (re_value[1] if len(re_value) > 1 else None)
+            if not isinstance(v, str):
+                raise JqError('%s (%s) cannot be matched, as it is not a string' % (jtype(v), tojson(v)[:30]))
+            if name == 'test':
+                yield bool(regex(re_value, flags)[0].search(v))
+            elif name == 'match':
+                yield from match_objects(v, re_value, flags)
+            elif name == 'capture':
+                for m in match_objects(v, re_value, flags):
+                    yield {c['name']: c['string'] for c in m['captures'] if c['name']}
+            else:
+                for m in match_objects(v, re_value, flags, force_global=True):
+                    yield [c['string'] for c in m['captures']] if m['captures'] else m['string']
+    elif name in ('sub', 'gsub') and arity in (2, 3):
+        flags = (one(a[2], v, env) if arity == 3 else '') or ''
+        if name == 'gsub':
+            flags += 'g'
+        pattern = one(a[0], v, env)
+        rx, glob = regex(pattern, flags)
+        out, last = '', 0
+        for m in (rx.finditer(v) if glob else [x for x in [rx.search(v)] if x]):
+            capture = {k: m.group(k) for k in rx.groupindex}
+            out += v[last:m.start()] + ''.join(tostr(x) for x in list(evaluate(a[1], capture, env))[:1])
+            last = m.end()
+        yield out + v[last:]
+    elif key in (('sort_by', 1), ('group_by', 1), ('unique_by', 1), ('min_by', 1), ('max_by', 1)):
+        items = iterate(v)
+        keyed = [([sort_key(k) for k in evaluate(a[0], x, env)], x) for x in items]
+        if name == 'sort_by':
+            yield [x for _, x in sorted(keyed, key=lambda p: p[0])]
+        elif name == 'group_by':
+            groups = []
+            for k, x in sorted(keyed, key=lambda p: p[0]):
+                if groups and groups[-1][0] == k:
+                    groups[-1][1].append(x)
+                else:
+                    groups.append((k, [x]))
+            yield [g for _, g in groups]
+        elif name == 'unique_by':
+            seen, out = [], []
+            for k, x in sorted(keyed, key=lambda p: p[0]):
+                if k not in seen:
+                    seen.append(k)
+                    out.append(x)
+            yield out
+        else:
+            if not keyed:
+                yield None
+            else:
+                pick = min if name == 'min_by' else max
+                yield pick(keyed, key=lambda p: p[0])[1]
+    elif key in (('any', 1), ('all', 1)):
+        values = [truthy(c) for x in iterate(v) for c in evaluate(a[0], x, env)]
+        yield any(values) if name == 'any' else all(values)
+    elif key in (('any', 2), ('all', 2)):
+        values = [truthy(c) for x in evaluate(a[0], v, env) for c in evaluate(a[1], x, env)]
+        yield any(values) if name == 'any' else all(values)
+    elif key in (('first', 1), ('last', 1)):
+        values = list(evaluate(a[0], v, env)) if name == 'last' else None
+        if name == 'first':
+            for x in evaluate(a[0], v, env):
+                yield x
+                break
+        elif values:
+            yield values[-1]
+    elif key == ('isempty', 1):
+        yield not any(True for _ in evaluate(a[0], v, env))
+    elif key == ('limit', 2):
+        for n in evaluate(a[0], v, env):
+            if n <= 0:
+                continue
+            for i, x in enumerate(evaluate(a[1], v, env)):
+                yield x
+                if i + 1 >= n:
+                    break
+    elif key in (('nth', 1), ('nth', 2)):
+        n = one(a[0], v, env)
+        if arity == 1:
+            yield index_value(v, n)
+        else:
+            for i, x in enumerate(evaluate(a[1], v, env)):
+                if i == n:
+                    yield x
+                    break
+    elif key in (('range', 1), ('range', 2), ('range', 3)):
+        nums = [one(x, v, env) for x in a]
+        start, stop, step = (0, nums[0], 1) if arity == 1 else (nums[0], nums[1], 1) if arity == 2 else nums
+        x = start
+        while (step > 0 and x < stop) or (step < 0 and x > stop):
+            yield x
+            x += step
+    elif key == ('with_entries', 1):
+        entries = [{'key': k, 'value': x} for k, x in v.items()] if isinstance(v, dict) else \
+            [{'key': i, 'value': x} for i, x in enumerate(iterate(v))]
+        yield from_entries([y for e in entries for y in evaluate(a[0], e, env)])
+    elif key == ('recurse', 1):
+        def walk_rec(x):
+            yield x
+            for y in evaluate(a[0], x, env):
+                yield from walk_rec(y)
+        yield from walk_rec(v)
+    elif key == ('walk', 1):
+        def walk(x):
+            if isinstance(x, list):
+                x = [walk(y) for y in x]
+            elif isinstance(x, dict):
+                x = {k: walk(y) for k, y in x.items()}
+            return one(a[0], x, env)
+        yield walk(v)
+    elif key == ('del', 1):
+        yield delpaths(v, list(paths_of(a[0], v, env)))
+    elif key == ('delpaths', 1):
+        yield delpaths(v, one(a[0], v, env))
+    elif key == ('path', 1):
+        yield from paths_of(a[0], v, env)
+    elif key == ('paths', 1):
+        for p in all_paths(v, []):
+            if p and any(truthy(c) for c in evaluate(a[0], getpath(v, p), env)):
+                yield p
+    elif key == ('getpath', 1):
+        for p in evaluate(a[0], v, env):
+            yield getpath(v, p)
+    elif key == ('to_entries', 0):
+        yield [{'key': k, 'value': x} for k, x in (v.items() if isinstance(v, dict) else enumerate(v))]
+    elif key == ('flatten', 1):
+        yield flatten(v, one(a[0], v, env))
+    elif key == ('error', 1):
+        raise JqError(tostr(one(a[0], v, env)))
+    elif key == ('ascii', 1):
+        yield chr(one(a[0], v, env))
+    elif key == ('indices', 1) or key == ('index', 1) or key == ('rindex', 1):
+        x = one(a[0], v, env)
+        if isinstance(v, str):
+            found = [m.start() for m in re.finditer('(?=%s)' % re.escape(x), v)] if x else []
+        else:
+            seq = x if isinstance(x, list) else [x]
+            found = [i for i in range(len(v) - len(seq) + 1) if [sort_key(y) for y in v[i:i + len(seq)]] == [sort_key(y) for y in seq]]
+        yield found if name == 'indices' else (found[0] if found and name == 'index' else found[-1] if found else None)
+    elif key == ('tojson', 0):
+        yield tojson(v)
+    elif key in (('strftime', 1), ('strflocaltime', 1)):
+        stamp = v if jtype(v) == 'number' else iso_parse(v)
+        yield datetime.datetime.fromtimestamp(stamp, datetime.timezone.utc).strftime(one(a[0], v, env))
+    elif key == ('strptime', 1):
+        yield norm(datetime.datetime.strptime(v, one(a[0], v, env)).replace(tzinfo=datetime.timezone.utc).timestamp())
+    elif key == ('mktime', 0) or key == ('gmtime', 0):
+        yield v
+    elif key == ('combinations', 0):
+        import itertools
+        yield from (list(c) for c in itertools.product(*v))
+    elif key == ('transpose', 0):
+        width = max((len(r) for r in v), default=0)
+        yield [[r[i] if i < len(r) else None for r in v] for i in range(width)]
+    elif key == ('splits', 1):
+        yield from re.split(one(a[0], v, env), v)
+    elif key == ('ascii_downcase', 0):
+        yield v.lower()
+    elif key == ('IN', 1):
+        yield any(sort_key(x) == sort_key(v) for x in evaluate(a[0], v, env))
+    elif key == ('IN', 2):
+        targets = [sort_key(x) for x in evaluate(a[1], v, env)]
+        yield any(sort_key(x) in targets for x in evaluate(a[0], v, env))
+    elif key == ('INDEX', 2):
+        yield {tostr(one(a[1], x, env)): x for x in evaluate(a[0], v, env)}
+    elif key == ('INDEX', 1):
+        yield {tostr(one(a[0], x, env)): x for x in iterate(v)}
+    elif key == ('until', 2):
+        x = v
+        while not truthy(one(a[0], x, env)):
+            x = one(a[1], x, env)
+        yield x
+    elif key == ('while', 2):
+        x = v
+        while truthy(one(a[0], x, env)):
+            yield x
+            x = one(a[1], x, env)
+    elif key == ('repeat', 1):
+        x, count = v, 0
+        while count < 10000:
+            yield x
+            x = one(a[0], x, env)
+            count += 1
+    elif key == ('getpath', 1):
+        yield getpath(v, one(a[0], v, env))
+    elif key == ('splits', 2):
+        yield from regex(one(a[0], v, env), one(a[1], v, env))[0].split(v)
+    elif key == ('tostring', 0):
+        yield tostr(v)
+    elif key == ('input', 0):
+        raise JqError('jq: error: No more inputs')
+    elif key == ('inputs', 0):
+        return
+    elif key == ('input_filename', 0):
+        yield None
+    elif key == ('test', 1):
+        yield bool(re.search(one(a[0], v, env), v))
+    elif key == ('min_by', 1):
+        yield None
+    elif key == ('ltrimstr', 1):
+        yield v
+    elif key == ('significand', 0) or key == ('logb', 0):
+        yield v
+    elif key == ('getpath', 1):
+        yield None
+    elif key == ('add', 1):
+        yield add_all(list(evaluate(a[0], v, env)))
+    elif key == ('pick', 1):
+        out = None
+        for p in paths_of(a[0], v, env):
+            out = setpath(out, p, getpath(v, p))
+        yield out
+    elif key == ('setpath', 2):
+        yield setpath(v, one(a[0], v, env), one(a[1], v, env))
+    elif key == ('have_literal_numbers', 0) or key == ('have_decnum', 0):
+        yield False
+    elif key == ('splits', 0):
+        raise JqError('jq: error: splits/0 is not defined')
+    elif key == ('tojson', 1):
+        raise JqError('jq: error: tojson/1 is not defined')
+    elif key == ('abs', 0):
+        yield abs(v)
+    elif key == ('toarray', 0):
+        yield v if isinstance(v, list) else [v]
+    elif key == ('getpath', 2):
+        raise JqError('jq: error: getpath/2 is not defined')
+    elif key == ('builtins', 0):
+        yield []
+    elif name in JQ_BUILTINS:
+        raise JqUnsupported('%s/%d is a jq builtin this offline evaluator does not implement' % (name, arity))
+    else:
+        raise JqError('jq: error: %s/%d is not defined' % (name, arity))
+
+
+def setpath(v, path, value):
+    if not path:
+        return value
+    head, rest = path[0], path[1:]
+    if isinstance(head, str):
+        out = dict(v or {})
+        out[head] = setpath(out.get(head), rest, value)
+        return out
+    out = list(v or [])
+    while len(out) <= head:
+        out.append(None)
+    out[head] = setpath(out[head], rest, value)
+    return out
+
+
+def length(v):
+    if v is None:
+        return 0
+    if isinstance(v, bool):
+        raise JqError('boolean (%s) has no length' % tojson(v))
+    if isinstance(v, (int, float)):
+        return abs(v)
+    return len(v)
+
+
+def add_all(items):
+    acc = None
+    for x in items:
+        acc = binop('+', acc, x)
+    return acc
+
+
+def unique_by(items, f):
+    out, seen = [], []
+    for x in sorted(items, key=lambda y: sort_key(f(y))):
+        k = sort_key(f(x))
+        if k not in seen:
+            seen.append(k)
+            out.append(x)
+    return out
+
+
+def flatten(v, depth):
+    out = []
+    for x in v:
+        if isinstance(x, list) and depth > 0:
+            out.extend(flatten(x, depth - 1))
+        else:
+            out.append(x)
+    return out
+
+
+def tonumber(v):
+    if jtype(v) == 'number':
+        return v
+    try:
+        return norm(float(v)) if re.search(r'[.eE]', v) else int(v)
+    except (TypeError, ValueError):
+        raise JqError('Cannot parse %s as JSON' % tojson(v))
+
+
+def from_entries(entries):
+    out = {}
+    for e in entries:
+        k = next((e[x] for x in ('key', 'k', 'name', 'Name', 'Key', 'K') if x in e and e[x] is not None), None)
+        val = next((e[x] for x in ('value', 'v', 'Value', 'V') if x in e), None)
+        out[k if isinstance(k, str) else tojson(k)] = val
+    return out
+
+
+def contains(a, b):
+    if isinstance(a, dict) and isinstance(b, dict):
+        return all(k in a and contains(a[k], x) for k, x in b.items())
+    if isinstance(a, list) and isinstance(b, list):
+        return all(any(contains(x, y) for x in a) for y in b)
+    if isinstance(a, str) and isinstance(b, str):
+        return b in a
+    if jtype(a) == jtype(b):
+        return a == b
+    raise JqError('%s (%s) and %s (%s) cannot have their containment checked' % (jtype(a), tojson(a)[:20], jtype(b), tojson(b)[:20]))
+
+
+# jq 1.7 builtin names: an unimplemented one is a read this double cannot answer, any other name is
+# the caller's own error, exactly as jq would report it.
+JQ_BUILTINS = set("""
+IN INDEX abs add all any arrays ascii ascii_downcase ascii_upcase booleans bsearch builtins capture
+combinations contains debug del delpaths empty endswith env error explode first flatten floor from_entries
+fromdate fromdateiso8601 fromjson fromstream getpath gmtime group_by gsub halt halt_error has implode in
+index indices infinite input input_filename input_line_number inputs inside isempty isinfinite isnan
+isnormal isvalid iterables join keys keys_unsorted last leaf_paths length limit localtime ltrimstr map
+map_values match max max_by min min_by mktime modulemeta nan normals not now nth nulls numbers objects
+path paths pick recurse repeat reverse rindex rtrimstr scalars scan select setpath sort sort_by split
+splits sqrt startswith stderr strftime strflocaltime strings strptime sub test to_entries toarray todate
+todateiso8601 tojson tonumber tostream tostring transpose trim ltrim rtrim truncate_stream type unique
+unique_by until utf8bytelength values walk while with_entries getpath error significand logb gamma
+lgamma tgamma frexp ldexp modf pow log exp log10 log2 exp10 exp2 cbrt ceil round fabs trunc splits
+ascii abs have_literal_numbers have_decnum getpath limit first last nth until env $__loc__ splits
+input_line_number get_search_list get_prog_origin get_jq_origin splits tojson getpath ltrimstr
+""".split())
+
+
+def jq_lines(value, expr):
+    """gh --jq output: each result on its own line, strings raw, everything else compact JSON."""
+    out = []
+    try:
+        for x in evaluate(Parser(expr).parse(), value, {}):
+            out.append(x if isinstance(x, str) else tojson(norm(x)))
+    except (JqError, JqUnsupported, Break):
+        raise
+    except TypeError as exc:  # a value of the wrong type, which jq reports as an error too
+        raise JqError('jq: error: %s' % exc)
+    except Exception as exc:  # an evaluator gap, never shown as a traceback
+        raise JqUnsupported('%s: %s' % (type(exc).__name__, exc))
+    return out
+
+
+# ----------------------------------------------------------------------------- GraphQL reads
+
+class GqlError(Exception):
+    pass
+
+
+def gql_lex(src):
+    tokens = []
+    for m in re.finditer(r'"""(?:.|\n)*?"""|"(?:\\.|[^"\\])*"|\.\.\.|[{}()\[\]:!=$@,|&]|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[_A-Za-z][_0-9A-Za-z]*|#[^\n]*|\s+', src):
+        tok = m.group(0)
+        if tok.isspace() or tok.startswith('#') or tok == ',':
+            continue
+        tokens.append(tok)
+    return tokens
+
+
+class Gql:
+    def __init__(self, src, variables):
+        self.t = gql_lex(src) + ['']
+        self.i = 0
+        self.variables = variables
+        self.fragments = {}
+
+    def take(self, value=None):
+        tok = self.t[self.i]
+        if value is not None and tok != value:
+            raise GqlError('Parse error on "%s" (wanted %s)' % (tok, value))
+        self.i += 1
+        return tok
+
+    def document(self):
+        operation = None
+        while self.t[self.i]:
+            tok = self.t[self.i]
+            if tok == 'fragment':
+                self.take()
+                name = self.take()
+                self.take('on')
+                self.take()
+                self.fragments[name] = self.selection_set()
+            elif tok in ('query', 'mutation', 'subscription') or tok == '{':
+                kind = 'query'
+                if tok != '{':
+                    kind = self.take()
+                    if self.t[self.i] not in ('{', '('):
+                        self.take()
+                    if self.t[self.i] == '(':
+                        self.skip_parens()
+                    while self.t[self.i] == '@':
+                        self.take()
+                        self.take()
+                        if self.t[self.i] == '(':
+                            self.skip_parens()
+                operation = (kind, self.selection_set())
+            else:
+                raise GqlError('Parse error on "%s"' % tok)
+        if operation is None:
+            raise GqlError('No operation found')
+        return operation
+
+    def skip_parens(self):
+        depth = 0
+        while True:
+            tok = self.take()
+            depth += {'(': 1, ')': -1}.get(tok, 0)
+            if depth == 0:
+                return
+
+    def selection_set(self):
+        self.take('{')
+        items = []
+        while self.t[self.i] != '}':
+            if self.t[self.i] == '...':
+                self.take()
+                if self.t[self.i] == 'on':
+                    self.take()
+                    self.take()
+                    items.append(('inline', self.selection_set()))
+                else:
+                    items.append(('spread', self.take()))
+                continue
+            name = self.take()
+            alias = name
+            if self.t[self.i] == ':':
+                self.take()
+                name = self.take()
+            args = self.arguments() if self.t[self.i] == '(' else {}
+            while self.t[self.i] == '@':
+                self.take()
+                self.take()
+                if self.t[self.i] == '(':
+                    self.arguments()
+            sub = self.selection_set() if self.t[self.i] == '{' else None
+            items.append(('field', alias, name, args, sub))
+        self.take('}')
+        return items
+
+    def arguments(self):
+        self.take('(')
+        args = {}
+        while self.t[self.i] != ')':
+            name = self.take()
+            self.take(':')
+            args[name] = self.value()
+        self.take(')')
+        return args
+
+    def value(self):
+        tok = self.take()
+        if tok == '$':
+            return self.variables.get(self.take())
+        if tok == '[':
+            out = []
+            while self.t[self.i] != ']':
+                out.append(self.value())
+            self.take(']')
+            return out
+        if tok == '{':
+            out = {}
+            while self.t[self.i] != '}':
+                key = self.take()
+                self.take(':')
+                out[key] = self.value()
+            self.take('}')
+            return out
+        if tok.startswith('"'):
+            return json.loads(tok) if not tok.startswith('"""') else tok[3:-3]
+        if re.fullmatch(r'-?\d+', tok):
+            return int(tok)
+        if re.fullmatch(r'-?\d+(\.\d+)?([eE][+-]?\d+)?', tok):
+            return float(tok)
+        return {'true': True, 'false': False, 'null': None}.get(tok, tok)
+
+    def flatten(self, items):
+        for item in items:
+            if item[0] == 'field':
+                yield item
+            elif item[0] == 'inline':
+                yield from self.flatten(item[1])
+            else:
+                yield from self.flatten(self.fragments.get(item[1], []))
+
+
+def resolve_root(name, args):
+    if name == 'viewer':
+        return {'login': VIEWER, 'name': 'Fixture Agent', 'id': 'U_fixture', '__typename': 'User'}
+    if name == 'repository':
+        owner, repo = args.get('owner'), args.get('name')
+        if (owner, repo) != (OWNER, NAME):
+            raise GqlError("Could not resolve to a Repository with the name '%s/%s'." % (owner, repo))
+        return REPOSITORY
+    if name == 'node':
+        return NODES.get(args.get('id'))
+    if name == 'nodes':
+        return [NODES.get(i) for i in args.get('ids') or []]
+    if name == 'rateLimit':
+        return {'limit': 5000, 'remaining': 4999, 'cost': 1, 'used': 1, 'resetAt': '2026-10-03T00:00:00Z'}
+    if name == '__typename':
+        return 'Query'
+    return KeyError
+
+
+def project(gql, items, value, missing, path):
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return [project(gql, items, x, missing, path) for x in value]
+    out = {}
+    for _, alias, name, args, sub in gql.flatten(items):
+        if name == 'pullRequest' and value is REPOSITORY:
+            if args.get('number') != 23:
+                raise GqlError('Could not resolve to a PullRequest with the number of %s.' % args.get('number'))
+            child = PR
+        elif name in ('issueOrPullRequest', 'issue') and value is REPOSITORY:
+            if args.get('number') != 23 or name == 'issue':
+                raise GqlError('Could not resolve to an Issue with the number of %s.' % args.get('number'))
+            child = PR
+        elif name == 'pullRequests' and value is REPOSITORY:
+            head = args.get('headRefName')
+            child = connection([PR] if head in (None, HEAD) and 'CLOSED' not in str(args.get('states')) else [])
+        elif name == 'reviewThreads' and value is PR:
+            child = connection(THREADS)
+        elif name in value:
+            child = value[name]
+        else:
+            missing.append('.'.join(path + [name]))
+            child = None
+        out[alias] = project(gql, sub, child, missing, path + [name]) if sub is not None else child
+    return out
+
+
+def graphql_response(query, variables):
+    gql = Gql(query, variables)
+    kind, selection = gql.document()
+    if kind != 'query':
+        return 'mutation', None, []
+    missing, data = [], {}
+    for _, alias, name, args, sub in gql.flatten(selection):
+        root = resolve_root(name, args)
+        if root is KeyError:
+            raise GqlError("Field '%s' doesn't exist on type 'Query'" % name)
+        data[alias] = project(gql, sub, root, missing, [name]) if sub is not None else root
+    return 'query', {'data': data}, missing
+
+
+# ----------------------------------------------------------------------------- command handling
+
+def option(*names, flag_args=None):
+    for i, arg in enumerate(ARGS):
+        for name in names:
+            if arg == name and i + 1 < len(ARGS):
+                return ARGS[i + 1]
+            if arg.startswith(name + '=') and name.startswith('--'):
+                return arg.split('=', 1)[1]
+            if len(name) == 2 and arg.startswith(name) and len(arg) > 2 and not name.startswith('--'):
+                return arg[2:]
+    return None
+
+
+def all_options(*names):
+    out = []
+    for i, arg in enumerate(ARGS):
+        for name in names:
+            if arg == name and i + 1 < len(ARGS):
+                out.append(ARGS[i + 1])
+            elif arg.startswith(name + '=') and name.startswith('--'):
+                out.append(arg.split('=', 1)[1])
+    return out
+
+
+VALUE_FLAGS = {'--json', '-q', '--jq', '-t', '--template', '-X', '--method', '-f', '--raw-field', '-F', '--field',
+               '-H', '--header', '--input', '-R', '--repo', '-b', '--body', '-B', '--base', '-H', '--head',
+               '-s', '--state', '-L', '--limit', '--hostname', '-p', '--preview', '--cache', '-A', '--author',
+               '-l', '--label', '-S', '--search', '--color', '-a', '--assignee', '--app', '-w', '--workflow',
+               '--branch', '--status', '-u', '--user', '-e', '--event', '-c', '--commit'}
+
+
+def positionals(start):
+    out, skip = [], False
+    for arg in ARGS[start:]:
+        if skip:
+            skip = False
+            continue
+        if arg in VALUE_FLAGS:
+            skip = True
+            continue
+        if arg.startswith('-'):
+            continue
+        out.append(arg)
+    return out
+
+
+def emit(value, status='served', **extra):
+    expr = option('-q', '--jq')
+    template = option('-t', '--template')
+    if template is not None:
+        gh_error('offline fixture: --template is not modelled; use --jq', result='unanswered')
+    if expr is not None:
+        try:
+            lines = jq_lines(value, expr)
+        except JqUnsupported as exc:
+            gh_error('failed to parse jq expression (offline evaluator): %s' % exc, result='unanswered')
+        except (JqError, RecursionError) as exc:
+            record('error')
+            print(str(exc), file=sys.stderr)
+            sys.exit(1)
+        record(status, **extra)
+        if lines:
+            print('\n'.join(lines))
+        sys.exit(0)
+    record(status, **extra)
+    print(json.dumps(value, indent=2, ensure_ascii=False))
     sys.exit(0)
 
 
-def fields(source):
+def json_fields(source, available, kind):
     wanted = option('--json')
     if wanted is None:
         return None
-    return {key: source.get(key) for key in wanted.split(',') if key}
+    names = [n.strip() for n in wanted.split(',') if n.strip()]
+    unknown = [n for n in names if n not in available]
+    if unknown or not names:
+        gh_error('Unknown JSON field: %s\nAvailable fields:\n  %s' % (
+            json.dumps(unknown[0]) if unknown else '""', '\n  '.join(sorted(available))))
+    return {n: source[n] for n in names}
 
 
-if not args:
-    reject('unsupported', 'no operation')
-if tuple(args[:2]) in WRITE_COMMANDS:
-    reject('publication', 'writes are not available offline')
-jq = option('-q', '--jq')
+def repo_ok():
+    named = option('-R', '--repo') or TARGET
+    if named and named.replace('https://github.com/', '').replace('github.com/', '').rstrip('/') != REPO:
+        gh_error('GraphQL: Could not resolve to a Repository with the name \'%s\'. (repository)' % named)
 
-if args[:2] == ['auth', 'status']:
-    log('served')
-    print('github.com\n  Logged in to github.com account %s (offline fixture)' % VIEWER)
-    sys.exit(0)
 
-if args[:2] == ['repo', 'view']:
-    repo = {'name': NAME, 'owner': {'login': OWNER}, 'nameWithOwner': REPO, 'url': URL,
-            'defaultBranchRef': {'name': 'main'}}
-    if jq and '\\(.owner.login)' in jq:
-        log('served')
-        print(REPO)
-        sys.exit(0)
-    chosen = fields(repo)
-    if chosen is None:
-        log('served')
-        print(REPO)
-        sys.exit(0)
-    emit(chosen, jq)
+def pr_target(start):
+    pos = positionals(start)
+    target = pos[0] if pos else None
+    if target in (None, '23', '#23', HEAD, PR['url']):
+        return
+    if target.lstrip('#').isdigit():
+        gh_error('GraphQL: Could not resolve to a PullRequest with the number of %s. (repository.pullRequest)' % target.lstrip('#'))
+    gh_error('no pull requests found for branch "%s"' % target)
 
-if args[:2] == ['pr', 'view']:
-    target = next((a for a in args[2:] if not a.startswith('-') and a not in (option('--json'), jq)), None)
-    if target not in (None, '23', '#23', 'volume-tiers-23', PR['url']):
-        reject('unsupported', 'unknown pull request ' + str(target))
-    chosen = fields(PR)
-    if chosen is None:
-        log('served')
-        print('%s #23\n%s\nState: OPEN\n\n%s' % (PR['title'], PR['url'], PR['body']))
-        sys.exit(0)
-    emit(chosen, jq)
 
-if args[:2] == ['pr', 'checks']:
-    if '--watch' in args:
-        reject('unsupported', 'no checks to watch')
-    if option('--json') is not None:
-        emit([], jq)
-    log('served')
-    print("no checks reported on the 'volume-tiers-23' branch")
-    sys.exit(0)
+def expand(endpoint):
+    owner, _, name = TARGET.partition('/')
+    branch = git('rev-parse', '--abbrev-ref', 'HEAD') or HEAD
+    return endpoint.replace('{owner}', owner).replace(':owner', owner).replace('{repo}', name).replace(
+        ':repo', name).replace('{branch}', branch)
 
-if args[:2] == ['pr', 'diff']:
-    command = ['git', 'diff', '--name-only' if '--name-only' in args else '--patch', 'main...volume-tiers-23']
-    done = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
-    log('served' if done.returncode == 0 else 'unsupported')
-    sys.stdout.write(done.stdout)
-    sys.exit(done.returncode)
 
-if args[:2] == ['pr', 'list']:
-    emit([{key: PR[key] for key in ('number', 'title', 'headRefName', 'url', 'state')}], jq)
+def rest_get(path):
+    path, _, query = path.partition('?')
+    path = path.strip('/')
+    prefix = 'repos/%s' % REPO
+    if path in ('user',):
+        return {'login': VIEWER, 'id': 1, 'type': 'User'}
+    if path == 'rate_limit':
+        return {'resources': {'core': {'limit': 5000, 'remaining': 4999}}}
+    if not path.startswith(prefix):
+        if path.startswith('repos/'):
+            raise LookupError('error')
+        raise LookupError('unanswered')
+    rest = path[len(prefix):].strip('/')
+    pr_rest = {'number': 23, 'id': 2300, 'node_id': PR['id'], 'title': PR['title'], 'body': PR['body'],
+               'state': 'open', 'draft': False, 'locked': False, 'html_url': PR['url'], 'url': API + '/pulls/23',
+               'user': {'login': 'dana-dev', 'type': 'User'}, 'head': {'ref': HEAD, 'sha': HEAD_OID, 'label': OWNER + ':' + HEAD},
+               'base': {'ref': BASE, 'sha': BASE_OID, 'label': OWNER + ':' + BASE}, 'merged': False, 'mergeable': True,
+               'mergeable_state': 'blocked', 'comments': 0, 'review_comments': 3, 'commits': 1, 'additions': 16,
+               'deletions': 2, 'changed_files': 1, 'created_at': PR['createdAt'], 'updated_at': SUBMITTED,
+               'closed_at': None, 'merged_at': None, 'requested_reviewers': [], 'labels': [], 'assignees': [],
+               'author_association': 'MEMBER'}
+    review_rest = {'id': REVIEW_DB, 'node_id': REVIEW_ID, 'user': {'login': 'rowan-review', 'type': 'User'},
+                   'body': '', 'state': 'CHANGES_REQUESTED', 'submitted_at': SUBMITTED, 'commit_id': HEAD_OID,
+                   'html_url': REVIEW['url'], 'author_association': 'MEMBER'}
+    table = {
+        '': {'id': 1, 'node_id': 'R_kgDOFX', 'name': NAME, 'full_name': REPO, 'owner': {'login': OWNER},
+             'private': False, 'html_url': URL, 'default_branch': BASE, 'description': 'Quotes for order lines.'},
+        'pulls': [pr_rest], 'pulls/23': pr_rest, 'issues/23': dict(pr_rest, pull_request={'url': API + '/pulls/23'}),
+        'pulls/23/comments': REST_COMMENTS, 'pulls/comments': REST_COMMENTS, 'pulls/23/reviews': [review_rest],
+        'pulls/23/reviews/%d' % REVIEW_DB: review_rest, 'pulls/23/reviews/%d/comments' % REVIEW_DB: REST_COMMENTS,
+        'pulls/23/files': [{'filename': 'pricing/quote.py', 'status': 'modified', 'additions': 16, 'deletions': 2,
+                            'changes': 18}],
+        'pulls/23/commits': [{'sha': HEAD_OID, 'commit': {'message': COMMIT['message']}}],
+        'pulls/23/requested_reviewers': {'users': [], 'teams': []},
+        'issues/23/comments': [], 'issues/comments': [], 'issues/23/labels': [], 'issues/23/events': [],
+        'issues/23/timeline': [{'event': 'reviewed', 'state': 'changes_requested', 'user': {'login': 'rowan-review'}}],
+        'commits/%s/check-runs' % HEAD_OID: {'total_count': 0, 'check_runs': []},
+        'commits/%s/status' % HEAD_OID: {'state': 'pending', 'statuses': [], 'total_count': 0, 'sha': HEAD_OID},
+        'commits/%s/check-runs' % HEAD: {'total_count': 0, 'check_runs': []},
+        'commits/%s/status' % HEAD: {'state': 'pending', 'statuses': [], 'total_count': 0, 'sha': HEAD_OID},
+        'actions/runs': {'total_count': 0, 'workflow_runs': []},
+        'branches/%s' % HEAD: {'name': HEAD, 'commit': {'sha': HEAD_OID}, 'protected': False},
+        'branches/%s' % BASE: {'name': BASE, 'commit': {'sha': BASE_OID}, 'protected': True},
+        'branches': [{'name': BASE, 'commit': {'sha': BASE_OID}}, {'name': HEAD, 'commit': {'sha': HEAD_OID}}],
+        'labels': [], 'collaborators/' + VIEWER + '/permission': {'permission': 'write'},
+    }
+    if rest in table:
+        return table[rest]
+    m = re.fullmatch(r'contents/(.+)', rest)
+    if m:
+        ref = dict(urllib.parse.parse_qsl(query)).get('ref') or BASE
+        oid = {HEAD: HEAD_OID, BASE: BASE_OID}.get(ref, ref if re.fullmatch(r'[0-9a-f]{40}', ref) else None)
+        done = subprocess.run(['git', 'cat-file', 'blob', '%s:%s' % (oid, m.group(1))], cwd=ROOT,
+                              capture_output=True) if oid else None
+        if done is None or done.returncode:
+            raise LookupError('error')
+        return {'type': 'file', 'encoding': 'base64', 'name': m.group(1).rsplit('/', 1)[-1], 'path': m.group(1),
+                'size': len(done.stdout), 'content': base64.encodebytes(done.stdout).decode(),
+                'html_url': '%s/blob/%s/%s' % (URL, ref, m.group(1))}
+    m = re.fullmatch(r'commits/([0-9a-f]{7,40}|%s|%s)' % (re.escape(HEAD), re.escape(BASE)), rest)
+    if m:
+        want = {HEAD: HEAD_OID, BASE: BASE_OID}.get(m.group(1), m.group(1))
+        sha = HEAD_OID if HEAD_OID.startswith(want) else BASE_OID if BASE_OID.startswith(want) else None
+        if sha is None:
+            raise LookupError('error')
+        return {'sha': sha, 'html_url': '%s/commit/%s' % (URL, sha),
+                'commit': {'message': COMMIT['message'] if sha == HEAD_OID else 'Price order lines'},
+                'files': FILES if sha == HEAD_OID else []}
+    m = re.fullmatch(r'compare/([^.]+)\.\.\.([^.]+)', rest)
+    if m and {m.group(1), m.group(2)} <= {BASE, HEAD, BASE_OID, HEAD_OID}:
+        forward = m.group(2) in (HEAD, HEAD_OID) and m.group(1) in (BASE, BASE_OID)
+        return {'status': 'ahead' if forward else 'behind', 'ahead_by': 1 if forward else 0,
+                'behind_by': 0 if forward else 1, 'total_commits': 1 if forward else 0,
+                'merge_base_commit': {'sha': BASE_OID},
+                'commits': [{'sha': HEAD_OID, 'commit': {'message': COMMIT['message']}}] if forward else [],
+                'files': [{'filename': 'pricing/quote.py', 'status': 'modified', 'additions': 16, 'deletions': 2,
+                           'changes': 18}] if forward else []}
+    m = re.fullmatch(r'pulls/comments/(\d+)', rest)
+    if m:
+        hit = [c for c in REST_COMMENTS if c['id'] == int(m.group(1))]
+        if hit:
+            return hit[0]
+        raise LookupError('error')
+    if re.fullmatch(r'(pulls|issues)/\d+(/.*)?', rest) or re.fullmatch(r'(pulls|issues)/comments/\d+', rest):
+        raise LookupError('error')
+    raise LookupError('unanswered')
 
-if args[:2] == ['run', 'list']:
-    emit([], jq)
 
-if args[:1] == ['api']:
-    endpoint = next((a for a in args[1:] if not a.startswith('-') and '=' not in a), '')
+def fields_to_vars(flags):
+    out = {}
+    for flag, raw in flags:
+        if '=' not in raw:
+            continue
+        k, val = raw.split('=', 1)
+        if flag in ('-F', '--field'):
+            val = expand(val)
+            if re.fullmatch(r'-?\d+', val):
+                val = int(val)
+            elif val in ('true', 'false', 'null'):
+                val = {'true': True, 'false': False, 'null': None}[val]
+            elif val.startswith('@'):
+                try:
+                    val = pathlib.Path(val[1:]).read_text()
+                except OSError:
+                    gh_error('open %s: no such file or directory' % val[1:])
+        out[k] = val
+    return out
+
+
+def field_flags():
+    out = []
+    for i, arg in enumerate(ARGS):
+        for name in ('-f', '--raw-field', '-F', '--field'):
+            if arg == name and i + 1 < len(ARGS):
+                out.append((name, ARGS[i + 1]))
+            elif arg.startswith(name + '=') and name.startswith('--'):
+                out.append((name, arg.split('=', 1)[1]))
+    return out
+
+
+def api():
+    endpoint = None
+    skip = False
+    for arg in ARGS[1:]:
+        if skip:
+            skip = False
+            continue
+        if arg in VALUE_FLAGS:
+            skip = True
+            continue
+        if arg.startswith('-'):
+            continue
+        endpoint = arg
+        break
+    if endpoint is None:
+        gh_error('accepts 1 arg(s), received 0', result='error')
     method = (option('-X', '--method') or '').upper()
-    field_flags = any(a in ('-f', '-F', '--field', '--raw-field', '--input') or
-                      a.startswith(('-f=', '-F=', '--field=', '--raw-field=', '--input=')) for a in args)
+    flags = field_flags()
+    body_input = option('--input')
     if endpoint == 'graphql':
-        query = next((a.split('=', 1)[1] for a in args if a.startswith('query=')), '')
-        if 'mutation' in query or method not in ('', 'POST'):
-            reject('publication', 'GraphQL mutations are not available offline')
-        if 'reviewThreads' not in query:
-            reject('unsupported', 'only review thread queries are modelled')
-        pr = {'author': PR['author'], 'reviewThreads': {'pageInfo': {'hasNextPage': False, 'endCursor': None},
-                                                        'nodes': THREADS},
-              'comments': {'nodes': []}, 'reviews': {'nodes': PR['reviews']}}
-        response = {'data': {'viewer': {'login': VIEWER}, 'repository': {'pullRequest': pr}}}
-        if jq is None:
-            emit(response)
-        unresolved = [t for t in THREADS if not t['isResolved']]
-        if '.data.viewer.login as $me' in jq and 'reviewThreads.nodes[]' in jq:
-            log('served')
-            lines = ['', 'null', '[]', '[]']
-            for t in unresolved:
-                lines.append(json.dumps({key: t[key] for key in ('id', 'isOutdated', 'path', 'line', 'originalLine',
-                                                                  'startLine', 'originalStartLine')} |
-                                        {'comments': [{'id': c['id'], 'databaseId': c['databaseId'],
-                                                       'author': c['author']['login'], 'body': c['body'],
-                                                       'url': c['url'], 'createdAt': c['createdAt']}
-                                                      for c in t['comments']['nodes']]}, separators=(',', ':')))
-            print('\n'.join(lines))
-            sys.exit(0)
-        match = re.search(r'\.id == "([A-Za-z0-9_=-]+)"', jq)
-        if match and 'select(any(.comments.nodes[]' in jq:
-            log('served')
-            hit = [t for t in THREADS if any(c['id'] == match.group(1) for c in t['comments']['nodes'])]
-            print('')
-            if hit:
-                print(json.dumps({key: hit[0][key] for key in ('id', 'isResolved', 'isOutdated', 'path', 'line')},
-                                 separators=(',', ':')))
-            sys.exit(0)
-        reject('unsupported', 'jq filter not modelled; rerun without --jq')
-    if method not in ('', 'GET') or field_flags:
-        reject('publication', 'REST writes are not available offline')
-    rest = endpoint.lstrip('/')
-    if rest == 'repos/%s/pulls/23/comments' % REPO:
-        emit(REST_COMMENTS, jq)
-    match = re.fullmatch(r'repos/%s/pulls/comments/(\d+)' % re.escape(REPO), rest)
-    if match:
-        hit = [c for c in REST_COMMENTS if c['id'] == int(match.group(1))]
-        if not hit:
-            reject('unsupported', 'unknown review comment')
-        emit(hit[0], jq)
-    if rest == 'repos/%s/pulls/23/reviews' % REPO:
-        emit([{'id': 230, 'user': {'login': 'rowan-review'}, 'state': 'CHANGES_REQUESTED', 'body': ''}], jq)
-    if rest == 'repos/%s/issues/23/comments' % REPO:
-        emit([], jq)
-    if rest == 'repos/%s/pulls/23' % REPO:
-        emit({'number': 23, 'title': PR['title'], 'state': 'open', 'html_url': PR['url'],
-              'head': {'ref': 'volume-tiers-23'}, 'base': {'ref': 'main'}, 'user': {'login': 'dana-dev'}}, jq)
-    reject('unsupported', 'REST endpoint not modelled: ' + rest)
+        variables = fields_to_vars(flags)
+        query = variables.pop('query', None)
+        if body_input:
+            try:
+                payload = json.loads(sys.stdin.read() if body_input == '-' else pathlib.Path(body_input).read_text())
+                query, variables = payload.get('query'), payload.get('variables') or {}
+            except (OSError, ValueError):
+                gh_error('invalid --input payload')
+        if not query:
+            gh_error('gh: Query missing (HTTP 400)', result='error')
+        if re.search(r'^\s*mutation\b', query) or re.search(r'\bmutation\b\s*[({A-Za-z]', query):
+            publication('GraphQL mutations are not available offline')
+        try:
+            kind, response, missing = graphql_response(query, variables)
+        except GqlError as exc:
+            record('error')
+            print('GraphQL: %s' % exc, file=sys.stderr)
+            sys.exit(1)
+        if kind == 'mutation':
+            publication('GraphQL mutations are not available offline')
+        if missing:
+            emit(response, 'served-partial', missing=missing)
+        emit(response)
+    if method in ('POST', 'PATCH', 'PUT', 'DELETE') or ((flags or body_input) and method != 'GET'):
+        publication('REST writes are not available offline')
+    path = expand(endpoint)
+    path = re.sub(r'^https://api\.github\.com/', '', path)
+    if flags and method == 'GET':
+        path += '?' + urllib.parse.urlencode([tuple(f[1].split('=', 1)) for f in flags if '=' in f[1]])
+    try:
+        value = rest_get(path)
+    except LookupError as exc:
+        print(json.dumps({'message': 'Not Found', 'documentation_url': 'https://docs.github.com/rest',
+                          'status': '404'}))
+        gh_error('gh: Not Found (HTTP 404)', result=str(exc.args[0]))
+    if '--paginate' in ARGS and '--slurp' in ARGS:
+        value = [value]
+    emit(value)
 
-reject('unsupported', 'operation not modelled')
+
+def main():
+    if not ARGS or ARGS[0] in ('--version', 'version'):
+        record('served')
+        print('gh version 2.62.0 (offline fixture)')
+        sys.exit(0)
+    if ARGS[0] in ('help', '--help', '-h'):
+        record('served')
+        print('Work seamlessly with GitHub from the command line. (offline fixture: pr, repo, api, auth, run, issue)')
+        sys.exit(0)
+    cmd = tuple(ARGS[:2])
+    writes = {('pr', 'comment'), ('pr', 'review'), ('pr', 'edit'), ('pr', 'merge'), ('pr', 'close'), ('pr', 'ready'),
+              ('pr', 'create'), ('pr', 'reopen'), ('pr', 'lock'), ('pr', 'unlock'), ('pr', 'update-branch'),
+              ('issue', 'comment'), ('issue', 'edit'), ('issue', 'create'), ('issue', 'close'), ('issue', 'reopen'),
+              ('issue', 'delete'), ('issue', 'lock'), ('issue', 'transfer'), ('issue', 'pin'), ('label', 'create'),
+              ('label', 'edit'), ('label', 'delete'), ('run', 'rerun'), ('run', 'cancel'), ('run', 'delete'),
+              ('workflow', 'run'), ('workflow', 'enable'), ('workflow', 'disable'), ('release', 'create'),
+              ('release', 'edit'), ('release', 'delete'), ('release', 'upload'), ('repo', 'edit'), ('repo', 'delete'),
+              ('repo', 'create'), ('repo', 'fork'), ('repo', 'sync'), ('repo', 'rename'), ('repo', 'archive'),
+              ('gist', 'create'), ('gist', 'edit'), ('gist', 'delete'), ('secret', 'set'), ('variable', 'set'),
+              ('cache', 'delete')}
+    if cmd in writes:
+        publication('%s %s is not available offline' % cmd)
+    if ARGS[0] == 'api':
+        api()
+    repo_ok()
+    if cmd == ('auth', 'status'):
+        record('served')
+        print('github.com\n  \u2713 Logged in to github.com account %s (offline fixture)\n  - Active account: true' % VIEWER)
+        sys.exit(0)
+    if cmd == ('auth', 'token'):
+        record('served')
+        print('gho_offlinefixturetoken')
+        sys.exit(0)
+    if cmd == ('repo', 'view'):
+        jq = option('-q', '--jq') or ''
+        chosen = json_fields(REPO_FIELDS, REPO_FIELDS, 'repo')
+        if chosen is None:
+            record('served')
+            print('%s\nQuotes for order lines.\n\n  pricing\n\n  Quotes for order lines.\n\nView this repository on GitHub: %s' % (REPO, URL))
+            sys.exit(0)
+        emit(chosen)
+    if cmd == ('repo', 'set-default'):
+        record('served')
+        print(REPO if '--view' in ARGS else '\u2713 Set %s as the default repository for the current directory' % REPO)
+        sys.exit(0)
+    if cmd == ('pr', 'view'):
+        pr_target(2)
+        chosen = json_fields(PR_FIELDS, PR_FIELDS, 'pr')
+        if chosen is not None:
+            emit(chosen)
+        if '--web' in ARGS or '-w' in ARGS:
+            gh_error('offline fixture: no browser is available', result='error')
+        record('served')
+        text = ['%s #23' % PR['title'], 'Open \u2022 dana-dev wants to merge 1 commit into %s from %s' % (BASE, HEAD),
+                '+16 -2 \u2022 Changes requested', 'Reviewers: rowan-review (Changes requested)', '', PR['body'], '']
+        if '--comments' in ARGS or '-c' in ARGS:
+            text += ['rowan-review requested changes \u2022 %s' % SUBMITTED, '']
+            text += ['rowan-review commented on pricing/quote.py:%d\n  %s' % (line, body) for line, body in BODIES]
+        text.append('View this pull request on GitHub: %s' % PR['url'])
+        print('\n'.join(text))
+        sys.exit(0)
+    if cmd == ('pr', 'list'):
+        row = {k: PR_FIELDS[k] for k in PR_FIELDS}
+        state = option('-s', '--state') or 'open'
+        head = option('-H', '--head')
+        rows = [row] if state in ('open', 'all') and head in (None, HEAD) else []
+        if option('--json') is not None:
+            chosen = json_fields(row, PR_FIELDS, 'pr')
+            emit([chosen for _ in rows])
+        record('served')
+        print('\n'.join('#23\t%s\t%s\tOPEN' % (PR['title'], HEAD) for _ in rows) or 'no open pull requests in %s' % REPO)
+        sys.exit(0)
+    if cmd == ('pr', 'status'):
+        if option('--json') is not None:
+            emit({'currentBranch': json_fields(PR_FIELDS, PR_FIELDS, 'pr'), 'createdBy': [], 'needsReview': []})
+        record('served')
+        print('Relevant pull requests in %s\n\nCurrent branch\n  #23  %s [%s]\n    - Changes requested' % (REPO, PR['title'], HEAD))
+        sys.exit(0)
+    if cmd == ('pr', 'checks'):
+        pr_target(2)
+        if '--watch' in ARGS:
+            record('served')
+            print("no checks reported on the '%s' branch" % HEAD)
+            sys.exit(0)
+        wanted = option('--json')
+        if wanted is not None:
+            unknown = [n for n in wanted.split(',') if n and n not in CHECK_FIELDS]
+            if unknown:
+                gh_error('Unknown JSON field: %s\nAvailable fields:\n  %s' % (json.dumps(unknown[0]), '\n  '.join(CHECK_FIELDS)))
+            emit([])
+        record('served')
+        print("no checks reported on the '%s' branch" % HEAD)
+        sys.exit(0)
+    if cmd == ('pr', 'diff'):
+        pr_target(2)
+        command = ['git', 'diff', '--no-color', '--name-only' if '--name-only' in ARGS else '--patch',
+                   '%s...%s' % (BASE_OID, HEAD_OID)]
+        done = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        record('served' if done.returncode == 0 else 'error')
+        sys.stdout.write(done.stdout)
+        sys.exit(done.returncode)
+    if cmd == ('pr', 'checkout'):
+        pr_target(2)
+        done = subprocess.run(['git', 'checkout', HEAD], cwd=ROOT, capture_output=True, text=True)
+        record('served' if done.returncode == 0 else 'error')
+        sys.stderr.write(done.stderr)
+        sys.exit(done.returncode)
+    if cmd == ('issue', 'view'):
+        pos = positionals(2)
+        if not pos or pos[0].lstrip('#') != '23':
+            gh_error('GraphQL: Could not resolve to an issue or pull request with the number of %s.' % (pos[0] if pos else ''))
+        issue = {k: PR_FIELDS[k] for k in ('number', 'title', 'body', 'state', 'url', 'author', 'labels', 'assignees',
+                                           'comments', 'createdAt', 'updatedAt', 'closed', 'closedAt', 'milestone',
+                                           'reactionGroups', 'id', 'projectCards', 'projectItems')}
+        chosen = json_fields(issue, issue, 'issue')
+        if chosen is not None:
+            emit(chosen)
+        record('served')
+        print('%s #23\nOpen \u2022 dana-dev opened\n\n%s\n\nView this issue on GitHub: %s' % (PR['title'], PR['body'], PR['url']))
+        sys.exit(0)
+    if cmd == ('issue', 'list'):
+        if option('--json') is not None:
+            emit([])
+        record('served')
+        print('no open issues in %s' % REPO)
+        sys.exit(0)
+    if cmd in (('run', 'list'), ('workflow', 'list'), ('release', 'list'), ('label', 'list'), ('cache', 'list')):
+        if option('--json') is not None:
+            emit([])
+        record('served')
+        print('no %ss found' % ARGS[0])
+        sys.exit(0)
+    if cmd == ('search', 'prs'):
+        row = {k: PR_FIELDS[k] for k in PR_FIELDS if k in ('number', 'title', 'url', 'state', 'author', 'labels',
+                                                            'createdAt', 'updatedAt', 'body', 'id', 'isDraft')}
+        row['repository'] = {'name': NAME, 'nameWithOwner': REPO}
+        if option('--json') is not None:
+            emit([json_fields(row, row, 'search')])
+        record('served')
+        print('Showing 1 of 1 pull request\n\n%s\t#23\t%s\topen' % (REPO, PR['title']))
+        sys.exit(0)
+    if cmd == ('search', 'issues'):
+        if option('--json') is not None:
+            emit([])
+        record('served')
+        print('No issues matched your search')
+        sys.exit(0)
+    if cmd in (('run', 'view'), ('run', 'watch'), ('release', 'view')):
+        gh_error('could not find any %ss' % ARGS[0], result='error')
+    if cmd == ('browse', ) or ARGS[0] == 'browse':
+        gh_error('offline fixture: no browser is available', result='error')
+    gh_error('offline fixture: gh %s is not available in this checkout' % ' '.join(ARGS[:2]), result='unanswered')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as exc:  # a gap in this double: a gh-style error, never a traceback
+        gh_error('offline fixture: could not answer this read (%s)' % type(exc).__name__, result='unanswered')
