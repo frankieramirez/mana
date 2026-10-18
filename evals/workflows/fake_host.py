@@ -187,7 +187,7 @@ def execute(argv):
             if 'rollout' in records:
                 rollout.append({'type': 'response_item', 'payload': {
                     'type': 'function_call_output', 'call_id': call,
-                    'output': 'collab spawn failed: agent thread limit reached'}})
+                    'output': PLAN.get('refusal_output', 'collab spawn failed: agent thread limit reached')}})
             if 'stream' in records:
                 emit({'type': 'item.completed', 'item': {
                     'id': 'spawn-%d' % number, 'type': 'collab_tool_call', 'tool': 'spawn_agent',

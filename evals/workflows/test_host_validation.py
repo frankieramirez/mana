@@ -648,6 +648,12 @@ class ProbeCommand(unittest.TestCase):
         claimed, _ = self.probe(self.cap_plan(cap_mode='children', refusal_records=[], rollout_noise=model_text), 'claimed')
         self.assertNotIn('active_thread_cap', claimed['capabilities'])
         self.assertEqual(self.gate(claimed)['refused_spawns'], 0)
+        # A spawn that failed for a reason other than the thread limit says nothing about the cap.
+        other, _ = self.probe(self.cap_plan(cap_mode='children',
+                                            refusal_output='collab spawn failed: model gpt-6.1-sol is unavailable'), 'other')
+        self.assertNotIn('active_thread_cap', other['capabilities'])
+        self.assertEqual(self.gate(other)['refusals_by_source'], {'stream': [], 'history': [], 'rollout': []})
+        self.assertEqual(self.gate(other)['peak_children'], 2)
         ignored, _ = self.probe(self.cap_plan(cap_mode='ignore'), 'ignored')
         self.assertEqual(ignored['capabilities']['active_thread_cap']['status'], 'failed')
         self.assertIn('children exceeded the configured cap', ignored['capabilities']['active_thread_cap']['evidence'][0])
@@ -658,7 +664,7 @@ class ProbeCommand(unittest.TestCase):
         unchallenged, _ = self.probe(self.cap_plan(children=2), 'unchallenged')
         self.assertNotIn('active_thread_cap', unchallenged['capabilities'])
         self.assertTrue(any('not challenged' in note for note in unchallenged['unknown']))
-        for name in ('claimed', 'ignored', 'staggered', 'unchallenged'):
+        for name in ('claimed', 'other', 'ignored', 'staggered', 'unchallenged'):
             self.assert_not_comparative(name)
 
     def test_thread_cap_judgement_needs_overflow_or_refusal(self):

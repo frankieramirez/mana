@@ -107,8 +107,12 @@ def tool_output(value):
     return ''
 
 
+# Codex's own tool output for a spawn refused at agents.max_threads. Other spawn failures say nothing about the cap.
+LIMIT_REFUSAL = 'collab spawn failed: agent thread limit reached'
+
+
 def rollout_refusals(path):
-    """spawn_agent calls whose host-written tool output starts with `collab spawn failed`.
+    """spawn_agent calls whose host-written tool output starts with the thread-limit refusal.
 
     This reads Codex's on-disk session format: one JSON record per line, with `response_item`
     payloads of type `function_call` and `function_call_output` joined by `call_id`. Model
@@ -131,7 +135,7 @@ def rollout_refusals(path):
             spawns.append(payload.get('call_id'))
         elif payload.get('type') == 'function_call_output':
             outputs[payload.get('call_id')] = tool_output(payload.get('output'))
-    return [call for call in spawns if call is not None and outputs.get(call, '').startswith('collab spawn failed')]
+    return [call for call in spawns if call is not None and outputs.get(call, '').startswith(LIMIT_REFUSAL)]
 
 
 def refused_spawns(events, threads, parent):
