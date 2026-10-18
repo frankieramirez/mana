@@ -177,14 +177,14 @@ def build_manifest():
     for case in sorted(rows):
         row = rows[case]
         entry = row['entry']
-        group, seconds = JOBS[entry['job']]
+        group = JOBS[entry['job']][0]
         cases.append({
             'id': case, 'group': group, 'job': entry['job'], 'source_group': entry['source_group'],
             'split': entry['split'], 'request_path': 'inputs/%s/request.md' % case,
             **case_digests(case),
-            'group_request_sha256': entry['request_sha256'], 'group_fixture_sha256': entry['fixture_sha256'],
+            'group_fixture_sha256': entry['fixture_sha256'],
             'oracle_id': entry['oracle_id'], 'allowed_effects': entry['allowed_effects'],
-            'timeout_seconds': entry['timeout_seconds'], 'job_limit_seconds': seconds,
+            'timeout_seconds': entry['timeout_seconds'],
             'delegation_allowed': entry['delegation_allowed'],
             'condition_entrypoints': {
                 'mana': {'path': row['entrypoints']['mana']['path'],
@@ -228,7 +228,7 @@ def matrix_problems(manifest):
         if sorted(c['id'] for c in members) != sorted(GROUP_CASES[group]):
             problems.append('%s must hold exactly %s' % (job, ', '.join(GROUP_CASES[group])))
         for c in members:
-            if c['group'] != group or c['timeout_seconds'] != seconds or c['job_limit_seconds'] != seconds:
+            if c['group'] != group or c['timeout_seconds'] != seconds:
                 problems.append(c['id'] + ': time limit differs from the %d second job limit' % seconds)
             if c['delegation_allowed'] is not (group != 'prose'):
                 problems.append(c['id'] + ': code tasks share the delegation capability and prose has none')
@@ -287,7 +287,7 @@ def problems(manifest=None):
             found.append('pilot manifest differs from the group freezes and case bytes: ' + key)
     rows = group_sources()[0]
     for c in rebuilt['cases']:
-        if c['request_sha256'] != c['group_request_sha256']:
+        if c['request_sha256'] != rows[c['id']]['entry']['request_sha256']:
             found.append(c['id'] + ': request digest differs from its group freeze')
         for kind in ('mana', 'reference'):
             group_sha = rows[c['id']]['entrypoints'][kind]['group_sha256']
@@ -398,10 +398,13 @@ def blockers(root=None, evidence=None, at=None, groups=group_blockers):
     return found
 
 
-def study_blockers(study, at=None):
-    """Gates for one frozen study directory, read from its frozen copies, plus its own controls."""
+def study_blockers(study, at=None, root=None, evidence=None):
+    """Gates for one frozen study directory, read from its frozen copies, plus its own controls.
+
+    root and evidence replace the frozen gate records and host evidence for offline tests only.
+    """
     source = study.root / 'runner-source'
-    found = blockers(source / 'heldout', source / 'host-evidence', at)
+    found = blockers(root or source / 'heldout', evidence or source / 'host-evidence', at)
     manifest = load(source / 'heldout' / MANIFEST_NAME)
     controls = study.controls
     if controls.get('pilot_manifest_sha256') != conditions.digest((source / 'heldout' / MANIFEST_NAME).read_bytes()):
@@ -534,17 +537,18 @@ def sources():
     return {name: conditions.digest((HERE / name).read_bytes()) for name in sorted(set(names))}
 
 
-def prepare_study(mana_root, reference_root, destination, pins=None):
+def prepare_study(mana_root, reference_root, destination, pins=None, gate_check=blockers):
     """Freeze one study directory for the complete matrix. Builds every workspace; never invokes an agent.
 
-    pins replaces the payload inventory and entrypoint digests for offline tests with synthetic payloads.
-    study_blockers() refuses such a study, because its payloads differ from the pilot pins.
+    Refuses while any gate is closed: the study reads its frozen gate copies, so one prepared with a closed
+    gate could never open. pins and gate_check replace the payload pins and the gates for offline tests with
+    synthetic payloads; study_blockers() refuses such a study, because its payloads differ from the pilot pins.
     """
     import run
+    closed = gate_check()
+    if closed:
+        raise ValueError('study gates closed, nothing prepared: ' + '; '.join(closed))
     manifest = load(HELDOUT / MANIFEST_NAME)
-    found = problems(manifest)
-    if found:
-        raise ValueError('pilot manifest problems: ' + '; '.join(found))
     roots = {'mana': Path(mana_root).resolve(), 'reference': Path(reference_root).resolve()}
     data = {key: manifest[key] for key in ('study', 'host', 'model', 'reasoning', 'seed', 'repetitions', 'delegation')}
     data['version'] = 1
@@ -571,14 +575,12 @@ def prepare_study(mana_root, reference_root, destination, pins=None):
                          'timeout_seconds': c['timeout_seconds'], 'delegation_allowed': c['delegation_allowed']})
     extra = {'heldout': True, 'platform': manifest['platform'],
              'pilot_manifest_sha256': conditions.digest((HELDOUT / MANIFEST_NAME).read_bytes()),
-             'automatic_retries': 0, 'stop_conditions': manifest['stop_conditions'],
-             'gates_at_freeze': blockers()}
+             'automatic_retries': 0, 'stop_conditions': manifest['stop_conditions']}
     result = conditions.freeze_selected(data, selected, destination, run.HERE, {**run.STUDY_SOURCES, **sources()},
                                         prepare_workspace, extra)
     schedule = load(Path(destination) / 'schedule.json')
     if schedule != manifest['schedule']:
         raise ValueError('frozen schedule differs from the pilot manifest')
-    result['blockers'] = extra['gates_at_freeze']
     return result
 
 
@@ -600,7 +602,10 @@ def main(argv):
         print(conditions.digest(path.read_bytes()))
         return 0
     if argv[:1] == ['--prepare'] and len(argv) == 4:
-        print(json.dumps(prepare_study(*argv[1:]), indent=2))
+        try:
+            print(json.dumps(prepare_study(*argv[1:]), indent=2))
+        except ValueError as exc:
+            raise SystemExit(str(exc))
         return 0
     print(__doc__)
     return 2

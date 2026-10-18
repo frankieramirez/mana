@@ -173,7 +173,7 @@ python3 -B evals/workflows/pilot.py --check
 | Resources | `heldout/pilot-gates.json` records an authorization of exactly 72 parent slots, 35,640 parent seconds and 540 children, with who authorized it and when. |
 | Human effort | The same record names two distinct reviewers and a separate adjudicator, or records the cohort unavailable so effort metrics stay unmeasured. |
 
-Prepare a study directory from checkouts of both pins. Preparation verifies both inventories and every entrypoint digest, builds all 12 workspaces once, and archives the held-out builders, the governed inputs and oracles, the gate records and the host evidence in `runner-source/`. It never invokes an agent:
+Record the host evidence, the authorization and the human-effort record in the repository first. Preparation refuses while any gate is closed, because a study reads its frozen gate copies and one prepared with a closed gate could never open. Then prepare a study directory from checkouts of both pins. Preparation verifies both inventories and every entrypoint digest, builds all 12 workspaces once, and archives the held-out builders, the governed inputs and oracles, the gate records and the host evidence in `runner-source/`. It never invokes an agent:
 
 ```bash
 git -C /path/to/mana archive 9d1aa521974bc7c72bf9cdd676de18c09a036468 skills | tar -x -C /abs/mana
@@ -182,11 +182,11 @@ git -C /path/to/plugins archive 101b274dd991f694e1f7024be2157e5f3adf07de pstack 
 python3 -B evals/workflows/pilot.py --prepare /abs/mana/skills /abs/reference /abs/new-study
 ```
 
-`run.py --study` reads the gates from those frozen copies before every slot. While any gate is closed it claims no slot and invokes nothing. It also refuses a study whose payloads, entrypoints or schedule differ from the pilot manifest. Record the host evidence, the authorization and the human-effort record in the repository first, then prepare the directory.
+`run.py --study` reads the gates from those frozen copies before every slot. While any gate is closed it claims no slot and invokes nothing. It also refuses a study whose payloads, entrypoints or schedule differ from the pilot manifest.
 
-Each slot runs through the same contained runner as a development case: the sandbox preflight, per-thread probes, descendant collection and process-family termination. Three held-out stop gates run after every invocation, whatever its status: a changed installed payload, a changed tool double, and a ref change in the evaluator-owned bare origin. The first two count as corrupted input and the third as an external write. Each one retains the attempt and stops the schedule. A tool double's exit 97 is a refused write or install that the group grader measures, so it never stops a held-out study. Collection never decides a held-out task outcome: `evaluation.json` keeps it null and the sealed record says `needs_adjudication` until the group grader and a human record a judgment. Grading debugging output still needs a contained runner for the hidden controls; collection does not.
+Each slot runs through the same contained runner as a development case: the sandbox preflight, per-thread probes, descendant collection and process-family termination. Three held-out stop gates run after every invocation, whatever its status and even when collection raised: a changed installed payload, a changed tool double, and a ref change in the evaluator-owned bare origin. The first two count as corrupted input and the third as an external write. Each one retains the attempt and stops the schedule. A tool double's exit 97 is a refused write or install that the group grader measures, so it never stops a held-out study. Collection never decides a held-out task outcome: `evaluation.json` keeps it null and the sealed record says `needs_adjudication` until the group grader and a human record a judgment. Grading debugging output still needs a contained runner for the hidden controls; collection does not.
 
-The offline tests prepare a study from synthetic payloads, check the delegation text each condition receives, and drive slots through `fake_host.py` for each stop gate:
+The offline tests build closed gate records and host evidence themselves, prepare a study from synthetic payloads, check the delegation text each condition receives, and drive slots through `fake_host.py` for each stop gate:
 
 ```bash
 python3 -B -m unittest discover -s evals/workflows -p test_pilot.py

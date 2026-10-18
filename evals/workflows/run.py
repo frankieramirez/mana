@@ -504,6 +504,7 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
     started = time.monotonic()
     result['started_at'] = process_family.now()
     work = None
+    baseline = None
     listener = None
     limits = condition.get('delegation') if condition is not None else None
     try:
@@ -639,12 +640,7 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
             result["failures"].append("missing command execution events")
         if result["execution"] == "completed" and not result["usage"]:
             result["failures"].append("missing turn usage events")
-        if collect_fn is not None:
-            # Held-out attempts: external writes and changed frozen inputs are checked whatever the execution
-            # status. The task outcome is left to the group grader and human adjudication.
-            result['failures'] += collect_fn(work, out, baseline)
-            result['grading'] = 'pending: group grader and human adjudication'
-        elif result["execution"] == "completed":
+        if collect_fn is None and result["execution"] == "completed":
             try:
                 response = json.loads((out / "response.json").read_text())
                 result["failures"] += grade(case, work, baseline, response, events)
@@ -658,6 +654,14 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
     finally:
         if listener is not None:
             listener.close()
+        if collect_fn is not None and work is not None and baseline is not None:
+            # Held-out stop gates (external writes, changed frozen inputs) are checked whatever the execution
+            # status, even when collection raised. The task outcome waits for the group grader and adjudication.
+            try:
+                result['failures'] += collect_fn(work, out, baseline)
+            except (OSError, ValueError, subprocess.SubprocessError) as exc:
+                result['failures'].append('final state unavailable: held-out stop gates: %s' % exc)
+            result['grading'] = 'pending: group grader and human adjudication'
         if frozen_study is not None:
             try:
                 frozen_study.verify()
@@ -690,6 +694,19 @@ def capability_summary(assessment):
                          for key, value in assessment['capabilities'].items()}}
 
 
+def heldout_gates(study):
+    """Closed gates of a held-out study, or None for any other study.
+
+    The held-out builders, inputs, oracles and gate records must first equal their frozen copies.
+    """
+    if not study.controls.get('heldout'):
+        return None
+    import pilot
+    study.loaded_sources = {**STUDY_SOURCES, **pilot.sources()}
+    study.verify()
+    return pilot.study_blockers(study)
+
+
 def execute_study(study, slot):
     """One explicit allocated slot; preparation failures are retained without retries."""
     import archive_delegated
@@ -697,11 +714,8 @@ def execute_study(study, slot):
     hooks = {}
     if heldout:
         import pilot
-        # The held-out builders, inputs, oracles and gate records must equal the frozen copies.
-        study.loaded_sources = {**STUDY_SOURCES, **pilot.sources()}
-        study.verify()
         # The complete comparative study starts only when every gate is open. Nothing is claimed otherwise.
-        closed = pilot.study_blockers(study)
+        closed = heldout_gates(study)
         if closed:
             raise ValueError('study gates closed, no slot claimed: ' + '; '.join(closed))
         hooks = {'prepare_fn': pilot.prepare_workspace, 'collect_fn': pilot.collection_failures}
@@ -947,13 +961,7 @@ def main():
             if args.out or args.check == args.live or not args.controls_sha256:
                 raise ValueError('study requires --controls-sha256 and exactly one of --check or --live')
             study = conditions.FrozenStudy(args.study, args.controls_sha256, STUDY_SOURCES, HERE)
-            gates = None
-            if study.controls.get('heldout'):
-                import pilot
-                # The held-out builders, inputs, oracles and gate records run from the frozen copies too.
-                study.loaded_sources = {**STUDY_SOURCES, **pilot.sources()}
-                study.verify()
-                gates = pilot.study_blockers(study)
+            gates = heldout_gates(study)
             if args.check:
                 if args.slot is not None:
                     raise ValueError('study check validates the full frozen inputs, without selecting a slot')

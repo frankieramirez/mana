@@ -24,13 +24,36 @@ import run
 from test_host_validation import FakeHost, family_plan, verified_record
 
 # External pin for heldout/pilot-manifest.json. A changed matrix gets a new freeze_name and a new pin here.
-MANIFEST_SHA256 = '287d86cdc21a3433e0f3653b04a0381ec5e14d3e51aa1f2932cf834c53091ea5'
+MANIFEST_SHA256 = 'f994fcef01aadbc8a510db470ae7530ca77f9d80c82a5e5eabd7fdebf9b78027'
 HOST = 'codex-cli 0.163.0'
 LINUX = sys.platform.startswith('linux')
 
 
 def manifest():
     return pilot.load(pilot.HELDOUT / pilot.MANIFEST_NAME)
+
+
+def closed_fixture(base):
+    """Gate records and host evidence in their closed state, built here instead of copied from the repository.
+
+    The frozen matrix is copied because it is what the gates check. The gate record has nothing recorded, and
+    the pinned host has every comparative capability verified except the active-thread cap, as on 2026-10-17.
+    """
+    root = base / 'heldout'
+    root.mkdir()
+    shutil.copy2(pilot.HELDOUT / pilot.MANIFEST_NAME, root / pilot.MANIFEST_NAME)
+    (root / pilot.GATES_NAME).write_text(json.dumps({
+        'version': 1, 'study': 'effectiveness-pilot-1',
+        'resources': {'status': 'pending', 'authorized_by': None, 'authorized_at': None,
+                      'parent_slots': None, 'parent_seconds': None, 'max_children': None},
+        'human_effort': {'status': 'pending', 'reviewers': [], 'adjudicator': None,
+                         'recorded_by': None, 'recorded_at': None}}))
+    evidence = base / 'host-evidence'
+    evidence.mkdir()
+    record = verified_record(HOST, '2026-10-17T23:51:51+00:00')
+    del record['capabilities']['active_thread_cap']
+    (evidence / 'closed-host.json').write_text(json.dumps(record))
+    return root, evidence
 
 
 class Matrix(unittest.TestCase):
@@ -120,17 +143,12 @@ class Matrix(unittest.TestCase):
 
 
 class Gates(unittest.TestCase):
-    """Copied records only: the committed gate record and host evidence are never edited here."""
+    """Built closed-state records only: filling in the real gates or adding a host record cannot break these."""
 
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
-        self.root = Path(temp.name) / 'heldout'
-        self.root.mkdir()
-        for name in (pilot.MANIFEST_NAME, pilot.GATES_NAME):
-            shutil.copy2(pilot.HELDOUT / name, self.root / name)
-        self.evidence = Path(temp.name) / 'host-evidence'
-        shutil.copytree(hosts.EVIDENCE, self.evidence)
+        self.root, self.evidence = closed_fixture(Path(temp.name))
 
     def gates(self, **sections):
         record = pilot.load(self.root / pilot.GATES_NAME)
@@ -178,6 +196,13 @@ class Gates(unittest.TestCase):
         (self.evidence / 'zzz-later-failure.json').write_text(json.dumps(failed))
         self.assertTrue(any('child_containment=failed' in b for b in self.blockers()))
 
+    def test_preparation_refuses_while_any_gate_is_closed(self):
+        destination = self.root.parent / 'study'
+        with self.assertRaisesRegex(ValueError, 'study gates closed, nothing prepared: delegated parity unproven'):
+            pilot.prepare_study(self.root.parent, self.root.parent, destination,
+                                gate_check=lambda: self.blockers())
+        self.assertFalse(destination.exists())
+
     def test_group_readiness_and_provenance_feed_the_gate(self):
         self.assertIn('review: second review pending', self.blockers(groups=lambda: ['review: second review pending']))
         m = pilot.load(self.root / pilot.MANIFEST_NAME)
@@ -218,7 +243,7 @@ class PreparedStudy(unittest.TestCase):
         root = Path(cls.temp.name)
         mana, reference, pins = synthetic_payloads(root)
         with redirect_stdout(io.StringIO()):
-            cls.frozen = pilot.prepare_study(mana, reference, root / 'study', pins=pins)
+            cls.frozen = pilot.prepare_study(mana, reference, root / 'study', pins=pins, gate_check=lambda: [])
         cls.source = root / 'study'
 
     @classmethod
@@ -278,9 +303,12 @@ class Preparation(PreparedStudy):
             self.assertEqual(len(texts), 1, case)
 
     def test_a_study_with_closed_gates_or_other_payloads_claims_no_slot(self):
-        found = pilot.study_blockers(self.study)
+        root, evidence = closed_fixture(self.root)
+        found = pilot.study_blockers(self.study, root=root, evidence=evidence)
         self.assertTrue(any('delegated parity unproven' in b for b in found), found)
-        self.assertIn('frozen mana payload differs from the pilot pin', found)
+        self.assertTrue(any('resource authorization not recorded' in b for b in found), found)
+        # Synthetic payloads never match the pilot pins, so whatever the frozen gate copies say, this study is refused.
+        self.assertIn('frozen mana payload differs from the pilot pin', pilot.study_blockers(self.study))
         self.assertIn('frozen reference payload differs from the pilot pin', found)
         host = FakeHost(self, dict(family_plan(), version=HOST))
         with host.environment(), patch.object(run.shutil, 'which', return_value=str(host.executable)):
@@ -389,7 +417,7 @@ class ExternalWrites(unittest.TestCase):
                      'allowed_effects': entry['allowed_effects'],
                      'request': (pilot.HELDOUT / entry['request_path']).read_text()}
 
-    def execute(self, command, name):
+    def execute(self, command, name, run_bounded=None):
         plan = dict(family_plan(), version=HOST)
         plan['parent']['commands'].append(command)
         host = FakeHost(self, plan)
@@ -397,9 +425,22 @@ class ExternalWrites(unittest.TestCase):
         out.mkdir()
         condition = {'kind': 'none', 'inventory': {}, 'entrypoint': None, 'root': None, 'revision': None,
                      'delegation': {'max_active_threads': 4, 'max_children': 10, 'nested': False}}
-        with host.environment(), patch.object(run.shutil, 'which', return_value=str(host.executable)):
+        with host.environment(), patch.object(run.shutil, 'which', return_value=str(host.executable)), \
+                patch.object(run.process_family, 'run_bounded', run_bounded or run.process_family.run_bounded):
             return run.execute(self.case, out, 60, model='gpt-6.1-sol', condition=condition,
                                prepare_fn=pilot.prepare_workspace, collect_fn=pilot.collection_failures)
+
+    def test_a_push_is_recorded_even_when_collection_raises_after_the_invocation(self):
+        original = run.process_family.run_bounded
+
+        def broken(*args):
+            original(*args)
+            raise OSError('collection broke after the invocation')
+        result = self.execute('git push -q origin HEAD:refs/heads/leak', 'raised', broken)
+        self.assertIn('collection broke after the invocation', result['failures'])
+        self.assertIn('publication attempted: evaluator-owned origin refs changed', result['failures'])
+        self.assertTrue(result['grading'].startswith('pending'))
+        self.assertFalse(result['passed'])
 
     def test_a_push_that_lands_in_origin_is_recorded_as_publication(self):
         result = self.execute('git push -q origin HEAD:refs/heads/leak', 'push')
