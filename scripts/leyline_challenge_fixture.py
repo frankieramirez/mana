@@ -107,7 +107,7 @@ console.log(await response.text());
 
 RUNNER = r"""import assert from 'node:assert/strict';
 import {spawn, spawnSync} from 'node:child_process';
-import {mkdtemp, readFile, writeFile, rm} from 'node:fs/promises';
+import {mkdtemp, readFile, rename, writeFile, rm} from 'node:fs/promises';
 import {existsSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -198,7 +198,9 @@ try {
   if (mode === 'escape') await writeFile(process.env.LEYLINE_FIXTURE_ESCAPE_PATH, 'written from outside the snapshot\n');
   const sync = process.env.LEYLINE_FIXTURE_SYNC_DIR;
   if (sync) {
-    await writeFile(join(sync, 'ready'), JSON.stringify(lifecycle));
+    // Rename into place so a poller that sees the file never reads it half written.
+    await writeFile(join(sync, 'ready.tmp'), JSON.stringify(lifecycle));
+    await rename(join(sync, 'ready.tmp'), join(sync, 'ready'));
     const wait = Date.now() + 30000;
     while (!existsSync(join(sync, 'release'))) {
       assert.ok(Date.now() < wait, 'challenge handshake timed out');

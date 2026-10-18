@@ -3,6 +3,7 @@
 ## 0.43.17
 
 - The `effectiveness-pilot-1` gate record is filled in. Frankie authorized the frozen matrix bounds of 72 parent slots, 35,640 parent seconds and 540 children, and recorded the human-effort cohort as unavailable because no other people will review, so reviewer-effort metrics stay unmeasured. `pilot.py --check` now reports no blockers. Nothing has been prepared or run.
+- The leyline challenge fixture renames its ready file into place, so the SIGTERM test no longer reads it half written.
 
 ## 0.43.16
 
