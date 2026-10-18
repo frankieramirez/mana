@@ -366,6 +366,7 @@ def freeze_study(manifest_path, destination, loaded_sources=None):
     runner.mkdir()
     loaded = loaded_sources or LOADED_SOURCES
     for name in SOURCE_NAMES:
+        (runner / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(HERE / name, runner / name)
         if name in loaded and conditions.digest((runner / name).read_bytes()) != loaded[name]:
             raise ValueError('evaluator source changed during freeze: ' + name)

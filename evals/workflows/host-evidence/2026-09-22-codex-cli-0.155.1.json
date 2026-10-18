@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "host": "codex-cli 0.155.1",
+  "platform": "linux",
+  "recorded_at": "2026-09-22T07:59:10-04:00",
+  "source": "Historical focused pilot, migrated into the registry without new probes.",
+  "timestamp_basis": "Commit time of the record holding the evidence; the probes ran no later than this.",
+  "capabilities": {
+    "installation": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: measured on 2026-09-22 using Codex CLI 0.155.1 on Linux"
+      ]
+    },
+    "outside_read_denied": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: separate execution confirmed outside-file reads are denied"
+      ]
+    },
+    "protected_write_denied": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: skill writes are denied"
+      ]
+    },
+    "fixture_write_allowed": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: fixture and Git writes work"
+      ]
+    },
+    "network_denied": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: the isolation probe uses a reachable local listener"
+      ]
+    },
+    "command_events": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: saved artifacts contain raw tool events for eight passing scenarios"
+      ]
+    },
+    "completion_detection": {
+      "status": "verified",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: all eight scenarios have a passing observed run under the final grader"
+      ]
+    },
+    "model_selection": {
+      "status": "unavailable",
+      "observed_at": "2026-09-22T07:59:10-04:00",
+      "evidence": [
+        "evals/workflows/findings.md: the host did not expose a resolved model identifier in saved events"
+      ]
+    }
+  }
+}

@@ -81,25 +81,13 @@ class ClaimTargets(unittest.TestCase):
                 self.assertNotIn('Traceback', result.stderr)
 
     def test_unexpected_grading_exception_writes_failed_result(self):
-        class FakeProcess:
-            returncode = 0
-
-            def __init__(self, command, **kwargs):
-                self.stdout = kwargs['stdout']
-                self.response = Path(command[command.index('-o') + 1])
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                return False
-
-            def communicate(self, prompt, timeout):
-                self.stdout.write(json.dumps({'type': 'item.completed', 'item': {
-                    'type': 'command_execution', 'command': 'git status', 'exit_code': 0,
-                    'aggregated_output': ''}}) + '\n')
-                self.stdout.write(json.dumps({'type': 'turn.completed', 'usage': {}}) + '\n')
-                self.response.write_text(json.dumps({'report': 'Prepared unit 11', 'checks': []}))
+        def fake_invocation(command, prompt, stdout, stderr, timeout):
+            stdout.write(json.dumps({'type': 'item.completed', 'item': {
+                'type': 'command_execution', 'command': 'git status', 'exit_code': 0,
+                'aggregated_output': ''}}) + '\n')
+            stdout.write(json.dumps({'type': 'turn.completed', 'usage': {}}) + '\n')
+            Path(command[command.index('-o') + 1]).write_text(json.dumps({'report': 'Prepared unit 11', 'checks': []}))
+            return {'outcome': 'completed', 'exit_code': 0, 'family_terminated': True, 'surviving_pids': []}
 
         for error in (StopIteration('missing issue'), RuntimeError('unexpected grader defect')):
             with self.subTest(error=type(error).__name__):
@@ -109,7 +97,7 @@ class ClaimTargets(unittest.TestCase):
                         patch.object(fixture, 'prepare', return_value=(self.work, self.baseline)), \
                         patch.object(fixture, 'permission_config', return_value=[]), \
                         patch.object(fixture, 'preflight', return_value={}), \
-                        patch.object(fixture.subprocess, 'Popen', FakeProcess), \
+                        patch.object(fixture.process_family, 'run_bounded', fake_invocation), \
                         patch.object(fixture, 'grade', side_effect=error):
                     result = fixture.execute(self.case, self.out, 10)
                 saved = json.loads((self.out / 'result.json').read_text())
