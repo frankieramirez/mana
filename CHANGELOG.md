@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.15
+
+- The workflow evaluator records a second live Codex CLI 0.163.0 host probe. The host refused a third child spawn while two were open, so the active-thread cap is verified as counting child threads only, and the host is accepted for comparative delegated runs. The study's delegated parity gate is now open; only the resource authorization and human-effort records keep it closed.
+
 ## 0.43.14
 
 - The workflow evaluator freezes the complete `effectiveness-pilot-1` matrix in `evals/workflows/pilot.py`: 12 held-out source groups, three conditions, two repetitions, per-job time limits, no retries and the seeded 72-slot schedule. One complete reference package holds every route, and each case's digests cover only its own inputs and oracles. `pilot.py --prepare` freezes a study directory only while every gate is open, and `run.py --study` runs held-out slots through the contained runner. Changed installed payloads, changed tool doubles and pushes into the evaluator-owned origin stop the schedule, even when collection raised. Collection never grades a held-out attempt. Code tasks now get the shared delegation limits in every condition, and prose tasks are told not to delegate. The study refuses to start, claiming no slot, until a host record proves delegated parity and the resource authorization and human-effort records are filled in. Today the host gate is closed because the active-thread cap is unknown.
@@ -205,7 +209,7 @@
 - `dispel` no longer invents facts to replace the wording it strips. Asked to rewrite prose sitting next to a code block, it read a constant out of the code and documented the schedule that constant produces, in 3 of 3 runs, where the same model without the skill did so in 0 of 3. The rules told it to replace vague wording by naming the mechanism or the number and never said what to do when the source supplies neither. A new Fidelity section scopes the substitution rules to facts the source states, makes exempt text read-only in both directions, and adds a self-check for anything carried out of it. After the change the same case is clean in 3 of 3 runs. The PR description case moved the same way, from inventing a key-rotation reason the prompt never gave in 3 of 3 runs to stating the behavior without a reason in 3 of 3, while the same model without the skill still invents it every time.
 - Make the eval suite's invention graders deterministic. `no-invented-mechanics` and `no-invented-rationale` were LLM judges whose verdicts flipped on wording that did not differ in substance, which hid the regression above behind register scores. Both are regex now, matching `no-invented-numbers`. They catch less, and what they catch is stable across runs.
 
-## Unreleased
+## 0.43.15
 
 - Add the `dispel` eval suite under `evals/`: six cases that expect the skill to fire and two negative cases that expect it to stay out of the way. Run artifacts under `evals/results/` stay untracked. No change to shipped skill behavior, so no version bump.
 
