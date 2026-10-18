@@ -58,3 +58,5 @@ A probe is `blocked` when something it depends on did not happen, such as an inc
 Each feature probe lists its `runs`: the run id, the exit code, the report path, and the report's SHA-256. The checker copies each report it judged into the folder named by `retained` before it removes the worktree. Pass `--out <dir>` to choose that folder; it must be empty or absent. Without it the checker makes a new temporary folder. Link those reports as the challenge evidence.
 
 Pick a feature whose run is affordable. A feature run in a large project can take many minutes, and dynamic mode runs it five times. `--timeout` bounds each command.
+
+Dynamic mode is a quick probe. The challenge in [references/challenge.md](references/challenge.md) adds cancellation, declared fault variants, process ownership and checkout preservation, and retains every report outside the checkout.

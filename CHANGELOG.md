@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.4
+
+- Leyline gains a challenge stage. `challenge.sh` runs an installed control from committed bytes in disposable worktrees through baseline, declared break, restore, concurrent runs, SIGINT and SIGTERM cancellation, and plan-declared faults such as a missing browser, zero executed cases, source mutation and teardown failure. Each probe checks that an unknown listener survives, that no started process outlives its run, and that HEAD, index, tracked and untracked bytes are unchanged. Reports and control evidence are retained outside the checkout with a SHA-256 manifest that is checked again after cleanup. The generated Node control adds prerequisite probes, owned process verification, artifact digests, and treats suite errors such as a failed teardown as incomplete while keeping failed assertions. A synthetic acceptance fixture exercises every path; no consumer conformance is claimed.
+
 ## 0.43.3
 
 - Leyline's dynamic conformance check keeps the reports it judged. Each feature probe records its run id, and the checker copies every report with its SHA-256 into a retained folder (`--out`) before it removes the worktree. An incomplete run under the break patch now blocks the `break` probe instead of failing the checker. A probe that does not pass keeps the tail of stdout as well as stderr, and every probe appears with a reason when it never ran. The report check rejects a report with no `source.identity.head`. Regressions for all five cases from the Ultima refresh are in `scripts/test-leyline.sh`.
