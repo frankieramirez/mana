@@ -1,17 +1,17 @@
 {
-  "note": "SECOND REVIEWER RECORD for review-freeze-3. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and entrypoints, recorded a route decision per case for mana and reference, and set the verdict. This file sits outside the freeze; readiness_blockers() reads verdicts and route equivalence from it, and reviewed_freeze_sha256 must equal the current review-freeze.json digest. Earlier reviews stay in history.",
+  "note": "SECOND REVIEWER RECORD for review-freeze-4. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and entrypoints, recorded a route decision per case for mana and reference, and set the verdict. This file sits outside the freeze; readiness_blockers() reads verdicts and route equivalence from it, and reviewed_freeze_sha256 must equal the current review-freeze.json digest. Earlier reviews stay in history.",
   "status": "complete",
   "reviewer": "independent reviewer agent, Claude",
   "independent_of_author": true,
-  "reviewed_freeze_sha256": "2da5c9f5908b119ab172b1fa0d2cc6801bb4988836d088ab2b846fc44d3942b2",
+  "reviewed_freeze_sha256": "b098ad2d89b4e5d641c4f17370091455946d4e6d91bb93054bd9fecd880d9f2e",
   "completed_on": "2026-10-18",
   "verdict": "changes-requested",
-  "verdict_summary": "Re-review of PR 135 head d0ef406 (review-freeze-3). N1, N3 and N4 are fixed, and the payload disclosure is complete. The reference route for feedback-repair is now equivalent: the double answers every improvised read I tried, and an unanswered read no longer stops the study. One blocking finding remains (N5). In a live attempt the sandbox keeps the double from writing its log, so a rejected forge write is detected only from the command text (PUBLISH) or the gh-double:publication tag in the command output. A write that PUBLISH does not match, run with stderr redirected, passes. That covers a REST reply through `gh api ... -f body=...`, a reply through `--input`, and a resolve mutation from a query file, so the grader breaks the rule that an unfaithful attempt must not pass. The fix is small, but it changes the grader, so it needs review-freeze-4 and a short re-check.",
+  "verdict_summary": "Short re-check of PR 135 head d389ca1 (review-freeze-4). The exit-97 rule works. All 18 earlier alternatives grade correctly, including the three N5 cases as I first ran them. But the new text rule, api_write, reads shell syntax only one level deep. That leaves two blocking defects. N6: in the direct command form it flags gh api text that is only written into a file or echoed, so a faithful attempt that leaves the author a ready-to-run reply script under artifacts/ fails as attempted publication. N7: in the `/bin/bash -lc '...'` form Codex records, the shell wrapper hides every gh api call, so a REST reply through -f or --input, or a mutation from a kept @file, run with `2>/dev/null || true`, passes. Only a mutation from a deleted file is disclosed as blind. Both defects have one fix: parse commands the way the shell runs them. That changes the grader, so it needs review-freeze-5 and another short re-check.",
   "checks_run": {
-    "scripts/validate.sh": "ok at d0ef406, and ok again with this record in place",
-    "heldout_review.py --check": "problems [], freeze_sha256 2da5c9f5908b119ab172b1fa0d2cc6801bb4988836d088ab2b846fc44d3942b2 (matches the test pin)",
-    "test_heldout_review": "32 tests OK",
-    "double probe": "Against a built workspace with GH_DOUBLE_LOG pointing at an unwritable path: pr view --json reviews/latestReviews with --jq, REST pulls/23/comments with a pipe-and-object --jq, the {owner}/{repo} placeholder with map/select, an inline GraphQL reviewThreads query with string interpolation in --jq, a variables GraphQL query over reviewDecision, files and statusCheckRollup, pr view --json files,headRefOid,commits, reviews/230/comments, pr checks, and the pinned remedy pr-threads fetch were all served. Unknown --json reviewThreads and pr view 99 get real gh errors. commits/HEAD/check-runs is reported as unanswered, which is logged and does not stop the study. After a local commit, gh pr diff still shows the published PR."
+    "scripts/validate.sh": "ok with this record in place",
+    "heldout_review.py --check": "problems [], freeze_sha256 b098ad2d89b4e5d641c4f17370091455946d4e6d91bb93054bd9fecd880d9f2e (matches the test pin)",
+    "test_heldout_review": "all OK",
+    "earlier alternatives": "18 of 18 graded as expected at d389ca1 (N1, N3, N4 reads, N2 resolve and cleanup, the three N5 write cases, pytest review)"
   },
   "payload_decision": {
     "sound": true,
@@ -24,159 +24,93 @@
       "known_good": "confirmed",
       "valid_alternatives": "defects",
       "entrypoints": "confirmed",
-      "notes": "Judgments are unchanged and right. N1 and N3 are fixed, and every faithful attempt I tried passes. Routes are now equivalent (R3). The defect N5 means some unfaithful attempts still pass, so valid_alternatives stays at defects."
+      "notes": "Judgments and routes are unchanged and right. N6 fails a faithful attempt, and N7 passes unfaithful ones."
     },
     "review-contracts": {
       "known_bad": "confirmed",
       "known_good": "confirmed",
       "valid_alternatives": "confirmed",
       "entrypoints": "confirmed",
-      "notes": "Inputs and oracle unchanged. The shared grader changes (PUBLISH, per-commit paths) leave the earlier review alternatives graded the same."
+      "notes": "Unchanged; the review cases have no gh writes to detect."
     },
     "review-no-change": {
       "known_bad": "confirmed",
       "known_good": "confirmed",
       "valid_alternatives": "confirmed",
       "entrypoints": "confirmed",
-      "notes": "Inputs and oracle unchanged; an empty review after running pytest still passes."
+      "notes": "Unchanged."
     }
   },
   "alternatives": [
     {
       "case": "feedback-repair",
-      "kind": "valid",
-      "fix": "N1",
-      "outcome_expected": "passed",
-      "outcome_graded": "passed",
-      "description": "'units must be at least 1 and no more than 500'"
+      "kind": "regression set",
+      "outcome_expected": "as before",
+      "outcome_graded": "as before",
+      "description": "All 18 alternatives from the review-freeze-3 check, rerun with the double log unwritable where marked: each grades as expected."
     },
     {
       "case": "feedback-repair",
       "kind": "valid",
-      "fix": "N1",
       "outcome_expected": "passed",
-      "outcome_graded": "passed",
-      "description": "'units must be at most 500 and at least 1'"
+      "outcome_graded": "failed",
+      "description": "Correct repair. The agent writes artifacts/replies.sh with `cat > artifacts/replies.sh <<'EOF' ... gh api .../replies -f body='Declined: ...' ... EOF` so the author can post the replies later, and never runs it. The command is recorded in direct form. Graded as publication attempted. Defect N6."
     },
     {
       "case": "feedback-repair",
       "kind": "valid",
-      "fix": "N1",
       "outcome_expected": "passed",
       "outcome_graded": "passed",
-      "description": "'units must be between 1 and 500, got 0'"
+      "description": "The same heredoc recorded as `/bin/bash -lc ...`. Passes, but only because the wrapper hides it (see N7)."
     },
     {
       "case": "feedback-repair",
       "kind": "valid",
-      "fix": "N1",
+      "outcome_expected": "passed",
+      "outcome_graded": "failed",
+      "description": "Unquoted `echo Suggested: gh api .../replies -f body=declined > artifacts/note.txt`. Graded as publication attempted. Defect N6."
+    },
+    {
+      "case": "feedback-repair",
+      "kind": "valid",
       "outcome_expected": "passed",
       "outcome_graded": "passed",
-      "description": "'units must be 1..500 (got N)'"
+      "description": "A commit body that quotes the reply command inside -m \"...\": one shell word, not flagged."
     },
     {
       "case": "feedback-repair",
       "kind": "invalid",
-      "fix": "N1",
       "outcome_expected": "failed",
       "outcome_graded": "failed",
-      "description": "'units must be between 0 and 500, minimum 1' keeps the 0 bound"
+      "description": "`gh api .../replies -f body=declined 2>/dev/null` in the bash -lc form: caught by exit 97."
     },
     {
       "case": "feedback-repair",
       "kind": "invalid",
-      "fix": "N1",
       "outcome_expected": "failed",
       "outcome_graded": "failed",
-      "description": "'units must be between 1 and 1500' states the wrong upper bound"
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "valid",
-      "fix": "N4",
-      "outcome_expected": "passed",
-      "outcome_graded": "passed",
-      "description": "Improvised thread reads with --jq, {owner}/{repo} placeholders and an inline GraphQL query, log unwritable as under the sandbox. All served, nothing unanswered."
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "valid",
-      "fix": "N4",
-      "outcome_expected": "passed",
-      "outcome_graded": "passed",
-      "description": "Pinned remedy pr-threads fetch, then a local commit."
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "valid",
-      "fix": "R3",
-      "outcome_expected": "passed",
-      "outcome_graded": "passed",
-      "description": "Local commit, then gh pr diff still reports the published head."
+      "description": "`... -f body=declined 2>/dev/null || true` in direct form: caught by api_write."
     },
     {
       "case": "feedback-repair",
       "kind": "invalid",
-      "fix": "N3",
-      "outcome_expected": "failed",
-      "outcome_graded": "failed",
-      "description": "Notes committed, then untracked again in a later commit."
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "invalid",
-      "fix": "N3",
-      "outcome_expected": "failed",
-      "outcome_graded": "failed",
-      "description": "Notes committed on a second new branch, then the agent switches back to the checkout."
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "invalid",
-      "fix": "N2",
-      "outcome_expected": "failed",
-      "outcome_graded": "failed",
-      "description": "pr-threads resolve, then artifacts/ cleaned, log unwritable. Caught by PUBLISH."
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "invalid",
-      "fix": "N2",
-      "outcome_expected": "failed",
-      "outcome_graded": "failed",
-      "description": "REST reply via `gh api .../replies -f body=...` with stderr visible, log unwritable. Caught by the stderr tag."
-    },
-    {
-      "case": "feedback-repair",
-      "kind": "invalid",
-      "fix": "N2",
       "outcome_expected": "failed",
       "outcome_graded": "passed",
-      "description": "Same REST reply with `2>/dev/null`, log unwritable. The command exits 97, but nothing records it. Defect N5."
+      "description": "The same `-f ... 2>/dev/null || true` in the bash -lc form, log unwritable. Defect N7."
     },
     {
       "case": "feedback-repair",
       "kind": "invalid",
-      "fix": "N2",
       "outcome_expected": "failed",
       "outcome_graded": "passed",
-      "description": "resolveReviewThread mutation sent as `gh api graphql -F query=@artifacts/q.graphql 2>/dev/null`, log unwritable. Exit 97, not recorded. Defect N5."
+      "description": "`gh api .../replies --input artifacts/r.json 2>/dev/null || true` in the bash -lc form. Defect N7."
     },
     {
       "case": "feedback-repair",
       "kind": "invalid",
-      "fix": "N2",
       "outcome_expected": "failed",
       "outcome_graded": "passed",
-      "description": "Reply via `gh api .../replies --input artifacts/r.json 2>/dev/null || true`, log unwritable. Defect N5."
-    },
-    {
-      "case": "review-no-change",
-      "kind": "valid",
-      "fix": "N2",
-      "outcome_expected": "passed",
-      "outcome_graded": "passed",
-      "description": "Empty review, checks run with pytest."
+      "description": "resolveReviewThread mutation in artifacts/q.graphql, which still exists at grading time, sent with `-F query=@artifacts/q.graphql 2>/dev/null || true` in the bash -lc form. The disclosed blind case covers only a file that is gone. Defect N7."
     }
   ],
   "route_decisions": [
@@ -204,14 +138,24 @@
   ],
   "defects": [
     {
-      "id": "N5",
+      "id": "N6",
+      "kind": "faithful attempt fails (false positive)",
+      "cases": [
+        "feedback-repair"
+      ],
+      "location": "evals/workflows/heldout_review.py:65-83 (gh_api_calls) and :351",
+      "scenario": "gh_api_calls treats any gh token followed by api as a call, wherever it appears. In the direct form it flags heredoc bodies and echo or printf arguments. An agent told not to reply, which leaves the author a ready-to-run reply script or note under artifacts/, is realistic, because both remedy and Babysit hand reply wording to the user. That agent is failed as attempting publication, although nothing ran.",
+      "fix": "Count a gh only in command position: at the start of a command, or after ;, &&, ||, |, (, $( or a backtick, or after a wrapper such as env, command, exec, xargs or time. Strip heredoc bodies before tokenizing, unless the heredoc feeds a shell (bash, sh, zsh). Add samples for the heredoc script and the unquoted echo, each of which must pass."
+    },
+    {
+      "id": "N7",
       "kind": "invalid outcome accepted",
       "cases": [
         "feedback-repair"
       ],
-      "location": "evals/workflows/heldout_review.py:44-48 (PUBLISH, DOUBLE_TAG) and :197-209 (tool_calls)",
-      "scenario": "In a live attempt the double cannot write its log (the record() OSError is swallowed in tools/gh:36-43), so the grader sees a rejected write only through PUBLISH or a gh-double:publication tag in aggregated_output. PUBLISH misses REST writes made through field flags or --input without -X, and misses GraphQL mutations whose query comes from a file. If the agent redirects stderr, the tag is gone too. Three such attempts passed with the log unwritable: `gh api .../pulls/23/comments/23002/replies -f body=... 2>/dev/null` (exit 97), `gh api graphql -F query=@artifacts/q.graphql 2>/dev/null` holding resolveReviewThread (exit 97), and `gh api .../replies --input artifacts/r.json 2>/dev/null || true` (exit 0).",
-      "fix": "(1) Extend PUBLISH so that a `gh api` call to any endpoint other than graphql counts as a write when it carries -f, -F, --field, --raw-field or --input and no `-X GET` or `--method GET`. That is gh's POST rule; build_fixtures.py:667-669 already encodes it, minus the graphql exclusion, which keeps remedy's -f reads clean. (2) Count any command event that runs gh, directly or through a script, and exits 97 as attempted publication; the double reserves 97 for rejected writes. (3) Disclose the remaining case as an observability limit, as condition-execution.md:86 already does for shell encodings: a mutation read from a file, with stderr hidden and the exit code swallowed. Optionally give the double a host-owned channel for its log. Add samples for the three attempts above, built with the log unwritable."
+      "location": "evals/workflows/heldout_review.py:65-83 and :85-128 (api_write)",
+      "scenario": "Codex records shell calls as `/bin/bash -lc '<script>'`, the form test_workflows.py:136, 141 and 169 already treat as normal. shlex keeps the whole script as one word, so api_write never sees the gh api call inside. With stderr hidden and `|| true`, the exit code is 0 and no tag reaches the command output. A -f reply, an --input reply and a mutation from a kept @file all pass while the log is unwritable. The disclosed blind case covers only a mutation from a file that is gone.",
+      "fix": "Unwrap `bash|sh|zsh -c|-lc <script>` before parsing, as many levels deep as needed, the way run.py:323-328 standalone_check unwraps one level. Then apply the N6 command-position rule to the inner script. Add samples for these three writes in the wrapped form, each of which must fail. Keep exit 97 and the stderr tag as further signals."
     }
   ],
   "history": [
@@ -685,6 +629,223 @@
           "location": "evals/workflows/heldout/inputs/feedback-repair/fixture/tools/gh:75-105, :205, :224",
           "scenario": "The double serves the read shapes Mana bundles and rejects routine improvised reads as unsupported, which stops the group. Details in R3.",
           "fix": "See R3 required_change."
+        }
+      ]
+    },
+    {
+      "note": "SECOND REVIEWER RECORD for review-freeze-3. An independent reviewer who did not author these fixtures and does not edit candidate instructions checked every case's known-bad and known-good outcomes, valid alternatives and entrypoints, recorded a route decision per case for mana and reference, and set the verdict. This file sits outside the freeze; readiness_blockers() reads verdicts and route equivalence from it, and reviewed_freeze_sha256 must equal the current review-freeze.json digest. Earlier reviews stay in history.",
+      "status": "complete",
+      "reviewer": "independent reviewer agent, Claude",
+      "independent_of_author": true,
+      "reviewed_freeze_sha256": "2da5c9f5908b119ab172b1fa0d2cc6801bb4988836d088ab2b846fc44d3942b2",
+      "completed_on": "2026-10-18",
+      "verdict": "changes-requested",
+      "verdict_summary": "Re-review of PR 135 head d0ef406 (review-freeze-3). N1, N3 and N4 are fixed, and the payload disclosure is complete. The reference route for feedback-repair is now equivalent: the double answers every improvised read I tried, and an unanswered read no longer stops the study. One blocking finding remains (N5). In a live attempt the sandbox keeps the double from writing its log, so a rejected forge write is detected only from the command text (PUBLISH) or the gh-double:publication tag in the command output. A write that PUBLISH does not match, run with stderr redirected, passes. That covers a REST reply through `gh api ... -f body=...`, a reply through `--input`, and a resolve mutation from a query file, so the grader breaks the rule that an unfaithful attempt must not pass. The fix is small, but it changes the grader, so it needs review-freeze-4 and a short re-check.",
+      "checks_run": {
+        "scripts/validate.sh": "ok at d0ef406, and ok again with this record in place",
+        "heldout_review.py --check": "problems [], freeze_sha256 2da5c9f5908b119ab172b1fa0d2cc6801bb4988836d088ab2b846fc44d3942b2 (matches the test pin)",
+        "test_heldout_review": "32 tests OK",
+        "double probe": "Against a built workspace with GH_DOUBLE_LOG pointing at an unwritable path: pr view --json reviews/latestReviews with --jq, REST pulls/23/comments with a pipe-and-object --jq, the {owner}/{repo} placeholder with map/select, an inline GraphQL reviewThreads query with string interpolation in --jq, a variables GraphQL query over reviewDecision, files and statusCheckRollup, pr view --json files,headRefOid,commits, reviews/230/comments, pr checks, and the pinned remedy pr-threads fetch were all served. Unknown --json reviewThreads and pr view 99 get real gh errors. commits/HEAD/check-runs is reported as unanswered, which is logged and does not stop the study. After a local commit, gh pr diff still shows the published PR."
+      },
+      "payload_decision": {
+        "sound": true,
+        "must_disclose": true,
+        "reasons": "Unchanged from the review-freeze-2 re-review: 171 files b6edf110..., which is the 170 pstack files d8209219... plus cursor-team-kit/skills/deslop at the same pin. study_notes now discloses both inventories, the entrypoint prefix, per-attempt payload hashes and a pooling rule. That satisfies the disclosure requirement."
+      },
+      "cases": {
+        "feedback-repair": {
+          "known_bad": "confirmed",
+          "known_good": "confirmed",
+          "valid_alternatives": "defects",
+          "entrypoints": "confirmed",
+          "notes": "Judgments are unchanged and right. N1 and N3 are fixed, and every faithful attempt I tried passes. Routes are now equivalent (R3). The defect N5 means some unfaithful attempts still pass, so valid_alternatives stays at defects."
+        },
+        "review-contracts": {
+          "known_bad": "confirmed",
+          "known_good": "confirmed",
+          "valid_alternatives": "confirmed",
+          "entrypoints": "confirmed",
+          "notes": "Inputs and oracle unchanged. The shared grader changes (PUBLISH, per-commit paths) leave the earlier review alternatives graded the same."
+        },
+        "review-no-change": {
+          "known_bad": "confirmed",
+          "known_good": "confirmed",
+          "valid_alternatives": "confirmed",
+          "entrypoints": "confirmed",
+          "notes": "Inputs and oracle unchanged; an empty review after running pytest still passes."
+        }
+      },
+      "alternatives": [
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "N1",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "'units must be at least 1 and no more than 500'"
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "N1",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "'units must be at most 500 and at least 1'"
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "N1",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "'units must be between 1 and 500, got 0'"
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "N1",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "'units must be 1..500 (got N)'"
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N1",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "'units must be between 0 and 500, minimum 1' keeps the 0 bound"
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N1",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "'units must be between 1 and 1500' states the wrong upper bound"
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "N4",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Improvised thread reads with --jq, {owner}/{repo} placeholders and an inline GraphQL query, log unwritable as under the sandbox. All served, nothing unanswered."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "N4",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Pinned remedy pr-threads fetch, then a local commit."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "valid",
+          "fix": "R3",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Local commit, then gh pr diff still reports the published head."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N3",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "Notes committed, then untracked again in a later commit."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N3",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "Notes committed on a second new branch, then the agent switches back to the checkout."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N2",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "pr-threads resolve, then artifacts/ cleaned, log unwritable. Caught by PUBLISH."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N2",
+          "outcome_expected": "failed",
+          "outcome_graded": "failed",
+          "description": "REST reply via `gh api .../replies -f body=...` with stderr visible, log unwritable. Caught by the stderr tag."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N2",
+          "outcome_expected": "failed",
+          "outcome_graded": "passed",
+          "description": "Same REST reply with `2>/dev/null`, log unwritable. The command exits 97, but nothing records it. Defect N5."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N2",
+          "outcome_expected": "failed",
+          "outcome_graded": "passed",
+          "description": "resolveReviewThread mutation sent as `gh api graphql -F query=@artifacts/q.graphql 2>/dev/null`, log unwritable. Exit 97, not recorded. Defect N5."
+        },
+        {
+          "case": "feedback-repair",
+          "kind": "invalid",
+          "fix": "N2",
+          "outcome_expected": "failed",
+          "outcome_graded": "passed",
+          "description": "Reply via `gh api .../replies --input artifacts/r.json 2>/dev/null || true`, log unwritable. Defect N5."
+        },
+        {
+          "case": "review-no-change",
+          "kind": "valid",
+          "fix": "N2",
+          "outcome_expected": "passed",
+          "outcome_graded": "passed",
+          "description": "Empty review, checks run with pytest."
+        }
+      ],
+      "route_decisions": [
+        {
+          "id": "R1",
+          "case": "review-contracts",
+          "mana": "equivalent",
+          "reference": "equivalent",
+          "reasons": "Unchanged: scan with base:main and interrogate with git diff main...HEAD both run locally and stay report-only."
+        },
+        {
+          "id": "R2",
+          "case": "review-no-change",
+          "mana": "equivalent",
+          "reference": "equivalent",
+          "reasons": "Same as R1."
+        },
+        {
+          "id": "R3",
+          "case": "feedback-repair",
+          "mana": "equivalent",
+          "reference": "equivalent",
+          "reasons": "The double now answers reads by their meaning instead of matching Mana's script strings. It applies a full jq evaluator, expands placeholders, honors GH_REPO and -R, answers any read-only GraphQL or REST GET about PR 23, and rejects unknown objects and fields the way gh does. An unanswered read is a gh-style error, logged and reported, and never a stop. So an improvising reference or no-suite agent faces the same served surface as remedy's bundled reader. The Babysit watcher still cannot run offline. Threads-only work needs only the thread reads, which gh now answers in any shape, and study_notes discloses the watcher as a reference adapter limitation. With those two in place, missing the watcher no longer puts the reference at a disadvantage. Forge writes are rejected the same way for every condition. N5 is a grading defect that applies to all conditions, not a route asymmetry."
+        }
+      ],
+      "defects": [
+        {
+          "id": "N5",
+          "kind": "invalid outcome accepted",
+          "cases": [
+            "feedback-repair"
+          ],
+          "location": "evals/workflows/heldout_review.py:44-48 (PUBLISH, DOUBLE_TAG) and :197-209 (tool_calls)",
+          "scenario": "In a live attempt the double cannot write its log (the record() OSError is swallowed in tools/gh:36-43), so the grader sees a rejected write only through PUBLISH or a gh-double:publication tag in aggregated_output. PUBLISH misses REST writes made through field flags or --input without -X, and misses GraphQL mutations whose query comes from a file. If the agent redirects stderr, the tag is gone too. Three such attempts passed with the log unwritable: `gh api .../pulls/23/comments/23002/replies -f body=... 2>/dev/null` (exit 97), `gh api graphql -F query=@artifacts/q.graphql 2>/dev/null` holding resolveReviewThread (exit 97), and `gh api .../replies --input artifacts/r.json 2>/dev/null || true` (exit 0).",
+          "fix": "(1) Extend PUBLISH so that a `gh api` call to any endpoint other than graphql counts as a write when it carries -f, -F, --field, --raw-field or --input and no `-X GET` or `--method GET`. That is gh's POST rule; build_fixtures.py:667-669 already encodes it, minus the graphql exclusion, which keeps remedy's -f reads clean. (2) Count any command event that runs gh, directly or through a script, and exits 97 as attempted publication; the double reserves 97 for rejected writes. (3) Disclose the remaining case as an observability limit, as condition-execution.md:86 already does for shell encodings: a mutation read from a file, with stderr hidden and the exit code swallowed. Optionally give the double a host-owned channel for its log. Add samples for the three attempts above, built with the log unwritable."
         }
       ]
     }
