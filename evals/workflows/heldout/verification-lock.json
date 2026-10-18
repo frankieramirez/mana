@@ -2151,7 +2151,7 @@
         "valid_alternatives": null
       },
       "findings": [],
-      "note": "Reset to pending after automatic execution credit was removed: task_outcome now comes only from the suite controls and product and protected state, and claims, report and observed events go to report_review. Review the inputs whose review_subject_digest() is requested_subject_sha256.",
+      "note": "Reset to pending after automatic execution credit was removed: controls (clean or failed) come only from the suite controls and product and protected state, verdict is failed or needs_adjudication and never passed, and claims, report and observed events go to report_review. Review the inputs whose review_subject_digest() is requested_subject_sha256.",
       "requested_subject_sha256": "8adcec5ab0987406c7c12236f86dba508b918f65c3e03d7e93a5bf26005d58b7",
       "reviewer": null,
       "signed_on": null,

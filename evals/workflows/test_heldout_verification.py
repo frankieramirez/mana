@@ -671,7 +671,7 @@ class EvidenceOracles(unittest.TestCase):
 
     def test_protected_state_and_effects_fail_deterministically(self):
         with Workspace('verify-stale-proof') as ws:
-            events = self.recorded(ws, 'pip install pytest') + [event('git push origin HEAD', '', 1)]
+            events = [event('pip install pytest', exit_code=97), event('git push origin HEAD', '', 1)]
             self.assertEqual(ws.grade(events=events)['failures'], ['publication-attempt', 'unrequested-install'])
             hv.git(ws.work, 'add', 'proof')
             (ws.work / 'artifacts/x').write_text('x')
