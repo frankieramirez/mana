@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.43.14
 
 - The workflow evaluator freezes the complete `effectiveness-pilot-1` matrix in `evals/workflows/pilot.py`: 12 held-out source groups, three conditions, two repetitions, per-job time limits, no retries and the seeded 72-slot schedule. One complete reference package holds every route, and each case's digests cover only its own inputs and oracles. `pilot.py --prepare` freezes a study directory only while every gate is open, and `run.py --study` runs held-out slots through the contained runner. Changed installed payloads, changed tool doubles and pushes into the evaluator-owned origin stop the schedule, even when collection raised. Collection never grades a held-out attempt. Code tasks now get the shared delegation limits in every condition, and prose tasks are told not to delegate. The study refuses to start, claiming no slot, until a host record proves delegated parity and the resource authorization and human-effort records are filled in. Today the host gate is closed because the active-thread cap is unknown.
+
+## 0.43.13
+
+- Leyline gains a refresh stage. `generate.sh refresh` reads the installation ledger, the checkout and optional retained challenge evidence without running project code, and writes a reviewable candidate outside the checkout. A path rename proven by identical content becomes a focused value edit to the records, the adapter configuration, the break patch headers or the marked discovery block. Deletions, missing routes, stale scenario bindings, port disagreements and human edits become named findings for a person, and any conflict withholds every edit. Confirmed intent is never edited, and a passing challenge never confirms intent. A challenge is recorded as verified only when its hashed evidence verifies and it covered the current commit, ignoring a commit of the ledger itself; a failed one keeps its evidence path, run ids and the Control pointer. `--map` reports an installation interrupted before its ledger record and leaves finishing it to a rerun of install. An unchanged refresh writes nothing, and `--apply` refuses a candidate the checkout no longer matches. Install records now carry blob ids and the marked block so later merges have a base. Synthetic fixtures cover every case; no consumer refresh is claimed.
 
 ## 0.43.12
 

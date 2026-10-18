@@ -50,6 +50,7 @@ scripts/test-leyline.sh || err "leyline conformance fixtures failed"
 scripts/test-leyline-install.sh || err "leyline installation fixtures failed"
 python3 -B scripts/test_control_runtime.py || err "generated control runtime fixtures failed"
 python3 -B scripts/test_leyline_challenge.py || err "leyline challenge fixtures failed"
+python3 -B scripts/test_leyline_refresh.py || err "leyline refresh fixtures failed"
 python3 -B -m unittest discover -s evals/semantic -p 'test_*.py' || err "semantic eval runner fixtures failed"
 
 # 2a. Every output style has the frontmatter the Claude Code picker needs.

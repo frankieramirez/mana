@@ -661,6 +661,7 @@ Checks that a project gives agents an honest way to find a feature, run the app,
 - Validates run reports: zero executed tests, a missing prerequisite, or an exit code that disagrees with the report is never a pass.
 - With your agreement, runs the project's CLI in a throwaway worktree and applies a declared break patch to prove the right check fails.
 - Challenges an installed control with cancellation, concurrent runs and declared faults, checks that it leaves your checkout and unknown processes alone, and keeps every report in a hash-checked evidence folder.
+- Refreshes an installed control after the code moves, proposing only focused edits it can prove and keeping your edits, confirmed intent and failed evidence.
 
 ```text
 # Check this repo's control setup
@@ -671,6 +672,9 @@ Checks that a project gives agents an honest way to find a feature, run the app,
 
 # Draft and install the first mapped control within the authorized edit scope
 /mana:leyline install
+
+# Reconcile the installed control with renamed or deleted code and a retained challenge
+/mana:leyline refresh
 ```
 
 <details>
@@ -678,7 +682,7 @@ Checks that a project gives agents an honest way to find a feature, run the app,
 
 The project's `## Agent skills` block names its control skill with a `Control:` line. That skill gives the CLI prefix and where records, test registrations, and break patches live. The CLI answers `list`, `describe`, `feature`, `changed`, and `release`, prints one JSON report with `--json`, and exits 0 passed, 1 failed, 2 usage, or 3 incomplete. The full contract is in `skills/leyline/references/contract.md`.
 
-`run` builds a worktree of HEAD and probes list, describe, an unknown id, a baseline run, the break patch, the restored run, and two runs at once. A probe that could not happen is reported as blocked, never passed. The challenge (`skills/leyline/scripts/challenge.sh`) adds SIGINT and SIGTERM cancellation and the faults a plan declares, such as a missing browser or a failed teardown, and retains the evidence outside the checkout. Installation creates a candidate; actual challenge results establish its execution scope. Refresh and private-consumer rollout remain separate work.
+`run` builds a worktree of HEAD and probes list, describe, an unknown id, a baseline run, the break patch, the restored run, and two runs at once. A probe that could not happen is reported as blocked, never passed. The challenge (`skills/leyline/scripts/challenge.sh`) adds SIGINT and SIGTERM cancellation and the faults a plan declares, such as a missing browser or a failed teardown, and retains the evidence outside the checkout. Installation creates a candidate; actual challenge results establish its execution scope. `refresh` reconciles an installed control from its ledger without running project code: a proven rename gets a focused edit, and a deletion, missing route, stale binding, port disagreement or human edit becomes a named finding. It never confirms intent, and it records challenge evidence as `verified` only for a passing challenge of the current commit. Private-consumer rollout remains separate work.
 
 </details>
 
