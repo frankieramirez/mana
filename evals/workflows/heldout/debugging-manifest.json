@@ -7,7 +7,7 @@
   "status": "authored and hash-locked; refrozen after second-review findings; re-review pending; not yet frozen into a study directory; no outcomes collected",
   "ready_for_study_freeze": false,
   "blockers": [
-    "Second review round 4 (2026-10-18) returned changes required on the 5070b36 replay rule: see review.second_review.findings.",
+    "Re-review of the round 4 fixes (literal invoice calls for a pass, single-total script runs and nonzero-exit replays to adjudication) is pending.",
     "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
   ],
   "exposure_rule": "A source group whose request, workspace or oracle a candidate-instruction author reads while tuning becomes development. Record it in exposures, set its split to development and author an untouched replacement group for confirmation.",
@@ -66,7 +66,7 @@
       "timeout_seconds": 600,
       "delegation_allowed": true,
       "oracle_id": "oracle-debug-regression-claim-01",
-      "oracle_sha256": "e654fc0e1bca7dd408a9167e6edb399690cb462ad9935c587a6cf45b1c0dc0cd"
+      "oracle_sha256": "b6f67c40ffbd2175238a9b55624f45e70958b12d50c3c9a3db30f6f311103bea"
     },
     {
       "id": "debug-partial-retry",
@@ -133,8 +133,9 @@
   "freeze": {
     "frozen_on": "2026-10-18",
     "method": "freeze_sha256 is conditions.digest(conditions.encoded({cases, conditions})). Review records sit outside it so the second reviewer can sign without changing the freeze.",
-    "freeze_sha256": "36dfb4da0540a13833bbea0a2fdb3b8a0047d4ba995042a3baefe5a683626d62",
+    "freeze_sha256": "32076fbbb7f2e41f5890317ababe6a4cb127e06d058a7045a200193a2303005b",
     "supersedes": [
+      "36dfb4da0540a13833bbea0a2fdb3b8a0047d4ba995042a3baefe5a683626d62",
       "3b08d84d3da5687d319e7b5452fb000dc85ff8329a16e4017de4be5ca847edba",
       "3a13b73b794ed1cc5779af8e8b3f56a2ebe269c4cc3a53dd5d6fdd9969ab4547",
       "2e4e6c078d4b37073f0fe46bfc8728c9c72df1fc15d94591e66cfa5603eb1949"

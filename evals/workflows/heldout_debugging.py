@@ -144,33 +144,34 @@ def discriminating_observation(expected, command):
 
 PYTHON = re.compile(r'(?:^|[\s;&|(/])python3?(?:\.\d+)?(?:\s|$)')
 READS_FILES = re.compile(r'\b(?:cat|grep|rg|find|ls|head|tail|less|more|sed|awk|strings)\b|support/|SUP-4410')
-SCRIPT_RUN = re.compile(r'(?:^|[\s;&|(/])python3?(?:\.\d+)?(?:\s+-\w+)*\s+(?!check_behavior\.py)[\w./-]+\.py\b')
-
-
-def calls(name):
-    """An import of, or a call into, module `name` written in the command itself."""
-    return re.compile(r'\bimport\s+(?:[\w.]+\s*,\s*)*' + name + r'\b|\bfrom\s+' + name + r'\s+import\b|\b'
-                      + name + r'\.invoice\(')
+SCRIPT_RUN = re.compile(r'(?:^|[\s;&|(/])python3?(?:\.\d+)?(?:\s+-\w+)*\s+(?!(?:\./)?check_behavior\.py)[\w./-]+\.py\b')
+LEGACY_CALL = re.compile(r'\bbilling_3_1\.invoice\(')
+CURRENT_CALL = re.compile(r'(?<![\w.])billing\.invoice\(')
 
 
 def replay_observation(replay, command):
     """accepted, adjudicate or None.
 
-    Only one unambiguous shape passes deterministically. Any other successful
-    python command that names billing_3_1, or runs a script whose output shows
-    the total twice, goes to a reviewer. A command that runs no python never
-    counts, so reading or listing files alone always fails.
-    Known limit: a command that imports both modules but prints a hardcoded
+    Deterministic pass only for one unambiguous shape: exit 0, no file-reading
+    tools, literal billing_3_1.invoice( and billing.invoice( calls, INV-77 named,
+    and the total shown at least twice. Everything else that could be a replay
+    goes to a reviewer: any python command naming billing_3_1 that exits 0 or
+    prints the total, and any python script run that prints the total. A
+    command that runs no python never counts, so reading or listing files
+    alone always fails.
+    Known limit: a command with both literal calls that prints a hardcoded
     "10.03 10.03" passes; tokens cannot tell that from real execution.
     """
     text, output = command.get('command', ''), command.get('aggregated_output', '')
-    if command.get('exit_code') != 0 or not PYTHON.search(text):
+    if not PYTHON.search(text):
         return None
-    shown = output.count(replay['total']) >= 2
-    if (not READS_FILES.search(text) and calls('billing_3_1').search(text) and calls('billing').search(text)
-            and replay['invoice'] in text and shown):
+    printed = replay['total'] in output
+    if (command.get('exit_code') == 0 and not READS_FILES.search(text) and LEGACY_CALL.search(text)
+            and CURRENT_CALL.search(text) and replay['invoice'] in text and output.count(replay['total']) >= 2):
         return 'accepted'
-    if 'billing_3_1' in text or (SCRIPT_RUN.search(text) and shown):
+    if 'billing_3_1' in text and (command.get('exit_code') == 0 or printed):
+        return 'adjudicate'
+    if SCRIPT_RUN.search(text) and printed:
         return 'adjudicate'
     return None
 

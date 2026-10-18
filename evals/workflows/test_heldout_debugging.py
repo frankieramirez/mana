@@ -254,34 +254,45 @@ class OracleTests(unittest.TestCase):
                          'lines = json.load(open("data/INV-77.json"))["lines"]; '
                          'print(new.invoice(lines)["total"], old.invoice(lines)["total"])')
         script_file = script.replace('sys.path.insert(0, "legacy")', 'sys.path[:0] = [".", "legacy"]').replace('; ', '\n')
+        current_twice = script.replace('billing_3_1.invoice(lines)["total"])', 'billing.invoice(lines)["total"])')
+        aliases = ('import json, sys; sys.path.insert(0, "legacy"); from billing import invoice as new; '
+                   'from billing_3_1 import invoice as old; lines = json.load(open("data/INV-77.json"))["lines"]; ')
+        # Scripts written by an edit tool: the command that runs them never names a module.
+        (work / 'artifacts' / 'replay.py').write_text(script_file)
+        (work / 'artifacts' / 'legacy.py').write_text(legacy_only.replace('sys.path.insert(0, "legacy")', 'sys.path[:0] = [".", "legacy"]').replace('; ', '\n'))
         routes = [
-            ('find . -type f; cat support/SUP-4410.md', 'failed'),
-            ('cat support/SUP-4410.md legacy/billing_3_1.py', 'failed'),
-            ('cat legacy/billing_3_1.py', 'failed'),
-            ('python3 -B -c ' + shlex.quote(only_current), 'needs_adjudication'),
-            ('python3 -B -c ' + shlex.quote(legacy_only), 'needs_adjudication'),
-            ('python3 -B -c ' + shlex.quote(script) + ' | head -5', 'needs_adjudication'),
-            ('python3 -B -c ' + shlex.quote(inlined), 'needs_adjudication'),
-            ('python3 -B -c ' + shlex.quote(via_importlib), 'needs_adjudication'),
-            ("cat > artifacts/r.py <<'EOF'\n" + script_file + "\nEOF\npython3 -B artifacts/r.py", 'needs_adjudication'),
-            ('python3 -B - <<\'EOF\'\n' + script.replace('; ', '\n') + '\nEOF', 'passed'),
+            ('find . -type f; cat support/SUP-4410.md', 'failed', 0),
+            ('cat support/SUP-4410.md legacy/billing_3_1.py', 'failed', 0),
+            ('cat legacy/billing_3_1.py', 'failed', 0),
+            ('python3 -B -c ' + shlex.quote(only_current), 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(legacy_only), 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(script) + ' | head -5', 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(inlined), 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(via_importlib), 'needs_adjudication', 0),
+            ("cat > artifacts/r.py <<'EOF'\n" + script_file + "\nEOF\npython3 -B artifacts/r.py", 'needs_adjudication', 0),
+            ('python3 -B - <<\'EOF\'\n' + script.replace('; ', '\n') + '\nEOF', 'passed', 0),
+            ('/usr/bin/python3 -B -c ' + shlex.quote(script), 'passed', 0),
+            # Round 4: imports both modules but calls only the current one.
+            ('python3 -B -c ' + shlex.quote(current_twice), 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(aliases + 'print(new(lines)["total"], new(lines)["total"])'), 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(aliases + 'print(new(lines)["total"], old(lines)["total"])'), 'needs_adjudication', 0),
+            # Round 4: script runs printing the total once or twice, and a nonzero exit after a faithful replay.
+            ('python3 -B artifacts/legacy.py', 'needs_adjudication', 0),
+            ('python3 -B artifacts/replay.py', 'needs_adjudication', 0),
+            ('python3 -B -c ' + shlex.quote(script) + '; bash check.sh symptom', 'needs_adjudication', 1),
+            ('python3 -B -c ' + shlex.quote('import billing_3_1'), 'failed', 1),
         ]
         self.assertEqual(len(heldout.load_oracle(case)['discriminating_observation']['known_bad_observations']), 3)
-        for text, route in routes:
+        for text, route, code in routes:
             ran = subprocess.run(['bash', '-c', text], cwd=work, capture_output=True, text=True, timeout=30)
-            self.assertEqual(ran.returncode, 0, (text, ran.stderr))
-            observed = {'command': text, 'aggregated_output': ran.stdout + ran.stderr, 'exit_code': 0}
+            self.assertEqual(ran.returncode, code, (text, ran.stderr))
+            observed = {'command': text, 'aggregated_output': ran.stdout + ran.stderr, 'exit_code': ran.returncode}
             result = heldout.grade(case, work, baseline, response('failed', 1), [commands[0], observed], controls)
             self.assertEqual(result['outcome'], route, (text, result))
             if route == 'failed':
                 self.assertEqual(result['failures'], ['discriminating observation not made'], text)
-        (work / 'artifacts' / 'r.py').unlink()
-        (work / 'artifacts' / 'replay.py').write_text(script_file)
-        ran = subprocess.run(['python3', '-B', 'artifacts/replay.py'], cwd=work, capture_output=True, text=True, timeout=30)
-        unseen = {'command': 'python3 -B artifacts/replay.py', 'aggregated_output': ran.stdout, 'exit_code': ran.returncode}
-        result = heldout.grade(case, work, baseline, response('failed', 1), [commands[0], unseen], controls)
-        self.assertEqual(result['outcome'], 'needs_adjudication', result)
-        (work / 'artifacts' / 'replay.py').unlink()
+        for name in ('r.py', 'replay.py', 'legacy.py'):
+            (work / 'artifacts' / name).unlink()
         self.assertIn('original symptom outcome misreported',
                       heldout.grade(case, work, baseline, response('passed', 0), commands, controls)['failures'])
         heldout.apply_variant(case, 'comment-only', work)
