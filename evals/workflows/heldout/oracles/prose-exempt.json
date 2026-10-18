@@ -78,6 +78,12 @@
       "review_question": "Does the prose avoid numbers, schedules and settings that appear only in the YAML sample?"
     },
     {
+      "id": "no-added-fact",
+      "kind": "forbid",
+      "topics": [],
+      "review_question": "Does every new or reworded sentence state only what the original prose stated, adding no fact about the cache (where it lives, who shares it, who can clear it) or anything else?"
+    },
+    {
       "id": "no-inferred-reason",
       "kind": "forbid",
       "topics": [
@@ -87,6 +93,36 @@
     }
   ],
   "screen": {
+    "source": {
+      "path": "docs/image-cache.md"
+    },
+    "source_carries": [
+      {
+        "sentence": "The image cache is a crucial component that seamlessly keeps thumbnails close to the renderer — it's not just a cache, it's the backbone of the gallery experience.",
+        "carries": [
+          "cache-holds-thumbnails"
+        ]
+      },
+      {
+        "sentence": "In order to keep things tidy, old thumbnails are cleaned up periodically by a background sweep.",
+        "carries": [
+          "periodic-sweep-removes-old"
+        ]
+      },
+      {
+        "sentence": "When the cache is full, new thumbnails still render, they just don't get stored.",
+        "carries": [
+          "full-cache-behavior"
+        ]
+      },
+      {
+        "sentence": "It's worth noting that the cache starts out cold after a restart.",
+        "carries": [
+          "cold-after-restart"
+        ]
+      }
+    ],
+    "unmatched": "no-added-fact",
     "faithful": [
       {
         "sentence": "The image cache keeps thumbnails close to the renderer.",

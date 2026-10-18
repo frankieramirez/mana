@@ -253,16 +253,36 @@ def compiled(pattern):
 
 
 def normalize(sentence):
-    """Canonical comparison ignores case, spacing, list markers, code ticks, quote style and end punctuation."""
+    """Canonical comparison ignores case, spacing, heading and list markers, code ticks, quote style and a
+    closing period, colon, semicolon or exclamation mark. A question mark or a trailing ellipsis stays, so a
+    question never matches a statement."""
     text = sentence.replace('’', "'").replace('‘', "'").replace('`', '').replace('"', '')
-    text = re.sub(r'^\s*(?:[-*+]|\d+\.)\s+', '', text)
+    text = re.sub(r'^\s*(?:#+|[-*+]|\d+\.)\s+', '', text)
     text = re.sub(r'\s+', ' ', text).strip().lower()
-    return text.rstrip('.!?;: ').strip()
+    if text.endswith('...') or text.endswith('…'):
+        return text
+    return re.sub(r'[.!;:\s]+$', '', text)
 
 
 def sentences(prose):
-    lines = [line for line in prose.splitlines() if not line.lstrip().startswith('#')]
-    return [s for s in SENTENCE_SPLIT.split('\n'.join(lines)) if normalize(s)]
+    """Every line counts, headings included; a line splits further at sentence-final punctuation."""
+    return [s for s in SENTENCE_SPLIT.split(prose) if normalize(s)]
+
+
+def source_sentences(screen, files):
+    """Normalized sentences of the text the candidate was asked to edit, fenced blocks left out."""
+    spec = screen.get('source')
+    if spec is None or files is None:
+        return set()
+    text = files[spec['path']]
+    if 'start' in spec:
+        text = span(text, spec)
+    text = re.sub(r'```.*?```', '\n', text, flags=re.S)
+    found = {normalize(s) for s in sentences(text)}
+    for item in screen.get('source_carries', []):
+        if normalize(item['sentence']) not in found:
+            raise ValueError('source sentence not found in the fixture: ' + item['sentence'])
+    return found
 
 
 def check_screen(screen):
@@ -272,14 +292,21 @@ def check_screen(screen):
             raise ValueError('canonical contradiction holds a negation, quantifier or reason: ' + item['sentence'])
 
 
-def screen_prose(oracle, prose):
-    """Return (check, verdict, failure, reason) for every fact, in oracle order."""
+def screen_prose(oracle, prose, files=None):
+    """Return (check, verdict, failure, reason) for every fact, in oracle order.
+    A sentence fails only as a canonical contradiction and passes only as a canonical faithful statement or
+    unchanged from the source text in files. Every other sentence goes to a reviewer: to each fact whose
+    topic it mentions, or else to the screen's catch-all check."""
     screen = oracle.get('screen')
     if screen is None:
         return []
     check_screen(screen)
     faithful = {normalize(f['sentence']): f['carries'] for f in screen['faithful']}
+    faithful_source = {normalize(f['sentence']): f['carries'] for f in screen.get('source_carries', [])}
     contradictions = {normalize(c['sentence']): c for c in screen['contradictions']}
+    if screen['unmatched'] not in {fact['id'] for fact in oracle['facts']}:
+        raise ValueError('screen catch-all check is not a fact: ' + screen['unmatched'])
+    unchanged = source_sentences(screen, files)
     carried, routed, failed = set(), {}, {}
     for sentence in sentences(prose):
         key = normalize(sentence)
@@ -287,10 +314,13 @@ def screen_prose(oracle, prose):
             failed.setdefault(contradictions[key]['check'], contradictions[key]['failure'])
         elif key in faithful:
             carried.update(faithful[key])
+        elif key in unchanged:
+            carried.update(faithful_source.get(key, []))
         else:
-            for fact in oracle['facts']:
-                if any(compiled(p).search(sentence) for p in fact['topics']):
-                    routed.setdefault(fact['id'], 'topical sentence is not canonical: ' + sentence.strip())
+            topical = [fact['id'] for fact in oracle['facts']
+                       if any(compiled(p).search(sentence) for p in fact['topics'])]
+            for ident in topical or [screen['unmatched']]:
+                routed.setdefault(ident, 'sentence is neither canonical nor unchanged: ' + sentence.strip())
     for cue in screen.get('prose_cues', []):
         if compiled(cue['pattern']).search(prose):
             routed.setdefault(cue['check'], 'reviewer cue in the reply layout')
@@ -367,7 +397,7 @@ def grade(case_id, observation, root=HELDOUT):
         check = oracle['shorter_than']
         source = span(initial[check['span']['path']], check['span'])
         record(check['id'], 'pass' if words(text) < words(source) else 'fail', check['failure'])
-    for check_id, verdict, failure, reason in screen_prose(oracle, prose.strip()):
+    for check_id, verdict, failure, reason in screen_prose(oracle, prose.strip(), initial):
         record(check_id, verdict, failure, reason)
     outcome = 'failed' if failures else 'needs_adjudication' if adjudication else 'passed'
     return {'case_id': case_id, 'oracle_id': oracle['oracle_id'], 'outcome': outcome,

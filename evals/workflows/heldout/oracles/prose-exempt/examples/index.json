@@ -330,5 +330,91 @@
       "contradicted-fact"
     ],
     "note": "Canonical contradiction of the cold start."
+  },
+  {
+    "id": "r24-canonical-control",
+    "label": "valid-alternative",
+    "output": "r24-canonical-control.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Fifth review control: every sentence canonical."
+  },
+  {
+    "id": "r25-gpu-memory",
+    "label": "adjudicate",
+    "output": "r25-gpu-memory.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "no-added-fact"
+    ],
+    "note": "Fifth review: invented fact with no topic word. Must not pass."
+  },
+  {
+    "id": "r26-shared-by-every-user",
+    "label": "adjudicate",
+    "output": "r26-shared-by-every-user.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "no-added-fact"
+    ],
+    "note": "Fifth review: invented fact. Must not pass."
+  },
+  {
+    "id": "r27-admins-clear-by-hand",
+    "label": "adjudicate",
+    "output": "r27-admins-clear-by-hand.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "no-added-fact"
+    ],
+    "note": "Fifth review: invented fact. Must not pass."
+  },
+  {
+    "id": "r28-claim-in-heading",
+    "label": "adjudicate",
+    "output": "r28-claim-in-heading.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Fifth review: a contradicting claim in the heading. Must not pass."
+  },
+  {
+    "id": "r29-cold-as-question",
+    "label": "adjudicate",
+    "output": "r29-cold-as-question.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Fifth review: the cold start asked, not stated. Must not pass."
+  },
+  {
+    "id": "r30-rhetorical-question",
+    "label": "valid-alternative",
+    "output": "r30-rhetorical-question.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Fifth review: faithful rhetorical question. Must never fail."
+  },
+  {
+    "id": "r31-cold-only-in-heading",
+    "label": "adjudicate",
+    "output": "r31-cold-only-in-heading.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "cold-after-restart"
+    ],
+    "note": "Fifth review: the cold start only as a sub-heading, then contradicted. Must not pass."
   }
 ]

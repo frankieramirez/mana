@@ -2,7 +2,7 @@
   "schema_version": 1,
   "study": "effectiveness-pilot-1",
   "job": "prose-fidelity",
-  "status": "frozen; payload inventories verified; oracles reworked to closed lists after the fourth review, which requested changes; a new review of this freeze is needed",
+  "status": "frozen; payload inventories verified; oracles reworked after the fifth review, which requested changes, so only canonical or unchanged sentences pass; a new review of this freeze is needed",
   "conditions": {
     "mana": {
       "source": "https://github.com/frankieramirez/mana",
@@ -54,7 +54,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-exempt-01",
-      "oracle_sha256": "80a60700b130f79190cd711a21d1403ebb4d48ccc351b0488288c43936a53328"
+      "oracle_sha256": "ed0a1a1456eeb776aff0aba9e747fecbce9e2aff3809e4eab44560d9e218e00e"
     },
     {
       "id": "prose-scope",
@@ -85,7 +85,7 @@
       "timeout_seconds": 180,
       "delegation_allowed": false,
       "oracle_id": "oracle-prose-scope-01",
-      "oracle_sha256": "bd839f9f33333104eead1e50deb93e52b37c551639607689ca960a2689b58651"
+      "oracle_sha256": "3d4837eb322af654f44d14006113aec5ece80793c42444bc270a31cf377eeb7b"
     },
     {
       "id": "prose-verbatim",
@@ -120,7 +120,7 @@
     }
   ],
   "exposure": [],
-  "freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+  "freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
   "history": [
     {
       "date": "2026-10-17",
@@ -163,6 +163,13 @@
       "previous_freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
       "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
       "change": "Policy change after the fourth review of freeze 80775510, before any outcome: prose screens use closed lists. A prose sentence fails only as a canonical contradiction with no negation, quantifier or reason clause; it passes only as a canonical faithful statement or when it mentions no topic of any check; every other topical sentence goes to needs_adjudication, with no failure-word exemption. Verb-list contradictions and presence patterns are removed, including the full-cache check. The version 4.2 token becomes an exact required-token check. Examples r18 to r23 and c1, c2 (prose-exempt), r14 to r19 and c3, c4 (prose-scope) added; earlier routes relabeled to the new policy."
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+      "previous_freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+      "by": "Claude fixture author for issue 108",
+      "change": "Fifth review: only canonical or unchanged sentences pass; headings are screened; a question mark is kept; thirteen reviewer outputs added as examples"
     }
   ]
 }

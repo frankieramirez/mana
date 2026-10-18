@@ -91,6 +91,40 @@
     }
   ],
   "screen": {
+    "source": {
+      "path": "notes/importer-draft.md",
+      "start": "We are thrilled",
+      "end": "\n",
+      "include_start": true
+    },
+    "source_carries": [
+      {
+        "sentence": "We are thrilled to share that, starting with version 4.2, the importer will now successfully bring in each and every record that passes schema validation — reliably, consistently, and without exception.",
+        "carries": [
+          "validation-scope",
+          "version-onward"
+        ]
+      },
+      {
+        "sentence": "Records that fail validation are not imported at all, and instead they are listed in the rejection report.",
+        "carries": [
+          "invalid-excluded-and-reported"
+        ]
+      },
+      {
+        "sentence": "For example, a record whose `posted_on` date is in the future fails validation and will be rejected.",
+        "carries": [
+          "example-not-exhaustive"
+        ]
+      },
+      {
+        "sentence": "It is important to note that the importer does not modify any record in any way.",
+        "carries": [
+          "records-not-modified"
+        ]
+      }
+    ],
+    "unmatched": "no-inferred-fact",
     "faithful": [
       {
         "sentence": "Starting with version 4.2, the importer brings in every record that passes schema validation.",

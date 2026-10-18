@@ -262,20 +262,25 @@ class Oracles(unittest.TestCase):
         faithful = {
             'prose-exempt': ['r1-list-without-periods', 'r2-negated-stop', 'r3-negated-persist',
                              'r11-not-empty-no-room', 'r12-no-longer-empty', 'r13-double-negative',
-                             'r18-nothing-survives', 'r19-no-thumbnail-kept', 'r20-whatever-was-cached-is-gone'],
+                             'r18-nothing-survives', 'r19-no-thumbnail-kept', 'r20-whatever-was-cached-is-gone',
+                             'r24-canonical-control', 'r30-rhetorical-question'],
             'prose-scope': ['r1-meets-the-schema', 'r5-version-last', 'r9-failing-example-included', 'r13-among-them',
                             'r14-clears-validation', 'r15-not-the-only-reason', 'r16-not-only-those',
-                            'r17-while-one-fails'],
+                            'r17-while-one-fails', 'r20-canonical-control'],
         }
         unfaithful = {
             'prose-exempt': ['r4-inferred-sweep-purpose', 'r5-sweep-frees-full-cache', 'r6-negated-cold-start',
                              'r7-isnt-cold', 'r8-not-empty', 'r9-doesnt-start-out-cold',
                              'r10-restart-keeps-thumbnails', 'r14-restart-doesnt-leave-cold', 'r15-isnt-left-cold',
                              'r16-doesnt-come-back-cold', 'r17-carried-over', 'r21-still-there-afterwards',
-                             'r22-stay-across-restarts', 'r23-older-pushed-aside'],
+                             'r22-stay-across-restarts', 'r23-older-pushed-aside', 'r25-gpu-memory',
+                             'r26-shared-by-every-user', 'r27-admins-clear-by-hand', 'r28-claim-in-heading',
+                             'r29-cold-as-question', 'r31-cold-only-in-heading'],
             'prose-scope': ['r2-before-version', 'r3-version-only', 'r4-report-destination', 'r7-future-date-included',
                             'r8-future-date-passes', 'r10-future-dates-included', 'r11-future-dates-too',
-                            'r12-now-accepts-future-date', 'r18-no-longer-fail', 'r19-no-reason-to-reject'],
+                            'r12-now-accepts-future-date', 'r18-no-longer-fail', 'r19-no-reason-to-reject',
+                            'r21-runs-nightly', 'r22-arrival-order', 'r23-single-threaded',
+                            'r24-modification-as-question'],
         }
         for label, groups, forbidden in (('faithful', faithful, 'failed'), ('unfaithful', unfaithful, 'passed')):
             for case, idents in groups.items():
@@ -330,6 +335,45 @@ class Oracles(unittest.TestCase):
                     routes = [v for _, v, _, _ in hp.screen_prose(oracle, text)]
                     self.assertIn('adjudicate', routes)
                     self.assertNotIn('fail', routes)
+
+    def test_only_canonical_or_unchanged_sentences_pass(self):
+        """A new or reworded sentence reaches a reviewer whatever its topic; an untouched source sentence passes."""
+        for case, invented in (('prose-exempt', 'The cache lives in GPU memory.'),
+                               ('prose-scope', 'It is single-threaded.')):
+            oracle = hp.load_oracle(hp.HELDOUT, case)
+            manifest, _ = hp.load()
+            entry = next(e for e in manifest['cases'] if e['id'] == case)
+            files = hp.fixture_files(hp.HELDOUT, entry)
+            with self.subTest(case=case, text=invented):
+                routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, invented, files)}
+                self.assertEqual(routes[oracle['screen']['unmatched']], 'adjudicate')
+                self.assertNotIn('fail', routes.values())
+            source = ' '.join(item['sentence'] for item in oracle['screen']['source_carries'])
+            routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, source, files)}
+            self.assertEqual(set(routes.values()), {'pass'}, case)
+            routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, source)}
+            self.assertNotIn('pass', [routes[i['carries'][0]] for i in oracle['screen']['source_carries']], case)
+            broken = json.loads(json.dumps(oracle))
+            broken['screen']['source_carries'][0]['sentence'] = 'A sentence the fixture never held.'
+            with self.assertRaises(ValueError):
+                hp.screen_prose(broken, source, files)
+            broken = json.loads(json.dumps(oracle))
+            broken['screen']['unmatched'] = 'not-a-fact'
+            with self.assertRaises(ValueError):
+                hp.screen_prose(broken, source, files)
+
+    def test_headings_and_questions_are_screened(self):
+        oracle = hp.load_oracle(hp.HELDOUT, 'prose-exempt')
+        self.assertNotEqual(hp.normalize('The cache starts cold after a restart?'),
+                            hp.normalize('The cache starts cold after a restart.'))
+        self.assertEqual(hp.normalize('## The cache starts cold after a restart'),
+                         hp.normalize('The cache starts cold after a restart.'))
+        for text in ('# Image cache (warm after every restart)', 'The cache is warm after a restart?',
+                     'The cache starts cold after a restart?'):
+            with self.subTest(text=text):
+                routes = {c: v for c, v, _, _ in hp.screen_prose(oracle, text)}
+                self.assertEqual(routes['cold-after-restart'], 'adjudicate')
+                self.assertNotIn('fail', routes.values())
 
     def test_examples_cover_good_bad_and_alternatives(self):
         for case in hp.CASES:

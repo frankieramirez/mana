@@ -292,5 +292,52 @@
       "contradicted-fact"
     ],
     "note": "Canonical contradiction: the failing example is imported."
+  },
+  {
+    "id": "r20-canonical-control",
+    "label": "valid-alternative",
+    "output": "r20-canonical-control.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "expected_adjudication": [],
+    "note": "Fifth review control: every sentence canonical."
+  },
+  {
+    "id": "r21-runs-nightly",
+    "label": "adjudicate",
+    "output": "r21-runs-nightly.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fifth review: invented fact. Must not pass."
+  },
+  {
+    "id": "r22-arrival-order",
+    "label": "adjudicate",
+    "output": "r22-arrival-order.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "no-inferred-fact"
+    ],
+    "note": "Fifth review: invented fact with no topic word. Must not pass."
+  },
+  {
+    "id": "r23-single-threaded",
+    "label": "adjudicate",
+    "output": "r23-single-threaded.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": [
+      "no-inferred-fact"
+    ],
+    "note": "Fifth review: invented fact. Must not pass."
+  },
+  {
+    "id": "r24-modification-as-question",
+    "label": "adjudicate",
+    "output": "r24-modification-as-question.md",
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "note": "Fifth review: no-modification asked, not stated. Must not pass."
   }
 ]
