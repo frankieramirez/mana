@@ -591,14 +591,12 @@ class ProbeCommand(unittest.TestCase):
         with host.environment():
             record = host_probe.probe(host.executable, self.root / name, MODEL, timeout=60, prepare=run.prepare,
                                       permission_config=run.permission_config, config_args=run.config_args,
-                                      case=self.case, settle=1.0)
+                                      case=self.case)
         return record, host
 
     def cap_plan(self, children=3, **overrides):
         plan = family_plan(children=children, **overrides)
-        plan['parent'] = {'commands': ['python3 bin/probe.py parent', '@spawn', 'python3 bin/gate.py spawned']}
-        plan['children'] = [{'commands': ['python3 bin/probe.py child-%d' % n, 'python3 bin/gate.py child-%d' % n]}
-                            for n in range(1, children + 1)]
+        plan['children'] = [{'commands': ['python3 bin/probe.py child-%d' % n]} for n in range(1, children + 1)]
         return plan
 
     def gate(self, record):
@@ -612,96 +610,86 @@ class ProbeCommand(unittest.TestCase):
         self.assertFalse(result['accepted'])
         self.assertTrue(any(m.startswith('active_thread_cap=') for m in result['missing']))
 
-    def test_enforced_host_yields_evidence_the_registry_accepts(self):
-        record, host = self.probe(self.cap_plan(cap_mode='children', refusal_records=['rollout']), 'enforced')
+    def test_refusal_only_in_the_rollout_file_verifies_the_cap(self):
+        # Codex 0.163.0 writes no spawn item to the stream or the saved turns; only the rollout has the refusal.
+        record, host = self.probe(self.cap_plan(cap_mode='children'), 'enforced')
         statuses = {k: v['status'] for k, v in record['capabilities'].items()}
         self.assertEqual(set(statuses.values()), {'verified'}, statuses)
         self.assertEqual(record['capabilities']['active_thread_cap']['counts'], 'children')
         evidence = record['capabilities']['active_thread_cap']['evidence'][0]
-        self.assertIn('peak children held at the gate 2', evidence)
-        self.assertIn('explicit spawn refusals 1', evidence)
-        gate = self.gate(record)
-        self.assertEqual(gate['gate']['reason'], 'every spawn call returned and the held set settled')
-        self.assertEqual(gate['gate']['held_at_release'], ['child-1', 'child-2'])
-        self.assertEqual(gate['refusals']['by_source']['rollout'], ['call-spawn-2'])
+        self.assertIn('peak concurrent children 2', evidence)
+        self.assertIn('refused spawns 1', evidence)
+        self.assertEqual(self.gate(record)['refusals_by_source'], {'stream': [], 'history': [], 'rollout': ['call-spawn-2']})
         self.assertEqual(record['capabilities']['process_family_termination']['status'], 'verified')
         self.assertEqual(record['model_invocations'], 1)
         self.assertEqual(len(host.calls()), 1)
         self.assertIn('agents.max_threads=2', host.calls()[0]['argv'])
-        self.assertIn('Spawn 3 child agents', host.calls()[0]['prompt'])
-        self.assertIn('python3 bin/gate.py spawned', host.calls()[0]['prompt'])
+        self.assertIn('Start exactly 3 child agents', host.calls()[0]['prompt'])
         self.assertNotIn(str(self.root), json.dumps(record))
         registry = self.root / 'registry'
         registry.mkdir()
         shutil.copy2(self.root / 'enforced/host-evidence.json', registry / 'probe.json')
         self.assertTrue(hosts.assess(FAKE, 'comparative-delegated', directory=registry)['accepted'])
 
-    def test_each_explicit_refusal_record_decides_what_the_cap_counts(self):
+    def test_structured_refusals_and_the_parent_count(self):
         parent, _ = self.probe(self.cap_plan(cap_mode='including_parent', refusal_records=['stream']), 'parent')
         self.assertEqual(parent['capabilities']['active_thread_cap']['counts'], 'including_parent')
-        self.assertEqual(self.gate(parent)['gate']['peak_held'], 1)
-        self.assertEqual(len(self.gate(parent)['refusals']['by_source']['stream']), 2)
+        self.assertEqual(len(self.gate(parent)['refusals_by_source']['stream']), 2)
         history, _ = self.probe(self.cap_plan(cap_mode='children', refusal_records=['history']), 'history')
         self.assertEqual(history['capabilities']['active_thread_cap']['counts'], 'children')
-        self.assertEqual(self.gate(history)['refusals']['by_source']['history'], ['call-spawn-2'])
+        self.assertEqual(self.gate(history)['refusals_by_source']['history'], ['call-spawn-2'])
 
-    def test_ignored_staggered_and_unchallenged_caps_never_verify(self):
+    def test_model_text_ignored_staggered_and_unchallenged_caps_never_verify(self):
+        # The refusal wording appears only in model text and in output for another tool call.
+        model_text = [{'type': 'message', 'role': 'assistant',
+                       'content': [{'type': 'output_text', 'text': 'collab spawn failed: agent thread limit reached'}]},
+                      {'type': 'function_call', 'name': 'shell', 'call_id': 'call-shell'},
+                      {'type': 'function_call_output', 'call_id': 'call-shell', 'output': 'collab spawn failed: agent thread limit reached'}]
+        claimed, _ = self.probe(self.cap_plan(cap_mode='children', refusal_records=[], rollout_noise=model_text), 'claimed')
+        self.assertNotIn('active_thread_cap', claimed['capabilities'])
+        self.assertEqual(self.gate(claimed)['refused_spawns'], 0)
         ignored, _ = self.probe(self.cap_plan(cap_mode='ignore'), 'ignored')
         self.assertEqual(ignored['capabilities']['active_thread_cap']['status'], 'failed')
         self.assertIn('children exceeded the configured cap', ignored['capabilities']['active_thread_cap']['evidence'][0])
-        self.assertEqual(self.gate(ignored)['gate']['reason'], 'more children held at once than the cap')
-        self.assertEqual(self.gate(ignored)['gate']['peak_held'], 3)
-        # Two children held at the cap and a third that ran after release, beside failed items that are no spawn refusal.
-        noise = [{'where': 'stream', 'item': {'id': 'n1', 'type': 'collab_tool_call', 'tool': 'wait', 'status': 'failed',
-                                              'receiver_thread_ids': []}},
-                 {'where': 'stream', 'item': {'id': 'n2', 'type': 'agent_spawn_notice', 'status': 'failed', 'error': 'x'}},
-                 {'where': 'history', 'item': {'type': 'collabAgentToolCall', 'id': 'n3', 'tool': 'sendInput',
-                                               'status': 'failed', 'receiverThreadIds': []}},
-                 {'where': 'rollout', 'item': {'type': 'function_call_output', 'call_id': 'call-wait',
-                                               'output': 'agent thread limit reached (max 2)'}}]
-        staggered, _ = self.probe(self.cap_plan(cap_mode='queue', noise_items=noise), 'staggered')
+        staggered, _ = self.probe(self.cap_plan(cap_mode='queue'), 'staggered')
         self.assertNotIn('active_thread_cap', staggered['capabilities'])
-        gate = self.gate(staggered)
-        self.assertEqual((gate['gate']['peak_held'], gate['collected_children'], gate['refused_spawns']), (2, 3, 0))
+        self.assertEqual((self.gate(staggered)['peak_children'], self.gate(staggered)['collected_children']), (2, 3))
         self.assertTrue(any('staggered' in note for note in staggered['unknown']))
         unchallenged, _ = self.probe(self.cap_plan(children=2), 'unchallenged')
         self.assertNotIn('active_thread_cap', unchallenged['capabilities'])
         self.assertTrue(any('not challenged' in note for note in unchallenged['unknown']))
-        for name in ('ignored', 'staggered', 'unchallenged'):
+        for name in ('claimed', 'ignored', 'staggered', 'unchallenged'):
             self.assert_not_comparative(name)
 
     def test_thread_cap_judgement_needs_overflow_or_refusal(self):
-        self.assertEqual(host_probe.thread_cap(3, 3, 3, 0, 2)[0]['status'], 'failed')
-        self.assertEqual(host_probe.thread_cap(2, 2, 2, 1, 2)[0]['counts'], 'children')
-        self.assertEqual(host_probe.thread_cap(1, 1, 1, 2, 2)[0]['counts'], 'including_parent')
+        self.assertEqual(host_probe.thread_cap(3, 3, 0, 2)[0]['status'], 'failed')
+        self.assertEqual(host_probe.thread_cap(2, 2, 1, 2)[0]['counts'], 'children')
+        self.assertEqual(host_probe.thread_cap(1, 1, 2, 2)[0]['counts'], 'including_parent')
         # Peak at the cap plus a later third child, the old pass condition, is unknown without a refusal.
-        self.assertIsNone(host_probe.thread_cap(2, 2, 3, 0, 2)[0])
-        self.assertIsNone(host_probe.thread_cap(2, 2, 2, 0, 2)[0])
-        self.assertIsNone(host_probe.thread_cap(1, 1, 1, 0, 2)[0])
-        self.assertIsNone(host_probe.thread_cap(None, 0, 2, 1, 2)[0])
-        # A refusal counts only from the explicit spawn records.
+        self.assertIsNone(host_probe.thread_cap(2, 3, 0, 2)[0])
+        self.assertIsNone(host_probe.thread_cap(2, 2, 0, 2)[0])
+        self.assertIsNone(host_probe.thread_cap(None, 2, 1, 2)[0])
+        # Failed items whose type only mentions agent, collab or spawn are not refusals.
         events = [{'type': 'item.completed', 'item': {'id': 'a', 'type': 'collab_tool_call', 'tool': 'wait', 'status': 'failed'}},
                   {'type': 'item.completed', 'item': {'id': 'b', 'type': 'spawn_error', 'status': 'failed'}},
                   {'type': 'item.completed', 'item': {'id': 'c', 'type': 'agent_message', 'error': 'spawn failed'}},
                   {'type': 'item.completed', 'item': {'id': 'd', 'type': 'collab_tool_call', 'tool': 'spawn_agent',
                                                       'status': 'failed', 'receiver_thread_ids': ['child']}}]
-        threads = {'parent': {'turns': [{'items': [
+        threads = {'parent': {'path': str(self.root / 'absent.jsonl'), 'turns': [{'items': [
             {'type': 'collabAgentToolCall', 'id': 'e', 'tool': 'wait', 'status': 'failed'},
             {'type': 'collabAgentToolCall', 'id': 'f', 'tool': 'spawnAgent', 'status': 'completed'}]}]}}
-        self.assertEqual(host_probe.spawn_refusals(events, threads, 'parent')[0], 0)
+        self.assertEqual(host_probe.refused_spawns(events, threads, 'parent')[0], 0)
         events.append({'type': 'item.completed', 'item': {'id': 'g', 'type': 'collab_tool_call', 'tool': 'spawn_agent',
                                                           'status': 'failed', 'receiver_thread_ids': []}})
-        self.assertEqual(host_probe.spawn_refusals(events, threads, 'parent')[0], 1)
+        self.assertEqual(host_probe.refused_spawns(events, threads, 'parent')[0], 1)
         rollout = self.root / 'rollout.jsonl'
         rollout.write_text('\n'.join(json.dumps({'type': 'response_item', 'payload': p}) for p in (
             {'type': 'function_call', 'name': 'spawn_agent', 'call_id': 'one'},
-            {'type': 'function_call_output', 'call_id': 'one', 'output': 'tool failed: sandbox busy'},
+            {'type': 'function_call_output', 'call_id': 'one', 'output': {'content': 'collab spawn failed: agent thread limit reached'}},
             {'type': 'function_call', 'name': 'spawn_agent', 'call_id': 'two'},
-            {'type': 'function_call_output', 'call_id': 'two', 'output': '{"agent_id": "child"}'},
-            {'type': 'function_call', 'name': 'shell', 'call_id': 'three'},
-            {'type': 'function_call_output', 'call_id': 'three', 'output': 'agent thread limit reached'})))
-        count, evidence = host_probe.spawn_refusals([], {'parent': {'path': str(rollout)}, 'child': {}}, 'parent')
-        self.assertEqual((count, len(evidence['rollout_spawn_calls'])), (0, 2))
+            {'type': 'function_call_output', 'call_id': 'two', 'output': 'note: collab spawn failed earlier'})) + '\nnot json\n')
+        self.assertEqual(host_probe.rollout_refusals(rollout), ['one'])
+        self.assertEqual(host_probe.rollout_refusals(self.root / 'absent.jsonl'), [])
 
     def test_leaky_host_fails_without_a_model_call(self):
         leaky, host = self.probe(dict(family_plan(), containment='leaky'), 'leaky')

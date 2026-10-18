@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- `run.py --probe-host` now challenges the thread cap in its one model call. Every child waits at a gate that the evaluator releases only after the spawn attempts are over. The cap is verified only when the host explicitly refuses a spawn while the gate holds the cap's worth of children, and it fails when more children are held than the cap. A staggered run stays unknown. Failed items count as refusals only when the host recorded a refused `spawn_agent` call. The docs now say that no runner uses the Codex CLI 0.163.0 delegated acceptance yet, because the delegated review path pins 0.159.2.
+- `run.py --probe-host` reads refused spawns from the parent's Codex rollout file, where Codex 0.163.0 records a refused `spawn_agent` call as tool output starting with `collab spawn failed`. This depends on Codex's on-disk session format. Structured stream and saved-turn items count only when they are failed `spawn_agent` calls, and model text never counts. The cap is verified only from a refusal or from more children open than the cap; two children at the cap with no refusal stays unknown. The docs now say that no runner uses the Codex CLI 0.163.0 delegated acceptance yet, because the delegated review path pins 0.159.2.
 
 ## 0.43.5
 
