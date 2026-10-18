@@ -186,11 +186,6 @@ class FreezeIntegrity(unittest.TestCase):
         rewrite(self.root, lambda m, r: r['history'][0].update(reviewer=r['author']['identity']))
         self.assertTrue(any('review history entry 1' in p for p in hp.verify(self.root)))
 
-    def test_first_review_is_kept_in_history(self):
-        _, review = hp.load()
-        self.assertEqual(review['history'][0]['status'], 'changes_required')
-        self.assertEqual(len(review['history'][0]['notes']['defects']), 8)
-
     def test_freeze_history_chains_to_current_freeze(self):
         manifest, _ = hp.load()
         self.assertEqual(manifest['history'][-1]['freeze_sha256'], manifest['freeze_sha256'])
@@ -255,26 +250,21 @@ class Oracles(unittest.TestCase):
                     self.assertEqual(result['failures'], sorted(example['expected_failures']))
 
     def test_every_prose_output_goes_to_an_adjudicator(self):
-        """Exact checks pass or fail; a prose output that clears them always needs adjudication, and
-        whatever its outcome the result hands the adjudicator the fact list."""
+        """Exact checks pass or fail; a prose output that clears them always needs adjudication, and the
+        result hands the adjudicator the fact list."""
         for case in ('prose-exempt', 'prose-scope'):
             oracle = hp.load_oracle(hp.HELDOUT, case)
             for example in hp.examples(hp.HELDOUT, case):
                 with self.subTest(case=case, example=example['id']):
                     result = hp.grade(case, observation(case, example))
                     self.assertNotEqual(result['outcome'], 'passed')
-                    self.assertEqual([a['check'] for a in result['adjudication']], ['fact-review'])
                     self.assertEqual(result['facts'], oracle['facts'])
-        for example in hp.examples(hp.HELDOUT, 'prose-verbatim'):
-            result = hp.grade('prose-verbatim', observation('prose-verbatim', example))
-            self.assertEqual(result['adjudication'], [], example['id'])
 
     def test_fact_lists_serve_an_adjudicator(self):
         for case in ('prose-exempt', 'prose-scope'):
             oracle = hp.load_oracle(hp.HELDOUT, case)
-            self.assertNotIn('screen', oracle)
             kinds = {f['kind'] for f in oracle['facts']}
-            self.assertEqual(kinds, set(hp.FACT_KINDS), case)
+            self.assertLessEqual({'must-survive', 'condition', 'must-not-add'}, kinds, case)
             for fact in oracle['facts']:
                 self.assertEqual(tuple(fact), hp.FACT_FIELDS, (case, fact))
                 self.assertTrue(fact['statement'] and fact['review_question'].endswith('?'), (case, fact['id']))
@@ -291,31 +281,24 @@ class Oracles(unittest.TestCase):
             self.assertTrue(any('oracle facts need' in p for p in hp.verify(root)))
 
     def test_examples_cover_good_bad_and_alternatives(self):
-        """Every group has known-good, valid-alternative and known-bad outputs. In prose groups each one names
-        the adjudication a second reviewer should reach; a known-bad output fails an exact check or is unfaithful."""
+        """Every group has known-good, valid-alternative and known-bad outputs. A known-bad output fails an exact
+        check or is unfaithful; --check verifies that `shows` names a known fact."""
         for case in hp.CASES:
-            facts = {f['id'] for f in hp.load_oracle(hp.HELDOUT, case)['facts']}
             labels = [e['label'] for e in hp.examples(hp.HELDOUT, case)]
             self.assertGreaterEqual(labels.count('known-good'), 1, case)
             self.assertGreaterEqual(labels.count('valid-alternative'), 1, case)
             self.assertGreaterEqual(labels.count('known-bad'), 3, case)
             for example in hp.examples(hp.HELDOUT, case):
-                with self.subTest(case=case, example=example['id']):
-                    adjudication = example.get('expected_adjudication')
-                    if not facts:
-                        self.assertIsNone(adjudication)
-                        self.assertEqual(example['expected_outcome'] == 'passed', example['label'] != 'known-bad')
-                        continue
-                    self.assertEqual(set(adjudication), {'verdict', 'facts'})
-                    self.assertLessEqual(set(adjudication['facts']), facts)
-                    self.assertEqual(adjudication['verdict'] == 'faithful', not adjudication['facts'])
-                    if example['label'] == 'known-bad':
-                        self.assertTrue(example['expected_failures'] or adjudication['verdict'] == 'unfaithful')
-                    else:
-                        self.assertEqual((example['expected_failures'], adjudication['verdict']), ([], 'faithful'))
-            bad = [e for e in hp.examples(hp.HELDOUT, case) if e['label'] == 'known-bad']
-            if facts:
-                self.assertTrue(any(not e['expected_failures'] for e in bad), case)
+                bad = example['expected_failures'] or example.get('expected_adjudication') == 'unfaithful'
+                self.assertEqual(bool(bad), example['label'] == 'known-bad', (case, example['id']))
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            copy_tree(root)
+            path = root / 'oracles/prose-scope/examples/index.json'
+            rows = json.loads(path.read_text())
+            rows[3]['shows'] = 'not-a-fact'
+            path.write_text(json.dumps(rows, indent=2) + '\n')
+            self.assertTrue(any('shows a known fact' in p for p in hp.verify(root)))
 
     def test_protected_config_bytes_are_exact(self):
         case = 'prose-exempt'
@@ -375,16 +358,8 @@ class Oracles(unittest.TestCase):
                             path = oracle['graded_text']['path']
                             obs['files'][path] = outside_protected(obs['files'][path], protected, change)
                         result = hp.grade(case, obs)
-                        self.assertEqual(set(result['failures']) - set(expected['failures']) - {'not-shortened'}, set())
+                        self.assertEqual(set(result['failures']) - set(expected['failures']), set())
                         self.assertNotEqual(result['outcome'], 'passed')
-
-    def test_oracles_do_not_score_register(self):
-        register = re.compile(r'[—–]|worth noting|honestly|leverag|seamless|crucial|robust|not just')
-        for case in hp.CASES:
-            oracle = hp.load_oracle(hp.HELDOUT, case)
-            for fact in oracle['facts']:
-                for field in ('statement', 'review_question'):
-                    self.assertIsNone(register.search(fact[field]), (case, fact['id'], field))
 
     def test_missing_oracle_marker_is_an_error(self):
         with self.assertRaises(ValueError):

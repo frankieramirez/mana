@@ -70,8 +70,8 @@
     {
       "id": "no-added-fact",
       "kind": "must-not-add",
-      "statement": "The prose states no eviction policy, reason, purpose, consequence or other fact about the cache beyond the four above.",
-      "review_question": "Does the prose avoid adding any fact, mechanism, reason or consequence (for example LRU eviction, freeing space, slower first loads, where the cache lives or who can clear it)?"
+      "statement": "The prose adds no eviction policy, reason, purpose, consequence or other fact that the original prose does not support. Restating or characterizing what the original says is allowed.",
+      "review_question": "Does the prose avoid any fact, mechanism, reason or consequence the original prose does not support (for example LRU eviction, freeing space, slower first loads, where the cache lives or who can clear it)?"
     }
   ]
 }

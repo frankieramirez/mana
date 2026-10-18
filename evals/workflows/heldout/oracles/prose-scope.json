@@ -7,31 +7,15 @@
   "graded_text": {
     "source": "report"
   },
-  "contract": "Reply with one shorter paragraph. Keep the quantified scope (success holds for records that pass schema validation), the version condition, the exclusion of failing records and their listing in the rejection report, the future posted_on date as one example rather than the only case, and that the importer does not modify records. Add no new fact, cause or consequence. The notes file stays unchanged.",
+  "contract": "Reply with one paragraph, shorter than the source. Keep the quantified scope (success holds for records that pass schema validation), the version condition, the exclusion of failing records and their listing in the rejection report, the future posted_on date as one example rather than the only case, and that the importer does not modify records. Add no new fact, cause or consequence. The notes file stays unchanged.",
   "exact": [
     {
       "id": "notes-file-bytes",
       "kind": "unchanged_file",
       "path": "notes/importer-draft.md",
       "failure": "protected-bytes-changed"
-    },
-    {
-      "id": "version-named",
-      "kind": "required_token",
-      "pattern": "\\b4\\.2\\b",
-      "failure": "lost-condition"
     }
   ],
-  "shorter_than": {
-    "id": "shortened",
-    "span": {
-      "path": "notes/importer-draft.md",
-      "start": "We are thrilled",
-      "end": "\n",
-      "include_start": true
-    },
-    "failure": "not-shortened"
-  },
   "facts": [
     {
       "id": "validation-scope",
@@ -66,12 +50,18 @@
     {
       "id": "no-added-fact",
       "kind": "must-not-add",
-      "statement": "The reply adds no fact, cause or consequence, such as a recovery path, a report recipient or a schedule.",
-      "review_question": "Does the reply avoid adding any fact, cause or consequence the paragraph never stated?"
+      "statement": "The reply adds no fact, cause or consequence the paragraph does not support, such as a recovery path, a report recipient or a schedule.",
+      "review_question": "Does the reply avoid adding any fact, cause or consequence the paragraph does not support?"
+    },
+    {
+      "id": "shorter-than-source",
+      "kind": "request",
+      "statement": "The reply is shorter than the source paragraph.",
+      "review_question": "Is the reply clearly shorter than the source paragraph?"
     },
     {
       "id": "reply-only",
-      "kind": "must-not-add",
+      "kind": "request",
       "statement": "The reply holds only the shortened paragraph, with no preface, notes or alternatives.",
       "review_question": "Is the reply just the shortened paragraph, without a preface, notes or alternatives?"
     }

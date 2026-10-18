@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
+  "freeze_sha256": "8d24afd71e02b9c0af04ffe4090ea4b344239ea0d0fbcef1d4836b80fa2aa34d",
   "author": {
     "identity": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
     "role": "Instantiated requests, fixtures, exact checks, fact lists and labeled examples",
@@ -816,6 +816,43 @@
           }
         ],
         "recommendation": "Map curly double quotes to straight ones instead of deleting straight ones, so a quoted word never matches a canonical or unchanged sentence. Omissions, reordering, merging and whitespace or closing punctuation edits all behave correctly."
+      }
+    },
+    {
+      "status": "changes_required",
+      "reviewer": "independent reviewer agent, Claude",
+      "reviewed_freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
+      "date": "2026-10-18",
+      "checked": {
+        "contracts": false,
+        "known_good": false,
+        "known_bad": false,
+        "valid_alternatives": null
+      },
+      "notes": {
+        "verdict": "changes required",
+        "recorded_by": "fixture author, from the review findings relayed by the coordinator; the reviewer did not commit this record",
+        "checks_meaning": "false: checked and found defects; null: no finding was relayed for this check.",
+        "exact_checks": "The protected-byte and verbatim checks hold byte for byte.",
+        "defects": [
+          {
+            "where": "prose-scope.json required_token; heldout_prose.py",
+            "scenario": "The 4.2 token check fails faithful outputs that write \"v4.2\" or \"version four point two\"; the version-onward fact already covers it."
+          },
+          {
+            "where": "prose-scope.json shorter_than; heldout_prose.py",
+            "scenario": "The shortening check is a word count on prose; shortness belongs in the fact list."
+          },
+          {
+            "where": "prose-scope/examples/index.json",
+            "scenario": "b2-exhaustive-example also breaks invalid-excluded-and-reported, so per-example fact lists are incomplete."
+          },
+          {
+            "where": "prose-exempt.json no-added-fact",
+            "scenario": "The fact forbids anything beyond the four stated facts, yet g2-sloppy-style (\"a crucial part of the gallery\") is labeled faithful."
+          }
+        ],
+        "recommendation": "Delete required_token and shorter_than, add shortness as a fact, label each failing example with the one fact it shows, reword no-added-fact to allow supported statements, and remove the adjudicate verdict, dead code, screen-era tests and repeated retellings."
       }
     }
   ]

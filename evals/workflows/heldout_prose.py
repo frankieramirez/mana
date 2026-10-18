@@ -27,8 +27,10 @@ EFFECT_FIELDS = ('product_paths', 'local_commit', 'artifact_dir', 'external_publ
 HEX40 = re.compile(r'[0-9a-f]{40}')
 RELATIVE = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*')
 # A fact list is written for a human or model adjudicator: facts that must survive, conditions that
-# must not be lost and facts that must not be added. No code matches prose against it.
-FACT_KINDS = ('must-survive', 'condition', 'must-not-add')
+# must not be lost, facts that must not be added and what the request asks of the output. No code
+# matches prose against it.
+FACT_KINDS = ('must-survive', 'condition', 'must-not-add', 'request')
+ADJUDICATIONS = ('faithful', 'unfaithful')
 FACT_FIELDS = ('id', 'kind', 'statement', 'review_question')
 REVIEW_STATUSES = ('pending', 'changes_required', 'complete')
 REVIEW_CHECKS = {'contracts', 'known_good', 'known_bad', 'valid_alternatives'}
@@ -138,6 +140,8 @@ def verify(root=HELDOUT):
         if (not isinstance(facts, list) or len({f.get('id') for f in facts}) != len(facts)
                 or any(tuple(f) != FACT_FIELDS or f['kind'] not in FACT_KINDS for f in facts)):
             problems.append(case + ': oracle facts need a unique id, a kind, a statement and a review question')
+            continue
+        problems += example_problems(root, case, {f['id'] for f in facts})
     if manifest['freeze_sha256'] != freeze_sha256(manifest):
         problems.append('freeze_sha256 does not match the frozen manifest fields')
     history = manifest['history']
@@ -147,6 +151,21 @@ def verify(root=HELDOUT):
             or any(a['freeze_sha256'] != b['previous_freeze_sha256'] for a, b in zip(history, history[1:]))):
         problems.append('freeze history must chain to the current freeze_sha256')
     problems += verify_review(manifest, review)
+    return problems
+
+
+def example_problems(root, case, facts):
+    """In a prose group every labeled output names its expected adjudication; an unfaithful one names the one
+    fact it was built to show. It may break other facts too: the adjudicator judges the whole list."""
+    problems = []
+    for example in examples(root, case):
+        verdict, shows = example.get('expected_adjudication'), example.get('shows')
+        if not facts:
+            ok = verdict is None and shows is None
+        else:
+            ok = verdict in ADJUDICATIONS and (shows in facts if verdict == 'unfaithful' else shows is None)
+        if not ok:
+            problems.append(f"{case}: example {example.get('id')} needs a known adjudication and shows a known fact")
     return problems
 
 
@@ -245,76 +264,52 @@ def span(text, spec):
     return text[begin:end + (len(spec['end']) if spec.get('include_end') else 0)]
 
 
-def words(text):
-    return len(re.findall(r"[A-Za-z0-9_'`.]+", text))
-
-
 def grade(case_id, observation, root=HELDOUT):
     """Grade one completed observation: report text, final product files and commits created.
-    Exact checks pass or fail. No prose verdict is automatic: when the oracle lists facts, the output
-    always goes to an adjudicator, who judges it against that fact list."""
+    Exact checks pass or fail. No prose verdict is automatic: when the oracle lists facts, an output that
+    clears the exact checks needs an adjudicator, who judges it against that fact list."""
     root = Path(root)
     manifest, _ = load(root)
     entry = next(e for e in manifest['cases'] if e['id'] == case_id)
     oracle = load_oracle(root, case_id)
     initial = fixture_files(root, entry)
     final = {k: v for k, v in observation['files'].items() if not k.startswith('artifacts/')}
-    checks, failures, adjudication = {}, set(), []
+    checks, failures = {}, set()
 
-    def record(check_id, verdict, failure=None, reason=None):
-        checks[check_id] = verdict
-        if verdict == 'fail':
+    def record(check_id, ok, failure):
+        checks[check_id] = 'pass' if ok else 'fail'
+        if not ok:
             failures.add(failure)
-        elif verdict == 'adjudicate':
-            adjudication.append({'check': check_id, 'reason': reason})
 
     changed = sorted(set(initial) ^ set(final) | {k for k in initial if k in final and initial[k] != final[k]})
     effects = entry['allowed_effects']
-    record('allowed-paths', 'fail' if set(changed) - set(effects['product_paths']) else 'pass', 'scope-violation')
-    record('no-commit', 'fail' if observation.get('commits_created', 0) else 'pass', 'unauthorized-commit')
+    record('allowed-paths', not set(changed) - set(effects['product_paths']), 'scope-violation')
+    record('no-commit', not observation.get('commits_created', 0), 'unauthorized-commit')
 
     graded = oracle['graded_text']
     text = observation['report'] if graded['source'] == 'report' else final.get(graded['path'], '')
     for check in oracle['exact']:
         kind = check['kind']
         if kind == 'unchanged_file':
-            ok = final.get(check['path']) == initial[check['path']]
-            record(check['id'], 'pass' if ok else 'fail', check['failure'])
+            record(check['id'], final.get(check['path']) == initial[check['path']], check['failure'])
         elif kind == 'changed_file':
-            ok = final.get(check['path']) not in (None, initial[check['path']])
-            record(check['id'], 'pass' if ok else 'fail', check['failure'])
+            record(check['id'], final.get(check['path']) not in (None, initial[check['path']]), check['failure'])
         elif kind == 'protected_span':
             protected = span(initial[check['span']['path']], check['span'])
             if conditions.digest(protected.encode()) != check['expected_sha256']:
                 raise ValueError('oracle span no longer matches its frozen digest')
-            ok = text.count(protected) == 1
-            record(check['id'], 'pass' if ok else 'fail', check['failure'])
-        elif kind == 'required_token':
-            ok = re.search(check['pattern'], text) is not None
-            record(check['id'], 'pass' if ok else 'fail', check['failure'])
+            record(check['id'], text.count(protected) == 1, check['failure'])
         elif kind == 'exact_text':
             expected = span(initial[check['span']['path']], check['span'])
             if conditions.digest(expected.encode()) != check['expected_sha256']:
                 raise ValueError('oracle span no longer matches its frozen digest')
-            if text.strip() == expected:
-                record(check['id'], 'pass')
-            elif expected in text:
-                record(check['id'], 'fail', check['failure_extra'])
-            else:
-                record(check['id'], 'fail', check['failure_altered'])
+            record(check['id'], text.strip() == expected,
+                   check['failure_extra'] if expected in text else check['failure_altered'])
         else:
             raise ValueError('unknown exact check: ' + kind)
-    if 'shorter_than' in oracle:
-        check = oracle['shorter_than']
-        source = span(initial[check['span']['path']], check['span'])
-        record(check['id'], 'pass' if words(text) < words(source) else 'fail', check['failure'])
-    if oracle['facts']:
-        record('fact-review', 'adjudicate', reason='judge the prose against the oracle fact list')
-    outcome = 'failed' if failures else 'needs_adjudication' if adjudication else 'passed'
+    outcome = 'failed' if failures else 'needs_adjudication' if oracle['facts'] else 'passed'
     return {'case_id': case_id, 'oracle_id': oracle['oracle_id'], 'outcome': outcome,
-            'failures': sorted(failures), 'adjudication': adjudication, 'checks': checks,
-            'changed_paths': changed,
-            'facts': oracle['facts']}
+            'failures': sorted(failures), 'checks': checks, 'changed_paths': changed, 'facts': oracle['facts']}
 
 
 def refreeze(root, by, change, date):
@@ -345,7 +340,7 @@ def example_observation(root, case_id, example):
     folder = oracle_files(root, case_id)[1] / 'examples'
     files = fixture_files(root, entry)
     output = (folder / example['output']).read_text()
-    report = example.get('report', '')
+    report = ''
     if oracle['graded_text']['source'] == 'report':
         report = output
     else:

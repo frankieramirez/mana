@@ -2,7 +2,7 @@
 
 [Ticket 108](https://github.com/frankieramirez/mana/issues/108) instantiates the three prose rows of the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md): `prose-exempt`, `prose-scope` and `prose-verbatim`. Each is its own source group (`sealed-prose-exempt-01`, `sealed-prose-scope-01`, `sealed-prose-verbatim-01`), split `confirmation`, with new inputs that share no sentence of 30 or more characters with the public prose evals, the semantic pilot or the focused workflow cases.
 
-Status: frozen, with both payload inventories verified. Six review rounds each requested changes before any outcome existed. After the sixth, the automated prose screen was removed. The second review of the current freeze is pending, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
+Status: frozen, with both payload inventories verified. The second review of the current freeze is pending, so these groups cannot enter a confirmation run yet. Nothing here invokes a model.
 
 ## Layout
 
@@ -11,7 +11,7 @@ Status: frozen, with both payload inventories verified. Six review rounds each r
 | `heldout/inputs/<case>/request.md` | Candidate: the ordinary request, identical across conditions |
 | `heldout/inputs/<case>/fixture/` | Candidate: the workspace product files |
 | `heldout/oracles/<case>.json` | Evaluator only: contract, exact checks, fact list for the adjudicator |
-| `heldout/oracles/<case>/examples/` | Evaluator only: a few known-good, valid-alternative and known-bad outputs with their expected grade and adjudication |
+| `heldout/oracles/<case>/examples/` | Evaluator only: a few known-good, valid-alternative and known-bad outputs with their expected grade, adjudication and the fact each bad one shows |
 | `heldout/prose-manifest.json` | Evaluator only: source groups, hashes, allowed effects, condition routes, freeze digest and freeze history |
 | `heldout/prose-review.json` | Evaluator only: author record, the current second reviewer slot and earlier review results |
 
@@ -29,17 +29,18 @@ The reference digest `d8209219…f6cc` covers 170 files. The second reviewer rec
 
 ## Oracles
 
-Exact checks are deterministic and conclusive. `prose-exempt` requires the fenced YAML sample to appear exactly once with its original bytes, `config/image-cache.yaml` to be unchanged and the doc to be edited. `prose-scope` requires the notes file to be unchanged, the reply to have fewer words than the source paragraph and the token `4.2` to appear, since no paraphrase can carry the version condition without it. `prose-verbatim` requires the reply, after trimming surrounding whitespace, to equal Priya Raman's second answer byte for byte; text around an intact quote is `extra-text`, any other difference is `quote-altered`. All three cases check changed product paths against `allowed_effects` and fail any created commit.
+Exact checks are deterministic and conclusive. `prose-exempt` requires the fenced YAML sample to appear exactly once with its original bytes, `config/image-cache.yaml` to be unchanged and the doc to be edited. `prose-scope` requires the notes file to be unchanged. `prose-verbatim` requires the reply, after trimming surrounding whitespace, to equal Priya Raman's second answer byte for byte; text around an intact quote is `extra-text`, any other difference is `quote-altered`. All three cases check changed product paths against `allowed_effects` and fail any created commit.
 
-No prose verdict is automatic. Six review rounds showed that every automated fidelity screen left a gap the next reviewer found, and the ticket asks for oracle review, not a screen. When an output clears the exact checks in `prose-exempt` or `prose-scope`, its outcome is `needs_adjudication` and the result carries the case's fact list. A human or model adjudicator judges the prose against that list. Each fact has an id, a kind, a statement and a review question:
+No prose verdict is automatic. When an output clears the exact checks in `prose-exempt` or `prose-scope`, its outcome is `needs_adjudication` and the result carries the case's fact list. A human or model adjudicator judges the prose against that list. Each fact has an id, a kind, a statement and a review question:
 
 - `must-survive`: a stated fact the output keeps.
 - `condition`: a scope, version, trigger or example boundary the output must not lose.
-- `must-not-add`: facts from the YAML sample, inferred reasons, mechanisms or consequences, and anything else the source never stated.
+- `must-not-add`: facts from the YAML sample, and reasons, mechanisms, consequences or other facts the source does not support. Restating or characterizing what the source says is allowed.
+- `request`: what the request asks of the output, such as a reply shorter than the source with nothing around it.
 
-Style is not a fidelity defect. No fact or review question mentions dashes, filler or other register rules, and the tests check that style edits outside protected bytes never add an exact failure.
+Style is not a fidelity defect, and the tests check that style edits outside protected bytes never add an exact failure.
 
-Each group keeps a few labeled outputs for the second reviewer. Every one names its expected grade. In the prose groups it also names the expected adjudication: `faithful`, or `unfaithful` with the facts it breaks. A known-bad output either fails an exact check or is unfaithful, and each prose group has at least one known-bad output that only an adjudicator can catch.
+Each group keeps a few labeled outputs for the second reviewer. Every one names its expected grade. In the prose groups it also names the expected adjudication, `faithful` or `unfaithful`, and an unfaithful one names in `shows` the one fact it was built to show. It may break other facts too: the adjudicator judges each output against the whole list. `--check` verifies that every `shows` names a known fact. A known-bad output either fails an exact check or is unfaithful.
 
 ## Freeze and exposure
 
@@ -56,7 +57,7 @@ Changing any input, oracle, example or manifest field needs a deliberate refreez
 
 ## Review record
 
-`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. Six reviews of earlier freezes requested changes and are history entries 1 to 6. The first three found defects in pattern-based fact screens and the review record. The fourth and fifth found the same kind of gap in closed lists of canonical sentences. The sixth found scare quotes passing. That screen and the labeled corpora built to test it are gone. The slot is `pending` for the current freeze.
+`prose-review.json` names the fixture author, who does not edit `skills/`, `agents/` or `output-styles/`. Its `second_review` slot is `pending`, `changes_required` or `complete`. A named result needs a reviewer other than the author, a date, the freeze it read and the four check fields; a `changes_required` result also needs notes saying what failed. Only a `complete` review of this exact freeze with every check true makes the groups ready. When a review is superseded, its record moves to `history`. Seven reviews of earlier freezes requested changes and are history entries 1 to 7. The first six each found a gap in an automated prose-fidelity screen: pattern lists, then closed lists of canonical sentences, then scare quotes. The ticket asks for oracle review, not a screen, so the screen and the labeled corpora built to test it are gone. The seventh found that the `4.2` token and word-count checks graded prose and that some labels were incomplete; those checks became facts for the adjudicator. The slot is `pending` for the current freeze.
 
 ## Limits
 

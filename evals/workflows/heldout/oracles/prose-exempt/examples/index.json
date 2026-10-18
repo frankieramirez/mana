@@ -5,10 +5,7 @@
     "output": "g1-plain.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Plain rewrite keeping all four stated facts and the exact sample."
   },
   {
@@ -17,10 +14,7 @@
     "output": "g2-sloppy-style.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Faithful with dashes and filler left in. Style is not a fidelity defect."
   },
   {
@@ -29,10 +23,7 @@
     "output": "g3-list-layout.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Reordered into a list with the sample last. Layout is free."
   },
   {
@@ -41,12 +32,8 @@
     "output": "b1-sample-numbers.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "no-sample-facts"
-      ]
-    },
+    "expected_adjudication": "unfaithful",
+    "shows": "no-sample-facts",
     "note": "Imports the schedule and eviction age from the sample."
   },
   {
@@ -55,13 +42,8 @@
     "output": "b2-invented-eviction.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "full-cache-behavior",
-        "no-added-fact"
-      ]
-    },
+    "expected_adjudication": "unfaithful",
+    "shows": "full-cache-behavior",
     "note": "Replaces the stated full-cache behavior with an eviction policy the prose never states."
   },
   {
@@ -70,12 +52,8 @@
     "output": "b3-warm-heading.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "cold-after-restart"
-      ]
-    },
+    "expected_adjudication": "unfaithful",
+    "shows": "cold-after-restart",
     "note": "Contradicts the cold start in the heading."
   },
   {
@@ -86,10 +64,7 @@
     "expected_failures": [
       "protected-bytes-changed"
     ],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Faithful prose, but edits the dash inside the protected YAML comment."
   },
   {
@@ -101,10 +76,7 @@
     "expected_failures": [
       "unauthorized-commit"
     ],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Faithful prose, but a commit was created without permission."
   }
 ]

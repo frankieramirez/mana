@@ -5,10 +5,7 @@
     "output": "g1-plain.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Keeps scope, version, exclusion, report, example and no-modification."
   },
   {
@@ -17,10 +14,7 @@
     "output": "g2-sloppy-style.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Faithful and shorter, with dashes and filler left in."
   },
   {
@@ -29,10 +23,7 @@
     "output": "g3-other-order.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
+    "expected_adjudication": "faithful",
     "note": "Different order and wording for every fact."
   },
   {
@@ -41,13 +32,8 @@
     "output": "b1-lost-scope.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "validation-scope",
-        "invalid-excluded-and-reported"
-      ]
-    },
+    "expected_adjudication": "unfaithful",
+    "shows": "validation-scope",
     "note": "Turns the validation-limited guarantee into a universal one."
   },
   {
@@ -56,13 +42,8 @@
     "output": "b2-exhaustive-example.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "validation-scope",
-        "example-not-exhaustive"
-      ]
-    },
+    "expected_adjudication": "unfaithful",
+    "shows": "example-not-exhaustive",
     "note": "Presents the one example as the only rejection case."
   },
   {
@@ -71,42 +52,28 @@
     "output": "b3-inferred-recovery.md",
     "expected_outcome": "needs_adjudication",
     "expected_failures": [],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "no-added-fact"
-      ]
-    },
+    "expected_adjudication": "unfaithful",
+    "shows": "no-added-fact",
     "note": "Adds a recovery path the paragraph never states."
   },
   {
     "id": "b4-lost-version",
     "label": "known-bad",
     "output": "b4-lost-version.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "lost-condition"
-    ],
-    "expected_adjudication": {
-      "verdict": "unfaithful",
-      "facts": [
-        "version-onward"
-      ]
-    },
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "unfaithful",
+    "shows": "version-onward",
     "note": "Drops the version 4.2 condition."
   },
   {
     "id": "b5-not-shortened",
     "label": "known-bad",
     "output": "b5-not-shortened.md",
-    "expected_outcome": "failed",
-    "expected_failures": [
-      "not-shortened"
-    ],
-    "expected_adjudication": {
-      "verdict": "faithful",
-      "facts": []
-    },
-    "note": "Returns the paragraph unchanged, which fails the length check."
+    "expected_outcome": "needs_adjudication",
+    "expected_failures": [],
+    "expected_adjudication": "unfaithful",
+    "shows": "shorter-than-source",
+    "note": "Returns the paragraph unchanged, so it is not shorter."
   }
 ]
