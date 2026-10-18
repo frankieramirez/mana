@@ -131,10 +131,27 @@ def checked_manifest(data, cases, supported_hosts):
     return selected
 
 
+def schedule(case_ids, seed, repetitions):
+    """Sorted case blocks; each block's condition/repetition cells are shuffled with one seeded generator."""
+    rng = random.Random(seed)
+    slots = []
+    for case in sorted(case_ids):
+        cells = [(kind, repetition) for kind in KINDS for repetition in range(1, repetitions + 1)]
+        rng.shuffle(cells)
+        for kind, repetition in cells:
+            slots.append({'slot': len(slots) + 1, 'case': case, 'condition': kind, 'repetition': repetition})
+    return slots
+
+
 def freeze(manifest_path, destination, cases, source_dir, source_names, supported_hosts, prepare_fixture):
     """Create once; controls are externally pinned and input content is rechecked."""
     data = json.loads(Path(manifest_path).read_text())
     selected = checked_manifest(data, cases, supported_hosts)
+    return freeze_selected(data, selected, destination, source_dir, source_names, prepare_fixture)
+
+
+def freeze_selected(data, selected, destination, source_dir, source_names, prepare_fixture, extra_controls=None):
+    """Freeze already validated cases. extra_controls adds evaluator-owned fields to the pinned controls."""
     destination = Path(destination)
     for condition in ('mana', 'reference'):
         if destination.resolve().is_relative_to(Path(data['conditions'][condition]['root']).resolve()):
@@ -178,21 +195,15 @@ def freeze(manifest_path, destination, cases, source_dir, source_names, supporte
         shutil.copy2(source_dir / name, source / name)
         if name in source_names and digest((source / name).read_bytes()) != source_names[name]:
             raise ValueError('evaluator source changed during freeze: ' + name)
-    rng = random.Random(data['seed'])
-    schedule = []
-    for item in sorted(selected, key=lambda c: c['definition']['id']):
-        cells = [(kind, repetition) for kind in KINDS for repetition in range(1, data['repetitions'] + 1)]
-        rng.shuffle(cells)
-        for kind, repetition in cells:
-            schedule.append({'slot': len(schedule) + 1, 'case': item['definition']['id'],
-                             'condition': kind, 'repetition': repetition})
-    (destination / 'schedule.json').write_bytes(encoded(schedule))
+    slots = schedule([item['definition']['id'] for item in selected], data['seed'], data['repetitions'])
+    (destination / 'schedule.json').write_bytes(encoded(slots))
     controls = {k: data[k] for k in ('version', 'study', 'host', 'model', 'reasoning', 'seed', 'repetitions')}
     controls.update({'cases': selected, 'conditions': conditions,
                      'delegation': delegation.checked(data['delegation']) if 'delegation' in data else False,
-                     'schedule_sha256': digest(encoded(schedule)),
+                     'schedule_sha256': digest(encoded(slots)),
                      'fixture_inventory': inventory(fixture_source),
                      'runner_inventory': inventory(source)})
+    controls.update(extra_controls or {})
     control_bytes = encoded(controls)
     (destination / 'controls.json').write_bytes(control_bytes)
     # Permissions discourage accidental edits; the external digest supplies the pin.
@@ -206,7 +217,7 @@ def freeze(manifest_path, destination, cases, source_dir, source_names, supporte
     for name in ('controls.json', 'schedule.json'):
         (destination / name).chmod(0o444)
     return {'study': str(destination.resolve()), 'controls_sha256': digest(control_bytes),
-            'parent_slots': len(schedule), 'agent_executed': False}
+            'parent_slots': len(slots), 'agent_executed': False}
 
 
 class FrozenStudy:
@@ -259,10 +270,12 @@ class FrozenStudy:
         cell = self.schedule[slot - 1]
         case = next(c for c in self.controls['cases'] if c['definition']['id'] == cell['case'])
         payload = self.controls['conditions'][cell['condition']]
+        # Delegation follows the case: every condition of a code task gets the study's shared limits, and a
+        # case without delegation (prose) is told not to delegate in every condition alike.
         condition = {'kind': cell['condition'], 'root': self.root / 'payloads' / cell['condition'],
                      'inventory': payload['inventory'], 'revision': payload['revision'],
                      'entrypoint': payload['entrypoints'].get(cell['case']),
-                     'delegation': self.controls.get('delegation') or None}
+                     'delegation': (self.controls.get('delegation') or None) if case.get('delegation_allowed') else None}
         return cell, case, condition
 
     def claim(self, slot):
@@ -317,8 +330,8 @@ def evaluation_metadata(study, slot):
             'allowed_effects': case['definition']['allowed_effects'],
             'requested_model': study.controls['model'], 'actual_model': None,
             'timeout_seconds': case['timeout_seconds'],
-            'delegation_allowed': bool(study.controls.get('delegation')),
-            'delegation_limits': study.controls.get('delegation') or None,
+            'delegation_allowed': bool(condition['delegation']),
+            'delegation_limits': condition['delegation'],
             'retry_attempts': 0, 'human_review': {'active_seconds': None, 'censored': None},
             'judgments': [], 'regrades': []}
 

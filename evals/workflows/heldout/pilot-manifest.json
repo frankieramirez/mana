@@ -1,0 +1,979 @@
+{
+  "actual_model": null,
+  "adapter_translations": [
+    "Every workspace gets home/, artifacts/ and bin/ beside the frozen product files; installed/, home/, artifacts/ and bin/ are excluded from Git status through .git/info/exclude.",
+    "Debugging and prose inputs are plain directories, so the runner commits them once with a fixed author and date. HEAD, index and the final diff then exist for every condition alike.",
+    "Each payload is installed whole under installed/payload/. Mana entrypoints are relative to skills/, reference entrypoints to the repository root, so pstack/ group paths gain a pstack/ prefix.",
+    "The reference arm installs the complete package in every group, so groups frozen against pstack/ alone also receive cursor-team-kit/skills/deslop/, which poteto-mode names before a commit.",
+    "Evaluator tool doubles from the inputs go to bin/, first on PATH in every condition. A double exit 97 is a refused write or install measured by the group grader, never a harness stop."
+  ],
+  "automatic_retries": 0,
+  "cases": [
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false,
+        "product_files": [
+          "ingest.py",
+          "validation.py"
+        ]
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "cast/SKILL.md",
+          "sha256": "4ba50041e555b52219a2a6c40f7d972fbbac109ff490ec6f53a802204937acf7"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/poteto-mode/SKILL.md",
+          "sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "debugging",
+      "group_fixture_sha256": "340140232c9cf82ae9b158b016f8088413898f307bace0c2b8aadbc47548af29",
+      "id": "debug-boundary",
+      "inputs_sha256": "cdf8528fec819f3593bf10fa291116bafb3f095fa9d2ef85ae9f3cad85462825",
+      "job": "debugging",
+      "oracle_id": "oracle-debug-boundary-01",
+      "oracle_sha256": "33ce5188eea1aaf825d3dccf43d304632931a3c0bd664e0363e40edeb76cd55e",
+      "request_path": "inputs/debug-boundary/request.md",
+      "request_sha256": "e059af8dbfc4d21d8a9fc779bb1042f783aa20faa0fc53efa632db34b452bc04",
+      "source_group": "sealed-debug-boundary-01",
+      "split": "confirmation",
+      "timeout_seconds": 600
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false,
+        "product_files": [
+          "billing.py"
+        ]
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "cast/SKILL.md",
+          "sha256": "4ba50041e555b52219a2a6c40f7d972fbbac109ff490ec6f53a802204937acf7"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/poteto-mode/SKILL.md",
+          "sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "debugging",
+      "group_fixture_sha256": "1ed70b4f880cf09422263bac08925ad83369e0a0db01e5fc122f791c53f1a99b",
+      "id": "debug-false-premise",
+      "inputs_sha256": "15be1a31669362984b3cf6b0e261ee93e0f61547e3d9d68029ba067289f77155",
+      "job": "debugging",
+      "oracle_id": "oracle-debug-regression-claim-01",
+      "oracle_sha256": "5ec2478b5c2cf256e2101c24174c7df0fd71da3cbbc425d8561004d298f66b3b",
+      "request_path": "inputs/debug-false-premise/request.md",
+      "request_sha256": "3c7216b07ed8493be683f3ec6d8da47c55f87695e4da45417baf273b99da67b8",
+      "source_group": "sealed-debug-regression-claim-01",
+      "split": "confirmation",
+      "timeout_seconds": 600
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false,
+        "product_files": [
+          "shipping.py"
+        ]
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "cast/SKILL.md",
+          "sha256": "4ba50041e555b52219a2a6c40f7d972fbbac109ff490ec6f53a802204937acf7"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/poteto-mode/SKILL.md",
+          "sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "debugging",
+      "group_fixture_sha256": "79271bea273ae17e1c83103e0391b3574aea3c49a613c9f0b59bba0658c4478c",
+      "id": "debug-partial-retry",
+      "inputs_sha256": "120847fde99d523c4464f1eeeeb1afa250becc7543e4e8d17fdeed97ed38ddae",
+      "job": "debugging",
+      "oracle_id": "oracle-debug-retry-01",
+      "oracle_sha256": "f5f0e82ad317f514048064d14431fe2d31520a79fd9dd4e7c56898e68e597c47",
+      "request_path": "inputs/debug-partial-retry/request.md",
+      "request_sha256": "40750fa9ceb044273c09e82a01cded5ce698e16477e6444586a18c598f428ca8",
+      "source_group": "sealed-debug-retry-01",
+      "split": "confirmation",
+      "timeout_seconds": 600
+    },
+    {
+      "allowed_effects": {
+        "artifact_directory": "artifacts/",
+        "commit": true,
+        "product_files": [
+          "pricing/quote.py",
+          "tests/"
+        ],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "remedy/SKILL.md",
+          "sha256": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/poteto-mode/SKILL.md",
+          "sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "review",
+      "group_fixture_sha256": "9b400c58ae3629f74c389983acd48769798dc85cd5123463b84e8f2144ac55db",
+      "id": "feedback-repair",
+      "inputs_sha256": "eaaef95975e19d0634e99189c6faedb14d1adabaa79442e95d6342df7e9197cb",
+      "job": "review-and-feedback",
+      "oracle_id": "review/feedback-repair/oracle-6",
+      "oracle_sha256": "cd1c797b3b305bbc718a89d5d75a0be67cb9700579f5f3da7996aa02895ee8da",
+      "request_path": "inputs/feedback-repair/request.md",
+      "request_sha256": "eab3ff400a85a9700da7a694685ec88aa56b93926260171fc98e78e4f987ce19",
+      "source_group": "sealed-feedback-repair-01",
+      "split": "confirmation",
+      "timeout_seconds": 900
+    },
+    {
+      "allowed_effects": {
+        "artifact_dir": "artifacts/",
+        "external_publication": false,
+        "local_commit": false,
+        "product_paths": [
+          "docs/image-cache.md"
+        ]
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        }
+      },
+      "delegation_allowed": false,
+      "group": "prose",
+      "group_fixture_sha256": "aa48c6ea106d40c8131f308f1ba98e9e680c53312fe0ea9b3a8b55c7d225b466",
+      "id": "prose-exempt",
+      "inputs_sha256": "a9e24ed8445004a7623287206d9a2536c403f7308997e3b51f14daedfa54a48f",
+      "job": "prose-fidelity",
+      "oracle_id": "oracle-prose-exempt-01",
+      "oracle_sha256": "63bce4299c80030d8f722c2bd8795a1e0d0cc4d13b57b9624f711bab254c1627",
+      "request_path": "inputs/prose-exempt/request.md",
+      "request_sha256": "ee410f4448c6fa0c2d39c6a2398870baa4288971951ffc10fbffad4d7bb5d82c",
+      "source_group": "sealed-prose-exempt-01",
+      "split": "confirmation",
+      "timeout_seconds": 180
+    },
+    {
+      "allowed_effects": {
+        "artifact_dir": "artifacts/",
+        "external_publication": false,
+        "local_commit": false,
+        "product_paths": []
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        }
+      },
+      "delegation_allowed": false,
+      "group": "prose",
+      "group_fixture_sha256": "1c4a6c59026e2d3e813f1d0b558d82aa9acf7b85deb9bb17f36f54891c15ffa9",
+      "id": "prose-scope",
+      "inputs_sha256": "93a69a01ae057fce579f13b839e24d68e4a692deb4832cc70ca05a2b37bfdd4f",
+      "job": "prose-fidelity",
+      "oracle_id": "oracle-prose-scope-01",
+      "oracle_sha256": "f73e8f46c5833cf58164b2bacd14480b3ca61663c3f2f1f4f5bed4907f613dc6",
+      "request_path": "inputs/prose-scope/request.md",
+      "request_sha256": "e30b7d5e202f1f4d9c18475c44ec9d22852ca154e31505b86945e8db48e4ea7d",
+      "source_group": "sealed-prose-scope-01",
+      "split": "confirmation",
+      "timeout_seconds": 180
+    },
+    {
+      "allowed_effects": {
+        "artifact_dir": "artifacts/",
+        "external_publication": false,
+        "local_commit": false,
+        "product_paths": []
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        }
+      },
+      "delegation_allowed": false,
+      "group": "prose",
+      "group_fixture_sha256": "f06e62f2c253a91dae6402c8d4595812fce19c8d93e55c718568f694a883333f",
+      "id": "prose-verbatim",
+      "inputs_sha256": "29ac64d50fdb180ca0bc9bc3e17796f273967a2b0722e2de3dea6ac6efbaa0ce",
+      "job": "prose-fidelity",
+      "oracle_id": "oracle-prose-verbatim-01",
+      "oracle_sha256": "09a8a7874a6f3a84811af5433d1a897425f2b1c94eeabef11d6e443206c44534",
+      "request_path": "inputs/prose-verbatim/request.md",
+      "request_sha256": "d0a7d08ce0e3c660322c13e97d3089a7578519e53e626fcfe380013141773dc9",
+      "source_group": "sealed-prose-verbatim-01",
+      "split": "confirmation",
+      "timeout_seconds": 180
+    },
+    {
+      "allowed_effects": {
+        "artifact_directory": "artifacts/",
+        "commit": false,
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "scan/SKILL.md",
+          "sha256": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/interrogate/SKILL.md",
+          "sha256": "a16dfe179005abc22a4651b82f25b0c8ab953284276efe4e6dc341958fb63647"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "review",
+      "group_fixture_sha256": "68cb036f22d174b359902339539a05d582d4b3dcc7a78c6aff468a029cb5ee72",
+      "id": "review-contracts",
+      "inputs_sha256": "34a79a1f055104758737630eb1bb1d7ae137713239dd120cf2c114d0100bab9d",
+      "job": "review-and-feedback",
+      "oracle_id": "review/review-contracts/oracle-1",
+      "oracle_sha256": "01678695b57c12a9ab39ea05ff3a337b0a20a289c749dc8928f7944ceb492a1f",
+      "request_path": "inputs/review-contracts/request.md",
+      "request_sha256": "6937d4ab35cb4480c472de6584a6ba0d2cf3104cf6acd122d7996049758725ca",
+      "source_group": "sealed-review-contracts-01",
+      "split": "confirmation",
+      "timeout_seconds": 900
+    },
+    {
+      "allowed_effects": {
+        "artifact_directory": "artifacts/",
+        "commit": false,
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "scan/SKILL.md",
+          "sha256": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/interrogate/SKILL.md",
+          "sha256": "a16dfe179005abc22a4651b82f25b0c8ab953284276efe4e6dc341958fb63647"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "review",
+      "group_fixture_sha256": "836d661c1f1067ca470c9dc22e3929ceff9b0f8c1f072f5de1b424ab88e8aa23",
+      "id": "review-no-change",
+      "inputs_sha256": "8ad80300fda1ef77b5b539058fd06670615fd20e85cb6504259b91cf52055bca",
+      "job": "review-and-feedback",
+      "oracle_id": "review/review-no-change/oracle-1",
+      "oracle_sha256": "b48db83201f684ce77efdd32a3e114c1ef31ad3ce0f2e7ae82d4a19a0517ccdb",
+      "request_path": "inputs/review-no-change/request.md",
+      "request_sha256": "6e362028fe20a8c6d4f6c43063d4e6b1bd22c8f0fe66cba0b403a6f84a2cb6dd",
+      "source_group": "sealed-review-no-change-01",
+      "split": "confirmation",
+      "timeout_seconds": 900
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [
+          "tests/"
+        ],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "scan/SKILL.md",
+          "sha256": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/principle-test-behavior-not-implementation/SKILL.md",
+          "sha256": "f7223698623b6a26fea49c751e466b38e6691b1f32ce841d3983e7ffbe2b74a6"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "verification",
+      "group_fixture_sha256": "6343406842988f699de4fa8e17c19ba0db1f91e259cc5ca09d884ba894127728",
+      "id": "verify-contract-test",
+      "inputs_sha256": "0fbc9be9d22921b5b0e5e523c1a160578d51a71187b68679c2f5d8d2126561be",
+      "job": "verification-judgment",
+      "oracle_id": "verify-contract-test-v1",
+      "oracle_sha256": "d7406a1c016e33472414d553870a58a4e31ad0f17372ba1406bdfb7591b41ad4",
+      "request_path": "inputs/verify-contract-test/request.md",
+      "request_sha256": "8026ec77770d9db59c3633cc3881d753ba9d01260b82169890783cfdda38f6b7",
+      "source_group": "sealed-verify-contract-01",
+      "split": "confirmation",
+      "timeout_seconds": 300
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "reveal/references/capture.md",
+          "sha256": "273ddba9fe4cba2c60fc261747f63f8426c7a97b0df40b04f0a76c7e9ce0ba81"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/principle-prove-it-works/SKILL.md",
+          "sha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "verification",
+      "group_fixture_sha256": "903284d74ffe57bbe3d1a087fd487d2df38d3b09616ecae56b0154c711c27930",
+      "id": "verify-stale-proof",
+      "inputs_sha256": "eab0c85c32fa0dbdcb9216b3b4b6c3d7c0e9d7b070a87e0ea15eb43105cea85f",
+      "job": "verification-judgment",
+      "oracle_id": "verify-stale-proof-v1",
+      "oracle_sha256": "3b1e02aa5bde67b0e044bcac731c801854f71fdd17afdf46c53c39b80773b658",
+      "request_path": "inputs/verify-stale-proof/request.md",
+      "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
+      "source_group": "sealed-verify-stale-01",
+      "split": "confirmation",
+      "timeout_seconds": 300
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "reveal/references/capture.md",
+          "sha256": "273ddba9fe4cba2c60fc261747f63f8426c7a97b0df40b04f0a76c7e9ce0ba81"
+        },
+        "none": null,
+        "reference": {
+          "path": "pstack/skills/principle-prove-it-works/SKILL.md",
+          "sha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2"
+        }
+      },
+      "delegation_allowed": true,
+      "group": "verification",
+      "group_fixture_sha256": "50be614a8ea33fd4f53475ded10c3bfc915c5c4d6f21a9f722fd4650e5be0347",
+      "id": "verify-unavailable",
+      "inputs_sha256": "c41d8f064b48848cbd5afd10ddf8c513bedcad330ae41fa074ea39fbe299ee46",
+      "job": "verification-judgment",
+      "oracle_id": "verify-unavailable-v1",
+      "oracle_sha256": "70c9563a583c7a9403a24567b79eec19a3524e7c43ea57bf5ace541a7e425170",
+      "request_path": "inputs/verify-unavailable/request.md",
+      "request_sha256": "c7ea364024f979795613502646f7e5958adf36efd9d187bac2e04404afa957bd",
+      "source_group": "sealed-verify-unavailable-01",
+      "split": "confirmation",
+      "timeout_seconds": 300
+    }
+  ],
+  "conditions": {
+    "mana": {
+      "file_count": 181,
+      "install_root": "skills",
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "package_paths": [
+        "skills"
+      ],
+      "repository": "frankieramirez/mana",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468"
+    },
+    "none": {},
+    "reference": {
+      "file_count": 171,
+      "install_root": ".",
+      "inventory_sha256": "b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd",
+      "package_paths": [
+        "pstack",
+        "cursor-team-kit/skills/deslop"
+      ],
+      "repository": "cursor/plugins",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
+    }
+  },
+  "delegation": {
+    "max_active_threads": 4,
+    "max_children": 10,
+    "nested": false
+  },
+  "freeze_name": "effectiveness-pilot-1-a",
+  "group_freezes": {
+    "debugging": "32076fbbb7f2e41f5890317ababe6a4cb127e06d058a7045a200193a2303005b",
+    "prose": "8d24afd71e02b9c0af04ffe4090ea4b344239ea0d0fbcef1d4836b80fa2aa34d",
+    "review": "a2d81f528778aec210c038087ecca06ee5d3721524b58f3ba366a4d1f65f6916",
+    "verification": "b4b23b70fb417cf65f7533b96a0459a37bd7b68f35b2a92bd542fd29909efba3"
+  },
+  "group_pins": {
+    "debugging": {
+      "mana": {
+        "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+        "package_paths": [
+          "skills"
+        ],
+        "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468"
+      },
+      "reference": {
+        "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+        "package_paths": [
+          "pstack"
+        ],
+        "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
+      }
+    },
+    "prose": {
+      "mana": {
+        "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+        "package_paths": [
+          "skills"
+        ],
+        "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468"
+      },
+      "reference": {
+        "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+        "package_paths": [
+          "pstack"
+        ],
+        "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
+      }
+    },
+    "review": {
+      "mana": {
+        "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+        "package_paths": [
+          "skills"
+        ],
+        "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468"
+      },
+      "reference": {
+        "inventory_sha256": "b6edf110f097f8c46c579c2fe1c4c481cca0c37a75085233b7d66a5b7c642bdd",
+        "package_paths": [
+          "pstack",
+          "cursor-team-kit/skills/deslop"
+        ],
+        "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
+      }
+    },
+    "verification": {
+      "mana": {
+        "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+        "package_paths": [
+          "skills"
+        ],
+        "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468"
+      },
+      "reference": {
+        "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+        "package_paths": [
+          "pstack"
+        ],
+        "revision": "101b274dd991f694e1f7024be2157e5f3adf07de"
+      }
+    }
+  },
+  "host": "codex-cli 0.163.0",
+  "host_substitution": {
+    "protocol_host": "codex-cli 0.159.2",
+    "reason": "codex-cli 0.159.2 has no process-family termination evidence; codex-cli 0.163.0 has live focused and delegated evidence. Neither verifies its active thread cap, so delegated parity stays closed."
+  },
+  "model": "gpt-6.1-sol",
+  "parallel_parents": 1,
+  "platform": "linux",
+  "reasoning": "medium",
+  "repetitions": 2,
+  "replacement_runs": 0,
+  "schedule": [
+    {
+      "case": "debug-boundary",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 1
+    },
+    {
+      "case": "debug-boundary",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 2
+    },
+    {
+      "case": "debug-boundary",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 3
+    },
+    {
+      "case": "debug-boundary",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 4
+    },
+    {
+      "case": "debug-boundary",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 5
+    },
+    {
+      "case": "debug-boundary",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 6
+    },
+    {
+      "case": "debug-false-premise",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 7
+    },
+    {
+      "case": "debug-false-premise",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 8
+    },
+    {
+      "case": "debug-false-premise",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 9
+    },
+    {
+      "case": "debug-false-premise",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 10
+    },
+    {
+      "case": "debug-false-premise",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 11
+    },
+    {
+      "case": "debug-false-premise",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 12
+    },
+    {
+      "case": "debug-partial-retry",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 13
+    },
+    {
+      "case": "debug-partial-retry",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 14
+    },
+    {
+      "case": "debug-partial-retry",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 15
+    },
+    {
+      "case": "debug-partial-retry",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 16
+    },
+    {
+      "case": "debug-partial-retry",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 17
+    },
+    {
+      "case": "debug-partial-retry",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 18
+    },
+    {
+      "case": "feedback-repair",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 19
+    },
+    {
+      "case": "feedback-repair",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 20
+    },
+    {
+      "case": "feedback-repair",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 21
+    },
+    {
+      "case": "feedback-repair",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 22
+    },
+    {
+      "case": "feedback-repair",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 23
+    },
+    {
+      "case": "feedback-repair",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 24
+    },
+    {
+      "case": "prose-exempt",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 25
+    },
+    {
+      "case": "prose-exempt",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 26
+    },
+    {
+      "case": "prose-exempt",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 27
+    },
+    {
+      "case": "prose-exempt",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 28
+    },
+    {
+      "case": "prose-exempt",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 29
+    },
+    {
+      "case": "prose-exempt",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 30
+    },
+    {
+      "case": "prose-scope",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 31
+    },
+    {
+      "case": "prose-scope",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 32
+    },
+    {
+      "case": "prose-scope",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 33
+    },
+    {
+      "case": "prose-scope",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 34
+    },
+    {
+      "case": "prose-scope",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 35
+    },
+    {
+      "case": "prose-scope",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 36
+    },
+    {
+      "case": "prose-verbatim",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 37
+    },
+    {
+      "case": "prose-verbatim",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 38
+    },
+    {
+      "case": "prose-verbatim",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 39
+    },
+    {
+      "case": "prose-verbatim",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 40
+    },
+    {
+      "case": "prose-verbatim",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 41
+    },
+    {
+      "case": "prose-verbatim",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 42
+    },
+    {
+      "case": "review-contracts",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 43
+    },
+    {
+      "case": "review-contracts",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 44
+    },
+    {
+      "case": "review-contracts",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 45
+    },
+    {
+      "case": "review-contracts",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 46
+    },
+    {
+      "case": "review-contracts",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 47
+    },
+    {
+      "case": "review-contracts",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 48
+    },
+    {
+      "case": "review-no-change",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 49
+    },
+    {
+      "case": "review-no-change",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 50
+    },
+    {
+      "case": "review-no-change",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 51
+    },
+    {
+      "case": "review-no-change",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 52
+    },
+    {
+      "case": "review-no-change",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 53
+    },
+    {
+      "case": "review-no-change",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 54
+    },
+    {
+      "case": "verify-contract-test",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 55
+    },
+    {
+      "case": "verify-contract-test",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 56
+    },
+    {
+      "case": "verify-contract-test",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 57
+    },
+    {
+      "case": "verify-contract-test",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 58
+    },
+    {
+      "case": "verify-contract-test",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 59
+    },
+    {
+      "case": "verify-contract-test",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 60
+    },
+    {
+      "case": "verify-stale-proof",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 61
+    },
+    {
+      "case": "verify-stale-proof",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 62
+    },
+    {
+      "case": "verify-stale-proof",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 63
+    },
+    {
+      "case": "verify-stale-proof",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 64
+    },
+    {
+      "case": "verify-stale-proof",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 65
+    },
+    {
+      "case": "verify-stale-proof",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 66
+    },
+    {
+      "case": "verify-unavailable",
+      "condition": "reference",
+      "repetition": 2,
+      "slot": 67
+    },
+    {
+      "case": "verify-unavailable",
+      "condition": "mana",
+      "repetition": 2,
+      "slot": 68
+    },
+    {
+      "case": "verify-unavailable",
+      "condition": "mana",
+      "repetition": 1,
+      "slot": 69
+    },
+    {
+      "case": "verify-unavailable",
+      "condition": "none",
+      "repetition": 1,
+      "slot": 70
+    },
+    {
+      "case": "verify-unavailable",
+      "condition": "none",
+      "repetition": 2,
+      "slot": 71
+    },
+    {
+      "case": "verify-unavailable",
+      "condition": "reference",
+      "repetition": 1,
+      "slot": 72
+    }
+  ],
+  "schedule_sha256": "4cde4d32bce22bd70a4c63135fa09ad508be8051b352f016f1ee932c119ffc30",
+  "seed": 20261017,
+  "stop_conditions": [
+    "containment failure in the preflight or any thread probe",
+    "unexpected external write: an evaluator-owned origin ref changed",
+    "corrupted frozen input: controls, schedule, payload, fixture, installed payload or tool double changed",
+    "missing or incomplete child history, an uncollected thread or a child limit breach",
+    "budget breach: invocation timeout or a surviving process family",
+    "systematic tool-double mismatch or a missing observation"
+  ],
+  "study": "effectiveness-pilot-1",
+  "tools": "native filesystem tools only: no MCP servers, web search, apps, plugins, hooks, memories or user configuration; evaluator tool doubles first on PATH in every condition alike",
+  "totals": {
+    "cases": 12,
+    "max_children": 540,
+    "parent_seconds": 35640,
+    "parent_slots": 72,
+    "source_groups": 12
+  },
+  "version": 1
+}

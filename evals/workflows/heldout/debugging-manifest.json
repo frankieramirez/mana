@@ -4,10 +4,11 @@
   "area": "debugging",
   "ticket": "https://github.com/frankieramirez/mana/issues/106",
   "contract": "docs/specs/effectiveness-evaluation.md",
-  "status": "authored and hash-locked; second review completed and approved on 2026-10-18; not yet frozen into a study directory; no outcomes collected",
-  "ready_for_study_freeze": false,
-  "blockers": [
-    "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
+  "status": "authored and hash-locked; second review completed and approved on 2026-10-18; composed into the effectiveness-pilot-1 matrix (pilot.py, issue 113), whose runner admits these cases; no outcomes collected",
+  "ready_for_study_freeze": true,
+  "blockers": [],
+  "grading_prerequisites": [
+    "Hidden controls execute candidate code, so grading model output needs a contained runner for them. grade() reports the controls unavailable without one. Collecting attempts does not need it."
   ],
   "exposure_rule": "A source group whose request, workspace or oracle a candidate-instruction author reads while tuning becomes development. Record it in exposures, set its split to development and author an untouched replacement group for confirmation.",
   "exposures": [],

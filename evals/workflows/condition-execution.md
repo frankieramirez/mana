@@ -2,7 +2,7 @@
 
 [Implementation ticket 91](https://github.com/frankieramirez/mana/issues/91) adds an opt-in condition layer to the existing focused runner. It installs actual, separately pinned Mana and reference payloads, or an empty instruction directory for `none`. Each condition receives the same ordinary request, fixture, tools and response envelope. The instruction-loading prefix names only that condition's entrypoint. Discovery, user configuration, integrations and delegation remain disabled.
 
-This is development infrastructure. It does not implement the twelve held-out source groups in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md). [Ticket 99](https://github.com/frankieramirez/mana/issues/99) adds the host registry and condition-aware delegated collection described [below](#host-validation-and-delegated-arms). No comparative model runs have been performed. [Sealed attempts and blinded review](#sealed-attempts-and-blinded-review) supplies attempt, packet and judgment records; no reviewer cohort has used them. A live attempt requires the exact frozen host and fresh containment. The `0.159.0-alpha.3` host has no evidence record and is not accepted.
+This is development infrastructure for public fixtures. The twelve held-out source groups in the [effectiveness protocol](../../docs/specs/effectiveness-evaluation.md) run through the [complete comparative study](#complete-comparative-study). [Ticket 99](https://github.com/frankieramirez/mana/issues/99) adds the host registry and condition-aware delegated collection described [below](#host-validation-and-delegated-arms). No comparative model runs have been performed. [Sealed attempts and blinded review](#sealed-attempts-and-blinded-review) supplies attempt, packet and judgment records; no reviewer cohort has used them. A live attempt requires the exact frozen host and fresh containment. The `0.159.0-alpha.3` host has no evidence record and is not accepted.
 
 ## Supported fixtures
 
@@ -153,6 +153,44 @@ python3 -B -m unittest discover -s evals/workflows -p test_host_validation.py
 ```
 
 These tests show that the evaluator detects each failure. They do not validate any real host. The only live evidence is the 0.163.0 record above, recorded on the maintainer's machine because the delivery container had no Codex CLI. A test loads that committed file and checks that the registry reaches the same conclusion.
+
+## Complete comparative study
+
+[Ticket 113](https://github.com/frankieramirez/mana/issues/113) composes the four held-out group freezes into one preregistered matrix for `effectiveness-pilot-1`. It is evaluator-only: anyone tuning candidate instructions must not read `pilot.py`, `test_pilot.py` or `heldout/`. `heldout/pilot-manifest.json` holds 12 source groups, three conditions and two repetitions in a 72-slot schedule (seed 20261017, sorted case blocks of six shuffled cells). It also holds per-job time limits of 900, 600, 300 and 180 seconds, no automatic retries or replacement runs, one parent at a time, and the shared delegation limits for code tasks. Prose tasks have no children. The manifest pins host `codex-cli 0.163.0`, model `gpt-6.1-sol` at `medium`, and the tool controls. It records one complete reference package, `pstack/` plus `cursor-team-kit/skills/deslop/` at the pinned revision (171 files), with every entrypoint's path and SHA-256. Each case carries request, candidate input and oracle digests over that case's own files only, because the groups share `heldout/inputs` and `heldout/oracles`. `test_pilot.py` holds the manifest's external digest. Host 0.163.0 replaces the protocol's 0.159.2 before any run, because 0.159.2 has no process-family termination evidence.
+
+```bash
+python3 -B evals/workflows/pilot.py --check
+```
+
+`--check` rebuilds the matrix from the group freezes and lists every closed gate. The study starts only when that list is empty. The gates are:
+
+| Gate | Opens when |
+|---|---|
+| Matrix | The committed manifest equals the rebuild: every group has three conditions and two repetitions, its job's time limit and an executable Mana and reference route inside the pinned packages, and the runner has a workspace adapter for it. |
+| Groups | Each group freeze is intact, its independent second review approved it and its routes are confirmed. |
+| Provenance | No group records an exposure event, every split is `confirmation`, and no group freeze changed after the pilot manifest. |
+| Delegated parity | `hosts.py` accepts the pinned host in `comparative-delegated` mode for code tasks and `focused` mode for prose. Today the active-thread cap is unknown, so this gate is closed until a new host record verifies it. |
+| Resources | `heldout/pilot-gates.json` records an authorization of exactly 72 parent slots, 35,640 parent seconds and 540 children, with who authorized it and when. |
+| Human effort | The same record names two distinct reviewers and a separate adjudicator, or records the cohort unavailable so effort metrics stay unmeasured. |
+
+Record the host evidence, the authorization and the human-effort record in the repository first. Preparation refuses while any gate is closed, because a study reads its frozen gate copies and one prepared with a closed gate could never open. Then prepare a study directory from checkouts of both pins. Preparation verifies both inventories and every entrypoint digest, builds all 12 workspaces once, and archives the held-out builders, the governed inputs and oracles, the gate records and the host evidence in `runner-source/`. It never invokes an agent:
+
+```bash
+git -C /path/to/mana archive 9d1aa521974bc7c72bf9cdd676de18c09a036468 skills | tar -x -C /abs/mana
+git -C /path/to/plugins archive 101b274dd991f694e1f7024be2157e5f3adf07de pstack cursor-team-kit/skills/deslop \
+  | tar -x -C /abs/reference
+python3 -B evals/workflows/pilot.py --prepare /abs/mana/skills /abs/reference /abs/new-study
+```
+
+`run.py --study` reads the gates from those frozen copies before every slot. While any gate is closed it claims no slot and invokes nothing. It also refuses a study whose payloads, entrypoints or schedule differ from the pilot manifest.
+
+Each slot runs through the same contained runner as a development case: the sandbox preflight, per-thread probes, descendant collection and process-family termination. Three held-out stop gates run after every invocation, whatever its status and even when collection raised: a changed installed payload, a changed tool double, and a ref change in the evaluator-owned bare origin. The first two count as corrupted input and the third as an external write. Each one retains the attempt and stops the schedule. A tool double's exit 97 is a refused write or install that the group grader measures, so it never stops a held-out study. Collection never decides a held-out task outcome: `evaluation.json` keeps it null and the sealed record says `needs_adjudication` until the group grader and a human record a judgment. Grading debugging output still needs a contained runner for the hidden controls; collection does not.
+
+The offline tests build closed gate records and host evidence themselves, prepare a study from synthetic payloads, check the delegation text each condition receives, and drive slots through `fake_host.py` for each stop gate:
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_pilot.py
+```
 
 ## Sealed attempts and blinded review
 
