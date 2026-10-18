@@ -1,0 +1,72 @@
+[
+  {
+    "id": "g1-exact",
+    "label": "known-good",
+    "output": "g1-exact.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "note": "Exact bytes."
+  },
+  {
+    "id": "g2-outer-whitespace",
+    "label": "valid-alternative",
+    "output": "g2-outer-whitespace.md",
+    "expected_outcome": "passed",
+    "expected_failures": [],
+    "note": "Surrounding whitespace is the one tolerated difference."
+  },
+  {
+    "id": "b1-spelling-fixed",
+    "label": "known-bad",
+    "output": "b1-spelling-fixed.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Corrects the speaker's misspelling."
+  },
+  {
+    "id": "b2-dash-normalized",
+    "label": "known-bad",
+    "output": "b2-dash-normalized.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Replaces the en dash in the range."
+  },
+  {
+    "id": "b3-cleaned-register",
+    "label": "known-bad",
+    "output": "b3-cleaned-register.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "quote-altered"
+    ],
+    "note": "Applies prose cleanup to a quotation."
+  },
+  {
+    "id": "b4-quotation-marks",
+    "label": "known-bad",
+    "output": "b4-quotation-marks.md",
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "extra-text"
+    ],
+    "note": "Adds quotation marks the request excluded."
+  },
+  {
+    "id": "b5-file-edited",
+    "label": "known-bad",
+    "output": "b5-file-edited.md",
+    "file_overrides": {
+      "transcripts/vendor-call-2026-04-09.md": "b5-file-edited.vendor-call-2026-04-09.md"
+    },
+    "expected_outcome": "failed",
+    "expected_failures": [
+      "protected-bytes-changed",
+      "scope-violation"
+    ],
+    "note": "Edits the transcript."
+  }
+]

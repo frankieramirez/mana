@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "study": "effectiveness-pilot-1",
+  "job": "prose-fidelity",
+  "status": "frozen; payload inventories verified; exact checks pass or fail and every prose output that clears them goes to an adjudicator with a fact list; the second review of this freeze is complete",
+  "conditions": {
+    "mana": {
+      "source": "https://github.com/frankieramirez/mana",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+      "root": "skills",
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "inventory_status": "verified",
+      "evidence": "git archive of skills/ at the revision, then conditions.inventory_digest over 181 files; entrypoint hash from git show."
+    },
+    "reference": {
+      "source": "https://github.com/cursor/plugins",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+      "root": "pstack",
+      "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+      "inventory_status": "verified",
+      "evidence": "Entrypoint bytes fetched from raw.githubusercontent.com at the revision; the file names no supporting files. Inventory digest supplied by the parent session from a read-only checkout of cursor/plugins at the revision, then recomputed by the second reviewer on 2026-10-17: git archive of pstack/ at the revision and the checkout working tree both give conditions.inventory_digest d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc over 170 files, and skills/unslop/SKILL.md hashes to the frozen entrypoint SHA-256."
+    },
+    "none": {}
+  },
+  "cases": [
+    {
+      "id": "prose-exempt",
+      "source_group": "sealed-prose-exempt-01",
+      "job": "prose-fidelity",
+      "split": "confirmation",
+      "fixture_path": "inputs/prose-exempt/fixture",
+      "fixture_sha256": "aa48c6ea106d40c8131f308f1ba98e9e680c53312fe0ea9b3a8b55c7d225b466",
+      "request_path": "inputs/prose-exempt/request.md",
+      "request_sha256": "ee410f4448c6fa0c2d39c6a2398870baa4288971951ffc10fbffad4d7bb5d82c",
+      "allowed_effects": {
+        "product_paths": [
+          "docs/image-cache.md"
+        ],
+        "local_commit": false,
+        "artifact_dir": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "reference": {
+          "path": "skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        },
+        "none": null
+      },
+      "timeout_seconds": 180,
+      "delegation_allowed": false,
+      "oracle_id": "oracle-prose-exempt-01",
+      "oracle_sha256": "79a4077203e052121fd4c8b715397ce349a2c83b6356f0dc7613fe4eb6556650"
+    },
+    {
+      "id": "prose-scope",
+      "source_group": "sealed-prose-scope-01",
+      "job": "prose-fidelity",
+      "split": "confirmation",
+      "fixture_path": "inputs/prose-scope/fixture",
+      "fixture_sha256": "1c4a6c59026e2d3e813f1d0b558d82aa9acf7b85deb9bb17f36f54891c15ffa9",
+      "request_path": "inputs/prose-scope/request.md",
+      "request_sha256": "e30b7d5e202f1f4d9c18475c44ec9d22852ca154e31505b86945e8db48e4ea7d",
+      "allowed_effects": {
+        "product_paths": [],
+        "local_commit": false,
+        "artifact_dir": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "reference": {
+          "path": "skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        },
+        "none": null
+      },
+      "timeout_seconds": 180,
+      "delegation_allowed": false,
+      "oracle_id": "oracle-prose-scope-01",
+      "oracle_sha256": "f1959f59ba400a347aecc57a11e82a0204aa324754c7a4f6a94faebb7bbe8a9d"
+    },
+    {
+      "id": "prose-verbatim",
+      "source_group": "sealed-prose-verbatim-01",
+      "job": "prose-fidelity",
+      "split": "confirmation",
+      "fixture_path": "inputs/prose-verbatim/fixture",
+      "fixture_sha256": "f06e62f2c253a91dae6402c8d4595812fce19c8d93e55c718568f694a883333f",
+      "request_path": "inputs/prose-verbatim/request.md",
+      "request_sha256": "d0a7d08ce0e3c660322c13e97d3089a7578519e53e626fcfe380013141773dc9",
+      "allowed_effects": {
+        "product_paths": [],
+        "local_commit": false,
+        "artifact_dir": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "dispel/SKILL.md",
+          "sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7"
+        },
+        "reference": {
+          "path": "skills/unslop/SKILL.md",
+          "sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
+        },
+        "none": null
+      },
+      "timeout_seconds": 180,
+      "delegation_allowed": false,
+      "oracle_id": "oracle-prose-verbatim-01",
+      "oracle_sha256": "888e86e361d3b864e98c6130f2ab6c999af23b8bf0f95165ba251dc86269046c"
+    }
+  ],
+  "exposure": [],
+  "freeze_sha256": "8d24afd71e02b9c0af04ffe4090ea4b344239ea0d0fbcef1d4836b80fa2aa34d",
+  "history": [
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
+      "previous_freeze_sha256": null,
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Initial freeze of prose-exempt, prose-scope and prose-verbatim with the reference package inventory unresolved."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
+      "previous_freeze_sha256": "0ccbbaceea515e009251a640a83cd5883f7ccf5ecd6749813848e50a2b085dee",
+      "by": "independent reviewer agent, Claude",
+      "change": "Recorded the verified cursor/plugins pstack/ inventory digest d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+      "previous_freeze_sha256": "a968924545245623d186f79321a9064d4c1f2de163fdf818640a92a981af9eba",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Oracle repair after review history entry 1, before any outcome: sentence spans stop at line breaks; negation-aware contradictions for full-cache rendering and cold start; meets-the-schema and instead-of-imported wording accepted; version split into version-named and version-onward; new inferred-purpose screen for prose-exempt; report-destination inference for prose-scope; regression examples r1 to r6 added in both groups."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+      "previous_freeze_sha256": "9f40b4cc6e886095b2d36cd19d31cde39a408781ada3d2f09cac66f8938e5ecc",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Oracle repair after the re-review of freeze 9f40b4cc, before any outcome: cold-after-restart contradictions cover contracted and rephrased negations (isn't cold, not empty, doesn't start out cold, survives a restart, doesn't empty the cache); example-retained fails when the future posted_on record is placed inside the success scope or said to pass; regression examples r7 to r10 (prose-exempt) and r7 to r9 (prose-scope) added."
+    },
+    {
+      "date": "2026-10-17",
+      "freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+      "previous_freeze_sha256": "f6afdd62bf3a19e25a8578d4f49769836441e1ce49e71728e7b897abe64d54aa",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Oracle approach change after the third review of freeze f6afdd62, before any outcome: cold-after-restart fails deterministically only when the cache is the subject and is said to persist or not be cold after a restart; any negation in a clause about cold, empty, restart, carried over or survive, and any clause tying a restart to kept thumbnails, goes to needs_adjudication. In prose-scope, a sentence naming posted_on without a failure cue goes to needs_adjudication. Grader gains clause and sentence scoped reviewer cues. Examples r11 to r17 (prose-exempt) and r10 to r13 (prose-scope) added; r3 and r10 (prose-exempt) now go to a reviewer under the new rule."
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+      "previous_freeze_sha256": "807755104b74cedc765cb17670dcf801b81d0ca3997e14fe6a1104be0530fbba",
+      "by": "Claude fixture author for issue 108 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "change": "Policy change after the fourth review of freeze 80775510, before any outcome: prose screens use closed lists. A prose sentence fails only as a canonical contradiction with no negation, quantifier or reason clause; it passes only as a canonical faithful statement or when it mentions no topic of any check; every other topical sentence goes to needs_adjudication, with no failure-word exemption. Verb-list contradictions and presence patterns are removed, including the full-cache check. The version 4.2 token becomes an exact required-token check. Examples r18 to r23 and c1, c2 (prose-exempt), r14 to r19 and c3, c4 (prose-scope) added; earlier routes relabeled to the new policy."
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+      "previous_freeze_sha256": "7ab888298b5f2462ab95cf4e435cba10d5bfc5e7cb9bad333f90d4e1ddaaee31",
+      "by": "Claude fixture author for issue 108",
+      "change": "Fifth review: only canonical or unchanged sentences pass; headings are screened; a question mark is kept; thirteen reviewer outputs added as examples"
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
+      "previous_freeze_sha256": "0b2299813dfedfc383822b9bc60952e7c81a67bf1f4f727b6ca7ca7f39b35d26",
+      "by": "Claude fixture author for issue 108",
+      "change": "Sixth review: the automated prose screen is removed; exact checks pass or fail and every prose output goes to an adjudicator with a fact list; a small known-good and known-bad set per group replaces the screen corpora"
+    },
+    {
+      "date": "2026-10-18",
+      "freeze_sha256": "8d24afd71e02b9c0af04ffe4090ea4b344239ea0d0fbcef1d4836b80fa2aa34d",
+      "previous_freeze_sha256": "895df51a63b64cac5f34f33d76c46546b1b4cee89f79d5bb178c953c1c05e32e",
+      "by": "Claude fixture author for issue 108",
+      "change": "Seventh review: required_token and the word-count check removed in favour of facts; each unfaithful example names the one fact it shows; no-added-fact allows supported statements"
+    }
+  ]
+}

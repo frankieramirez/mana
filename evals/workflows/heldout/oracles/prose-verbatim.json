@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "oracle_id": "oracle-prose-verbatim-01",
+  "case_id": "prose-verbatim",
+  "evaluator_only": true,
+  "canary": "mana-heldout-canary-e5208c3d-prose-verbatim",
+  "graded_text": {
+    "source": "report"
+  },
+  "contract": "Reply with exactly the bytes of Priya Raman's second answer, after her speaker label and before the line end. Surrounding whitespace is the only tolerated difference. Its dashes, antithesis, triple, repeated word and misspelling are part of the quotation. The transcript stays unchanged.",
+  "exact": [
+    {
+      "id": "quote-bytes",
+      "kind": "exact_text",
+      "span": {
+        "path": "transcripts/vendor-call-2026-04-09.md",
+        "start": "**Priya Raman:** ",
+        "end": "\n",
+        "occurrence": 2
+      },
+      "expected_sha256": "a41477fe086bbd711bef156b91d180cc12c36700bdb297b37db76470aa304a83",
+      "failure_extra": "extra-text",
+      "failure_altered": "quote-altered"
+    },
+    {
+      "id": "transcript-bytes",
+      "kind": "unchanged_file",
+      "path": "transcripts/vendor-call-2026-04-09.md",
+      "failure": "protected-bytes-changed"
+    }
+  ],
+  "facts": []
+}

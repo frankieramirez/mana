@@ -1,0 +1,1 @@
+Starting with 4.2, the importer brings in every record except those with a future `posted_on` date, which are listed in the rejection report. The importer doesn't modify records.

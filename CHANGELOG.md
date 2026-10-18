@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.43.12
+
+- The workflow evaluator holds three frozen held-out prose-fidelity groups for protected config bytes, quantified scope and exact quotation. Exact checks pass or fail; every other prose output goes to an adjudicator with a fact list. The second review of the freeze is complete.
+
 ## 0.43.11
 
 - The workflow evaluator gains a selection-only discovery adapter in `evals/workflows/discovery.py`. It installs the whole catalog where the host discovers skills, snapshots each entrypoint's metadata and bytes, sends the user's request with no skill path or load instruction, keeps host discovery on and delegation off, and leaves only `artifacts/` writable so runs end before product mutation. `discovery-cases.json` preregisters the spec's 46 cases with accepted routes, fallbacks, forbidden skills and forbidden actions, and a live run must pass its digest. Loads come only from recorded commands that printed an entrypoint, and activation, routing, execution and capability limits are judged separately. `run.py --probe-discovery` records `skill_discovery` and the new `explicit_only_honored` capability from two canary skills in one model call, and the registry gains a `discovery` mode. Offline tests use the fake host, whose keyword selector is labelled an offline fixture and never counts as live discovery. No host is accepted for discovery yet, because no live probe has run.
