@@ -38,8 +38,10 @@ DEVELOPMENT_CORPORA = ('evals/0*-*/prompt.md', 'evals/semantic/cases.jsonl', 'ev
 CASE_FIELDS = ('id', 'source_group', 'split', 'request', 'inputs', 'protected_spans', 'timeout_seconds')
 ORACLE_FIELDS = ('schema_version', 'group', 'case_id', 'group_kind', 'evaluator_only', 'canary', 'contract',
                  'supported_facts', 'invented_facts_that_fail', 'legitimate_alternatives', 'judgments', 'examples')
-JUDGMENT_FIELDS = ('id', 'failure', 'question')
-EXAMPLE_FIELDS = ('id', 'label', 'polished', 'text', 'failures', 'note')
+JUDGMENT_FIELDS = ('id', 'question')
+EXAMPLE_FIELDS = ('id', 'label', 'polished', 'text')
+# A failing example names the one question it was built to show; a note is optional.
+OPTIONAL_EXAMPLE_FIELDS = ('shows', 'note')
 SPAN_LOST = 'protected-span-lost'
 REVIEW_FIELDS = ('status', 'reviewer', 'date', 'freeze_sha256', 'contested_groups', 'notes')
 
@@ -113,37 +115,45 @@ def checked_oracle(oracle, case):
     known = judgments | {SPAN_LOST}
     ids = set()
     for example in oracle['examples']:
-        conditions.keys(example, EXAMPLE_FIELDS, 'oracle example')
+        if not isinstance(example, dict) or set(EXAMPLE_FIELDS) - set(example) \
+                or set(example) - set(EXAMPLE_FIELDS + OPTIONAL_EXAMPLE_FIELDS):
+            raise ValueError('invalid oracle example fields: ' + case['id'])
         if example['id'] in ids or example['label'] not in ('valid', 'failing') or not isinstance(example['polished'], bool):
             raise ValueError('invalid oracle example: ' + str(example['id']))
         ids.add(example['id'])
-        if set(example['failures']) - known:
-            raise ValueError('example names an unknown judgment: ' + example['id'])
-        if (example['label'] == 'valid') == bool(example['failures']):
-            raise ValueError('a valid example names no failure and a failing example names at least one: '
+        if 'note' in example and not (isinstance(example['note'], str) and example['note']):
+            raise ValueError('a note is omitted or non-empty: ' + example['id'])
+        if (example['label'] == 'failing') != ('shows' in example):
+            raise ValueError('a failing example, and only a failing example, names the question it shows: '
                              + example['id'])
-        if all(protected_spans(case, example['text']).values()) == (SPAN_LOST in example['failures']):
+        if 'shows' in example and example['shows'] not in known:
+            raise ValueError('example shows an unknown question: ' + example['id'])
+        if spans_kept(case, example['text']) == (example.get('shows') == SPAN_LOST):
             raise ValueError('example span label disagrees with its bytes: ' + example['id'])
     valid = [e for e in oracle['examples'] if e['label'] == 'valid']
     failing = [e for e in oracle['examples'] if e['label'] == 'failing']
     if len(valid) < 2 or len(failing) < 3:
         raise ValueError('each group needs two legitimate alternatives and three failing outputs: ' + case['id'])
-    if not any(e['polished'] and set(e['failures']) - {SPAN_LOST} for e in failing):
+    if not any(e['polished'] and e['shows'] != SPAN_LOST for e in failing):
         raise ValueError('each group needs a cleanly styled output that still fails on fidelity: ' + case['id'])
     return oracle
 
 
-def protected_spans(case, output):
-    """Deterministic: each protected span is present byte for byte, or it is lost."""
-    return {span['id']: span['text'] in output for span in case['protected_spans']}
+def span_checks(case, output):
+    """The prose adapter's byte-for-byte span check over this case's spans."""
+    spans = [{**span, 'sha256': pa.text_digest(span['text'])} for span in case['protected_spans']]
+    return pa.protected_span_checks({'protected_spans': spans}, output)
+
+
+def spans_kept(case, output):
+    return all(check['preserved'] for check in span_checks(case, output))
 
 
 def grade(oracle, case, output):
-    """Protected spans pass or fail on their bytes. Every prose output then goes to adjudication against the
-    oracle's facts and questions; nothing here decides a prose verdict."""
-    spans = protected_spans(case, output)
-    return {'protected_spans': spans, 'spans': 'fail' if not all(spans.values()) else 'pass',
-            'prose': 'adjudicate', 'automatic_prose_verdict': False,
+    """Protected spans pass or fail on their bytes. The prose goes to adjudication against the oracle's facts
+    and questions; nothing here decides a prose verdict."""
+    checks = span_checks(case, output)
+    return {'protected_spans': checks, 'spans': 'pass' if all(c['preserved'] for c in checks) else 'fail',
             'adjudication': {k: oracle[k] for k in ('contract', 'supported_facts', 'invented_facts_that_fail',
                                                      'legitimate_alternatives', 'judgments')}}
 
@@ -393,8 +403,9 @@ def main(argv=None):
             if case is None:
                 raise ValueError('unknown confirmation case: ' + args.grade[0])
             oracle = load_oracles(CASE_SET, [case])[case['id']]
-            print(json.dumps(grade(oracle, case, Path(args.grade[1]).read_bytes().decode('utf-8')), indent=2))
-            return 0
+            result = grade(oracle, case, Path(args.grade[1]).read_bytes().decode('utf-8'))
+            print(json.dumps(result, indent=2))
+            return 0 if result['spans'] == 'pass' else 1
         if args.check_study:
             print(json.dumps(check_frozen_study(args.check_study), indent=2))
             return 0

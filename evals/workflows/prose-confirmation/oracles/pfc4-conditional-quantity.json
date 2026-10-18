@@ -27,47 +27,34 @@
   "judgments": [
     {
       "id": "free-ride-conditions",
-      "failure": "broadened-condition",
       "question": "Is the free first 30 minutes still limited to annual members on classic bikes?"
     },
     {
       "id": "ebike-rate",
-      "failure": "contradicted-fact",
       "question": "Do e-bikes still cost 15 cents a minute?"
     },
     {
       "id": "ebike-applies-to-members",
-      "failure": "lost-condition",
       "question": "Does the paragraph keep that the e-bike rate applies to members too, from the first minute?"
     },
     {
       "id": "casual-pricing",
-      "failure": "contradicted-fact",
       "question": "Do casual riders still pay $1 to unlock plus 20 cents a minute on classic bikes?"
     },
     {
       "id": "unlock-any-bike",
-      "failure": "lost-condition",
       "question": "Does the paragraph keep that the $1 unlock applies to any bike, e-bikes included?"
     },
     {
-      "id": "no-other-rates",
-      "failure": "contradicted-fact",
-      "question": "Does the paragraph avoid per-minute rates other than 15 and 20 cents?"
-    },
-    {
       "id": "pilot-dates",
-      "failure": "contradicted-fact",
       "question": "Does the paragraph keep the pilot end date of September 30?"
     },
     {
       "id": "uncertainty-kept",
-      "failure": "certainty-added",
       "question": "Does the paragraph keep that prices might change after September 30 and nothing is decided?"
     },
     {
       "id": "no-invented-terms",
-      "failure": "invented-fact",
       "question": "Does the paragraph avoid prices, discounts, caps, sequences or reasons the notes do not state?"
     }
   ],
@@ -76,16 +63,13 @@
       "id": "g1-plain",
       "label": "valid",
       "polished": false,
-      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone, members included, from the first minute. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes. This is pilot pricing through September 30; it may change after that, and the board hasn't decided yet.",
-      "failures": [],
-      "note": ""
+      "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone, members included, from the first minute. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes. This is pilot pricing through September 30; it may change after that, and the board hasn't decided yet."
     },
     {
       "id": "g2-by-bike",
       "label": "valid",
       "polished": false,
       "text": "Annual members get the first half hour free on classic bikes. Casual riders pay a $1 fee to unlock any bike, plus 20 cents a minute on classic bikes. E-bikes are 15 cents a minute for all riders from the start, including members. These are pilot prices that run through September 30 and could change after that; no decision has been made.",
-      "failures": [],
       "note": "Corrected after the first second review: the $1 unlock covers any bike."
     },
     {
@@ -93,9 +77,7 @@
       "label": "failing",
       "polished": true,
       "text": "Every ride is free for the first 30 minutes. After that, e-bikes cost 15 cents a minute and casual riders pay $1 to unlock plus 20 cents a minute. Pilot pricing runs through September 30 and may change after that.",
-      "failures": [
-        "free-ride-conditions"
-      ],
+      "shows": "free-ride-conditions",
       "note": "Drops both conditions on the free period."
     },
     {
@@ -103,49 +85,35 @@
       "label": "failing",
       "polished": true,
       "text": "Annual members ride free for the first 30 minutes on classic bikes and e-bikes. E-bikes otherwise cost 15 cents a minute for everyone. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes. Pilot pricing runs through September 30 and may change after that.",
-      "failures": [
-        "free-ride-conditions"
-      ],
-      "note": ""
+      "shows": "free-ride-conditions"
     },
     {
       "id": "b3-prices-will-rise",
       "label": "failing",
       "polished": true,
       "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone, members included. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes. Prices will go up after the pilot ends on September 30.",
-      "failures": [
-        "uncertainty-kept"
-      ],
-      "note": ""
+      "shows": "uncertainty-kept"
     },
     {
       "id": "b5-invented-discount",
       "label": "failing",
       "polished": true,
       "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 15 cents a minute for everyone, members included. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes, and students get half off. This is pilot pricing through September 30 and may change after that.",
-      "failures": [
-        "no-invented-terms"
-      ],
-      "note": ""
+      "shows": "no-invented-terms"
     },
     {
       "id": "b6-wrong-rate",
       "label": "failing",
       "polished": false,
       "text": "Annual members ride classic bikes free for the first 30 minutes. E-bikes cost 25 cents a minute for everyone. Casual riders pay $1 to unlock any bike plus 20 cents a minute on classic bikes. This is pilot pricing through September 30 and may change after that.",
-      "failures": [
-        "ebike-rate"
-      ],
-      "note": ""
+      "shows": "ebike-rate"
     },
     {
       "id": "b7-unlock-classic-only",
       "label": "failing",
       "polished": true,
       "text": "On classic bikes, annual members ride free for the first 30 minutes and casual riders pay a $1 unlock fee plus 20 cents a minute. E-bikes are 15 cents a minute for everyone from the start, members included, and that's all you pay. Pilot pricing runs through September 30 and may change; nothing is decided.",
-      "failures": [
-        "unlock-any-bike"
-      ],
+      "shows": "unlock-any-bike",
       "note": "From the first second review. Limits the $1 unlock to classic bikes, as the contested example did."
     }
   ]

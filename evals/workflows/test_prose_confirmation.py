@@ -235,11 +235,13 @@ class OracleTests(Workspace):
     def test_each_group_has_a_cleanly_styled_output_that_fails_on_fidelity(self):
         for case in self.cases:
             oracle = oracle_for(case)
+            questions = {j['id'] for j in oracle['judgments']}
             polished = [e for e in oracle['examples'] if e['label'] == 'failing' and e['polished']
-                        and set(e['failures']) - {pc.SPAN_LOST}]
+                        and e['shows'] != pc.SPAN_LOST]
             self.assertTrue(polished, case['id'])
             for example in polished:
-                self.assertTrue(all(pc.protected_spans(case, example['text']).values()), example['id'])
+                self.assertIn(example['shows'], questions)
+                self.assertTrue(pc.spans_kept(case, example['text']), example['id'])
 
     def test_protected_spans_pass_or_fail_on_their_bytes(self):
         case = self.by_id['pfc-dome-autoclose']
@@ -251,20 +253,19 @@ class OracleTests(Workspace):
                            'block removed': valid.replace(case['protected_spans'][0]['text'], '')}.items():
             with self.subTest(name):
                 result = pc.grade(oracle, case, text)
-                self.assertEqual(result['protected_spans'], {'autoclose-toml': False})
+                self.assertEqual([(c['id'], c['preserved']) for c in result['protected_spans']],
+                                 [('autoclose-toml', False)])
                 self.assertEqual(result['spans'], 'fail')
 
-    def test_no_prose_verdict_is_automatic(self):
+    def test_grade_carries_no_prose_verdict(self):
         for case in self.cases:
             oracle = oracle_for(case)
             for example in oracle['examples']:
                 result = pc.grade(oracle, case, example['text'])
-                self.assertEqual(result['prose'], 'adjudicate', example['id'])
-                self.assertFalse(result['automatic_prose_verdict'])
+                self.assertEqual(set(result), {'protected_spans', 'spans', 'adjudication'}, example['id'])
                 self.assertEqual(result['adjudication']['judgments'], oracle['judgments'])
         case = self.by_id['pfc-hold-expiry']
-        result = pc.grade(oracle_for(case), case, 'All holds now expire after one day.')
-        self.assertEqual((result['spans'], result['prose']), ('pass', 'adjudicate'))
+        self.assertEqual(pc.grade(oracle_for(case), case, 'All holds now expire after one day.')['spans'], 'pass')
 
     def test_grade_command_prints_spans_and_the_adjudication_packet(self):
         case = self.by_id['pfc-kiosk-logrotate']
@@ -274,9 +275,11 @@ class OracleTests(Workspace):
         with contextlib.redirect_stdout(printed):
             self.assertEqual(pc.main(['--grade', case['id'], str(output)]), 0)
         result = json.loads(printed.getvalue())
-        self.assertEqual(result['protected_spans'], {'logrotate-block': True})
-        self.assertEqual(result['prose'], 'adjudicate')
+        self.assertEqual([c['preserved'] for c in result['protected_spans']], [True])
         self.assertIn('supported_facts', result['adjudication'])
+        output.write_text('# Kiosk logs\n\nweekly, rotate 8\n')
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(pc.main(['--grade', case['id'], str(output)]), 1)
 
     def test_oracle_contract_requirements_are_enforced(self):
         case = self.by_id['pfc-dome-autoclose']
@@ -287,18 +290,19 @@ class OracleTests(Workspace):
             'two failing outputs': lambda o: o.update(examples=[e for e in o['examples'] if e['label'] == 'valid']
                                                       + [e for e in o['examples'] if e['label'] == 'failing'][:2]),
             'no polished failure': lambda o: [e.update(polished=False) for e in o['examples']],
-            'valid example with a failure': lambda o: o['examples'][0].update(failures=['manual-close']),
-            'failing example with no failure': lambda o: next(
-                e for e in o['examples'] if e['label'] == 'failing').update(failures=[]),
-            'unknown judgment': lambda o: next(
-                e for e in o['examples'] if e['label'] == 'failing').update(failures=['made-up']),
+            'valid example that shows a failure': lambda o: o['examples'][0].update(shows='manual-close'),
+            'failing example that shows nothing': lambda o: next(
+                e for e in o['examples'] if e['label'] == 'failing').pop('shows'),
+            'unknown question': lambda o: next(
+                e for e in o['examples'] if e['label'] == 'failing').update(shows='made-up'),
             'span loss not in the bytes': lambda o: next(
-                e for e in o['examples'] if e['id'] == 'b3-closes-on-lost-contact').update(failures=[pc.SPAN_LOST]),
+                e for e in o['examples'] if e['id'] == 'b3-closes-on-lost-contact').update(shows=pc.SPAN_LOST),
             'span loss unlabeled': lambda o: next(
-                e for e in o['examples'] if e['id'] == 'b6-block-reformatted').update(failures=['no-config-values']),
+                e for e in o['examples'] if e['id'] == 'b6-block-reformatted').update(shows='no-config-values'),
+            'empty note': lambda o: o['examples'][0].update(note=''),
+            'failure category': lambda o: o['judgments'][0].update(failure='lost-fact'),
             'no invented facts': lambda o: o.update(invented_facts_that_fail=[]),
             'no judgments': lambda o: o.update(judgments=[]),
-            'automatic verdict field': lambda o: o['examples'][0].update(screen='screen_pass'),
             'not evaluator only': lambda o: o.update(evaluator_only=False),
             'wrong group kind': lambda o: o.update(group_kind='anything'),
             'extra field': lambda o: o.update(expected_rewrite='x'),
@@ -343,8 +347,8 @@ class GateTests(Workspace):
         exposure = {'group': 'pfc4-conditional-quantity', 'reader': 'candidate tuner', 'date': '2026-10-18',
                     'reason': 'read the oracle while editing the candidate'}
         self.edit_json(case_set / 'exposures.json', lambda d: d['exposures'].append(exposure))
+        pc.refreeze(case_set)
         with self.assertRaisesRegex(ValueError, 'move to the development split'):
-            pc.refreeze(case_set)
             pc.verify(case_set)
         self.edit_json(case_set / 'cases.json', lambda d: d['cases'][3].update(split='development'))
         pc.refreeze(case_set)

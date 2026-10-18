@@ -29,47 +29,34 @@
   "judgments": [
     {
       "id": "cause-kept",
-      "failure": "lost-supported-cause",
       "question": "Does the email still say the lap pool is closed because the chlorine pump failed?"
     },
     {
-      "id": "no-vague-cause",
-      "failure": "lost-supported-cause",
-      "question": "Does the email avoid replacing the stated cause with a vaguer one?"
-    },
-    {
       "id": "no-invented-cause",
-      "failure": "invented-cause",
       "question": "Does the email avoid adding a cause for the failure or the closure?"
     },
     {
       "id": "part-thursday",
-      "failure": "contradicted-fact",
       "question": "Does the email still say the part is expected Thursday?"
     },
     {
       "id": "part-hedged",
-      "failure": "certainty-added",
       "question": "Does the Thursday arrival stay the vendor's expectation, not a certainty?"
     },
     {
       "id": "inspector-signoff",
-      "failure": "lost-condition",
       "question": "Does the email keep that the inspector must sign off before reopening?"
     },
     {
       "id": "saturday-target",
-      "failure": "certainty-added",
       "question": "Is Saturday still a hedged target the club cannot promise?"
     },
     {
       "id": "kids-pool-open",
-      "failure": "contradicted-fact",
       "question": "Does the email keep that the kids' pool is open as normal?"
     },
     {
       "id": "no-invented-detail",
-      "failure": "invented-fact",
       "question": "Does the email avoid consequences or offers the source does not state?"
     }
   ],
@@ -78,76 +65,55 @@
       "id": "g1-plain",
       "label": "valid",
       "polished": false,
-      "text": "The lap pool is closed this week. The chlorine pump failed on Monday, and the replacement part is coming from the manufacturer in Ohio; the vendor expects it Thursday. After it is installed, the county health inspector has to sign off before we can reopen. We're aiming for Saturday, but we can't promise it. The kids' pool has its own pump and is open as usual. Thanks for your patience.",
-      "failures": [],
-      "note": ""
+      "text": "The lap pool is closed this week. The chlorine pump failed on Monday, and the replacement part is coming from the manufacturer in Ohio; the vendor expects it Thursday. After it is installed, the county health inspector has to sign off before we can reopen. We're aiming for Saturday, but we can't promise it. The kids' pool has its own pump and is open as usual. Thanks for your patience."
     },
     {
       "id": "g2-short",
       "label": "valid",
       "polished": false,
-      "text": "Lap pool update: it's closed this week because the chlorine pump broke Monday. The replacement part should arrive Thursday, then the county health inspector needs to approve the repair before we reopen. Saturday is the target, not a promise. The kids' pool is open as normal.",
-      "failures": [],
-      "note": ""
+      "text": "Lap pool update: it's closed this week because the chlorine pump broke Monday. The replacement part should arrive Thursday, then the county health inspector needs to approve the repair before we reopen. Saturday is the target, not a promise. The kids' pool is open as normal."
     },
     {
       "id": "g3-conditional-saturday",
       "label": "valid",
       "polished": false,
-      "text": "Quick update: the lap pool is closed this week. Its chlorine pump failed and the replacement part is due Thursday. Once it's in and the county health inspector signs off, we'll reopen, hopefully on Saturday. The kids' pool is open as normal.",
-      "failures": [],
-      "note": ""
+      "text": "Quick update: the lap pool is closed this week. Its chlorine pump failed and the replacement part is due Thursday. Once it's in and the county health inspector signs off, we'll reopen, hopefully on Saturday. The kids' pool is open as normal."
     },
     {
       "id": "b1-maintenance",
       "label": "failing",
       "polished": true,
       "text": "The lap pool is closed this week for maintenance. We expect to reopen Saturday once the county health inspector signs off, but we can't promise that. The kids' pool is open as normal.",
-      "failures": [
-        "no-vague-cause",
-        "part-thursday"
-      ],
-      "note": "Swaps the stated cause for a vaguer one and drops the Thursday part."
+      "shows": "cause-kept",
+      "note": "Swaps the stated cause for a vaguer one."
     },
     {
       "id": "b2-aging-pump",
       "label": "failing",
       "polished": true,
       "text": "The lap pool is closed this week because its aging chlorine pump failed on Monday. The vendor expects the replacement part Thursday, and the county health inspector has to sign off before we reopen. We are aiming for Saturday but can't promise it. The kids' pool is open as normal.",
-      "failures": [
-        "no-invented-cause"
-      ],
-      "note": ""
+      "shows": "no-invented-cause"
     },
     {
       "id": "b3-definite-saturday",
       "label": "failing",
       "polished": true,
       "text": "The lap pool is closed this week because the chlorine pump failed. The replacement part should arrive Thursday and the county health inspector will sign off after it is installed. The lap pool will reopen Saturday. The kids' pool is open as normal.",
-      "failures": [
-        "saturday-target"
-      ],
-      "note": ""
+      "shows": "saturday-target"
     },
     {
       "id": "b4-both-closed",
       "label": "failing",
       "polished": false,
       "text": "Both pools are closed this week because the chlorine pump failed. The vendor expects the part Thursday, and the county health inspector has to sign off before we reopen. We're aiming for Saturday.",
-      "failures": [
-        "kids-pool-open"
-      ],
-      "note": ""
+      "shows": "kids-pool-open"
     },
     {
       "id": "b6-no-inspection",
       "label": "failing",
       "polished": false,
       "text": "The lap pool is closed this week because the chlorine pump failed. The replacement part should arrive Thursday and we'll reopen as soon as it's installed, hopefully Saturday. The kids' pool is open as normal.",
-      "failures": [
-        "inspector-signoff"
-      ],
-      "note": ""
+      "shows": "inspector-signoff"
     }
   ]
 }

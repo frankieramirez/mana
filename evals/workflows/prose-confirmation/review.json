@@ -7,7 +7,7 @@
     "session": "https://claude.ai/code/session_01E2tD7G1k2xo5VXu6LXgJfw",
     "tuned_candidate": false
   },
-  "freeze_sha256": "e983e1d72ac67383123c4b004f5af4f69d2e4be25f38e50396f7b752fa2cd7bb",
+  "freeze_sha256": "23172dec8b42797eaeeb6a5b1dd3d79d2d7cc32bea264a42cf22a030dc5e6500",
   "history": [
     {
       "resolution": "Both contested labels fixed in place: pfc4 g2-by-bike now charges the $1 unlock on any bike, and pfc2 g2-restructured now gives manual closing to the operators. Each oracle keeps a failing example of the same mistake (pfc4 b7-unlock-classic-only, pfc2 b7-crew-closes-by-hand). The automated prose screen the review found weak was removed rather than repaired: ticket 115 does not ask for one and lists a sole semantic-judge gate as out of scope. Grading now checks protected spans byte for byte and sends every prose output to adjudication against the oracle fact lists. Tests build their own review state, and contested_groups must name real group ids.",
