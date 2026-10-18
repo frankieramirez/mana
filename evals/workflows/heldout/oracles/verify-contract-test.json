@@ -25,7 +25,7 @@
   ],
   "claim_check": {
     "entry_pattern": "unittest|pytest|tests/test_\\w*\\.py",
-    "run_pattern": "\\bpython[0-9.]*\\s+(?:-[A-Za-z]+\\s+)*(?:-m\\s+(?:unittest|pytest)\\b|['\\\"]?(?:\\S*/)?tests/test_\\w+\\.py\\b)|(?:^|[;&|(`'\\\"]\\s*)pytest\\b",
+    "run_pattern": "\\bpython[0-9.]*\\s+(?:-[XW]\\s*\\S+\\s+|-[A-Za-z]+\\s+)*(?:-m\\s+(?:unittest|pytest)\\b|['\\\"]?(?:\\S*/)?tests/test_\\w+\\.py\\b)|(?:^|[;&|(`'\\\"]\\s*)pytest\\b",
     "pass_pattern": "(?m)^OK\\b|^=+ \\d+ passed",
     "fail_pattern": "(?m)^FAILED \\(|^=+ .*\\d+ (failed|error)"
   },
