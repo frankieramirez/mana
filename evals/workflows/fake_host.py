@@ -220,16 +220,34 @@ def execute(argv):
         parent_items.append({'type': 'commandExecution', 'id': item['id'], 'command': command,
                              'aggregatedOutput': output, 'exitCode': code, 'status': item['status']})
     # Children run one after another for real; their recorded timing models the host's
-    # agents.max_threads scheduling. `children` counts only child threads, `including_parent`
-    # also counts the parent, and `ignore` lets every child open at once.
+    # agents.max_threads scheduling. `children` refuses spawns once the cap's worth of children
+    # is open, `including_parent` also counts the parent, `queue` starts later children when a
+    # slot frees without refusing, and `ignore` lets every child open at once. Like Codex 0.163.0,
+    # a refusal is written only to the rollout file; `refusal_output` null writes no output at all.
     configured = next((int(v.split('=', 1)[1]) for v in opts['configs'] if v.startswith('agents.max_threads=')), None)
-    mode = PLAN.get('cap_mode', 'children')
-    slots = len(PLAN.get('children', [])) or 1
+    mode = PLAN.get('cap_mode', 'queue')
+    specs = PLAN.get('children', [])
+    slots = allowed = len(specs) or 1
     if configured is not None and mode != 'ignore':
         slots = max(1, configured - (1 if mode == 'including_parent' else 0))
-    for number, child in enumerate(PLAN.get('children', [])):
+        if mode != 'queue':
+            allowed = slots
+    refusal = PLAN.get('refusal_output', 'collab spawn failed: agent thread limit reached')
+    rollout = [{'type': 'session_meta', 'payload': {'id': PLAN.get('rollout_session', parent)}}]
+    rollout += [{'type': 'response_item', 'payload': noise} for noise in PLAN.get('rollout_noise', [])]
+    for number, child in enumerate(specs):
         identity = child.get('id', 'thread-child-%d' % number)
         owner = child.get('parent', parent)
+        call = 'call-spawn-%d' % number
+        rollout.append({'type': 'response_item', 'payload': {'type': 'function_call', 'name': 'spawn_agent',
+                                                             'call_id': call, 'arguments': '{}'}})
+        if number >= allowed:
+            if refusal is not None:
+                rollout.append({'type': 'response_item', 'payload': {
+                    'type': 'function_call_output', 'call_id': call, 'output': refusal}})
+            continue
+        rollout.append({'type': 'response_item', 'payload': {'type': 'function_call_output', 'call_id': call,
+                                                             'output': json.dumps({'agent_id': identity})}})
         items = []
         child_started = parent_started + 1 + (number // slots) * 10
         for index, command in enumerate(child.get('commands', [])):
@@ -252,13 +270,15 @@ def execute(argv):
             emit({'type': 'item.completed', 'item': {'id': 'spawn-%d' % number, 'type': 'collab_tool_call',
                                                       'receiver_thread_ids': [identity]}})
     parent_items.append({'type': 'agentMessage', 'phase': 'final_answer', 'text': 'parent done'})
+    path = STATE / PLAN.get('rollout_name', 'rollout-%s.jsonl' % parent)
     threads[parent] = {'id': parent, 'parentThreadId': None, 'cwd': work, 'model': model, 'reasoningEffort': 'medium',
-                       'cliVersion': PLAN['version'], 'source': 'exec',
+                       'cliVersion': PLAN['version'], 'source': 'exec', 'path': str(path),
                        'turns': [{'id': 'turn-1', 'status': 'completed', 'itemsView': 'full', 'items': parent_items,
                                   'startedAt': parent_started,
                                   'completedAt': parent_started + 2 + (len(PLAN.get('children', [])) // slots + 1) * 10}]}
     if not opts['ephemeral']:
         (STATE / 'threads.json').write_text(json.dumps(threads))
+        path.write_text(''.join(json.dumps(entry) + '\n' for entry in rollout))
     if not PLAN.get('omit_usage'):
         emit({'type': 'turn.completed', 'usage': {'input_tokens': 10, 'output_tokens': 2}})
     if opts['output'] and 'response' in PLAN:

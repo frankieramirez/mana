@@ -1,0 +1,112 @@
+{
+  "area": "verification-judgment",
+  "entries": [
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [
+          "tests/"
+        ],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "scan/SKILL.md",
+          "sha256": "1172c50f714e136330df15c6051bcc96d6eb58738b39322e1a15ce9cfbe5d266"
+        },
+        "none": null,
+        "reference": {
+          "path": "skills/principle-test-behavior-not-implementation/SKILL.md",
+          "sha256": "f7223698623b6a26fea49c751e466b38e6691b1f32ce841d3983e7ffbe2b74a6"
+        }
+      },
+      "delegation_allowed": true,
+      "fixture_sha256": "6343406842988f699de4fa8e17c19ba0db1f91e259cc5ca09d884ba894127728",
+      "id": "verify-contract-test",
+      "job": "verification-judgment",
+      "oracle_id": "verify-contract-test-v1",
+      "request_path": "evals/workflows/heldout/inputs/verify-contract-test/request.md",
+      "request_sha256": "8026ec77770d9db59c3633cc3881d753ba9d01260b82169890783cfdda38f6b7",
+      "source_group": "sealed-verify-contract-01",
+      "split": "confirmation",
+      "timeout_seconds": 300
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "reveal/references/capture.md",
+          "sha256": "273ddba9fe4cba2c60fc261747f63f8426c7a97b0df40b04f0a76c7e9ce0ba81"
+        },
+        "none": null,
+        "reference": {
+          "path": "skills/principle-prove-it-works/SKILL.md",
+          "sha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2"
+        }
+      },
+      "delegation_allowed": true,
+      "fixture_sha256": "903284d74ffe57bbe3d1a087fd487d2df38d3b09616ecae56b0154c711c27930",
+      "id": "verify-stale-proof",
+      "job": "verification-judgment",
+      "oracle_id": "verify-stale-proof-v1",
+      "request_path": "evals/workflows/heldout/inputs/verify-stale-proof/request.md",
+      "request_sha256": "4d35128e132643bbc00335f5f93f80aca407f203b40bb28e366e962ecab7d11e",
+      "source_group": "sealed-verify-stale-01",
+      "split": "confirmation",
+      "timeout_seconds": 300
+    },
+    {
+      "allowed_effects": {
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "product_files": [],
+        "publication": false
+      },
+      "condition_entrypoints": {
+        "mana": {
+          "path": "reveal/references/capture.md",
+          "sha256": "273ddba9fe4cba2c60fc261747f63f8426c7a97b0df40b04f0a76c7e9ce0ba81"
+        },
+        "none": null,
+        "reference": {
+          "path": "skills/principle-prove-it-works/SKILL.md",
+          "sha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2"
+        }
+      },
+      "delegation_allowed": true,
+      "fixture_sha256": "50be614a8ea33fd4f53475ded10c3bfc915c5c4d6f21a9f722fd4650e5be0347",
+      "id": "verify-unavailable",
+      "job": "verification-judgment",
+      "oracle_id": "verify-unavailable-v1",
+      "request_path": "evals/workflows/heldout/inputs/verify-unavailable/request.md",
+      "request_sha256": "c7ea364024f979795613502646f7e5958adf36efd9d187bac2e04404afa957bd",
+      "source_group": "sealed-verify-unavailable-01",
+      "split": "confirmation",
+      "timeout_seconds": 300
+    }
+  ],
+  "job": "verification-judgment",
+  "packages": {
+    "mana": {
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+      "root": "skills",
+      "source": "https://github.com/frankieramirez/mana"
+    },
+    "none": {},
+    "reference": {
+      "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+      "root": "pstack",
+      "source": "https://github.com/cursor/plugins"
+    }
+  },
+  "ticket": "frankieramirez/mana#107",
+  "version": 1
+}

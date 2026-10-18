@@ -1,8 +1,29 @@
 # Changelog
 
-## Unreleased
+## 0.43.11
 
 - The workflow evaluator gains a selection-only discovery adapter in `evals/workflows/discovery.py`. It installs the whole catalog where the host discovers skills, snapshots each entrypoint's metadata and bytes, sends the user's request with no skill path or load instruction, keeps host discovery on and delegation off, and leaves only `artifacts/` writable so runs end before product mutation. `discovery-cases.json` preregisters the spec's 46 cases with accepted routes, fallbacks, forbidden skills and forbidden actions, and a live run must pass its digest. Loads come only from recorded commands that printed an entrypoint, and activation, routing, execution and capability limits are judged separately. `run.py --probe-discovery` records `skill_discovery` and the new `explicit_only_honored` capability from two canary skills in one model call, and the registry gains a `discovery` mode. Offline tests use the fake host, whose keyword selector is labelled an offline fixture and never counts as live discovery. No host is accepted for discovery yet, because no live probe has run.
+
+## 0.43.10
+- The verification freeze review signs only its own three cases, so another freeze adding cases to the shared held-out folders no longer voids its approval. Its grader copies symlinks as links, so a candidate adding a directory symlink under `tests/` is graded instead of crashing the suite run, and a link at the file the oracle swaps in skips those runs so the grader never writes through it.
+
+- The workflow evaluator has three frozen held-out verification groups (`verify-contract-test`, `verify-stale-proof`, `verify-unavailable`). Offline tests show a contract-breaking mutation fails while the coupled spy can be removed, and that stale proof, a render after a failed check and a missing runtime earn no execution credit. Nothing earns execution credit automatically: the grader checks its own suite controls and product and protected state, never grades an attempt passed, and lists the claims, the report and every observed command for a human. An independent second review approved all three groups.
+
+## 0.43.9
+
+- The workflow evaluator holds three new review and feedback confirmation groups for `review-contracts`, `feedback-repair` and `review-no-change`. Candidate authors must not read `evals/workflows/heldout/`. An evaluator-only manifest maps Mana, reference and no-suite entrypoints and freezes request, fixture and oracle hashes, source groups and allowed effects. Offline tests check the oracles and the freeze. After the first independent review requested changes, `feedback-repair` serves its review as pull request threads through one offline `gh` double shared by every condition, the reference payload adds the `deslop` skill it names, and the grader accepts runner caches, fuller error messages and a new local branch while rejecting committed user files. After the re-review, the `gh` double answers any read about the pull request the way `gh` does, with placeholders, every `--json` field and a standard-library `--jq`, and a read it cannot answer gets a `gh`-style error instead of stopping the study. Its call log moved out of the candidate's reach, the message check accepts the bounds in any order, and every new commit is checked, not only the net diff. The study notes record that the review area's reference payload has 171 files. After the third, fourth and fifth reviews, publication is graded by evidence strength: a push that lands in the evaluator-owned bare origin, a command that exits 97, the double's tag or its log fails the attempt, while command text that may name a write, such as any `git` push or any `gh api` field flag, sends it to a reviewer. The shape no evidence reaches is disclosed. The group is refrozen as `review-freeze-6`; a new second review is pending, so no outcome collection may start.
+
+## 0.43.8
+
+- `run.py --probe-host` reads refused spawns from the parent's Codex rollout file, where Codex 0.163.0 records a refused `spawn_agent` call as tool output starting with `collab spawn failed: agent thread limit reached`. The rollout is the only refusal source, and it must belong to the parent thread by file name or `session_meta` id. A spawn that failed for any other reason, and any model text, does not count. This depends on Codex's on-disk session format. A refusal with the cap full of children verifies the cap; more children open than the cap marks it failed. The cap counts the parent only when a refusal came while the run's single child was open. Everything else, including two children at the cap with no refusal or a staggered run, stays unknown. The docs now say that no runner uses the Codex CLI 0.163.0 delegated acceptance yet, because the delegated review path pins 0.159.2.
+
+## 0.43.7
+
+- The evaluator holds six frozen confirmation groups for the first prose instruction ablation. Each pairs a new source and request with an evaluator-only fact list for adjudication. Protected spans are checked byte for byte and every prose output goes to a reviewer. An independent second review approved all six groups.
+
+## 0.43.6
+
+- The workflow evaluator holds three sealed debugging confirmation groups for partial retries, boundary validation and a misleading regression report. An evaluator-only manifest locks request, fixture and oracle hashes, source groups, allowed effects and Mana, reference and no-suite entrypoints. Hidden controls separate supported repairs from harmful ones, catch swallowed programming errors and accept a no-edit result where the report is wrong. A re-review of the revised oracles and runner integration are still pending.
 
 ## 0.43.5
 

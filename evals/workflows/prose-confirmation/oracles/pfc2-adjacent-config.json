@@ -1,0 +1,113 @@
+{
+  "schema_version": 3,
+  "group": "pfc2-adjacent-config",
+  "case_id": "pfc-dome-autoclose",
+  "group_kind": "adjacent-code-config",
+  "evaluator_only": true,
+  "canary": "mana-confirmation-canary-a91f3b07-adjacent-config",
+  "contract": "Rewrite the prose of the section and keep the TOML block byte for byte. The prose keeps its own facts: the controller closes the dome by itself in bad weather; operators can close it by hand from the console at any time; on lost contact with the weather mast it leaves the dome where it is and raises a console alarm; it does not reopen the dome after the weather clears, someone on the night crew does. Thresholds, the rain sensor, the grace period and the comment about short gusts appear only in the block and stay out of the prose. No reason for closing is added, and manual closing stays with the operators.",
+  "supported_facts": [
+    "The dome controller closes the dome on its own when the weather turns bad.",
+    "Operators can also close it by hand from the console at any time.",
+    "If the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console.",
+    "It does not reopen the dome by itself after the weather clears; someone on the night crew has to do that."
+  ],
+  "invented_facts_that_fail": [
+    "Thresholds, the rain sensor, the grace period or the short-gust comment stated in the prose.",
+    "The controller closing the dome when it loses contact with the weather mast.",
+    "The controller reopening the dome by itself.",
+    "A reason for closing, such as protecting the telescope.",
+    "Manual closing given to anyone but the operators."
+  ],
+  "legitimate_alternatives": [
+    "Keep \"bad weather\" general without naming thresholds or sensors.",
+    "Drop the praise and the \"huge relief\" remark, or keep a plain version of it.",
+    "Reorder sentences or split the lost-contact paragraph."
+  ],
+  "judgments": [
+    {
+      "id": "closes-in-bad-weather",
+      "question": "Does the prose still say the controller closes the dome by itself in bad weather?"
+    },
+    {
+      "id": "manual-close",
+      "question": "Does the prose still say operators can close it by hand from the console at any time?"
+    },
+    {
+      "id": "lost-contact-holds",
+      "question": "Does the prose still say lost contact leaves the dome where it is and raises a console alarm?"
+    },
+    {
+      "id": "no-auto-reopen",
+      "question": "Does the prose still say the controller does not reopen the dome and the night crew does?"
+    },
+    {
+      "id": "no-config-values",
+      "question": "Does the prose avoid thresholds, sensors, the grace period and the gust comment that appear only in the TOML block?"
+    },
+    {
+      "id": "no-invented-cause",
+      "question": "Does the prose avoid adding a reason for closing or for the lost-contact behavior?"
+    }
+  ],
+  "examples": [
+    {
+      "id": "g1-plain",
+      "label": "valid",
+      "polished": false,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself when the weather turns bad, which is a relief for the night crew. Operators can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console. It does not reopen the dome after the weather clears. Someone on the night crew has to do that."
+    },
+    {
+      "id": "g2-restructured",
+      "label": "valid",
+      "polished": false,
+      "text": "## Dome closing\n\nWhen the weather turns bad, the controller closes the dome on its own. Operators can also close it manually from the console whenever they want.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nLosing contact with the weather mast doesn't close the dome: the controller holds its current position and sounds an alarm on the console. Reopening after bad weather is always up to the night crew; the controller never reopens the dome on its own.",
+      "note": "Corrected after the first second review: manual closing stays with the operators."
+    },
+    {
+      "id": "b1-thresholds-in-prose",
+      "label": "failing",
+      "polished": true,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself when gusts pass 45 km/h, humidity reaches 88% or the rain sensor trips. Operators can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console. It does not reopen the dome after the weather clears; the night crew does that.",
+      "shows": "no-config-values",
+      "note": "Moves block values into the prose."
+    },
+    {
+      "id": "b3-closes-on-lost-contact",
+      "label": "failing",
+      "polished": true,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself in bad weather. Operators can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it closes the dome and raises an alarm on the console. It does not reopen the dome after the weather clears; the night crew does that.",
+      "shows": "lost-contact-holds"
+    },
+    {
+      "id": "b4-auto-reopen",
+      "label": "failing",
+      "polished": false,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself in bad weather. Operators can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console. It reopens the dome automatically once the weather clears.",
+      "shows": "no-auto-reopen"
+    },
+    {
+      "id": "b5-invented-purpose",
+      "label": "failing",
+      "polished": true,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself in bad weather to protect the telescope. Operators can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console. It does not reopen the dome after the weather clears; the night crew does that.",
+      "shows": "no-invented-cause"
+    },
+    {
+      "id": "b6-block-reformatted",
+      "label": "failing",
+      "polished": false,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself in bad weather. Operators can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90 # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console. It does not reopen the dome after the weather clears; the night crew does that.",
+      "shows": "protected-span-lost",
+      "note": "The block lost a space, so it is no longer the protected span."
+    },
+    {
+      "id": "b7-crew-closes-by-hand",
+      "label": "failing",
+      "polished": false,
+      "text": "## Dome closing\n\nThe dome controller closes the dome by itself in bad weather. The night crew can also close it by hand from the console at any time.\n\n```toml\n[dome.autoclose]\nwind_gust_kmh = 45\nhumidity_pct = 88\nrain_sensor = true\ngrace_seconds = 90  # gusts shorter than this are ignored\n```\n\nIf the controller loses contact with the weather mast, it leaves the dome where it is and raises an alarm on the console. It does not reopen the dome after the weather clears; the night crew does that.",
+      "shows": "manual-close",
+      "note": "Moves manual closing from the operators to the night crew, as the contested example did."
+    }
+  ]
+}

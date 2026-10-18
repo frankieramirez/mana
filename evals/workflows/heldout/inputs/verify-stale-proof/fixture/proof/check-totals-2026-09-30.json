@@ -1,0 +1,16 @@
+{
+  "command": "python3 checks/check_totals.py",
+  "exit_code": 0,
+  "recorded_at": "2026-09-30T18:04:00Z",
+  "source_sha256": {
+    "invoice/totals.py": "5833238146792ff2b71f41b4235a0b68d0493df8186dc16997693f73bab27af6"
+  },
+  "output": [
+    "ok   no discount: 999",
+    "ok   whole-cent discount: 900",
+    "ok   half-cent discount rounds up: 849",
+    "ok   empty invoice: 0",
+    "check_totals: all 4 cases passed"
+  ],
+  "image": "proof/check-totals-2026-09-30.svg"
+}

@@ -1,0 +1,19 @@
+2026-10-14T03:02:11Z status=500 device=greenhouse-7 fw=4.2.0 path=/readings
+Traceback (most recent call last):
+  File "server.py", line 15, in dispatch
+    status, payload = ingest.handle(body)
+  File "ingest.py", line 15, in handle
+    summary = stats.summarize(payload["readings"])
+  File "stats.py", line 10, in summarize
+    total = math.fsum(values)
+TypeError: must be real number, not str
+2026-10-14T03:02:41Z status=500 device=greenhouse-7 fw=4.2.0 path=/readings
+Traceback (most recent call last):
+  File "server.py", line 15, in dispatch
+    status, payload = ingest.handle(body)
+  File "ingest.py", line 15, in handle
+    summary = stats.summarize(payload["readings"])
+  File "stats.py", line 10, in summarize
+    total = math.fsum(values)
+TypeError: must be real number, not str
+2026-10-14T03:05:09Z status=200 device=greenhouse-3 fw=4.1.7 path=/readings count=4
