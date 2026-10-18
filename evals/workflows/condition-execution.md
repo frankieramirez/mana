@@ -169,7 +169,7 @@ python3 -B evals/workflows/pilot.py --check
 | Matrix | The committed manifest equals the rebuild: every group has three conditions and two repetitions, its job's time limit and an executable Mana and reference route inside the pinned packages, and the runner has a workspace adapter for it. |
 | Groups | Each group freeze is intact, its independent second review approved it and its routes are confirmed. |
 | Provenance | No group records an exposure event, every split is `confirmation`, and no group freeze changed after the pilot manifest. |
-| Delegated parity | `hosts.py` accepts the pinned host in `comparative-delegated` mode for code tasks and `focused` mode for prose. Today the active-thread cap is unknown, so this gate is closed until a new host record verifies it. |
+| Delegated parity | `hosts.py` accepts the pinned host in `comparative-delegated` mode for code tasks and `focused` mode for prose. The 2026-10-18 host record verifies the active-thread cap, so this gate is open while that record is fresh. |
 | Resources | `heldout/pilot-gates.json` records an authorization of exactly 72 parent slots, 35,640 parent seconds and 540 children, with who authorized it and when. |
 | Human effort | The same record names two distinct reviewers and a separate adjudicator, or records the cohort unavailable so effort metrics stay unmeasured. |
 

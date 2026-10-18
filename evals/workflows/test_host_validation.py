@@ -127,24 +127,43 @@ class Registry(unittest.TestCase):
 
     def test_live_codex_0163_record_supports_delegated_but_not_comparative_runs(self):
         # Recorded by run.py --probe-host on a real Codex CLI 0.163.0 host with one model call.
+        # Assessed alone in a copy, so a later record for the same host cannot change the verdict.
         path = hosts.EVIDENCE / '2026-10-17-codex-cli-0.163.0.json'
         self.assertEqual('907fb1372fa49bcf5f6baaf6ebb6a74a1718d7b38149ce5ef15a6206e9529460',
                          hashlib.sha256(path.read_bytes()).hexdigest())
+        shutil.copy2(path, self.dir / path.name)
         record = json.loads(path.read_text())
         self.assertEqual(1, record['model_invocations'])
         host, at = 'codex-cli 0.163.0', hosts.parse_time(record['recorded_at']) + datetime.timedelta(days=1)
         for mode in ('focused', 'delegated'):
             with self.subTest(mode=mode):
-                self.assertTrue(hosts.assess(host, mode, at=at)['accepted'])
-                hosts.require(host, mode, at=at)
-        result = hosts.assess(host, 'comparative-delegated', at=at)
+                self.assertTrue(hosts.assess(host, mode, directory=self.dir, at=at)['accepted'])
+                hosts.require(host, mode, directory=self.dir, at=at)
+        result = hosts.assess(host, 'comparative-delegated', directory=self.dir, at=at)
         self.assertFalse(result['accepted'])
         self.assertEqual(['active_thread_cap=unknown'], result['missing'])
         self.assertEqual([], result['stale'])
         self.assertEqual('verified', result['capabilities']['process_family_termination']['status'])
         with self.assertRaisesRegex(ValueError, 'unvalidated host'):
-            hosts.require(host, 'comparative-delegated', at=at)
-        self.assertNotIn(host, hosts.accepted_versions('comparative-delegated', at=at))
+            hosts.require(host, 'comparative-delegated', directory=self.dir, at=at)
+        self.assertNotIn(host, hosts.accepted_versions('comparative-delegated', directory=self.dir, at=at))
+
+    def test_live_codex_0163_cap_record_supports_comparative_runs(self):
+        # The second live probe filled the cap with children and saw the host refuse a third spawn.
+        path = hosts.EVIDENCE / '2026-10-18-codex-cli-0.163.0.json'
+        self.assertEqual('7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873',
+                         hashlib.sha256(path.read_bytes()).hexdigest())
+        shutil.copy2(path, self.dir / path.name)
+        record = json.loads(path.read_text())
+        self.assertEqual(1, record['model_invocations'])
+        self.assertEqual([], record['unknown'])
+        self.assertEqual('children', record['capabilities']['active_thread_cap']['counts'])
+        host, at = 'codex-cli 0.163.0', hosts.parse_time(record['recorded_at']) + datetime.timedelta(days=1)
+        result = hosts.assess(host, 'comparative-delegated', directory=self.dir, at=at)
+        self.assertTrue(result['accepted'])
+        self.assertEqual([], result['missing'])
+        stale = hosts.assess(host, 'comparative-delegated', directory=self.dir, at=at + datetime.timedelta(days=30))
+        self.assertFalse(stale['accepted'])
 
     def test_a_version_without_evidence_is_never_accepted(self):
         record = verified_record()

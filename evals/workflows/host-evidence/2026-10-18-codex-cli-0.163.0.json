@@ -1,0 +1,258 @@
+{
+  "actual_model": null,
+  "capabilities": {
+    "active_thread_cap": {
+      "counts": "children",
+      "evidence": [
+        "configured agents.max_threads=2; requested 3 children at once; collected 2; peak concurrent children 2; refused spawns 1; the host refused a spawn with the cap full of children, so the cap counts child threads only"
+      ],
+      "observed_at": "2026-10-18T04:36:16.624+00:00",
+      "status": "verified"
+    },
+    "child_containment": {
+      "evidence": [
+        "child probes verified: 2 of 2"
+      ],
+      "observed_at": "2026-10-18T04:36:16.624+00:00",
+      "status": "verified"
+    },
+    "command_events": {
+      "evidence": [
+        "model probe: 1 parent command events, 0 malformed events"
+      ],
+      "observed_at": "2026-10-18T04:36:16.327+00:00",
+      "status": "verified"
+    },
+    "completion_detection": {
+      "evidence": [
+        "model probe outcome completed exit 0 structured response True"
+      ],
+      "observed_at": "2026-10-18T04:36:16.327+00:00",
+      "status": "verified"
+    },
+    "descendant_collection": {
+      "evidence": [
+        "collected 2 children; failures: []"
+      ],
+      "observed_at": "2026-10-18T04:36:16.624+00:00",
+      "status": "verified"
+    },
+    "fixture_write_allowed": {
+      "evidence": [
+        "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}"
+      ],
+      "observed_at": "2026-10-18T04:35:55.896+00:00",
+      "status": "verified"
+    },
+    "installation": {
+      "evidence": [
+        "codex --version: codex-cli 0.163.0"
+      ],
+      "observed_at": "2026-10-18T04:35:55.822+00:00",
+      "status": "verified"
+    },
+    "model_selection": {
+      "evidence": [
+        "requested gpt-6.1-sol; host reported gpt-6.1-sol"
+      ],
+      "notes": "host-reported metadata only; backend identity unresolved",
+      "observed_at": "2026-10-18T04:36:16.624+00:00",
+      "status": "verified"
+    },
+    "network_denied": {
+      "evidence": [
+        "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}; evaluator listener inbound connections: 0"
+      ],
+      "observed_at": "2026-10-18T04:35:55.896+00:00",
+      "status": "verified"
+    },
+    "outside_read_denied": {
+      "evidence": [
+        "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}"
+      ],
+      "observed_at": "2026-10-18T04:35:55.896+00:00",
+      "status": "verified"
+    },
+    "process_family_termination": {
+      "evidence": [
+        "sandboxed setsid grandchild: outcome timeout, started True, heartbeat after sweep 15 then 15, token processes alive [], sweep surviving pids []"
+      ],
+      "observed_at": "2026-10-18T04:36:00.001+00:00",
+      "status": "verified"
+    },
+    "protected_write_denied": {
+      "evidence": [
+        "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}"
+      ],
+      "observed_at": "2026-10-18T04:35:55.896+00:00",
+      "status": "verified"
+    },
+    "thread_attribution": {
+      "evidence": [
+        "per-thread probe observations: {\"01a14d4b-8fd9-7af1-92ad-102042065e73\": {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"parent\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}, \"01a14d4b-a593-7012-81c8-f5f89bf89e3a\": {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"child-1\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}, \"01a14d4b-acf7-7f50-9406-aad4eee5b8de\": {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"child-2\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}}"
+      ],
+      "observed_at": "2026-10-18T04:36:16.624+00:00",
+      "status": "verified"
+    },
+    "usage_events": {
+      "evidence": [
+        "model probe turn.completed usage: [{\"type\": \"turn.completed\", \"usage\": {\"input_tokens\": 84583, \"cached_input_tokens\": 71040, \"cache_write_input_tokens\": 0, \"output_tokens\": 415, \"reasoning_output_tokens\": 8}}]"
+      ],
+      "observed_at": "2026-10-18T04:36:16.327+00:00",
+      "status": "verified"
+    }
+  },
+  "host": "codex-cli 0.163.0",
+  "model_invocations": 1,
+  "platform": "linux",
+  "probes": [
+    {
+      "exit_code": 0,
+      "failures": [],
+      "listener_inbound_connections": 0,
+      "listener_reachable_from_evaluator": true,
+      "name": "sandbox-containment",
+      "observation": {
+        "fixture_write": "allowed",
+        "input_write": {},
+        "label": "sandbox",
+        "network": "denied",
+        "nonce": "f5849c150d42a7ed",
+        "outside_read": "denied",
+        "protected_write": {
+          "bin": "denied",
+          "installed": "denied"
+        }
+      }
+    },
+    {
+      "grandchild_started": true,
+      "heartbeat_after_sweep": [
+        15,
+        15
+      ],
+      "invocation": {
+        "ended_at": "2026-10-18T04:35:58.995+00:00",
+        "exit_code": null,
+        "family_terminated": true,
+        "host_pid": 4109034,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "timeout",
+        "platform": "linux",
+        "signalled_pids": [
+          4109034,
+          4109061,
+          4109065,
+          4109066,
+          4109067,
+          4109069
+        ],
+        "started_at": "2026-10-18T04:35:55.896+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 3
+      },
+      "name": "process-family-termination",
+      "token_processes_after_sweep": []
+    },
+    {
+      "event_failures": [],
+      "invocation": {
+        "ended_at": "2026-10-18T04:36:16.327+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4109128,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-18T04:36:00.001+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "name": "model-events",
+      "parent_commands": 1,
+      "structured_response": true,
+      "usage": [
+        {
+          "type": "turn.completed",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 71040,
+            "input_tokens": 84583,
+            "output_tokens": 415,
+            "reasoning_output_tokens": 8
+          }
+        }
+      ]
+    },
+    {
+      "children": 2,
+      "failures": [],
+      "listener_inbound_connections": 0,
+      "name": "descendants",
+      "nested": [],
+      "threads": {
+        "01a14d4b-8fd9-7af1-92ad-102042065e73": {
+          "cliVersion": "0.163.0",
+          "model": "gpt-6.1-sol",
+          "parentThreadId": null,
+          "reasoningEffort": "medium",
+          "source": "exec"
+        },
+        "01a14d4b-a593-7012-81c8-f5f89bf89e3a": {
+          "cliVersion": "0.163.0",
+          "model": "gpt-6.1-sol",
+          "parentThreadId": "01a14d4b-8fd9-7af1-92ad-102042065e73",
+          "reasoningEffort": "medium",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "agent_nickname": "Rawls",
+                "agent_path": "/root/child_1",
+                "agent_role": null,
+                "depth": 1,
+                "parent_thread_id": "01a14d4b-8fd9-7af1-92ad-102042065e73"
+              }
+            }
+          }
+        },
+        "01a14d4b-acf7-7f50-9406-aad4eee5b8de": {
+          "cliVersion": "0.163.0",
+          "model": "gpt-6.1-sol",
+          "parentThreadId": "01a14d4b-8fd9-7af1-92ad-102042065e73",
+          "reasoningEffort": "medium",
+          "source": {
+            "subAgent": {
+              "thread_spawn": {
+                "agent_nickname": "Halley",
+                "agent_path": "/root/child_2",
+                "agent_role": null,
+                "depth": 1,
+                "parent_thread_id": "01a14d4b-8fd9-7af1-92ad-102042065e73"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "collected_children": 2,
+      "detail": "configured agents.max_threads=2; requested 3 children at once; collected 2; peak concurrent children 2; refused spawns 1",
+      "name": "thread-cap",
+      "peak_children": 2,
+      "refused_spawn_calls": [
+        "call_d47a1babc3b2489dbb3e1b41e43bd57d"
+      ],
+      "refused_spawns": 1
+    }
+  ],
+  "recorded_at": "2026-10-18T04:36:16.624+00:00",
+  "reported_model": "gpt-6.1-sol",
+  "requested_model": "gpt-6.1-sol",
+  "schema_version": 1,
+  "source": "run.py --probe-host",
+  "timeout_seconds": 120,
+  "unknown": []
+}
