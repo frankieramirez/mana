@@ -827,32 +827,32 @@
         "contracts": false,
         "known_good": false,
         "known_bad": false,
-        "valid_alternatives": null
+        "valid_alternatives": true
       },
       "notes": {
         "verdict": "changes required",
-        "recorded_by": "fixture author, from the review findings relayed by the coordinator; the reviewer did not commit this record",
-        "checks_meaning": "false: checked and found defects; null: no finding was relayed for this check.",
-        "exact_checks": "The protected-byte and verbatim checks hold byte for byte.",
+        "checks_meaning": "true: checked with no defect; false: checked and found defects.",
+        "exact_checks": "Byte exact. Mutating the quote (definately, the en dash, the the, an em dash, a curly apostrophe) gives quote-altered; mutating the YAML sample (36 to 37, em to en dash, LF to CRLF, a trailing space) gives protected-bytes-changed.",
         "defects": [
           {
-            "where": "prose-scope.json required_token; heldout_prose.py",
-            "scenario": "The 4.2 token check fails faithful outputs that write \"v4.2\" or \"version four point two\"; the version-onward fact already covers it."
+            "where": "oracles/prose-scope.json:18-23; heldout_prose.py:292-294",
+            "scenario": "The required_token check for 4.2 is a keyword screen on prose. g1-plain with v4.2 or version four point two fails as lost-condition although it is faithful; the version-onward fact already covers the condition."
           },
           {
-            "where": "prose-scope.json shorter_than; heldout_prose.py",
-            "scenario": "The shortening check is a word count on prose; shortness belongs in the fact list."
+            "where": "oracles/prose-scope.json:25-34; heldout_prose.py:248-249, 307-310",
+            "scenario": "The shorter_than word count grades prose. heldout-prose.md:40 says style edits never add an exact failure, yet test_heldout_prose.py:378 excludes not-shortened from that assertion."
           },
           {
-            "where": "prose-scope/examples/index.json",
-            "scenario": "b2-exhaustive-example also breaks invalid-excluded-and-reported, so per-example fact lists are incomplete."
+            "where": "oracles/prose-scope/examples/index.json, b2-exhaustive-example",
+            "scenario": "The output never says records that fail validation are excluded, so it also breaks invalid-excluded-and-reported, which b1 lists for the same reason."
           },
           {
-            "where": "prose-exempt.json no-added-fact",
-            "scenario": "The fact forbids anything beyond the four stated facts, yet g2-sloppy-style (\"a crucial part of the gallery\") is labeled faithful."
+            "where": "oracles/prose-exempt.json:73",
+            "scenario": "no-added-fact forbids any fact beyond the four listed, yet g2-sloppy-style, which calls the cache a crucial part of the gallery as the source does, is labeled faithful."
           }
         ],
-        "recommendation": "Delete required_token and shorter_than, add shortness as a fact, label each failing example with the one fact it shows, reword no-added-fact to allow supported statements, and remove the adjudicate verdict, dead code, screen-era tests and repeated retellings."
+        "valid_alternatives": "g3-list-layout, g3-other-order and g2-outer-whitespace grade and adjudicate as labeled.",
+        "cleanup": "Non-blocking: the adjudicate verdict and one-entry adjudication list, the dead example report field, the screen-era test guards and register list, the pinned history test, and three retellings of the removed screen in heldout-prose.md."
       }
     }
   ]
