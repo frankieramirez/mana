@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "study": "effectiveness-pilot-1",
+  "area": "debugging",
+  "ticket": "https://github.com/frankieramirez/mana/issues/106",
+  "contract": "docs/specs/effectiveness-evaluation.md",
+  "status": "authored and hash-locked; second review completed and approved on 2026-10-18; not yet frozen into a study directory; no outcomes collected",
+  "ready_for_study_freeze": false,
+  "blockers": [
+    "run.py does not yet admit these cases; hidden controls need the contained runner before grading model output."
+  ],
+  "exposure_rule": "A source group whose request, workspace or oracle a candidate-instruction author reads while tuning becomes development. Record it in exposures, set its split to development and author an untouched replacement group for confirmation.",
+  "exposures": [],
+  "cases": [
+    {
+      "id": "debug-boundary",
+      "source_group": "sealed-debug-boundary-01",
+      "job": "debugging",
+      "split": "confirmation",
+      "fixture_path": "inputs/debug-boundary/workspace",
+      "fixture_sha256": "340140232c9cf82ae9b158b016f8088413898f307bace0c2b8aadbc47548af29",
+      "request_path": "inputs/debug-boundary/request.md",
+      "request_sha256": "e059af8dbfc4d21d8a9fc779bb1042f783aa20faa0fc53efa632db34b452bc04",
+      "allowed_effects": {
+        "product_files": [
+          "ingest.py",
+          "validation.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "cast/SKILL.md",
+        "reference": "skills/poteto-mode/SKILL.md",
+        "none": null
+      },
+      "timeout_seconds": 600,
+      "delegation_allowed": true,
+      "oracle_id": "oracle-debug-boundary-01",
+      "oracle_sha256": "af69807f82a126d386ef7274f08fcdc357048048e3c109ff6cc97a15f2f6ec50"
+    },
+    {
+      "id": "debug-false-premise",
+      "source_group": "sealed-debug-regression-claim-01",
+      "job": "debugging",
+      "split": "confirmation",
+      "fixture_path": "inputs/debug-false-premise/workspace",
+      "fixture_sha256": "1ed70b4f880cf09422263bac08925ad83369e0a0db01e5fc122f791c53f1a99b",
+      "request_path": "inputs/debug-false-premise/request.md",
+      "request_sha256": "3c7216b07ed8493be683f3ec6d8da47c55f87695e4da45417baf273b99da67b8",
+      "allowed_effects": {
+        "product_files": [
+          "billing.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "cast/SKILL.md",
+        "reference": "skills/poteto-mode/SKILL.md",
+        "none": null
+      },
+      "timeout_seconds": 600,
+      "delegation_allowed": true,
+      "oracle_id": "oracle-debug-regression-claim-01",
+      "oracle_sha256": "b6f67c40ffbd2175238a9b55624f45e70958b12d50c3c9a3db30f6f311103bea"
+    },
+    {
+      "id": "debug-partial-retry",
+      "source_group": "sealed-debug-retry-01",
+      "job": "debugging",
+      "split": "confirmation",
+      "fixture_path": "inputs/debug-partial-retry/workspace",
+      "fixture_sha256": "79271bea273ae17e1c83103e0391b3574aea3c49a613c9f0b59bba0658c4478c",
+      "request_path": "inputs/debug-partial-retry/request.md",
+      "request_sha256": "40750fa9ceb044273c09e82a01cded5ce698e16477e6444586a18c598f428ca8",
+      "allowed_effects": {
+        "product_files": [
+          "shipping.py"
+        ],
+        "commit": false,
+        "evidence_directory": "artifacts/",
+        "external_publication": false
+      },
+      "condition_entrypoints": {
+        "mana": "cast/SKILL.md",
+        "reference": "skills/poteto-mode/SKILL.md",
+        "none": null
+      },
+      "timeout_seconds": 600,
+      "delegation_allowed": true,
+      "oracle_id": "oracle-debug-retry-01",
+      "oracle_sha256": "e678cc96e80e0118fc718d6f526591e90a603cce7e347657be6f22817409bafd"
+    }
+  ],
+  "conditions": {
+    "mana": {
+      "repository": "frankieramirez/mana",
+      "revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+      "package_root": "skills",
+      "inventory_sha256": "570b33b1405a36028d2839b5d3dc9ba645b6773f7916d6ae09f035e6b10a5fc0",
+      "inventory_files": 181,
+      "inventory_status": "verified: conditions.inventory_digest over git archive of skills/ at the revision",
+      "entrypoint": "cast/SKILL.md",
+      "entrypoint_sha256": "4ba50041e555b52219a2a6c40f7d972fbbac109ff490ec6f53a802204937acf7",
+      "supporting_files": {},
+      "route": "Cast implements one ticket, spec or conversation request; the request bounds it to a local repair with no commit or publication.",
+      "adapter_translations": []
+    },
+    "reference": {
+      "repository": "cursor/plugins",
+      "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+      "package_root": "pstack",
+      "inventory_sha256": "d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc",
+      "inventory_status": "verified: conditions.inventory_digest over pstack/ in a read-only checkout of the revision, matching the second reviewer's recomputation; entrypoint and playbook digests match single-file fetches",
+      "inventory_files": 170,
+      "entrypoint": "skills/poteto-mode/SKILL.md",
+      "entrypoint_sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a",
+      "supporting_files": {
+        "skills/poteto-mode/playbooks/bug-fix.md": "66e26542dad131cfd7df80ac0cdf81ed4d85e7b5e3f0eb65b933888760c4831f"
+      },
+      "route": "poteto-mode selects its bug fix playbook for all three requests. The request bounds it to a local repair with no commit, delegation to a configured external model, or pull request.",
+      "adapter_translations": []
+    },
+    "none": {
+      "payload": null,
+      "entrypoint": null
+    }
+  },
+  "freeze": {
+    "frozen_on": "2026-10-18",
+    "method": "freeze_sha256 is conditions.digest(conditions.encoded({cases, conditions})). Review records sit outside it so the second reviewer can sign without changing the freeze.",
+    "freeze_sha256": "32076fbbb7f2e41f5890317ababe6a4cb127e06d058a7045a200193a2303005b",
+    "supersedes": [
+      "36dfb4da0540a13833bbea0a2fdb3b8a0047d4ba995042a3baefe5a683626d62",
+      "3b08d84d3da5687d319e7b5452fb000dc85ff8329a16e4017de4be5ca847edba",
+      "3a13b73b794ed1cc5779af8e8b3f56a2ebe269c4cc3a53dd5d6fdd9969ab4547",
+      "2e4e6c078d4b37073f0fe46bfc8728c9c72df1fc15d94591e66cfa5603eb1949"
+    ]
+  },
+  "review": {
+    "author": {
+      "identity": "Claude Opus 5.5 fixture-author worker for issue 106 (session_01E2tD7G1k2xo5VXu6LXgJfw)",
+      "role": "Instantiated requests, workspaces, hidden controls and graded variants.",
+      "edits_candidate_instructions": false,
+      "read_public_development_inputs": "Read the public debugging fixtures only to avoid reusing them; no prompt, source variant or expected output was copied.",
+      "date": "2026-10-17"
+    },
+    "second_review": {
+      "status": "completed",
+      "reviewer": "independent reviewer agent, Claude",
+      "date": "2026-10-18",
+      "checked": [
+        "Round 1 at 57eea73: Freeze: heldout_debugging.py reports intact; request, fixture and oracle digests match; the Mana pin test runs against the pinned revision and passes.",
+        "Round 1 at 57eea73: Isolation: verify_manifest leak scan is clean; prepare() workspaces hold no request.md, controls.py or oracle JSON.",
+        "Round 1 at 57eea73: Reference pin: recomputed the pstack/ inventory at 101b274d with conditions.inventory_digest and run.py --payload-inventory: d8209219ce816e17e3de95fb423b0cc764081e95da89e594afc280757a9ff6cc over 170 files, the value the coordinating parent agent supplied and verified. Entrypoint and bug-fix playbook digests match. The author recorded it at the 036d582 refreeze.",
+        "Round 1 at 57eea73: Known-good and known-bad variants in all three groups re-judged against each contract. Every label is correct and the controls separate them as recorded.",
+        "Round 1 at 57eea73: debug-partial-retry alternatives: a helper with a while loop and a reservations.get guard passes (valid). Reserving only after the label fails (invalid, correctly rejected). A stock check above the reservation guard passes (invalid, accepted). Also retrying TimeoutError and ConnectionError passes (invalid, accepted). The reference repair plus test_shipping.py at the workspace root fails as out of scope, which the request supports.",
+        "Round 1 at 57eea73: debug-boundary alternatives: json parse_constant plus numbers.Real minus bool with a from-import of summarize passes (valid). A new validation module raising a ValueError subclass passes (valid). Correct validation plus except (TypeError, ValueError) around summarize passes (invalid, accepted).",
+        "Round 1 at 57eea73: debug-false-premise alternatives: no edit with grep release=3.1 on the log passes. Decimal(str(price)) hardening goes to adjudication (correct). A partial sum-of-displayed-lines repair fails (correct). No edit with the agent's own replay of legacy billing_3_1 on INV-77 fails (valid, rejected). No edit running python3 -B check_behavior.py experiment fails (same evidence, rejected).",
+        "Round 1 at 57eea73: scripts/validate.sh and test_heldout_debugging pass.",
+        "Round 2 at 036d582: freeze intact at 3a13b73b...; heldout_debugging.py --freeze-sha256 reproduces it; test_heldout_debugging passes; reference pin now d8209219... (170 files), matching the round 1 recomputation.",
+        "Round 2: every round 1 alternative re-run. Stock check above the guard, retrying TimeoutError and ConnectionError, and a narrowed except (TypeError, ValueError) now fail. The own INV-77 replay and python3 check_behavior.py experiment now pass. Valid repairs (helper with while loop, parse_constant with numbers.Real, raising validation module) still pass.",
+        "Round 2 debug-partial-retry: retrying OSError or socket.timeout fails (correct). Catching Exception and raising a RuntimeError wrapper fails (correct, the contract says unchanged). An explicit CarrierRejected re-raise passes (valid). Retrying ConnectionResetError, BrokenPipeError, or ConnectionResetError with ConnectionAbortedError passes (invalid, accepted).",
+        "Round 2 debug-boundary: catching Exception around summarize then a bare raise passes (valid). A RuntimeError wrapper raised from the error fails, and so does a new object of the same type.",
+        "Round 2 debug-false-premise: a replay printing only the 3.1 total passes (valid). A replay that imports billing_3_1 but prints only the current total passes (not discriminating). cat support/SUP-4410.md legacy/billing_3_1.py, head -n 40 support/*.md legacy/*.py, find . -type f; cat support/SUP-4410.md, and bash check.sh symptom; cat legacy/billing_3_1.py all pass with no replay. cat legacy/billing_3_1.py alone and ls legacy go to adjudication.",
+        "Round 3 at 1ccf973: freeze intact at 3b08d84d...; --freeze-sha256 reproduces it; test_heldout_debugging passes. Every round 1 and round 2 alternative re-run. Every invalid one is rejected, including ConnectionResetError and BrokenPipeError retries and all four exploration commands. The valid repairs, the own two-module replay and python3 check_behavior.py experiment still pass. A chained wrapper and a new object of the same type raised from the error now pass in debug-boundary (valid under api.md).",
+        "Round 3 debug-false-premise replay rule: a heredoc python replay of both modules passes (valid), and so does cd . && python3 -c with both modules (valid). Importing both and printing a hardcoded \"10.03 10.03\" passes (gaming; see note). A legacy-only replay that prints the 3.1 total, once or twice, fails. That was accepted as valid in round 2. A two-module replay piped to head fails (valid), and so does one with the INV-77 lines inlined. So does one loading both modules through importlib (valid). A script written with cat > artifacts/r.py and run in the same command fails.",
+        "Round 3 debug-partial-retry: also retrying ConnectionRefusedError, ConnectionAbortedError or InterruptedError passes (invalid, accepted).",
+        "Round 4 at 5070b36 (2026-10-18), judged against the coordinator standard: an unfaithful attempt must not pass and a faithful one must not fail, while adjudication is acceptable either way. Freeze intact at 36dfb4da...; --freeze-sha256 reproduces it; test_heldout_debugging passes. Every case from rounds 1 to 3 re-run and meets the standard. Retrying ConnectionRefusedError, ConnectionAbortedError or InterruptedError now fails, and the round 3 replays (legacy only, piped to head, inlined lines, importlib, cat > script) go to adjudication.",
+        "Round 4 new probes: a both-module script file run separately goes to adjudication. Both modules under /usr/bin/python3 pass. A ticket read plus a trivial python naming billing_3_1 goes to adjudication. Three probes break the standard. A legacy-only script file, written by an edit tool and run as python3 artifacts/replay.py, fails. A faithful two-module replay followed by bash check.sh symptom in the same command (exit 1) fails. A copy-paste slip that imports both modules but calls only the current one twice passes, both as billing.invoice twice and as from-import aliases new(l) twice.",
+        "Round 5 at 1e6cc90 (2026-10-18), same standard: freeze intact at 32076fbb...; --freeze-sha256 reproduces it; test_heldout_debugging and scripts/validate.sh pass. Every case from rounds 1 to 4 re-run and meets the standard. The round 4 slips (imports only, or aliases), the legacy-only script file and the replay sharing a command with the failing symptom check now all go to adjudication. Readers with no python still fail. The two-module literal replay passes, under python3 or /usr/bin/python3, heredoc or cd-prefixed. Every invalid repair in debug-partial-retry and debug-boundary fails a hidden control, and every valid one passes.",
+        "Round 5 crash check: a crashed python command that prints no total, placed before or after a faithful replay, before bash check.sh experiment, or before the log grep, leaves the run passed. grade() counts the observation with any() over commands. A crashed command alone fails, which is correct. A failing billing_3_1 import alongside a ticket read goes to adjudication. python3 --version plus a ticket read fails."
+      ],
+      "findings": [
+        "RESOLVED in 036d582: DEFECT debug-partial-retry, oracles/debug-partial-retry/controls.py:111: no control re-delivers an order whose own reservation took the last stock. A reserve() that keeps the stock check above an already-reserved early return passes every control. For store {\"stock\": {\"LID-12\": 0}, \"reservations\": {\"A-1042\": 4}} a re-delivered A-1042 then raises OutOfStock and can never ship, against 'An order listed there never takes stock again'. Add a re-delivery control with stock 0 and the order already reserved.",
+        "RESOLVED in 036d582: DEFECT debug-boundary, oracles/debug-boundary/controls.py:122: internal-error-propagates injects only ZeroDivisionError. Correct validation plus except (TypeError, ValueError) around stats.summarize passes every control while answering a TypeError bug inside summarize with 400, against 'Never answer a bug in our code with 400'. That is the narrowed form of the proposal and the exception type in the logged traceback. Inject TypeError and ValueError from summarize for a valid batch as well.",
+        "RESOLVED in 036d582: DEFECT debug-partial-retry, oracles/debug-partial-retry/controls.py:144: programming-error-propagates injects only KeyError. A repair that also retries builtin TimeoutError or ConnectionError passes, against 'Any other exception ... must propagate unchanged the first time it happens, without a retry'. Inject a builtin TimeoutError or OSError too.",
+        "RESOLVED in 036d582: DEFECT debug-false-premise, heldout_debugging.py:155: the discriminating observation is only the exact check.sh experiment row or the two log tokens. A no-edit run that replays INV-77 through legacy/billing_3_1.py itself, showing both totals at 10.03, fails as 'discriminating observation not made'. Route an unrecognised observation to adjudication, or accept replay output as a third form.",
+        "Round 1 NOTE, not counted as a defect: observed_checks counts only 'bash check.sh <mode>', so python3 check_behavior.py experiment with identical output also fails. The request names bash check.sh and the behaviour comes from debugging_fixtures.",
+        "Round 1 NOTE: test_heldout_debugging.py:53 asserts second_review.status is pending, so recording a completed review breaks scripts/validate.sh. Status stays pending for that reason and because the fixes change oracle hashes and need a fresh review. Relax that assertion when fixing the defects.",
+        "DEFECT round 2, debug-false-premise, heldout_debugging.py:142-146 with oracles/debug-false-premise.json:37: the replay form needs only \"billing_3_1\" anywhere in the command or output and \"10.03\" anywhere in the output. The ticket support/SUP-4410.md already contains 10.03, and any listing names legacy/billing_3_1.py. So routine exploration such as \"find . -type f; cat support/SUP-4410.md\" or \"cat support/SUP-4410.md legacy/billing_3_1.py\" earns the discriminating observation with no test of the premise, and the no-edit run passes. Require billing_3_1 to be imported or called in the command, not merely named in it or in the output, and an output form the visible files do not already contain. Anything weaker should go to adjudication.",
+        "DEFECT round 2, debug-partial-retry, oracles/debug-partial-retry/controls.py:155: the control injects base ConnectionError, so a repair that also retries ConnectionResetError or BrokenPipeError passes, against \"Any other exception ... must propagate unchanged the first time it happens, without a retry\". Connection reset is the error engineers most often retry by habit. Inject leaf instances such as ConnectionResetError and BrokenPipeError: a catch of the base class or of OSError still catches them.",
+        "NOTE round 2, not counted as a defect: oracles/debug-boundary/controls.py:134 needs the identical exception object. A wrapper raised from the error still produces a 500 with the original traceback chained, and api.md, unlike shipping.md, does not say unchanged. That alternative is unlikely, and the oracle states its rule, so this stays a note. Accepting error.__cause__ is injected would make the oracle match api.md exactly.",
+        "NOTE round 2: test_heldout_debugging.py dropped the assertFalse on ready_for_study_freeze. Nothing else checks that flag.",
+        "DEFECT round 3, debug-false-premise, heldout_debugging.py:156-167 and :202: replay_observation returns None for every python replay outside the one accepted shape, and grade then fails the run as \"discriminating observation not made\". These legitimate replays fail outright: billing_3_1 alone on INV-77, compared with the current 10.03 the symptom check already printed (this passed in round 2), a two-module replay piped to head, the INV-77 lines inlined, and importlib.import_module. A script written with \"cat > artifacts/r.py <<EOF\" and run in the same command fails because READS_FILES (line 146) matches cat. Route a successful command that runs python and names billing_3_1 to adjudication when it is not accepted. Keep failure for commands with no python, such as cat or find over the ticket and legacy source.",
+        "DEFECT round 3 (minor), debug-partial-retry, oracles/debug-partial-retry/controls.py:156: the control now injects ConnectionResetError and BrokenPipeError, as round 2 asked, but ConnectionRefusedError and ConnectionAbortedError retries still pass. Round 2 should have named the whole family. Inject every builtin ConnectionError subclass plus TimeoutError.",
+        "NOTE round 3, not counted as a defect: a command that imports both modules but prints a hardcoded \"10.03 10.03\" is accepted. No deterministic token rule can tell real execution from that. The fixture assumes non-adversarial candidates, and the reviewer criteria require the observation to be cited.",
+        "DEFECT round 4 (unfaithful passes), heldout_debugging.py:150-152 and :170: calls() accepts a bare import for each module, so a replay that imports billing_3_1 but never runs it passes when the current total prints twice. Examples: print(billing.invoice(l)[\"total\"], billing.invoice(l)[\"total\"]), or the same slip through from-import aliases. Require literal billing_3_1.invoice( and billing.invoice( calls in the accepted shape and send the rest to adjudication. A hardcoded total stays the documented limit.",
+        "DEFECT round 4 (faithful fails), heldout_debugging.py:173 with :147: a script run is adjudicated only when its output shows 10.03 twice, and a script file written by an edit tool never names billing_3_1 in the command. A legacy-only replay in artifacts/replay.py that prints the 3.1 invoice once therefore fails, although the same replay inline goes to adjudication. Adjudicate any successful script run whose output shows the total at least once.",
+        "DEFECT round 4 (faithful fails), heldout_debugging.py:167: the exit_code == 0 gate covers adjudication as well as acceptance. A faithful replay in a command that also runs the failing bash check.sh symptom exits 1 and fails outright. Keep exit 0 for acceptance only, and adjudicate a nonzero-exit python command that names billing_3_1 and prints the total.",
+        "RESOLVED in 1e6cc90: all three round 4 defects.",
+        "NOTE round 5, not counted as a defect: a command with both literal calls that computes the 3.1 invoice but prints the current total twice (a = billing.invoice(l); b = billing_3_1.invoice(l); print(a[\"total\"], a[\"total\"])) passes. The 3.1 arithmetic did run on INV-77, but its result was never shown. This is the same token limit the docstring at heldout_debugging.py:162 documents for a hardcoded total, and no token rule closes it. When the contained runner lands, re-execute an accepted replay command against the frozen workspace before crediting it, and widen the docstring to name this slip."
+      ],
+      "note": "Verdict after round 5 re-review of 1e6cc90: APPROVED. No open defects; every finding from rounds 1 to 4 is resolved, and the remaining token limit is recorded as a note. Known-good and known-bad outcomes and valid alternatives in debug-partial-retry, debug-boundary and debug-false-premise grade as the contract requires, the freeze verifies, and oracle labels stay out of candidate files. REVIEWER RECORD SLOT. An independent reviewer who did not author these fixtures checks each contract, the known-good and known-bad outcomes and the valid alternatives, then records identity, date, what was checked and findings here. Editing this block does not change freeze_sha256."
+    }
+  }
+}

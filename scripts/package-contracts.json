@@ -137,6 +137,7 @@
         "references/conformance.md",
         "scripts/conform.sh",
         "scripts/generate.sh",
+        "scripts/challenge.sh",
         "references/inspect.md",
         "references/feature-map.md",
         "references/install.md",
@@ -156,6 +157,13 @@
         },
         {
           "script": "scripts/generate.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/challenge.sh",
           "args": [
             "--help"
           ],

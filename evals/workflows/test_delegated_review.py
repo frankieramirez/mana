@@ -73,14 +73,11 @@ class InterruptedEvents(unittest.TestCase):
         work=prepared[1]
         (work/'artifacts/run').mkdir()
         (work/'artifacts/run/review.json').write_text('{}')
-        process=MagicMock()
-        process.__enter__.return_value=process
-        process.returncode=0
-        def communicate(*args, **kwargs):
-            if 'timeout' in kwargs:
-                (out/'events.jsonl').write_text(raw)
-                if timeout:raise subprocess.TimeoutExpired('fixture',1)
-        process.communicate.side_effect=communicate
+        def invocation(command, prompt, stdout, stderr, limit):
+            stdout.write(raw)
+            stdout.flush()
+            return {'outcome':'timeout' if timeout else 'completed','exit_code':None if timeout else 0,
+                    'family_terminated':True,'surviving_pids':[]}
         threads={'parent':{'model':'pinned','reasoningEffort':'medium'},
                  'child':{'parentThreadId':'parent','model':'pinned','reasoningEffort':'medium'}}
         with patch.object(d.shutil,'which',return_value='/fixture/codex'), \
@@ -88,8 +85,7 @@ class InterruptedEvents(unittest.TestCase):
              patch.object(d,'prepare',return_value=prepared), \
              patch.object(run,'permission_config',return_value=[]), \
              patch.object(run,'preflight',return_value={}), \
-             patch.object(d.subprocess,'Popen',return_value=process), \
-             patch.object(d.os,'killpg'), \
+             patch.object(d.process_family,'run_bounded',side_effect=invocation), \
              patch.object(d,'Reader') as reader, \
              patch.object(d,'collect',return_value=threads) as collector, \
              patch.object(d,'inspect',return_value=([],[])), \

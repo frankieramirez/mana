@@ -286,7 +286,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(result['passed'])
         self.assertEqual(json.loads((self.root / 'result.json').read_text())['execution'], 'setup_failed')
 
-    def test_timeout_has_durable_result_and_kills_process_group(self):
+    def test_timeout_has_durable_result_and_retains_family_termination(self):
         case, work, baseline = self.fixture('capture-pass')
         original_check_output = run.subprocess.check_output
 
@@ -295,23 +295,36 @@ class WorkflowTests(unittest.TestCase):
                 return run.SUPPORTED_HOST + '\n'
             return original_check_output(args, **kwargs)
 
-        process = MagicMock()
-        process.pid = 123456
-        process.communicate.side_effect = [run.subprocess.TimeoutExpired('codex', 1), (None, None)]
-        process.__enter__.return_value = process
+        termination = {'outcome': 'timeout', 'exit_code': None, 'family_terminated': True,
+                       'signalled_pids': [123456, 123457], 'surviving_pids': []}
         with patch.object(run.shutil, 'which', return_value='/usr/bin/true'), \
              patch.object(run.subprocess, 'check_output', side_effect=checked), \
              patch.object(run, 'prepare', return_value=(work, baseline)), \
              patch.object(run, 'preflight', return_value={'test': 'synthetic'}), \
-             patch.object(run.subprocess, 'Popen', return_value=process), \
-             patch.object(run.os, 'killpg') as kill:
+             patch.object(run.process_family, 'run_bounded', return_value=termination) as invoke:
             # Avoid mocking Git's own subprocess implementation during final-state capture.
             with patch.object(run, 'git', return_value='fixture'):
                 result = run.execute(case, self.root, 1)
-        kill.assert_called_once_with(123456, run.signal.SIGKILL)
+        self.assertEqual(invoke.call_args.args[4], 1)
         self.assertEqual(result['execution'], 'timeout')
+        self.assertEqual(result['process_family'], termination)
+        self.assertIsNone(result['usage'])
         self.assertFalse(result['passed'])
         self.assertTrue((self.root / 'result.json').is_file())
+
+    def test_surviving_process_family_is_a_harness_failure(self):
+        case, work, baseline = self.fixture('capture-pass')
+        termination = {'outcome': 'timeout', 'exit_code': None, 'family_terminated': False,
+                       'signalled_pids': [1], 'surviving_pids': [99]}
+        with patch.object(run.shutil, 'which', return_value='/usr/bin/true'), \
+             patch.object(run.subprocess, 'check_output', return_value=run.SUPPORTED_HOST + '\n'), \
+             patch.object(run, 'prepare', return_value=(work, baseline)), \
+             patch.object(run, 'preflight', return_value={}), \
+             patch.object(run.process_family, 'run_bounded', return_value=termination), \
+             patch.object(run, 'git', return_value='fixture'):
+            result = run.execute(case, self.root, 1)
+        self.assertTrue(result['harness_failure'])
+        self.assertIn('process family survived termination: 99', result['failures'])
 
 
 if __name__ == '__main__':

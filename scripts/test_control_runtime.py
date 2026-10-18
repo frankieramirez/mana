@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Exercise generated control reports against real Node assertions and process failures."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -45,6 +46,7 @@ if (mode === 'hang') {
     testResults:[{assertionResults:assertions}]};
   if (mode === 'bad-total') report.numTotalTests++;
   if (mode === 'runtime-error') report.numRuntimeErrorTestSuites = 1;
+  if (mode === 'suite-error') report.testResults[0].message = 'afterAll: fixture teardown failed';
   if (mode === 'secret') {
     console.error('TEST_TOKEN='+process.env.TEST_TOKEN);
     report.note = 'TEST_TOKEN='+process.env.TEST_TOKEN;
@@ -130,6 +132,47 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(baseline["source"]["identity"]["head"], broken["source"]["identity"]["head"])
         (self.root / "src/value.txt").write_text("hello\n")
         self.assertEqual(self.invoke("feature", "greeting")[0], 0)
+
+    def test_report_binds_owned_processes_and_artifact_digests(self):
+        code, report = self.invoke("feature", "greeting")
+        self.assertEqual(code, 0)
+        self.assertEqual(report["teardown"], {"status": "clean", "errors": []})
+        feature = [p for p in report["processes"] if p["role"] == "feature"][0]
+        self.assertTrue(feature["verified"])
+        self.assertEqual((feature["pid"], feature["survivors"]), (feature["pgid"], []))
+        with self.assertRaises(ProcessLookupError):
+            os.killpg(feature["pgid"], 0)
+        digests = {item["path"]: item for item in report["artifactDigests"]}
+        self.assertEqual(set(digests), set(report["artifacts"]) - {str(Path(report["evidenceDir"]) / "report.json")})
+        for path, item in digests.items():
+            self.assertEqual(hashlib.sha256(Path(path).read_bytes()).hexdigest(), item["sha256"])
+
+    def test_suite_error_is_incomplete_and_keeps_the_failed_assertion(self):
+        code, report = self.invoke("feature", "greeting", mode="suite-error")
+        self.assertEqual(code, 3)
+        self.assertEqual(report["checks"][0]["suiteErrors"], ["afterAll: fixture teardown failed"])
+        (self.root / "src/value.txt").write_text("broken\n")
+        code, report = self.invoke("feature", "greeting", mode="suite-error")
+        self.assertEqual((code, report["status"]), (3, "incomplete"))
+        self.assertEqual(report["checks"][0]["status"], "failed")
+        self.assertEqual(report["checks"][0]["failed"], ["greeting.exact"])
+
+    def test_probe_prerequisite_runs_in_the_snapshot_and_names_what_is_missing(self):
+        probe = "if (!process.env.CONTROL_TEST_BROWSER) { console.error('browser unavailable for this run'); process.exit(1); } require('node:fs').accessSync('src/value.txt');"
+        self.config["prerequisites"].append({"need": "browser", "probe": {"argv": [NODE, "-e", probe]}})
+        self.save_config()
+        code, report = self.invoke("feature", "greeting")
+        self.assertEqual(code, 3)
+        self.assertIn({"need": "browser", "status": "missing", "detail": "browser unavailable for this run"},
+                      [{k: p.get(k) for k in ("need", "status", "detail")} for p in report["prerequisites"]])
+        self.assertEqual(report["checks"][0]["executed"], [])
+        code, report = self.invoke("feature", "greeting", extra_env={"CONTROL_TEST_BROWSER": "1"})
+        self.assertEqual(code, 0)
+        self.assertIn("present", [p["status"] for p in report["prerequisites"] if p["need"] == "browser"])
+        self.config["prerequisites"][-1]["path"] = "src/value.txt"
+        self.save_config()
+        code, report = self.invoke("feature", "greeting")
+        self.assertEqual((code, report["mode"]), (1, "error"))
 
     def test_report_cannot_pass_unexecuted_or_unfinished_cases(self):
         for mode in ["zero", "missing", "skipped", "prefix", "ambiguous", "unknown-status", "bad-total", "runtime-error", "malformed", "crash-after-report"]:
@@ -326,7 +369,7 @@ fs.writeFileSync(ADDITIONAL,JSON.stringify(record)+'\\n');
         self.assertIn("REDACTED", retained["note"])
 
     def test_timeout_and_signal_cleanup_owned_processes(self):
-        self.config["timeoutSeconds"] = 0.2
+        self.config["timeoutSeconds"] = 1.5  # Long enough for Node to start and write its ready file.
         self.save_config()
         ready = self.home / "ready"
         code, report = self.invoke("feature", "greeting", mode="hang", extra_env={"CONTROL_TEST_READY": str(ready)})
@@ -342,7 +385,7 @@ fs.writeFileSync(ADDITIONAL,JSON.stringify(record)+'\\n');
                                 cwd=self.root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         self.addCleanup(lambda: proc.poll() is None and proc.kill())
         deadline = time.monotonic() + 5
-        while not ready.exists() and time.monotonic() < deadline:
+        while not (ready.exists() and ready.read_text()) and time.monotonic() < deadline:
             time.sleep(0.02)
         self.assertTrue(ready.exists())
         proc.send_signal(signal.SIGTERM)
