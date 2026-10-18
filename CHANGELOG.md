@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The workflow evaluator freezes the complete `effectiveness-pilot-1` matrix in `evals/workflows/pilot.py`: 12 held-out source groups, three conditions, two repetitions, per-job time limits, no retries and the seeded 72-slot schedule. One complete reference package holds every route, and each case's digests cover only its own inputs and oracles. `pilot.py --prepare` freezes a study directory, and `run.py --study` runs held-out slots through the contained runner. Changed installed payloads, changed tool doubles and pushes into the evaluator-owned origin stop the schedule. Collection never grades a held-out attempt. Code tasks now get the shared delegation limits in every condition, and prose tasks are told not to delegate. The study refuses to start, claiming no slot, until a host record proves delegated parity and the resource authorization and human-effort records are filled in. Today the host gate is closed because the active-thread cap is unknown.
+
 ## 0.43.12
 
 - The workflow evaluator holds three frozen held-out prose-fidelity groups for protected config bytes, quantified scope and exact quotation. Exact checks pass or fail; every other prose output goes to an adjudicator with a fact list. The second review of the freeze is complete.

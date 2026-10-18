@@ -483,7 +483,10 @@ def grade(case, work, baseline, response, events):
 
 
 def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
-            condition=None, frozen_study=None):
+            condition=None, frozen_study=None, prepare_fn=None, collect_fn=None):
+    """One invocation. prepare_fn builds a different fixture family; collect_fn replaces the automatic
+    grader with collection gates only, so the attempt's task outcome waits for its own grader."""
+    prepare_fn = prepare_fn or prepare
     result = {"case": case["id"], "case_definition": case, "schema_version": 1,
               "runner_sha256": LOADED_SOURCES["run.py"],
               "fixture_sha256": LOADED_SOURCES["review_fixtures.py"],
@@ -524,7 +527,7 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
         result["skill_revision"] = None if condition is not None else git(ROOT, "rev-parse", "HEAD")
         if condition is not None:
             result['declared_payload_revision'] = condition['revision']
-        work, baseline = prepare(case, out, skill_root, condition)
+        work, baseline = prepare_fn(case, out, skill_root, condition)
         result["baseline"] = baseline
         if condition is not None:
             # Initial source bytes and tool doubles stay outside the permitted workspace.
@@ -636,7 +639,12 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
             result["failures"].append("missing command execution events")
         if result["execution"] == "completed" and not result["usage"]:
             result["failures"].append("missing turn usage events")
-        if result["execution"] == "completed":
+        if collect_fn is not None:
+            # Held-out attempts: external writes and changed frozen inputs are checked whatever the execution
+            # status. The task outcome is left to the group grader and human adjudication.
+            result['failures'] += collect_fn(work, out, baseline)
+            result['grading'] = 'pending: group grader and human adjudication'
+        elif result["execution"] == "completed":
             try:
                 response = json.loads((out / "response.json").read_text())
                 result["failures"] += grade(case, work, baseline, response, events)
@@ -657,7 +665,8 @@ def execute(case, out, timeout, skill_root=None, model=None, reasoning="medium",
                 result['failures'].append('frozen study invalid after invocation: ' + str(exc))
         result["seconds"] = round(time.monotonic() - started, 2)
         result['ended_at'] = process_family.now()
-        result["passed"] = result["execution"] == "completed" and not result["failures"]
+        # Collection never passes a held-out attempt; only its grader and adjudication can.
+        result["passed"] = collect_fn is None and result["execution"] == "completed" and not result["failures"]
         if work is not None:
             try:
                 result["final_head"] = git(work, "rev-parse", "HEAD")
@@ -684,6 +693,18 @@ def capability_summary(assessment):
 def execute_study(study, slot):
     """One explicit allocated slot; preparation failures are retained without retries."""
     import archive_delegated
+    heldout = bool(study.controls.get('heldout'))
+    hooks = {}
+    if heldout:
+        import pilot
+        # The held-out builders, inputs, oracles and gate records must equal the frozen copies.
+        study.loaded_sources = {**STUDY_SOURCES, **pilot.sources()}
+        study.verify()
+        # The complete comparative study starts only when every gate is open. Nothing is claimed otherwise.
+        closed = pilot.study_blockers(study)
+        if closed:
+            raise ValueError('study gates closed, no slot claimed: ' + '; '.join(closed))
+        hooks = {'prepare_fn': pilot.prepare_workspace, 'collect_fn': pilot.collection_failures}
     out = study.claim(slot)
     cell, frozen_case, condition = study.selection(slot)
     metadata = conditions.evaluation_metadata(study, slot)
@@ -694,12 +715,14 @@ def execute_study(study, slot):
         study.snapshot(out, condition)
         report = execute(frozen_case['definition'], out, frozen_case['timeout_seconds'],
                          model=study.controls['model'], reasoning=study.controls['reasoning'],
-                         condition=condition, frozen_study=study)
+                         condition=condition, frozen_study=study, **hooks)
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         report['failures'].append('study attempt failed: ' + str(exc))
     finally:
-        incomplete = (report.get('harness_failure')
-                      or any(c.get('exit_code') == 97 for c in report.get('commands', []))
+        # A held-out double's exit 97 is a refused write or install that the frozen fixture contract measures,
+        # never a harness failure. Elsewhere it marks an unsupported double operation.
+        refused = [] if heldout else [c for c in report.get('commands', []) if c.get('exit_code') == 97]
+        incomplete = (report.get('harness_failure') or refused
                       or any(any(word in failure for word in ('frozen', 'missing command', 'missing turn',
                                                                'final state unavailable'))
                              for failure in report['failures']))
@@ -710,7 +733,8 @@ def execute_study(study, slot):
             report['passed'] = False
             report['failures'].append('incomplete condition execution or unsupported tool operation')
         metadata.update({'execution_status': report['execution'],
-                         'task_outcome': ('passed' if report['passed'] else 'failed')
+                         # A held-out outcome stays null until its grader and adjudication record one.
+                         'task_outcome': None if heldout else ('passed' if report['passed'] else 'failed')
                          if report['execution'] == 'completed' else None,
                          'actual_model': report.get('actual_model'),
                          'elapsed_seconds': report.get('seconds'),
@@ -731,8 +755,7 @@ def execute_study(study, slot):
         (out / 'result.json').write_bytes(conditions.encoded(report))
         # Unsupported double operations and missing observations are harness failures,
         # not evidence against a condition. Preserve the attempt and stop the schedule.
-        stop = (report['execution'] != 'completed'
-                or any(c.get('exit_code') == 97 for c in report.get('commands', []))
+        stop = (report['execution'] != 'completed' or refused
                 or any(any(word in failure for word in ('frozen', 'missing command', 'missing turn',
                                                           'publication', 'final state unavailable'))
                        for failure in report['failures']))
@@ -768,6 +791,8 @@ def execute_study(study, slot):
         study.release()
     print(out)
     print(json.dumps({k: report[k] for k in ('execution', 'passed', 'failures')}))
+    if heldout:
+        return 0 if report['execution'] == 'completed' and not (study.root / 'results/STOP.json').exists() else 1
     return 0 if report['passed'] else 1
 
 
@@ -922,10 +947,18 @@ def main():
             if args.out or args.check == args.live or not args.controls_sha256:
                 raise ValueError('study requires --controls-sha256 and exactly one of --check or --live')
             study = conditions.FrozenStudy(args.study, args.controls_sha256, STUDY_SOURCES, HERE)
+            gates = None
+            if study.controls.get('heldout'):
+                import pilot
+                # The held-out builders, inputs, oracles and gate records run from the frozen copies too.
+                study.loaded_sources = {**STUDY_SOURCES, **pilot.sources()}
+                study.verify()
+                gates = pilot.study_blockers(study)
             if args.check:
                 if args.slot is not None:
                     raise ValueError('study check validates the full frozen inputs, without selecting a slot')
-                print(json.dumps({'study': study.controls['study'], 'parent_slots': len(study.schedule), 'agent_executed': False}))
+                print(json.dumps({'study': study.controls['study'], 'parent_slots': len(study.schedule),
+                                  **({'blockers': gates} if gates is not None else {}), 'agent_executed': False}))
                 return 0
             if args.slot is None:
                 raise ValueError('live study execution requires one explicit --slot')

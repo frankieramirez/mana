@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "study": "effectiveness-pilot-1",
+  "rule": "Recorded outside the pilot freeze. Only Frankie records the resource authorization. The human-effort record names the review cohort, or records it as unavailable so effort metrics stay unmeasured. Each bound must equal the frozen matrix totals. A frozen study reads the copy taken when it was prepared, so record both before preparing the study directory.",
+  "resources": {
+    "status": "pending",
+    "authorized_by": null,
+    "authorized_at": null,
+    "parent_slots": null,
+    "parent_seconds": null,
+    "max_children": null
+  },
+  "human_effort": {
+    "status": "pending",
+    "reviewers": [],
+    "adjudicator": null,
+    "recorded_by": null,
+    "recorded_at": null
+  }
+}
