@@ -347,7 +347,8 @@
         "scripts/review.sh",
         "scripts/tickets.sh",
         "references/control-evidence.md",
-        "scripts/conform.sh"
+        "scripts/conform.sh",
+        "references/control-claims.md"
       ],
       "smoke": [
         {

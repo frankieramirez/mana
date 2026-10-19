@@ -236,6 +236,12 @@ python3 -B evals/workflows/run.py --live \
 ```
 
 
+## Scan control claims
+
+`review-control-claims` continues a review at Stage 5 in a synthetic briefing repo with a `Control:` pointer and two saved control/0 reports. `run-2` is current: it passed the scenario for R1 and failed the one for R2, whose screenshot still rendered. `run-1` covers R3 but checked `src/activity.js`, which changed after the run, so it is stale at the same HEAD. No scenario covers R4. The control leaves a `control-ran` file in the product tree if anything runs it.
+
+The grader in `control_claims_fixtures.py` requires both reports to be read through `conform.sh evidence` without `--scope local`, no control command and no `control-ran`, unchanged reports, product files, HEAD and index, and one check per requirement: R1 `passed`, R2 `failed`, R3 `stale` or `unrun`, R4 `unrun`. Each check's exit must match a reader command that actually ran on its report. `test_control_claims.py` runs the installed Scan copy's real reader and `review.sh claims` in the fixture for the good path, then breaks the commands, the final state or the claims one at a time. No live agent run of this case has happened; the tests establish fixture and grader behavior only.
+
 ## Ultima follow-up authority
 
 Four focused cases start from a completed audit with its existing report and one eligible candidate. `ultima-report-only` and `ultima-changed-target` require report delivery without changing the project. `ultima-local-fix` requires the already selected edit and successful verification while preserving HEAD and the index. `ultima-host-question` leaves the action unresolved on a host without a permitted question tool, so the report precedes an ordinary-text choice. None authorizes publication.
