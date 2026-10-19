@@ -69,6 +69,7 @@
         "scripts/text-frame.sh",
         "scripts/tickets.sh",
         "references/debugging.md",
+        "references/control-checks.md",
         "references/control-evidence.md",
         "scripts/conform.sh"
       ],

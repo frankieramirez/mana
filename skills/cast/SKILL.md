@@ -138,6 +138,8 @@ Seams: <public interfaces you will test at, or "none: no test harness">
 
 Do not start coding until that intent is written. If the ticket is still a question (a decision, not a build), stop. This skill builds ready work.
 
+When the `## Agent skills` block has a `Control:` line, load `references/control-checks.md` now and map each acceptance criterion to the scenario ids that prove it before the first edit.
+
 ## Stage 2: Build
 
 For an unexplained behavior defect or failed behavior check, load `references/debugging.md` now and use its implementation path. Skip it for prose, ordinary feature work, or a cause already established by direct observation.
@@ -160,7 +162,7 @@ Read `references/comment-cleanup.md` and follow it before the spec check. Its re
 
 Read `references/spec-check.md` and walk it against the diff and the ticket. If a criterion fails, fix it before committing. If a criterion cannot be met on this branch, stop and report it. Do not commit a partial that pretends to be the ticket.
 
-When the repo has a `Control:` line in its `## Agent skills` block, or a control report covers a criterion, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. Give each criterion its own status from that reading; a control pass never replaces the required validation.
+When the repo has a `Control:` line in its `## Agent skills` block, or a control report covers a criterion, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. With a `Control:` line, follow `references/control-checks.md` after the final relevant edit: run the changed selection when authorized, widen it wherever it missed a mapped criterion, and combine the readings. Give each criterion its own row from that reading. A control pass never replaces the required validation, which still runs after the final edit.
 
 ## Stage 4: Commit
 
@@ -214,7 +216,7 @@ fi
 
 Same rebase-or-stop rule as Stage 4. Never force-push.
 
-Capture at least one evidence file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`) only when Stage 3 found every acceptance criterion met and this PR is not a draft waiting on an unmet criterion. Any criterion still unmet or unverified ends the body with a reference line instead (`Refs #42`, `Refs ENG-42`), so the merge leaves the ticket open, and the report's Ticket row names those criteria. `references/body.md` gives each tracker's form under the closing line. Then run `scripts/open-pr.sh` with the title, body file, and attaches.
+Capture at least one evidence file. The body ends with a closing line for the ticket (`Closes #42`, `Closes ENG-42`) only when Stage 3 found every acceptance criterion met and this PR is not a draft waiting on an unmet criterion. A criterion mapped to a control scenario counts as met only when a current report supports it; a stale report or a selection that skipped it leaves it unverified. Any criterion still unmet or unverified ends the body with a reference line instead (`Refs #42`, `Refs ENG-42`), so the merge leaves the ticket open, and the report's Ticket row names those criteria. `references/body.md` gives each tracker's form under the closing line. Then run `scripts/open-pr.sh` with the title, body file, and attaches.
 
 The script repeats the preflight and checks GitHub after writing. If exit 4 reports conflicts after writing, rerun the preflight command to fetch the current base before using the same resolution procedure. Validate and refresh proof, then push and update the PR. Limit this to two resolution passes per run; continued base movement gets a concrete handoff. Exit 5 means mergeability remains unknown: report the URL and uncertainty without claiming the PR is ready. Existing PRs keep their review state. Clean mergeability applies to the checked snapshot; it does not guarantee future base changes or semantic compatibility.
 
@@ -253,11 +255,17 @@ Write the result as markdown, not as a code block and not as plain indented line
 | **Orca** | linked \<id>, in-review \| not present \| failed: reason |
 | **Open** | any criterion left unmet, or none |
 
+**Criteria**
+
+| Criterion | Evidence | Check | Checked state | Status | Claim |
+|---|---|---|---|---|---|
+| \<criterion> | executed \| source-inspected | command, scenario ids and `runId` \| file read | HEAD and digest \| working tree | passed \| failed \| blocked \| unrun, plus stale when it applies | supported \| contradicted \| unverified |
+
 **Build effort:** \<linked parent and progress, or none>
 
 **Next step:** \<concrete ticket, review, or closeout prompt; or destination complete>
 
-Every row appears, in this order, even when the value is `none`. A cell holds one line: no newlines, no bullets, and a literal pipe inside a value is escaped as `\|`. A value longer than a sentence gets trimmed to the fact rather than wrapped into prose. Paths, commits, and commands go in backticks, and a PR or issue link goes in bare, so the terminal renders it. Anything that does not fit a cell, such as a hazard worth flagging or an out-of-scope edit, goes in sentences under the table, after the two closing lines.
+Every row appears, in this order, even when the value is `none`. The criteria table holds one row per acceptance criterion, in the ticket's order. A cell holds one line: no newlines, no bullets, and a literal pipe inside a value is escaped as `\|`. A value longer than a sentence gets trimmed to the fact rather than wrapped into prose. Paths, commits, and commands go in backticks, and a PR or issue link goes in bare, so the terminal renders it. Anything that does not fit a cell, such as a hazard worth flagging or an out-of-scope edit, goes in sentences under the table, after the two closing lines.
 
 ## Scripts
 
@@ -273,6 +281,7 @@ Every row appears, in this order, even when the value is `none`. A cell holds on
 | `references/comment-cleanup.md` | Stage 2a, when this session changes code comments | Audit deletions and repair confusing code |
 | `references/comment-reaper.md` | Stage 2a, through comment cleanup | Scoped comment reviewer instructions |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
+| `references/control-checks.md` | Stage 1 and Stage 3, when a `Control:` line exists | Map criteria before edits, run and widen the changed selection, combine readings per criterion |
 | `references/control-evidence.md` | Stage 3, when a project control or control report exists | Per-criterion status from a control report, with `scripts/conform.sh evidence` |
 | `references/capture.md` | Stage 5 | Evidence kinds, check outcomes, and capture |
 | `references/body.md` | Stage 5 | Scannable PR body: trees and diffs |
