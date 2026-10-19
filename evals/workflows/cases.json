@@ -486,6 +486,18 @@
         "commit": false,
         "evidence_directory": "artifacts/"
       }
+    },
+    {
+      "id": "review-control-claims",
+      "skill": "scan",
+      "fixture": "control",
+      "expected_status": "claims-reconciled",
+      "request": "Continue at Stage 5 of this review. The reviewers already ran and found nothing in the diff. ticket.md holds requirements R1 to R4 and pr.md says which saved control runs verified them. Reconcile each requirement with the control evidence and report the result. This is a review only: do not run the project's control or tests, edit files, commit, push, or comment. Record one check per requirement whose claim names its R id.",
+      "allowed_effects": {
+        "product_files": [],
+        "commit": false,
+        "evidence_directory": "artifacts/"
+      }
     }
   ]
 }

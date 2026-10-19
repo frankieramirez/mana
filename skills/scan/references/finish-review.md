@@ -140,7 +140,7 @@ Write the rendered report to `{run_dir}/report.md`, the final `merged.json` find
 }
 ```
 
-`ticket` is `null` and `requirements` is `[]` when no ticket resolved. `peer` is `null` when none was requested. After metadata is written, `rm -f "$RUN_DIR"/peer-*` removes the peer job files; the peer artifact `havoc-demon-hunter-peer.json` stays.
+`ticket` is `null` and `requirements` is `[]` when no ticket resolved. A requirement reconciled with control evidence also carries the `control` record from `references/control-claims.md`. `peer` is `null` when none was requested. After metadata is written, `rm -f "$RUN_DIR"/peer-*` removes the peer job files; the peer artifact `havoc-demon-hunter-peer.json` stays.
 
 ## The `mode:agent` contract
 
