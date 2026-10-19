@@ -91,6 +91,18 @@
       "destinations": [
         "skills/cast/references/debugging.md"
       ]
+    },
+    {
+      "source": "skills/augur/references/proof.md",
+      "destinations": [
+        "skills/scan/references/proof.md"
+      ]
+    },
+    {
+      "source": "skills/augur/scripts/prove.sh",
+      "destinations": [
+        "skills/scan/scripts/prove.sh"
+      ]
     }
   ],
   "agents": [

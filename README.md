@@ -174,6 +174,7 @@ Reviews a branch or PR with specialist reviewers and returns one verified report
 
 - Selects reviewers for the diff and checks ticket acceptance criteria when available.
 - Includes dismissed findings and reasons, so you can challenge the report.
+- Runs the real code for up to two blocking findings that reading alone could not settle, in an isolated copy of the reviewed source.
 
 ```text
 # Current branch against its base
@@ -554,6 +555,7 @@ Finds what a change could break beyond its diff and runs code to prove the fact 
 
 - Traces dependencies beyond text search, including wire formats and distant callers.
 - Leaves the proving script on disk so a reviewer can rerun it.
+- Counts a proof only after it fails on a deliberately broken copy, and says whether it checked a few examples or a whole range of inputs.
 
 ```text
 # Current branch against its base
@@ -566,7 +568,7 @@ Finds what a change could break beyond its diff and runs code to prove the fact 
 <details>
 <summary>Evidence levels and targeted checks</summary>
 
-Augur names one fact the change is safe because of and moves it through five evidence levels: asserted, cited, walked, ran, reproduced. Anything below “ran it” stays unproven.
+Augur names one fact the change is safe because of and moves it through five evidence levels: asserted, cited, walked, ran, reproduced. Anything below “ran it” stays unproven. A run only counts once the proof fails on a break, a small patch that makes the fact false, and it reports its coverage as `examples` or as the range of inputs it swept.
 
 The search includes pinned library source, wire formats, database columns, feature flags, and callers three hops out.
 

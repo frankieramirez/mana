@@ -48,10 +48,14 @@ Every safety fact reports the rung it reached. Never round up.
 | 1 | You said so. Worthless alone. |
 | 2 | You pointed at the line: a real `file:line`, or the library's own source at the pinned version. |
 | 3 | You walked the failure path step by step and showed it cannot reach. |
-| 4 | You ran it: a script or test that calls the real code and fails loud when you are wrong. |
+| 4 | You ran it: a script or test that calls the real code, fails loud when you are wrong, and was seen failing on a deliberately broken copy. |
 | 5 | You reproduced it in the running app. |
 
-A fact below rung 4 is reported as unproven, in those words. Rung 4 is usually one small script that imports the same library the app ships and calls the exact function in question. When the change is config, a script, or prose that a tool consumes, the real code is that tool: run the validator, the parser, or the loader against the changed file and against a deliberately broken copy.
+A fact below rung 4 is reported as unproven, in those words. Rung 4 is usually one small script that imports the same library the app ships and calls the exact function in question. When the change is config, a script, or prose that a tool consumes, the real code is that tool: run the validator, the parser, or the loader against the changed file.
+
+A check you have never seen fail proves nothing. Every rung 4 needs a break: a small patch that makes the fact false, such as a removed guard or a flipped comparison. The helper runs the same proof on a copy with the break applied, and the proof must fail there. A proof that passed with no break, or passed on the break too, never saw itself fail, so it counts as rung 3.
+
+Every rung 4 also names its coverage. `examples` means the cases the script picked. `range` means every input in a stated finite domain, such as every age from 0 to 150 or every order of three steps. Sweep the range when it fits the time budget: a boundary bug at 65 hides from a check at 70 and 80. The proof prints how many cases reached the branch the fact is about, and zero reached means it never tested the fact.
 
 ## Steps
 
@@ -76,7 +80,7 @@ For each, name how it breaks, the `file:line`, how likely it is, and how bad it 
 
 ### 5. Prove the fact
 
-Read `references/proof.md` now. Resolve the exact reviewed commit, or capture the current tracked and untracked source for a local review. Run the proving script in that isolated snapshot with the bundled helper and retain its source digest and execution report. A successful run from another checkout cannot prove this change. Write a script that runs the real code and paste what happened. If a cheap proof is impossible (it needs infrastructure, secrets, a device, or an hour), say so and stop at the highest rung reached. Do not substitute a paragraph for the run.
+Read `references/proof.md` now. Resolve the exact reviewed commit, or capture the current tracked and untracked source for a local review. Run the proving script in that isolated snapshot with the bundled helper and retain its source digest and execution report. A successful run from another checkout cannot prove this change. Write a script that runs the real code and a break patch that makes the fact false, then paste what happened. If a cheap proof is impossible (it needs infrastructure, secrets, a device, or an hour), say so and stop at the highest rung reached. Do not substitute a paragraph for the run.
 
 ### 6. Widen for a large change
 
@@ -91,7 +95,7 @@ What it does
 <what changed, including the part that is not obvious>
 
 The fact it is safe because of
-<the fact>. Rung <n>. <proof output, or "unproven: <why>">
+<the fact>. Rung <n>, <examples | range: the domain swept>. <proof output and the break it caught, or "unproven: <why>">
 
 Risks
 - <how it breaks> at <file:line>. Likely: <low|medium|high>. Cost: <low|medium|high>. Check: <how>.

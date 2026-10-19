@@ -1,6 +1,6 @@
 # The proving script
 
-A proof calls the real code and exits non-zero when the safety fact is false. Paste its output verbatim. A passing execution supports rung 4 only when the assertions test the stated fact against the reviewed source.
+A proof calls the real code and exits non-zero when the fact is false. Paste its output verbatim. A passing execution supports rung 4 only when the assertions test the stated fact against the reviewed source, the proof sweeps or names the cases it covered, and the same proof failed on a break.
 
 ## Select and preserve the source
 
@@ -29,7 +29,31 @@ The helper retains a private run directory with the source snapshot, file hashes
 - **Keep source stable.** Put proof artifacts in `AUGUR_ARTIFACTS`, outside the snapshot. Source changes, including files added during the proof, make the run unproven. Python bytecode writes are disabled. No edits, commits or branch switches in the user's checkout. This helper isolates files; it is not a security sandbox for untrusted code.
 - **Fail loud.** Assert the bad case. A script that only prints values does not test the fact. When the fact is that a value cannot be null, construct the input that could make it null and check the actual guard.
 - **Keep the budget cheap.** Each setup or proof script has a 120-second default budget. Use `--timeout-seconds` only when the scoped check warrants it. A timeout is unproven, with output retained. Setup and proof scripts must stop and wait for their own background jobs before exiting. The helper terminates remaining processes in their process group and marks such a run unproven; a shell returning zero while its server still runs is incomplete execution. Do not detach work into another process group.
-- **Paste the evidence.** Include the report path, reviewed commit, source digest, runtime/dependency context, command, exit code and output. Preserve a failure even if later rendering succeeds. `passed` records execution success; the report still needs to explain which assertion proves the safety fact.
+- **Paste the evidence.** Include the report path, reviewed commit, source digest, runtime/dependency context, command, exit code, output, `challenge` and `coverage`. Preserve a failure even if later rendering succeeds. `passed` records execution success; the report still needs to explain which assertion proves the safety fact.
+
+## Break it once
+
+A proof that has never failed may assert nothing. Write a patch that makes the fact false in the reviewed source, the way a real regression would: remove the guard, flip the comparison, drop the cleanup, reorder the two steps. Keep it outside the repository beside the proof, as a unified diff with `a/` and `b/` paths from the repository root, and pass it to the helper:
+
+```bash
+bash "<SKILL_DIR>/scripts/prove.sh" --repo "<repo root>" --revision "<reviewed commit>" --proof "<scratch>/fact.sh" --context "<scratch>/context.json" --break "<scratch>/break.patch"
+```
+
+When the proof passes, the helper copies the prepared snapshot, applies the patch to the copy, writes a manifest for the patched files, and runs the same proof there. `challenge` in the report reads `detected` when the proof failed on every break, `missed` when it passed on one (the run is then unproven, exit 3), and `not-run` when no break was given or the proof already failed on the reviewed source. Read the break run's output: it must fail at the fact's assertion. A failure from a missing import, a syntax error, or the source-origin check means the break tested the wrong thing, so fix the patch and rerun. Repeat `--break` for a fact with more than one way to fail. A pass with `challenge: not-run` is rung 3.
+
+## Cover the range
+
+A script that checks the two cases you thought of finds the bugs you already expected. When the input domain is finite and small, check all of it: every age from 0 to 150, or every order of the steps that can interleave. Generate the inputs in the script with the standard library; call the real function on each, never a copy of its logic. When the domain is too large, sweep its boundaries and say which values you left out.
+
+End the proof's output with one line in this form, which the helper records as `coverage`:
+
+```
+coverage: every age from 0 to 150, 2 reached the discount branch
+```
+
+State the domain and how many cases reached the branch the fact is about. Zero reached means the proof never exercised the fact, which leaves it unproven. With no coverage line the proof covers `examples`, the cases it named.
+
+## A minimal proof
 
 A minimal proof file is:
 
@@ -42,9 +66,10 @@ cd "${AUGUR_SOURCE:?missing isolated source}"
 <print the actual runtime and dependency versions>
 <import the real implementation module from the current snapshot>
 <assert its path and hash match the expected selected-source manifest entry>
-<construct the bad case>
-<assert; exit 1 on failure>
+<construct the bad cases, or every input in the domain>
+<assert each; exit 1 on failure>
 print("ok: <the fact>")
+print("coverage: <the domain>, <n> reached <the branch>")
 CODE
 ```
 
@@ -72,6 +97,6 @@ print(f"implementation: {loaded}; sha256: {actual_hash}")
 
 ## When a cheap proof is impossible
 
-Unavailable commits, unresolved merges, submodules requiring separate materialization, escaping symlinks, required Git metadata, missing dependencies or infrastructure may prevent this helper from running the exact source. Name the missing prerequisite and report the highest rung reached as **unproven**. Missing runtime or dependencies and a failed source-origin check leave the fact unproven even when the helper records the command as a nonzero `failed` execution; distinguish these from an assertion that disproves the safety fact. Do not substitute a successful run in another checkout. Put the cheapest real check in "Before you merge", such as a revision-bound staging run or a specific test the author can run.
+Unavailable commits, unresolved merges, submodules requiring separate materialization, escaping symlinks, required Git metadata, missing dependencies or infrastructure may prevent this helper from running the exact source. Name the missing prerequisite and report the highest rung reached as **unproven**. Missing runtime or dependencies and a failed source-origin check leave the fact unproven even when the helper records the command as a nonzero `failed` execution; distinguish these from an assertion that disproves the safety fact. Do not substitute a successful run in another checkout. Put the cheapest real check in the report's next step, such as a revision-bound staging run or a specific test the author can run.
 
 The preserved directory can be rerun with its recorded command and working directory. If the source or prepared environment has changed, recapture with the helper and retain the new report. Evidence from another machine must carry the same source identity and runtime/dependency context.

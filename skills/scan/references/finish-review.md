@@ -87,6 +87,10 @@ Independent verification of the findings most likely to waste the user's time if
 3. Apply the return on the numbering the validator saw: copy the pass 2 `merged.json` over `reconciled.json`, and in that copy set `bucket: dismissed`, `reason: <the validator's reason>`, `stage: "validator"` on each `#` returned as `validated: false`. Never apply verdicts to the older reconciled file; its numbers predate the pass 2 renumbering. Merge the validator's `requirements` verdicts with yours from step 7: agreement stands; on disagreement, `unmet` beats `met`, and `cannot tell` is reported as such with both readings. Run pass 2 once more so numbering and counts are final. Prune triage groups after drops.
 4. On malformed validator output or infrastructure failure, drop the affected P2 and P3 findings but **keep** the affected P0 and P1 marked validation-degraded, and say so in Coverage.
 
+## Stage 5c: Proof
+
+Read `references/prove-findings.md` and follow it before rendering. It runs pass 2 again when a proof changes a finding.
+
 ## Stage 6 report
 
 Read `references/report-example.md` first. Assemble the markdown report. Sections, in order (omit any that would be empty):
@@ -103,8 +107,8 @@ Read `references/report-example.md` first. Assemble the markdown report. Section
 4. **Requirements.** Omit only when no ticket resolved. A header line names the ticket and whether it was explicit or inferred, then one line per `R<n>`: `met` with the `file:line` that satisfies it, `unmet` with the finding `#` or what is missing, `deferred` when the diff or PR body states the deferral, or `cannot tell` with the reason.
 5. **Existing PR feedback.** The reconciliation from judgment step 6: what was harvested, what became findings, what was already addressed, what was dismissed and why. Name each bot by its actual login (`coderabbitai`, `github-actions`, and so on). Give the late harvest its own sentence with the check time, so the user can see that a bot commented while the review was running and that those points are already accounted for. A finding that came from the late harvest says `arrived during this review` on its how-sure line. Omit only when no PR was reviewed.
 6. **Pre-existing.** Separate, does not count toward the verdict.
-7. **Dismissed.** One line per entry in the `dismissed` array whose confidence reached 50: the title, the reviewer, and the reason with its stage (the confidence gate, the validator's reason, or the lead-judgment filter that fired). Confidence 0 and 25 suppressions stay as counts in Coverage; they are noise, not judgment calls. This section exists so the user can override a rejection they disagree with. Omit when empty.
-8. **Coverage.** Reviewers that ran and any that failed; the peer's outcome (`ok`, `not started (<reason>)`, `no usable output (<reason>)`, or nothing when none was requested); the lite roster when it was used; `merge: script` or `merge: manual`; suppressed counts by anchor; fast-pass clamps and withdrawn preliminary items; quote-the-line demotions; soft-bucket demotions; validator results, drops, and any degraded blockers; dismissed counts by reason; reviewers whose whole return fell to nitpick gravity; harvested-feedback counts by outcome, with the late harvest separate (`late harvest: 2 items at 14:32 UTC, 1 finding, 1 addressed`, or `late harvest: none (checked 14:32 UTC)`, or `late harvest: fetch failed (<reason>)`); the ticket line (`ticket: ENG-42 read through tickets.sh`, `ticket: none found`, `ticket: ENG-42 unreadable (exit 3)`); untracked files excluded from scope; residual risks; testing gaps; intent uncertainty; the run artifact path.
+7. **Dismissed.** One line per entry in the `dismissed` array whose confidence reached 50: the title, the reviewer, and the reason with its stage (the confidence gate, the validator's reason, the proof that refuted it, or the lead-judgment filter that fired). Confidence 0 and 25 suppressions stay as counts in Coverage; they are noise, not judgment calls. This section exists so the user can override a rejection they disagree with. Omit when empty.
+8. **Coverage.** Reviewers that ran and any that failed; the peer's outcome (`ok`, `not started (<reason>)`, `no usable output (<reason>)`, or nothing when none was requested); the lite roster when it was used; `merge: script` or `merge: manual`; suppressed counts by anchor; fast-pass clamps and withdrawn preliminary items; quote-the-line demotions; soft-bucket demotions; validator results, drops, and any degraded blockers; proof outcomes from Stage 5c, or why it did not run; dismissed counts by reason; reviewers whose whole return fell to nitpick gravity; harvested-feedback counts by outcome, with the late harvest separate (`late harvest: 2 items at 14:32 UTC, 1 finding, 1 addressed`, or `late harvest: none (checked 14:32 UTC)`, or `late harvest: fetch failed (<reason>)`); the ticket line (`ticket: ENG-42 read through tickets.sh`, `ticket: none found`, `ticket: ENG-42 unreadable (exit 3)`); untracked files excluded from scope; residual risks; testing gaps; intent uncertainty; the run artifact path.
 9. **Verdict.** `Ready to merge` / `Ready with fixes` / `Not ready`, plus the fix order when relevant. An `unmet` requirement on an explicit ticket forces `Not ready` and the verdict names the requirement; on an inferred ticket it is a note in the verdict, never a block on its own. When every surviving finding is P3 and every requirement is met or deferred, say the code is ready and the list is optional polish. Do not pad a clean review.
 10. **Actionable recap**, last. The prioritized list of what to do, each item carrying severity, `file:line`, the terse what, and its response type.
 
@@ -158,13 +162,14 @@ Under `mode:agent` the deliverable is one JSON object, emitted bare with no code
   "actionable_findings": [1, 3],
   "triage_groups": [{"title": "...", "findings": [1, 3], "context": "...", "resolution": "...", "kind": "mechanical | decision"}],
   "pre_existing_findings": [],
-  "dismissed": [{"title": "...", "reviewers": ["balance-druid"], "reason": "...", "stage": "merge | lead | validator"}],
+  "dismissed": [{"title": "...", "reviewers": ["balance-druid"], "reason": "...", "stage": "merge | lead | validator | proof"}],
   "residual_risks": ["..."],
   "testing_gaps": ["..."],
   "coverage": {"lite_roster": false, "merge": "script | manual", "suppressed": {"0": 0, "25": 2}, "clamped_fast_pass": 0, "demoted_missing_evidence": 1, "promoted": 0,
                "harvested": {"total": 3, "findings": 1, "addressed": 1, "dismissed": 1,
                              "late": 2, "late_checked_at": "2026-09-07T14:32:00Z"},
                "validator": {"batch": 3, "dropped": 1, "degraded": []},
+               "proofs": [{"finding": 3, "outcome": "confirmed", "report": "<proof run dir>/report.json", "coverage": "every age from 0 to 150, 2 reached the discount branch", "reason": null}],
                "peer": "ok | not started (<reason>) | no usable output (<reason>) | null",
                "untracked_excluded": [], "notes": []}
 }
@@ -184,7 +189,7 @@ Before delivering, verify:
 4. **Line numbers are accurate.** A finding pointing at the wrong line is worse than no finding.
 5. **No linter duplication.** Nothing the project's formatter or linter already catches.
 6. **Nothing harvested vanished.** Every item in `harvest.json` and `harvest-late.json` is in one of the three buckets.
-7. **Nothing dismissed vanished.** Every gate-6 drop, validator drop, and lead-judgment dismissal has a line in Dismissed.
+7. **Nothing dismissed vanished.** Every gate-6 drop, validator drop, proof refutation, and lead-judgment dismissal has a line in Dismissed.
 8. **Every requirement has a status.** No `R<n>` from the block is missing from the Requirements section, and an `unmet` one on an explicit ticket is reflected in the verdict.
 
 ---

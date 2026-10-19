@@ -214,6 +214,63 @@ class SourceBoundProof(unittest.TestCase):
         self.assertIn("unsafe source path", report["reason"])
         self.assertIsNone(report["proof"])
 
+    def write_break(self, old, new, name="break.patch"):
+        patch = self.root / name
+        patch.write_text("--- a/app.py\n+++ b/app.py\n@@ -1 +1 @@\n-" + old + "\n+" + new + "\n")
+        return patch
+
+    def test_break_must_make_a_passing_proof_fail(self):
+        patch = self.write_break("VALUE = 'local-pass'", "VALUE = 'broken'")
+        before = self.checkout_state()
+        code = "python3 - <<'CODE'\nimport app\nprint('coverage: one value, 1 reached the check')\nassert app.VALUE == 'local-pass', app.VALUE\nCODE"
+        result, report, directory = self.run_proof(code, "--break", str(patch))
+        self.assertEqual(result.returncode, 0, report)
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual(report["challenge"], "detected")
+        self.assertEqual(report["coverage"], "one value, 1 reached the check")
+        self.assertTrue(report["breaks"][0]["detected"])
+        self.assertIn("broken", (directory / "break-1.stderr.txt").read_text())
+        self.assertEqual((directory / "source/app.py").read_text(), "VALUE = 'local-pass'\n")
+        self.assertEqual(self.checkout_state(), before)
+
+    def test_proof_that_passes_on_the_break_is_unproven(self):
+        patch = self.write_break("VALUE = 'local-pass'", "VALUE = 'broken'")
+        result, report, _ = self.run_proof("python3 -c \"import app; print(app.VALUE)\"", "--break", str(patch))
+        self.assertEqual(result.returncode, 3, report)
+        self.assertEqual(report["status"], "unproven")
+        self.assertEqual(report["challenge"], "missed")
+        self.assertIn("cannot tell", report["reason"])
+
+    def test_pass_without_a_break_is_reported_as_unchallenged(self):
+        result, report, _ = self.run_proof("python3 -c \"import app; assert app.VALUE == 'local-pass'\"")
+        self.assertEqual(result.returncode, 0, report)
+        self.assertEqual(report["challenge"], "not-run")
+        self.assertIsNone(report["coverage"])
+
+    def test_break_runs_against_its_own_manifest(self):
+        patch = self.write_break("VALUE = 'local-pass'", "VALUE = 'broken'")
+        code = "python3 - <<'CODE'\nimport hashlib, json, os\nfrom pathlib import Path\nimport app\nsnapshot = Path(os.environ['AUGUR_SOURCE']).resolve()\nloaded = Path(app.__file__).resolve()\nexpected = next(i for i in json.loads(Path(os.environ['AUGUR_MANIFEST']).read_text()) if i['path'] == 'app.py')\nassert loaded == snapshot / 'app.py', 'unproven: wrong path'\nassert hashlib.sha256(loaded.read_bytes()).hexdigest() == expected['sha256'], 'unproven: wrong source'\nassert app.VALUE == 'local-pass', 'fact false: ' + app.VALUE\nCODE"
+        result, report, directory = self.run_proof(code, "--break", str(patch))
+        self.assertEqual(result.returncode, 0, report)
+        errors = (directory / "break-1.stderr.txt").read_text()
+        self.assertIn("fact false: broken", errors)
+        self.assertNotIn("unproven", errors)
+
+    def test_break_that_does_not_apply_is_unproven(self):
+        patch = self.write_break("VALUE = 'something else'", "VALUE = 'broken'")
+        result, report, _ = self.run_proof("exit 0", "--break", str(patch))
+        self.assertEqual(result.returncode, 3, report)
+        self.assertEqual(report["status"], "unproven")
+        self.assertIn("does not apply", report["reason"])
+
+    def test_failing_proof_skips_the_break(self):
+        patch = self.write_break("VALUE = 'local-pass'", "VALUE = 'broken'")
+        result, report, _ = self.run_proof("exit 1", "--break", str(patch))
+        self.assertEqual(result.returncode, 1, report)
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["challenge"], "not-run")
+        self.assertEqual(report["breaks"], [])
+
     def test_timeout_retains_output_and_is_unproven(self):
         result, report, directory = self.run_proof("echo started; sleep 10", "--timeout-seconds", "0.1")
         self.assertEqual(result.returncode, 3)
