@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.3
+
+- Sift uses a project control during triage. At Stage 2a it loads `references/control-triage.md` and runs `scripts/candidates.sh`, which reads files only: it reports the `Control:` pointer as present, absent or broken and the feature map as complete, incomplete or absent, matches the report against each feature's aliases, summary, reach and scenario steps, and flags a recorded route the source no longer mentions. Every candidate starts inferred. A static-only request runs no control command. Under local authority the plan names `list --search`, `describe` and at most one feature run for the top candidate, never one with no bound scenario or a tie, and the brief records each candidate as observed only from a valid, current report read through `conform.sh evidence`, with its run id, HEAD and matching record field. `evals/workflows/test_sift_control.py` grades synthetic triage attempts by the control's own invocation log, the final repository state and the response's claims.
+
 ## 0.44.2
 
 - Scan reconciles each requirement with project-control evidence. When a `Control:` pointer exists or the PR cites a control run, Stage 5 loads `references/control-claims.md`, reads every cited report through `conform.sh evidence` under a static scope unless the request authorized running checks, and runs the new `review.sh claims`. A current failed scenario makes its requirement unmet, whatever reading or a rendered screenshot said. A current pass turns `cannot tell` into met. A stale, unknown, rejected or uncovered claim never counts as verification, and each requirement keeps a `control` record with the run id, report path and both HEADs. A new offline workflow case, `review-control-claims`, grades the commands that ran, the unchanged repository and the per-requirement claims.
