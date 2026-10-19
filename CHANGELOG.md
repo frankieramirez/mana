@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.2
+
+- Scan reconciles each requirement with project-control evidence. When a `Control:` pointer exists or the PR cites a control run, Stage 5 loads `references/control-claims.md`, reads every cited report through `conform.sh evidence` under a static scope unless the request authorized running checks, and runs the new `review.sh claims`. A current failed scenario makes its requirement unmet, whatever reading or a rendered screenshot said. A current pass turns `cannot tell` into met. A stale, unknown, rejected or uncovered claim never counts as verification, and each requirement keeps a `control` record with the run id, report path and both HEADs. A new offline workflow case, `review-control-claims`, grades the commands that ran, the unchanged repository and the per-requirement claims.
+
 ## 0.44.1
 
 - Leyline adds `conform.sh evidence` and `references/control-evidence.md`, one reading of project-control evidence for every workflow. The reader runs no project code. It reports the `Control:` pointer as present, absent or broken, rejects malformed, zero-case and lying reports, and treats a report as current only when its HEAD matches and every checked file still hashes the same, so the same HEAD with edited checked bytes is stale. Each criterion gets its own capture status and a supported, contradicted or unverified claim: missing prerequisites are blocked, timed-out and cancelled checks stay unrun with their reasons, and a failed check survives an incomplete run. Under a static scope it offers nothing to run; under a local scope it names the control's `feature` command. Sift, Cast and Scan carry copies of the reference and reader, and `scripts/test_control_evidence.py` holds the synthetic fixtures.
