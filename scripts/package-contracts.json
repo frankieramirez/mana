@@ -325,12 +325,15 @@
         "references/personas/subtlety-rogue.md",
         "references/personas/unholy-death-knight.md",
         "references/personas/windwalker-monk.md",
+        "references/proof.md",
+        "references/prove-findings.md",
         "references/report-example.md",
         "references/roster.md",
         "references/scope.md",
         "references/subagent-template.md",
         "references/validator.md",
         "references/voice.md",
+        "scripts/prove.sh",
         "scripts/review.sh",
         "scripts/tickets.sh"
       ],
@@ -344,6 +347,13 @@
         },
         {
           "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/prove.sh",
           "args": [
             "--help"
           ],

@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import signal
 import stat
 import subprocess
@@ -22,13 +23,15 @@ parser.add_argument("--include", action="append", default=[], help="Additional i
 parser.add_argument("--proof", required=True, help="Bash proof script to preserve and execute")
 parser.add_argument("--context", required=True, help="JSON object with runtime and dependencies evidence")
 parser.add_argument("--setup", help="Optional bash script installing pinned dependencies into the snapshot")
+parser.add_argument("--break", dest="breaks", action="append", default=[],
+                    help="Patch that makes the fact false; the proof must fail on a copy with it applied")
 parser.add_argument("--timeout-seconds", type=float, default=120, help="Per-script execution budget (default: 120)")
 args = parser.parse_args()
 if args.timeout_seconds <= 0:
     parser.error("--timeout-seconds must be positive")
 run = Path(tempfile.mkdtemp(prefix="augur-proof-"))
 report = {"schemaVersion": 1, "status": "unproven", "runDirectory": str(run), "reason": None,
-          "source": {}, "proof": None, "setup": None}
+          "source": {}, "proof": None, "setup": None, "challenge": "not-run", "breaks": [], "coverage": None}
 repo = Path(args.repo).resolve()
 env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
 for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "PYTHONPATH", "NODE_PATH", "BASH_ENV", "ENV"):
@@ -122,14 +125,14 @@ def inventory(root):
             for path in sorted(root.rglob("*")) if path.is_symlink() or not path.is_dir()}
 
 
-def execute(path, label, source_root):
+def execute(path, label, source_root, manifest_path=None):
     output = run / (label + ".stdout.txt")
     errors = run / (label + ".stderr.txt")
     command = ["bash", str(path)]
     script_digest = hashlib.sha256(path.read_bytes()).hexdigest()
     with output.open("wb") as stdout, errors.open("wb") as stderr:
         process = subprocess.Popen(command, cwd=source_root, env=dict(env, AUGUR_SOURCE=str(source_root),
-                                   AUGUR_ARTIFACTS=str(run / "artifacts"), AUGUR_MANIFEST=str(run / "source-manifest.json"),
+                                   AUGUR_ARTIFACTS=str(run / "artifacts"), AUGUR_MANIFEST=str(manifest_path or run / "source-manifest.json"),
                                    PYTHONDONTWRITEBYTECODE="1"),
                                    stdout=stdout, stderr=stderr, start_new_session=True)
         timed_out = False
@@ -164,6 +167,41 @@ def check_execution(result, label):
         raise ValueError(label + " left background processes running; terminated its process group")
     if result["scriptChanged"]:
         raise ValueError(label + " script changed during execution")
+
+
+def coverage_line(result):
+    # The proof states what it covered on a line of its own: "coverage: every age from 0 to 150, 1 reached the boundary".
+    lines = [line for line in Path(result["stdout"]).read_text(errors="replace").splitlines() if line.startswith("coverage: ")]
+    return lines[-1][len("coverage: "):].strip() if lines else None
+
+
+def challenge(index, patch, prepared_root, files):
+    # Apply the break to a copy of the prepared tree, so setup does not run twice and the
+    # reviewed snapshot stays exactly as the passing proof saw it.
+    label = "break-%d" % index
+    target = preserved_script(patch, label + "-patch")
+    broken = run / label
+    shutil.copytree(prepared_root, broken, symlinks=True)
+    before = digest(inventory(broken))
+    applied = subprocess.run(["git", "apply", "--whitespace=nowarn", str(target)], cwd=broken, capture_output=True,
+                             env=dict(env, GIT_CEILING_DIRECTORIES=str(run.parent)))
+    entry = {"patch": str(target), "patchSha256": hashlib.sha256(target.read_bytes()).hexdigest(), "source": str(broken),
+             "applied": applied.returncode == 0, "detected": False, "execution": None}
+    if applied.returncode != 0:
+        raise ValueError("break patch %d does not apply: %s" % (index, applied.stderr.decode(errors="replace").strip()))
+    if digest(inventory(broken)) == before:
+        raise ValueError("break patch %d changed nothing" % index)
+    prepared = inventory(prepared_root)
+    names = set(files) | {name for name in inventory(broken) if name not in prepared}
+    broken_files = {name: read_file(broken, name) for name in sorted(names) if (broken / name).exists() or (broken / name).is_symlink()}
+    broken_manifest = run / (label + "-manifest.json")
+    broken_manifest.write_text(json.dumps(manifest(broken_files), indent=2) + "\n")
+    entry["manifest"] = str(broken_manifest)
+    report["breaks"].append(entry)
+    entry["execution"] = execute(proof, label, broken, broken_manifest)
+    check_execution(entry["execution"], label)
+    entry["detected"] = entry["execution"]["exitCode"] != 0
+    return entry["detected"]
 
 
 def preserved_script(path, label):
@@ -226,10 +264,22 @@ try:
     if snapshot_changed or checkout_changed:
         raise ValueError("source changed during execution; recapture and rerun")
     exit_code = report["proof"]["exitCode"]
+    report["coverage"] = coverage_line(report["proof"])
     report["status"] = "passed" if exit_code == 0 else "failed"
     if exit_code < 0:
         exit_code = 128 - exit_code
+    if exit_code == 0 and args.breaks:
+        # A pass counts only once the same proof is seen failing on code that breaks the fact.
+        missed = [index for index, patch in enumerate(args.breaks, 1) if not challenge(index, patch, source_root, files)]
+        if digest(inventory(source_root)) != prepared_digest:
+            raise ValueError("reviewed snapshot changed during the break runs; recapture and rerun")
+        report["challenge"] = "missed" if missed else "detected"
+        if missed:
+            report["status"] = "unproven"
+            report["reason"] = "proof passed on break %s; it cannot tell this code from the broken copy" % ", ".join(map(str, missed))
+            exit_code = 3
 except (OSError, ValueError, subprocess.SubprocessError) as error:
+    report["status"] = "unproven"
     report["reason"] = str(error)
     exit_code = 3
 finally:

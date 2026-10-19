@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.44.0
+
+- Augur counts a proof at the "ran it" level only after the same proof fails on a break, a patch that makes the fact false. `prove.sh --break <patch>` runs the proof again on a copy of the prepared snapshot with the patch applied and its own manifest, and reports `challenge: detected`, `missed`, or `not-run`. A proof that passes on its break is unproven. Proofs end with a `coverage:` line that names the domain they swept and how many cases reached the branch in question, and the report carries it beside the rung.
+- Scan gains Stage 5c. After validation, it runs the real code for at most two primary P0 or P1 findings, or residual risks that would be one, whose evidence is only static. A failing proof confirms the finding; a pass that caught its break moves it to Dismissed with the proof. Scan carries its own copies of the proof reference and helper, so it needs nothing else installed.
+
 ## 0.43.17
 
 - The `effectiveness-pilot-1` gate record is filled in. Frankie authorized the frozen matrix bounds of 72 parent slots, 35,640 parent seconds and 540 children, and recorded the human-effort cohort as unavailable because no other people will review, so reviewer-effort metrics stay unmeasured. `pilot.py --check` now reports no blockers. Nothing has been prepared or run.

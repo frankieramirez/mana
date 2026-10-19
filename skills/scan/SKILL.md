@@ -40,7 +40,7 @@ Follow these boundaries in order. References supply detail but never change the 
 3. Resolve the ticket the change claims to finish and turn it into a requirements block (Stage 2c). No ticket is a normal outcome, never a question.
 4. Select the risk-driven reviewer roster and discover applicable standards paths (Stage 3).
 5. Read `references/subagent-template.md`, `references/diff-scope.md`, `references/findings-schema.json`, the selected persona files, and `references/peer-review.md` when a peer was requested, then dispatch the roster in capacity-sized batches and collect every reviewer before synthesis (Stage 4).
-6. Read `references/finish-review.md` and follow it to merge, validate, and render the report (Stage 5). Never synthesize directly from raw reviewer artifacts.
+6. Read `references/finish-review.md` and follow it to merge, validate, and render the report (Stage 5). Between validation and the report, read `references/prove-findings.md` and run the real code for at most two blocking findings that reading alone left as claims (Stage 5c). Never synthesize directly from raw reviewer artifacts.
 7. Resolve the authorized action from the request and conversation, then do it (Stage 6). Ask once only when the next action remains undecided.
 
 ## Operating principles
@@ -113,6 +113,10 @@ Read `references/dispatch.md`. Create the run directory, preserve the harvest, a
 
 Once every reviewer has returned, read `references/finish-review.md` in full and follow it. It opens with the late harvest, the second read of the PR that catches feedback posted while the reviewers ran. Then it runs the merge script, keeps the judgment steps for you, dispatches the validator from `references/validator.md`, and renders the report with `references/report-example.md` as the model. Do not improvise a shorter synthesis path.
 
+## Stage 5c: Prove what reading could not
+
+After the validator's verdicts are applied, read `references/prove-findings.md`. When a primary P0 or P1, or a residual risk that would be one, rests only on static evidence and a two-minute run of the reviewed code can settle it, write a proof and a break and run them through `scripts/prove.sh` in an isolated snapshot. A failing proof confirms the finding; a pass that also caught its break refutes it into Dismissed. Run at most two, yourself, never in the user's checkout. Skip the stage when the request limited the review to reading code.
+
 ## Stage 6: Choose what happens next
 
 Resolve the action from explicit tokens and the user's request, including earlier authorization that covers the current repository and target. Stay within the actions that permission allows. Permission limited to another target does not transfer; broad explicit permission continues to cover its stated targets without renewed approval. Natural language can select the same action without its token. `mode:agent` keeps its JSON-only contract; its caller owns any later action. A conflicting token and request needs clarification before acting.
@@ -150,5 +154,8 @@ The report is already delivered at this point, so the question is about action, 
 | `references/peer-review.md` | Stage 4, only with a peer | Routes, family rule, disclosure, the two peer files, outcomes |
 | `references/finish-review.md` | Stage 5 | The late harvest, merge, validate, render, the `mode:agent` contract, and the three Stage 6 action modes |
 | `references/validator.md` | Stage 5b | The validator batch template |
+| `references/prove-findings.md` | Stage 5c | Which findings get a run, and how each outcome changes them |
+| `references/proof.md` | Stage 5c | How to write the proof, its break, and its coverage line |
+| `scripts/prove.sh` | Stage 5c | Runs a proof and its break in an isolated snapshot of the reviewed source |
 | `references/report-example.md` | Stage 6 render | One good report and one bad one |
 | `references/voice.md` | Stage 6, comment mode | How to write PR comments as the user, not as an agent |
