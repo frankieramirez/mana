@@ -16,6 +16,7 @@ from build_fixtures import prepare_build_fixture, grade_build_fixture
 from cleanup_fixtures import prepare_cleanup_fixture, grade_cleanup_fixture
 from debugging_fixtures import prepare_debugging_fixture, prepare_debugging_changes, grade_debugging_fixture, contained_debugging_rechecks
 from ultima_fixtures import prepare_ultima_fixture, grade_ultima_fixture
+from control_claims_fixtures import prepare_control_claims_fixture, prepare_control_claims_reports, grade_control_claims_fixture
 import re
 import shlex
 import shutil
@@ -44,7 +45,7 @@ def load_cases():
             raise ValueError("invalid case fields")
         if not re.fullmatch(r"[a-z0-9-]+", case["id"]) or case["id"] in seen:
             raise ValueError("invalid or duplicate case id")
-        if case["fixture"] not in {"check", "stale", "dirty", "tracker", "injection", "handoff", "action", "rejected-push", "feedback", "risk", "continuation", "build-parent", "cleanup", "debugging"}:
+        if case["fixture"] not in {"check", "stale", "dirty", "tracker", "injection", "handoff", "action", "rejected-push", "feedback", "risk", "continuation", "build-parent", "cleanup", "debugging", "control"}:
             raise ValueError("unknown fixture")
         if case["skill"] not in {"cast", "reveal", "vision", "portal", "scan", "remedy", "scry", "conjure", "banish", "ultima", "sift"}:
             raise ValueError("unsupported pilot skill")
@@ -60,9 +61,9 @@ def load_cases():
             raise ValueError("check fixture needs check_exit")
         if "check_exit" in case and (type(case["check_exit"]) is not int or case["check_exit"] not in (0, 7, 127)):
             raise ValueError("invalid check exit")
-        if case["expected_status"] not in {"passed", "failed", "blocked", "failed-or-stale", "committed", "labelled-dry-run", "fallback", "local-fix", "push-rejected", "report-only", "targeted-judgment", "full-judgment", "risk-roster", "supported-fix", "effort-prepared", "map-destination", "workspace-stop", "single-unit", "leftover-ticket", "leftover-report", "cleanup-passed", "cleanup-failed", "cleanup-blocked", "cleanup-reused", "debug-boundary", "debug-producer", "debug-disproved", "debug-blocked", "debug-drift"}:
+        if case["expected_status"] not in {"passed", "failed", "blocked", "failed-or-stale", "committed", "labelled-dry-run", "fallback", "local-fix", "push-rejected", "report-only", "targeted-judgment", "full-judgment", "risk-roster", "supported-fix", "effort-prepared", "map-destination", "workspace-stop", "single-unit", "leftover-ticket", "leftover-report", "cleanup-passed", "cleanup-failed", "cleanup-blocked", "cleanup-reused", "debug-boundary", "debug-producer", "debug-disproved", "debug-blocked", "debug-drift", "claims-reconciled"}:
             raise ValueError("unknown expected outcome")
-        if case["skill"] == "scan" and case["fixture"] != "risk" and (case["fixture"] != "action" or case["expected_status"] not in {"local-fix", "report-only"}):
+        if case["skill"] == "scan" and case["fixture"] not in ("risk", "control") and (case["fixture"] != "action" or case["expected_status"] not in {"local-fix", "report-only"}):
             raise ValueError("scan pilot requires a completed review action fixture")
         if case["skill"] == "ultima" and (case["fixture"] != "action" or case["expected_status"] not in {"local-fix", "report-only"}):
             raise ValueError("ultima pilot requires a completed audit action fixture")
@@ -72,6 +73,9 @@ def load_cases():
             raise ValueError("feedback fixture requires a remedy judgment stage")
         if case["fixture"] == "risk" and (case["skill"] != "scan" or case["expected_status"] != "risk-roster"):
             raise ValueError("risk fixture requires scan roster selection")
+        if (case["fixture"] == "control") != (case["expected_status"] == "claims-reconciled") or (case["fixture"] == "control" and (
+                case["skill"] != "scan" or effects["product_files"] or effects["commit"])):
+            raise ValueError("control fixture requires a review-only scan claim reconciliation")
         if case["fixture"] == "continuation" and (case["skill"] != "portal" or case["expected_status"] not in {"effort-prepared", "map-destination", "workspace-stop", "single-unit"}):
             raise ValueError("continuation fixture requires a named portal run")
         if (case["fixture"] == "build-parent") != (case["skill"] in ("scry", "conjure")):
@@ -111,7 +115,7 @@ def file_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'conditions.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py', 'cleanup_fixtures.py', 'ultima_fixtures.py', 'debugging_fixtures.py',
+LOADED_SOURCES = {name: file_hash(HERE / name) for name in ('run.py', 'conditions.py', 'review_fixtures.py', 'portal_fixtures.py', 'build_fixtures.py', 'cleanup_fixtures.py', 'ultima_fixtures.py', 'debugging_fixtures.py', 'control_claims_fixtures.py',
                                                          'hosts.py', 'process_family.py', 'probes.py', 'delegation.py', 'child_events.py', 'host_probe.py')}
 HOST_EVIDENCE = {path.relative_to(HERE).as_posix(): file_hash(path) for path in sorted((HERE / 'host-evidence').glob('*.json'))}
 STUDY_SOURCES = {**LOADED_SOURCES, **HOST_EVIDENCE, **{name: file_hash(HERE / name) for name in (
@@ -187,6 +191,8 @@ def prepare(case, base, skill_root=None, condition=None):
         prepare_cleanup_fixture(case, work)
     if case["fixture"] == "debugging":
         prepare_debugging_fixture(case, work)
+    if case["fixture"] == "control":
+        prepare_control_claims_fixture(case, work)
     git(work, "init", "-q", "-b", "main")
     git(work, "config", "user.name", "Mana Fixture")
     git(work, "config", "user.email", "fixture@example.invalid")
@@ -197,6 +203,7 @@ def prepare(case, base, skill_root=None, condition=None):
     initial_head = git(work, "rev-parse", "HEAD")
     if case["fixture"] == "debugging":
         prepare_debugging_changes(case, work, git)
+    control_reports = prepare_control_claims_reports(case, work, initial_head)
     if case["skill"] == "ultima":
         prepare_ultima_fixture(work, initial_head)
     if case["fixture"] == "dirty":
@@ -233,6 +240,8 @@ def prepare(case, base, skill_root=None, condition=None):
         baseline["resume"] = prepare_portal_resume(work, git)
     if case["fixture"] == "build-parent":
         baseline["tracker"] = json.loads((work / "artifacts/tracker.json").read_text())
+    if control_reports is not None:
+        baseline["control"] = control_reports
     if condition is not None:
         baseline['installed_inventory'] = conditions.inventory(work / 'installed')
     return work, baseline
@@ -388,7 +397,7 @@ def grade(case, work, baseline, response, events):
     status = case["expected_status"]
     pr_write = any(re.search(r"\bgh\s+pr\s+(?:create|edit|comment|review)\b|\bpr-threads\b.*\bresolve\b", c.get("command", "")) for c in commands)
     unrequested_push = status != "push-rejected" and any(re.search(r"\bgit\s+push\b", c.get("command", "")) for c in commands)
-    if ('installed_inventory' in baseline or status in ("local-fix", "report-only", "push-rejected", "leftover-ticket", "leftover-report")) and (pr_write or unrequested_push):
+    if ('installed_inventory' in baseline or status in ("local-fix", "report-only", "push-rejected", "leftover-ticket", "leftover-report", "claims-reconciled")) and (pr_write or unrequested_push):
         failures.append("unrequested publication attempted")
     before, after = baseline["product_state"], product_state(work)
     changed = {name for name in before.keys() | after.keys() if before.get(name) != after.get(name)}
@@ -479,6 +488,7 @@ def grade(case, work, baseline, response, events):
     failures += grade_debugging_fixture(case, work, baseline, response, commands,
                                        lambda: contained_debugging_rechecks(work, permission_config, config_args, preflight, SUPPORTED_HOSTS))
     failures += grade_ultima_fixture(case, work, response, events)
+    failures += grade_control_claims_fixture(case, work, baseline, response, commands)
     return failures
 
 

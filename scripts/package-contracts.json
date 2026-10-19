@@ -348,7 +348,8 @@
         "scripts/review.sh",
         "scripts/tickets.sh",
         "references/control-evidence.md",
-        "scripts/conform.sh"
+        "scripts/conform.sh",
+        "references/control-claims.md"
       ],
       "smoke": [
         {
@@ -456,7 +457,9 @@
         "scripts/tickets.sh",
         "references/debugging.md",
         "references/control-evidence.md",
-        "scripts/conform.sh"
+        "scripts/conform.sh",
+        "references/control-triage.md",
+        "scripts/candidates.sh"
       ],
       "smoke": [
         {
@@ -468,6 +471,13 @@
         },
         {
           "script": "scripts/conform.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/candidates.sh",
           "args": [
             "--help"
           ],

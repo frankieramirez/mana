@@ -22,6 +22,14 @@
 #       DIR/havoc-demon-hunter-peer.json. --check only verifies the CLI and the family rule
 #       and prints the disclosure line. Exit 0 usable, 2 could not start, 3 no usable output.
 #
+#   claims --requirements FILE --evidence FILE [--evidence FILE ...] [--out FILE]
+#       Reconcile each requirement with what `conform.sh evidence` read from the control
+#       reports, its criteria keyed by requirement id. A contradicted claim makes the requirement
+#       unmet, whatever reading or a rendered artifact said. A supported claim lets cannot_tell
+#       become met. An unverified claim (stale, unknown, rejected, uncovered) never counts as
+#       verification: a `met` resting on it without a file:line becomes cannot_tell. Reads files
+#       only and runs nothing. Prints the requirements with a `control` record on each.
+#
 # Exit 4 from signals or merge means python3 is missing: follow the manual path in
 # references/finish-review.md instead. Everything here is python3 standard library inside
 # bash; there is no jq, no node, no pip package.
@@ -957,12 +965,114 @@ sys.exit(0)
 PY
 }
 
+# ---------------------------------------------------------------- claims
+
+cmd_claims() {
+  need_python
+  local requirements="" out="" evidence=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --requirements) requirements="${2:-}"; shift 2 ;;
+      --evidence) evidence+=("${2:-}"); shift 2 ;;
+      --out) out="${2:-}"; shift 2 ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "claims: unknown argument $1" ;;
+    esac
+  done
+  [ -n "$requirements" ] || die "claims: --requirements is required"
+  [ "${#evidence[@]}" -gt 0 ] || die "claims: at least one --evidence is required"
+  REVIEW_OUT="$out" python3 - "$requirements" "${evidence[@]}" <<'PY'
+import json, os, re, sys
+
+def load(path, what):
+    try:
+        with open(path) as fh:
+            return json.load(fh)
+    except (OSError, ValueError) as exc:
+        sys.exit("review.sh: claims: cannot read %s %s: %s" % (what, path, exc))
+
+reqs = load(sys.argv[1], "requirements")
+if isinstance(reqs, dict):
+    reqs = reqs.get("requirements")
+if not isinstance(reqs, list) or not all(isinstance(r, dict) and isinstance(r.get("id"), str) for r in reqs):
+    sys.exit("review.sh: claims: requirements must be a list of objects with an id")
+
+readings = {}
+for path in sys.argv[2:]:
+    doc = load(path, "evidence")
+    if not isinstance(doc, dict) or doc.get("mode") != "evidence" or not isinstance(doc.get("criteria"), list):
+        sys.exit("review.sh: claims: %s is not conform.sh evidence output" % path)
+    report = doc.get("report") or {}
+    identity = doc.get("identity") or {}
+    for c in doc["criteria"]:
+        readings.setdefault(c.get("id"), []).append({
+            "claim": c.get("claim"), "status": c.get("status"), "relevance": c.get("relevance"),
+            "reason": c.get("reason"), "scenarios": [s.get("id") for s in c.get("scenarios") or []],
+            "runId": report.get("runId"), "report": report.get("file"), "reportValid": report.get("valid"),
+            "reportHead": identity.get("reported", {}).get("head") if isinstance(identity.get("reported"), dict) else None,
+            "reviewedHead": identity.get("reviewed", {}).get("head") if isinstance(identity.get("reviewed"), dict) else None,
+            "changed": identity.get("changed") or []})
+
+def why(r):
+    if not r["scenarios"]:
+        return r["reason"] or "no scenario covers this requirement"
+    if r["claim"] == "unverified" and r["relevance"] in ("stale", "unknown"):
+        extra = " (%s changed)" % ", ".join(r["changed"]) if r["changed"] else ""
+        return "report %s is %s%s; it supports no current claim" % (r["runId"] or "?", r["relevance"], extra)
+    return r["reason"] or "no reason recorded"
+
+LINE = re.compile(r"[\w./-]+:\d+")
+counts = {"supported": 0, "contradicted": 0, "unverified": 0, "uncovered": 0}
+changed = []
+for req in reqs:
+    found = readings.pop(req["id"], [])
+    if not found:
+        req.setdefault("control", None)
+        continue
+    covered = [r for r in found if r["scenarios"]]
+    pick = next((r for r in covered if r["claim"] == "contradicted"), None) \
+        or next((r for r in covered if r["claim"] == "supported"), None) \
+        or next((r for r in covered if r["relevance"] in ("stale", "unknown")), None) \
+        or (covered or found)[0]
+    claim = pick["claim"] if pick["claim"] in ("supported", "contradicted") else "unverified"
+    counts[claim] += 1
+    if not covered:
+        counts["uncovered"] += 1
+    req["control"] = {"claim": claim, "status": pick["status"], "relevance": pick["relevance"],
+                      "reason": why(pick), "runId": pick["runId"], "report": pick["report"],
+                      "scenarios": pick["scenarios"], "reportHead": pick["reportHead"],
+                      "reviewedHead": pick["reviewedHead"]}
+    before = req.get("status")
+    run = "control run %s" % (pick["runId"] or "?")
+    if claim == "contradicted" and before != "unmet":
+        req["status"] = "unmet"
+        req["evidence"] = "%s failed %s: %s" % (run, ", ".join(pick["scenarios"]), pick["reason"])
+    elif claim == "supported" and before in (None, "", "cannot_tell"):
+        req["status"] = "met"
+        req["evidence"] = "%s passed %s at %s" % (run, ", ".join(pick["scenarios"]), pick["reportHead"] or "the reviewed state")
+    elif claim == "unverified" and before == "met" and not LINE.search(str(req.get("evidence") or "")):
+        req["status"] = "cannot_tell"
+        req["evidence"] = why(pick)
+    if req.get("status") != before:
+        changed.append({"id": req["id"], "from": before, "to": req["status"], "claim": claim})
+
+out = {"requirements": reqs, "changed": changed, "counts": counts,
+       "unmatched": sorted(k for k in readings if k is not None)}
+text = json.dumps(out, indent=1) + "\n"
+if os.environ.get("REVIEW_OUT"):
+    with open(os.environ["REVIEW_OUT"], "w") as fh:
+        fh.write(text)
+sys.stdout.write(text)
+PY
+}
+
 # ---------------------------------------------------------------- dispatch
 
 case "${1:-}" in
   signals) shift; cmd_signals "$@" ;;
   merge) shift; cmd_merge "$@" ;;
   peer) shift; cmd_peer "$@" ;;
+  claims) shift; cmd_claims "$@" ;;
   -h|--help|"") usage; [ -n "${1:-}" ] && exit 0 || exit 1 ;;
   *) die "unknown subcommand $1" ;;
 esac
