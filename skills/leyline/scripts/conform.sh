@@ -23,6 +23,20 @@
 #       it refuses without --trust. Removes only the worktree it created. Exit 0 when every
 #       probe passes, 1 when one fails, 3 when a probe is blocked and none failed.
 #
+#   evidence [--repo REPO] [--report FILE [--exit N]] [--criteria FILE] [--head SHA]
+#            [--digest SHA256] [--scope static|local]
+#       Read files and the repo's HEAD only; run no control command. Find the Control: pointer
+#       (present, absent, or broken), validate the report as `report` does, compare its source
+#       identity with the reviewed checkout, and give each criterion its own outcome in the
+#       capture vocabulary (passed, failed, blocked, unrun) with a claim of supported,
+#       contradicted, or unverified. --criteria is a JSON object mapping each criterion to the
+#       scenario ids that cover it; without it every scenario in the report is its own
+#       criterion. --head defaults to the repo's HEAD. --digest is the checked-byte digest of the
+#       reviewed state when a fresh report supplied it; without it the report's checked-file
+#       list is rehashed in REPO. --scope says whether control commands may run (default
+#       static). Exit 0 when every criterion is supported, 1 when the report is rejected or a
+#       current check failed, 3 otherwise.
+#
 # Exit 2 is a usage error and exit 4 means python3 is missing. Everything here is python3
 # standard library inside bash; there is no jq, no node, no pip package.
 
@@ -638,6 +652,203 @@ def probe_all(root, feature, timeout, keep, out, doc, probe):
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+CAPTURE = {"passed": "passed", "failed": "failed", "blocked": "blocked", "unavailable": "blocked",
+           "timed_out": "unrun", "cancelled": "unrun", "skipped": "unrun", "not_run": "unrun"}
+
+
+def discover_control(root):
+    """Read the Control: pointer without running anything: present, absent, or broken."""
+    findings = Findings()
+    control = resolve_control(root, findings)
+    has_line = False
+    if control["agentFile"]:
+        block = agent_block(read_text(os.path.join(root, control["agentFile"])) or "") or ""
+        has_line = re.search(r"^Control:", block, re.M) is not None
+    problems = [f["message"] for f in findings.errors]
+    state = "absent" if not has_line else "broken" if problems else "present"
+    return {"state": state, "agentFile": control["agentFile"], "skill": control["skill"],
+            "command": control["keys"].get("Command"), "detail": "; ".join(problems) or None}
+
+
+def reviewed_head(root):
+    try:
+        out = subprocess.run(["git", "-C", root, "rev-parse", "--verify", "HEAD"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return (out.stdout.strip() or None) if out.returncode == 0 else None
+
+
+def checked_files(manifest):
+    """The report's list of checked files, inline or in the artifact it names, or None."""
+    files = manifest.get("files")
+    if not isinstance(files, list) and isinstance(manifest.get("artifact"), str):
+        text = read_text(manifest["artifact"])
+        try:
+            files = json.loads(text) if text is not None else None
+        except ValueError:
+            files = None
+    if not isinstance(files, list) or not files:
+        return None
+    if not all(isinstance(f, dict) and isinstance(f.get("path"), str) and isinstance(f.get("digest"), str) for f in files):
+        return None
+    return files
+
+
+def judge_identity(report, root, head, digest):
+    identity = report["source"]["identity"]
+    manifest = identity.get("manifest") or {}
+    out = {"relevance": "unknown", "reported": {"head": identity.get("head"), "digest": manifest.get("digest")},
+           "reviewed": {"head": head, "digest": digest}, "changed": [], "detail": None}
+    if report["source"].get("sourceChanged"):
+        out["detail"] = "the checkout changed during the run, so its observations bind to no single source state"
+        return out
+    if head is None and identity.get("head") is not None:
+        out["detail"] = "the reviewed revision is unknown, so it cannot be matched with the report's"
+        return out
+    if head != identity.get("head"):
+        out["relevance"], out["detail"] = "stale", f"the report checked {identity.get('head')} but the reviewed state is {head}"
+        return out
+    if digest is not None:
+        same = digest == manifest.get("digest")
+        out["relevance"] = "current" if same else "stale"
+        out["detail"] = "the reviewed digest matches the checked bytes" if same else "the reviewed digest differs from the checked bytes"
+        return out
+    files = checked_files(manifest)
+    if files is None:
+        out["detail"] = "same HEAD alone does not establish identity: the report lists no checked files and no reviewed digest was given"
+        return out
+    listed = hashlib.sha256(json.dumps(files, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+    if listed != manifest.get("digest"):
+        out["detail"] = "the checked-file list does not hash to the reported digest"
+        return out
+    for item in files:
+        full = inside(root, item["path"])
+        if not full or not os.path.isfile(full):
+            out["changed"].append(item["path"])
+            continue
+        with open(full, "rb") as fh:
+            same = hashlib.sha256(fh.read()).hexdigest() == item["digest"]
+        if not same or (isinstance(item.get("mode"), int) and os.stat(full).st_mode & 0o777 != item["mode"]):
+            out["changed"].append(item["path"])
+    if out["changed"]:
+        out["relevance"] = "stale"
+        out["detail"] = f"same HEAD, but {len(out['changed'])} checked file(s) differ in the reviewed checkout"
+    else:
+        out["relevance"], out["detail"] = "current", f"every one of {len(files)} checked files matches the reviewed checkout"
+    return out
+
+
+def scenario_outcome(sid, report, missing):
+    """One scenario's observed outcome in the capture vocabulary, from a report that passed validation."""
+    proving = report["status"] in ("passed", "failed")
+    seen = []
+    for check in report["checks"]:
+        expected, executed = check.get("expected") or [], check.get("executed") or []
+        if sid not in expected and sid not in executed:
+            continue
+        raw, label = check.get("status"), f"{check.get('id')}: {check.get('status')}, {check.get('reason')}"
+        if raw in ("passed", "failed") and sid not in executed:
+            state, label = "unrun", f"{check.get('id')}: expected but not executed ({check.get('reason')})"
+        elif raw == "failed":
+            named = check.get("failed") if isinstance(check.get("failed"), list) else executed
+            state = "failed" if sid in named else "passed"
+        elif raw in ("not_run", "skipped") and missing:
+            state = "blocked"
+        else:
+            state = CAPTURE[raw]
+        if state == "passed" and not proving:
+            state, label = "unrun", f"the run was {report['status']}, so its passing checks prove no behavior ({label})"
+        if state == "blocked" and missing:
+            label += f"; missing prerequisite: {', '.join(missing)}"
+        seen.append((state, label))
+    if not seen:
+        return "unrun", "no check in the report expected or executed this scenario"
+    for state in ("failed", "passed", "blocked", "unrun"):
+        for got, label in seen:
+            if got == state:
+                return state, label
+
+
+def interpret(root, report_path, process_exit, criteria_path, head, digest, scope):
+    doc = {"contract": CONTRACT, "mode": "evidence", "control": discover_control(root), "report": None,
+           "identity": None, "criteria": [], "currentPass": False}
+    report, valid = None, False
+    if report_path is not None:
+        text = read_text(report_path)
+        report = parse_document(text) if text is not None else None
+        findings = Findings()
+        if report is None:
+            findings.add("report.parse", f"{report_path} is not a JSON document")
+        else:
+            findings = check_report(report, process_exit)
+        valid = not findings.errors
+        doc["report"] = {"file": report_path, "valid": valid, "findings": findings.items,
+                         "runId": report.get("runId") if isinstance(report, dict) else None,
+                         "status": report.get("status") if isinstance(report, dict) else None,
+                         "exit": report.get("exit") if isinstance(report, dict) else None}
+    if valid:
+        doc["identity"] = judge_identity(report, root, head, digest)
+    if criteria_path is not None:
+        text = read_text(criteria_path)
+        try:
+            criteria = json.loads(text) if text is not None else None
+        except ValueError:
+            criteria = None
+        if not isinstance(criteria, dict) or not all(isinstance(v, list) and all(isinstance(s, str) for s in v) for v in criteria.values()):
+            usage_error(f"evidence: {criteria_path} must be a JSON object mapping each criterion to a list of scenario ids")
+    else:
+        ids = []
+        for check in (report.get("checks") if valid else None) or []:
+            for sid in (check.get("expected") or []) + (check.get("executed") or []):
+                if sid not in ids:
+                    ids.append(sid)
+        criteria = {sid: [sid] for sid in ids}
+    relevance = doc["identity"]["relevance"] if doc["identity"] else None
+    missing = [p["need"] for p in report["prerequisites"] if p.get("status") == "missing"] if valid else []
+    for name, sids in criteria.items():
+        scenarios = []
+        for sid in sids:
+            if report is None:
+                state, why = "unrun", "no control report was supplied"
+            elif not valid:
+                state, why = "unrun", "the report was rejected, so it establishes nothing"
+            else:
+                state, why = scenario_outcome(sid, report, missing)
+            scenarios.append({"id": sid, "status": state, "reason": why})
+        states = [s["status"] for s in scenarios]
+        status = next((s for s in ("failed", "blocked", "unrun") if s in states), "passed" if states else "unrun")
+        reason = next((s["reason"] for s in scenarios if s["status"] == status), "no scenario covers this criterion")
+        if relevance != "current" or not states:
+            claim = "unverified"
+        else:
+            claim = "contradicted" if status == "failed" else "supported" if status == "passed" else "unverified"
+        doc["criteria"].append({"id": name, "status": status, "relevance": relevance, "claim": claim,
+                                "reason": reason, "scenarios": scenarios})
+    doc["currentPass"] = bool(valid and relevance == "current" and report["status"] == "passed")
+    control = doc["control"]
+    execution = {"scope": scope, "authorized": False, "rerun": [], "guidance": None}
+    if control["state"] == "absent":
+        execution["guidance"] = "no project control was discovered; use the repo's existing guidance, tests and source inspection, and report no control check"
+    elif control["state"] == "broken":
+        execution["guidance"] = f"the control pointer is broken ({control['detail']}); name the gap and use supported existing checks"
+    if scope == "static":
+        execution["reason"] = "static-only scope: every control command, including list, describe and --plan, executes project code"
+    elif control["state"] == "present":
+        execution["authorized"] = True
+        execution["reason"] = "local-only scope: run on this machine; no push, tracker write, deployment or publication"
+        try:
+            prefix = shlex.split(control["command"])
+        except ValueError:
+            prefix = None
+        features = sorted({s["id"].rsplit(".", 1)[0] for c in doc["criteria"] if c["claim"] != "supported" for s in c["scenarios"] if "." in s["id"]})
+        if prefix:
+            execution["rerun"] = [prefix + ["feature", f, "--json"] for f in features]
+    else:
+        execution["reason"] = "local scope, but there is no usable control to run"
+    doc["execution"] = execution
+    return doc
+
+
 def main(argv):
     if not argv:
         usage_error("missing subcommand")
@@ -712,6 +923,34 @@ def main(argv):
         print(json.dumps(doc, indent=2))
         states = {p["status"] for p in doc["probes"]}
         return 1 if "failed" in states else 3 if "blocked" in states else 0
+    if sub == "evidence":
+        opts = {"--repo": ".", "--report": None, "--exit": None, "--criteria": None, "--head": None, "--digest": None, "--scope": "static"}
+        i = 0
+        while i < len(rest):
+            if rest[i] in opts and i + 1 < len(rest):
+                opts[rest[i]], i = rest[i + 1], i + 2
+            else:
+                usage_error(f"evidence: unexpected argument {rest[i]}")
+        if opts["--scope"] not in ("static", "local"):
+            usage_error("evidence: --scope is static or local")
+        process_exit = None
+        if opts["--exit"] is not None:
+            try:
+                process_exit = int(opts["--exit"])
+            except ValueError:
+                usage_error("evidence: --exit takes an integer")
+        root = os.path.realpath(opts["--repo"])
+        if not os.path.isdir(root):
+            usage_error(f"evidence: not a directory: {root}")
+        head = opts["--head"] if opts["--head"] is not None else reviewed_head(root)
+        doc = interpret(root, opts["--report"], process_exit, opts["--criteria"], head, opts["--digest"], opts["--scope"])
+        print(json.dumps(doc, indent=2))
+        if doc["report"] and not doc["report"]["valid"]:
+            return 1
+        claims = [c["claim"] for c in doc["criteria"]]
+        if "contradicted" in claims:
+            return 1
+        return 0 if claims and all(c == "supported" for c in claims) else 3
     usage_error(f"unknown subcommand {sub}")
 
 
@@ -720,7 +959,7 @@ PY
 }
 
 case "${1:-}" in
-  static|report|dynamic) run_python "$@" ;;
+  static|report|dynamic|evidence) run_python "$@" ;;
   -h|--help) usage; exit 0 ;;
   "") usage; exit 2 ;;
   *) die "unknown subcommand $1" ;;

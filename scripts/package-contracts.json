@@ -68,7 +68,9 @@
         "scripts/open-pr.sh",
         "scripts/text-frame.sh",
         "scripts/tickets.sh",
-        "references/debugging.md"
+        "references/debugging.md",
+        "references/control-evidence.md",
+        "scripts/conform.sh"
       ],
       "smoke": [
         {
@@ -87,6 +89,13 @@
         },
         {
           "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/conform.sh",
           "args": [
             "--help"
           ],
@@ -146,7 +155,8 @@
         "references/control-skill-template.md",
         "references/recipes/typescript-node.md",
         "references/recipes/briefing-map.example.json",
-        "references/recipes/control.ts.template"
+        "references/recipes/control.ts.template",
+        "references/control-evidence.md"
       ],
       "smoke": [
         {
@@ -335,7 +345,9 @@
         "references/voice.md",
         "scripts/prove.sh",
         "scripts/review.sh",
-        "scripts/tickets.sh"
+        "scripts/tickets.sh",
+        "references/control-evidence.md",
+        "scripts/conform.sh"
       ],
       "smoke": [
         {
@@ -354,6 +366,13 @@
         },
         {
           "script": "scripts/prove.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/conform.sh",
           "args": [
             "--help"
           ],
@@ -434,11 +453,20 @@
         "references/interrogate.md",
         "references/out-of-scope.md",
         "scripts/tickets.sh",
-        "references/debugging.md"
+        "references/debugging.md",
+        "references/control-evidence.md",
+        "scripts/conform.sh"
       ],
       "smoke": [
         {
           "script": "scripts/tickets.sh",
+          "args": [
+            "--help"
+          ],
+          "exit": 0
+        },
+        {
+          "script": "scripts/conform.sh",
           "args": [
             "--help"
           ],
