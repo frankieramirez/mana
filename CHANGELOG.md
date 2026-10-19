@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Sift uses a project control during triage. At Stage 2a it loads `references/control-triage.md` and runs `scripts/candidates.sh`, which reads files only: it reports the `Control:` pointer as present, absent or broken and the feature map as complete, incomplete or absent, matches the report against each feature's aliases, summary, reach and scenario steps, and flags a recorded route the source no longer mentions. Every candidate starts inferred. A static-only request runs no control command. Under local authority the plan names `list --search`, `describe` and at most one feature run for the top candidate, never one with no bound scenario or a tie, and the brief records each candidate as observed only from a valid, current report read through `conform.sh evidence`, with its run id, HEAD and matching record field. `evals/workflows/test_sift_control.py` grades synthetic triage attempts by the control's own invocation log, the final repository state and the response's claims.
+
 ## 0.44.1
 
 - Leyline adds `conform.sh evidence` and `references/control-evidence.md`, one reading of project-control evidence for every workflow. The reader runs no project code. It reports the `Control:` pointer as present, absent or broken, rejects malformed, zero-case and lying reports, and treats a report as current only when its HEAD matches and every checked file still hashes the same, so the same HEAD with edited checked bytes is stale. Each criterion gets its own capture status and a supported, contradicted or unverified claim: missing prerequisites are blocked, timed-out and cancelled checks stay unrun with their reasons, and a failed check survives an incomplete run. Under a static scope it offers nothing to run; under a local scope it names the control's `feature` command. Sift, Cast and Scan carry copies of the reference and reader, and `scripts/test_control_evidence.py` holds the synthetic fixtures.

@@ -104,6 +104,8 @@ Two checks against the codebase:
 - **Already built.** Search by domain concept. Report where you looked. A match is `wontfix` (already implemented) at step 2e.
 - **Already rejected.** Read `.out-of-scope/*.md` (see `references/out-of-scope.md`) and surface a resemblance.
 
+When the repo has a `Control:` line in its `## Agent skills` block or a directory of feature records, load `references/control-triage.md` now. Run its candidate search over the report's words and carry the candidates, their matching record fields and the map's state into 2b.
+
 ### 2b. Recommend
 
 Tell the maintainer the category and state you lean toward, with reasoning, plus a short codebase note. Include whether it is already implemented. Reuse a supplied category and state or authority to choose. Wait only for material choices still unresolved. Under `you-pick`, show the same recommendation and continue with it.
@@ -114,7 +116,7 @@ For an unexplained behavior defect, load `references/debugging.md` now and use i
 
 Before interrogation, check the claim. For a bug, reproduce from the reporter's steps. For a PR, confirm the diff does what it claims: look at the code, run the relevant tests. Report confirmed (with the code path), failed, or too little detail (`needs-info`).
 
-When the repo has a `Control:` line in its `## Agent skills` block, or the report cites a control run, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. Running a control command is project execution and follows the same authority as running tests.
+When the repo has a `Control:` line in its `## Agent skills` block, or the report cites a control run, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. Running a control command is project execution and follows the same authority as running tests. A static-only or read-only request runs none. Under local authority, run only the commands the candidate search planned, then record each candidate as observed or inferred as `references/control-triage.md` says.
 
 ### 2d. Interrogate a thin request
 
@@ -164,7 +166,7 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 
 ## Scripts
 
-`scripts/tickets.sh` reads and writes tickets on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). It lists, views, creates, labels, comments, closes, wires blocking edges, finds the next unclaimed ready ticket, and claims one. Exit 3 means the token cannot write. `tickets.sh -h` prints usage. `scripts/conform.sh evidence` reads a project-control report without running anything.
+`scripts/tickets.sh` reads and writes tickets on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). It lists, views, creates, labels, comments, closes, wires blocking edges, finds the next unclaimed ready ticket, and claims one. Exit 3 means the token cannot write. `tickets.sh -h` prints usage. `scripts/conform.sh evidence` reads a project-control report without running anything. `scripts/candidates.sh` matches a report against the project's feature records and plans the control commands a local scope allows, without running any.
 
 ## References
 
@@ -175,3 +177,4 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 | `references/agent-brief.md` | Stage 2e, ready-for-agent or ready-for-human | Brief contract |
 | `references/out-of-scope.md` | Stage 2a and 2e, rejected enhancements | `.out-of-scope/` files |
 | `references/control-evidence.md` | Stage 2c, when a project control or control report exists | What a control report establishes, with `scripts/conform.sh evidence` |
+| `references/control-triage.md` | Stage 2a, when a `Control:` line or feature records exist | Candidate features from aliases and reach, scope, and observed versus inferred behavior in the brief |
