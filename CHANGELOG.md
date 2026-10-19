@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Cast verifies acceptance criteria through a project control. With a `Control:` line it loads the new `references/control-checks.md` in Stage 1 and maps each criterion to scenario ids before the first edit. In Stage 3, after the final relevant edit and when local runs are authorized, it runs `changed --base`, widens with `feature` runs wherever the selection missed a mapped criterion, and reads every report through `conform.sh evidence`. A mapped criterion is met only when a current executed report supports it, so a stale run or a partial selection keeps the ticket open with a `Refs` line, and the `Validation:` line still runs after the final edit. The report gains a criteria table with each criterion's evidence kind, check, checked state, status and claim. `evals/workflows/test_cast_control.py` drives synthetic sessions through real control, reader, validation and git commands, and `cast_control.py` grades the logged runs, the final repository and the report's claims.
+
 ## 0.44.1
 
 - Leyline adds `conform.sh evidence` and `references/control-evidence.md`, one reading of project-control evidence for every workflow. The reader runs no project code. It reports the `Control:` pointer as present, absent or broken, rejects malformed, zero-case and lying reports, and treats a report as current only when its HEAD matches and every checked file still hashes the same, so the same HEAD with edited checked bytes is stale. Each criterion gets its own capture status and a supported, contradicted or unverified claim: missing prerequisites are blocked, timed-out and cancelled checks stay unrun with their reasons, and a failed check survives an incomplete run. Under a static scope it offers nothing to run; under a local scope it names the control's `feature` command. Sift, Cast and Scan carry copies of the reference and reader, and `scripts/test_control_evidence.py` holds the synthetic fixtures.
