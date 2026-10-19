@@ -103,6 +103,22 @@
       "destinations": [
         "skills/scan/scripts/prove.sh"
       ]
+    },
+    {
+      "source": "skills/leyline/references/control-evidence.md",
+      "destinations": [
+        "skills/sift/references/control-evidence.md",
+        "skills/cast/references/control-evidence.md",
+        "skills/scan/references/control-evidence.md"
+      ]
+    },
+    {
+      "source": "skills/leyline/scripts/conform.sh",
+      "destinations": [
+        "skills/sift/scripts/conform.sh",
+        "skills/cast/scripts/conform.sh",
+        "skills/scan/scripts/conform.sh"
+      ]
     }
   ],
   "agents": [

@@ -114,6 +114,8 @@ For an unexplained behavior defect, load `references/debugging.md` now and use i
 
 Before interrogation, check the claim. For a bug, reproduce from the reporter's steps. For a PR, confirm the diff does what it claims: look at the code, run the relevant tests. Report confirmed (with the code path), failed, or too little detail (`needs-info`).
 
+When the repo has a `Control:` line in its `## Agent skills` block, or the report cites a control run, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. Running a control command is project execution and follows the same authority as running tests.
+
 ### 2d. Interrogate a thin request
 
 Load `references/interrogate.md`. Reuse supplied decisions, then ask about the remaining material gaps until the request is sharp enough to brief or to reject. Update `CONTEXT.md` when a term lands, using the same glossary habit as anywhere else: write the definition in the file when you have it.
@@ -162,7 +164,7 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 
 ## Scripts
 
-`scripts/tickets.sh` reads and writes tickets on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). It lists, views, creates, labels, comments, closes, wires blocking edges, finds the next unclaimed ready ticket, and claims one. Exit 3 means the token cannot write. `tickets.sh -h` prints usage.
+`scripts/tickets.sh` reads and writes tickets on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). It lists, views, creates, labels, comments, closes, wires blocking edges, finds the next unclaimed ready ticket, and claims one. Exit 3 means the token cannot write. `tickets.sh -h` prints usage. `scripts/conform.sh evidence` reads a project-control report without running anything.
 
 ## References
 
@@ -172,3 +174,4 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 | `references/debugging.md` | Stage 2c, unexplained behavior defect | Reproduction, discriminating experiments, and evidence limits |
 | `references/agent-brief.md` | Stage 2e, ready-for-agent or ready-for-human | Brief contract |
 | `references/out-of-scope.md` | Stage 2a and 2e, rejected enhancements | `.out-of-scope/` files |
+| `references/control-evidence.md` | Stage 2c, when a project control or control report exists | What a control report establishes, with `scripts/conform.sh evidence` |

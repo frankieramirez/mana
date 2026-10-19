@@ -113,6 +113,8 @@ Read `references/dispatch.md`. Create the run directory, preserve the harvest, a
 
 Once every reviewer has returned, read `references/finish-review.md` in full and follow it. It opens with the late harvest, the second read of the PR that catches feedback posted while the reviewers ran. Then it runs the merge script, keeps the judgment steps for you, dispatches the validator from `references/validator.md`, and renders the report with `references/report-example.md` as the model. Do not improvise a shorter synthesis path.
 
+When the repo has a `Control:` line in its `## Agent skills` block, or the PR or ticket cites a control run, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. A claim it leaves unverified stays unverified in the report.
+
 ## Stage 5c: Prove what reading could not
 
 After the validator's verdicts are applied, read `references/prove-findings.md`. When a primary P0 or P1, or a residual risk that would be one, rests only on static evidence and a two-minute run of the reviewed code can settle it, write a proof and a break and run them through `scripts/prove.sh` in an isolated snapshot. A failing proof confirms the finding; a pass that also caught its break refutes it into Dismissed. Run at most two, yourself, never in the user's checkout. Skip the stage when the request limited the review to reading code.
@@ -154,6 +156,8 @@ The report is already delivered at this point, so the question is about action, 
 | `references/peer-review.md` | Stage 4, only with a peer | Routes, family rule, disclosure, the two peer files, outcomes |
 | `references/finish-review.md` | Stage 5 | The late harvest, merge, validate, render, the `mode:agent` contract, and the three Stage 6 action modes |
 | `references/validator.md` | Stage 5b | The validator batch template |
+| `references/control-evidence.md` | Stage 5, when a project control or control report exists | Which control-report claims are supported, contradicted, or unverified |
+| `scripts/conform.sh` | Stage 5 | `evidence` reads a control report against the reviewed checkout without running anything |
 | `references/prove-findings.md` | Stage 5c | Which findings get a run, and how each outcome changes them |
 | `references/proof.md` | Stage 5c | How to write the proof, its break, and its coverage line |
 | `scripts/prove.sh` | Stage 5c | Runs a proof and its break in an isolated snapshot of the reviewed source |

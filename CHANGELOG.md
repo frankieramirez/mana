@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.1
+
+- Leyline adds `conform.sh evidence` and `references/control-evidence.md`, one reading of project-control evidence for every workflow. The reader runs no project code. It reports the `Control:` pointer as present, absent or broken, rejects malformed, zero-case and lying reports, and treats a report as current only when its HEAD matches and every checked file still hashes the same, so the same HEAD with edited checked bytes is stale. Each criterion gets its own capture status and a supported, contradicted or unverified claim: missing prerequisites are blocked, timed-out and cancelled checks stay unrun with their reasons, and a failed check survives an incomplete run. Under a static scope it offers nothing to run; under a local scope it names the control's `feature` command. Sift, Cast and Scan carry copies of the reference and reader, and `scripts/test_control_evidence.py` holds the synthetic fixtures.
+
 ## 0.44.0
 
 - Augur counts a proof at the "ran it" level only after the same proof fails on a break, a patch that makes the fact false. `prove.sh --break <patch>` runs the proof again on a copy of the prepared snapshot with the patch applied and its own manifest, and reports `challenge: detected`, `missed`, or `not-run`. A proof that passes on its break is unproven. Proofs end with a `coverage:` line that names the domain they swept and how many cases reached the branch in question, and the report carries it beside the rung.

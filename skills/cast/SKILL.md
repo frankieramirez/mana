@@ -160,6 +160,8 @@ Read `references/comment-cleanup.md` and follow it before the spec check. Its re
 
 Read `references/spec-check.md` and walk it against the diff and the ticket. If a criterion fails, fix it before committing. If a criterion cannot be met on this branch, stop and report it. Do not commit a partial that pretends to be the ticket.
 
+When the repo has a `Control:` line in its `## Agent skills` block, or a control report covers a criterion, load `references/control-evidence.md` and read every control report through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. Give each criterion its own status from that reading; a control pass never replaces the required validation.
+
 ## Stage 4: Commit
 
 At the start of the session, record `git status --porcelain` and the unstaged and staged diffs (`git diff`, `git diff --cached`). Stop when a file this session will edit already has unstaged or staged hunks.
@@ -259,7 +261,7 @@ Every row appears, in this order, even when the value is `none`. A cell holds on
 
 ## Scripts
 
-`scripts/tickets.sh` finds the next unclaimed ready ticket, claims it, and reads it, on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). Exit 3 means the token cannot write. `tickets.sh -h` prints usage. `scripts/open-pr.sh` opens or edits the pull request with `--attach`.
+`scripts/tickets.sh` finds the next unclaimed ready ticket, claims it, and reads it, on GitHub (`git` and `gh` only), Linear, or Jira (`python3` and the tracker's environment variables). Exit 3 means the token cannot write. `tickets.sh -h` prints usage. `scripts/open-pr.sh` opens or edits the pull request with `--attach`. `scripts/conform.sh evidence` reads a project-control report without running anything.
 
 ## References
 
@@ -271,6 +273,7 @@ Every row appears, in this order, even when the value is `none`. A cell holds on
 | `references/comment-cleanup.md` | Stage 2a, when this session changes code comments | Audit deletions and repair confusing code |
 | `references/comment-reaper.md` | Stage 2a, through comment cleanup | Scoped comment reviewer instructions |
 | `references/spec-check.md` | Stage 3 | Diff vs ticket before commit |
+| `references/control-evidence.md` | Stage 3, when a project control or control report exists | Per-criterion status from a control report, with `scripts/conform.sh evidence` |
 | `references/capture.md` | Stage 5 | Evidence kinds, check outcomes, and capture |
 | `references/body.md` | Stage 5 | Scannable PR body: trees and diffs |
 | `references/attach.md` | Stage 5 | Image paths, `--attach`, `open-pr.sh` |

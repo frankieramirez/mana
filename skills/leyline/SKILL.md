@@ -81,7 +81,7 @@ Read every finding and edit diff. Apply with `--apply <candidate.json>` when edi
 
 ## Stage 6: Report
 
-Lead with the actual state: inspected, candidate installed, statically conformant, or the observed challenge outcome. Name errors, missing prerequisites and unexecuted work. Link the source identity, raw reports, retained artifacts and installation ledger when present. State which feature/scenarios and environment the evidence covers. Local synthetic fixtures cannot establish a private consumer's browser readiness or a performance improvement.
+When a report stands as evidence for named criteria or a reviewed checkout, load [references/control-evidence.md](references/control-evidence.md) and read it through `bash "<SKILL_DIR>/scripts/conform.sh" evidence`. Lead with the actual state: inspected, candidate installed, statically conformant, or the observed challenge outcome. Name errors, missing prerequisites and unexecuted work. Link the source identity, raw reports, retained artifacts and installation ledger when present. State which feature/scenarios and environment the evidence covers. Local synthetic fixtures cannot establish a private consumer's browser readiness or a performance improvement.
 
 ## References
 
@@ -94,3 +94,4 @@ Lead with the actual state: inspected, candidate installed, statically conforman
 - [references/conformance.md](references/conformance.md): checker usage. Conformance.
 - [references/challenge.md](references/challenge.md): execution evidence and its limits. Challenge.
 - [references/refresh.md](references/refresh.md): drift, ownership and evidence reconciliation. Refresh.
+- [references/control-evidence.md](references/control-evidence.md): what a report establishes for each criterion against the reviewed checkout. Report.
