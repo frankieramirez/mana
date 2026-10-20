@@ -1,7 +1,7 @@
 # Skill discovery and host capability evaluation
 
 Decision: [Evaluate natural-language skill selection and host compatibility separately](https://github.com/frankieramirez/mana/issues/83), following the [workflow effectiveness protocol](effectiveness-evaluation.md).
-Status: matrix settled on 2026-10-17. The selection-only adapter, preregistered routes and activation probe exist and pass offline against the fake host ([issue 100](https://github.com/frankieramirez/mana/issues/100)); live discovery and capability runs unstarted.
+Status: matrix settled on 2026-10-17. The selection-only adapter, preregistered routes and activation probe exist and pass offline against the fake host ([issue 100](https://github.com/frankieramirez/mana/issues/100)); the [first bounded discovery pilot](../../evals/workflows/discovery-pilot-2026-10-20.md) stopped on 2026-10-20 after five of 24 allocated slots because collaboration events and spawn failures contradicted the no-child profile. Nineteen slots remain unrun; the group is incomplete and issue 101 stays open.
 
 ## Decision
 
@@ -77,6 +77,7 @@ The catalog can have several acceptable routes. Lock the allowed set before resu
 | Linux Codex CLI 0.163.0, comparative delegated execution | Second live `--probe-host` record on 2026-10-18, one model call: two children held `agents.max_threads=2` and the host refused the third spawn in the parent's rollout file | Accepted while the record is under 30 days old; the cap counts child threads only |
 | Delivery container for issue 99, Claude Code 2.1.302 | `claude --version` on 2026-10-17; Codex CLI absent | Installation only; no evaluator adapter, containment unexercised, no live probe run |
 | Linux Codex CLI 0.163.0, natural discovery | Live `--probe-discovery` record on 2026-10-18, one model call: the automatic canary was read directly from the installed catalog, with 0 outside loads. The explicit canary was read in the same command as a search hit | Accepted for discovery runs; `explicit_only_honored` stays unknown |
+| Linux Codex CLI 0.163.0, bounded discovery pilot | [2026-10-20 retained attempts](../../evals/workflows/discovery-pilot-2026-10-20.md): five parents, one timeout, failed spawns and empty collaboration waits despite disabled multi-agent flags | Incomplete; zero-child tool exposure and event attribution need revalidation before another group |
 | Any other Codex CLI version, natural discovery | No live activation probe | Unvalidated |
 | Claude Code, installed plugin | Manifests and optional host validator exist; prose outputs were supplied instructions in a separate experiment | No comparative discovery/host-control result established by these artifacts |
 | Cursor, Copilot or other skill hosts | Standalone package contract targets portability | Untested for this matrix; packaging does not establish runtime behavior |

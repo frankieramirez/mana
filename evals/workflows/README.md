@@ -126,6 +126,8 @@ python3 -B evals/workflows/run.py --discover --live --case dispel-positive --rou
 
 Each invocation is one serial parent with a 120-second limit, no children and no retries.
 
+The [2026-10-20 bounded pilot](discovery-pilot-2026-10-20.md) retains all 24 allocations. It stopped after five parent attempts, including one process timeout, on unexpected collaboration events and failed spawns under the no-child profile. Nineteen slots remain unrun. Its frozen manifest, original grades and raw archive are linked from the report; this incomplete group does not establish a discovery success rate.
+
 ## Results and regrading
 
 Runs go into a new ignored `evals/results/workflows-*` directory. Each case retains its request, skill payload hashes, starting repository state, host version, event stream, process result, structured response, final diff, and judgment. Recorded usage comes from the host's turn events. The host event stream may omit the resolved model identity; the report then records only the requested host default, without inventing a model name.
