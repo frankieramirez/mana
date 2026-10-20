@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.10
+
+- Deliberate shortcuts get a marker and a ledger. Cast writes `shortcut: <the limit>, <when to revisit>` as a one-line comment when it ships a shortcut with a known limit, and its report gains a Shortcuts row. The Comment Reaper keeps a marker under a new Shortcut marker clause and cites one that names no trigger as `Shortcut marker, no trigger`, which Cast completes and Banish reports open. Scan's reviewers and Ultima's lenses treat a marker that names its limit as a recorded decision, a finding only when evidence shows the load or use already crosses the limit. `/sift shortcuts` loads the new `references/shortcut-ledger.md`, lists every marker with its limit and trigger, tags the ones with no trigger, and on request files them as `needs-triage` issues through `tickets.sh`, skipping any marker `find` already matches.
+
 ## 0.44.9
 
 - Ultima adds an opt-in `lean` lens under Architecture that finds code the project could delete or merge: dead code, unused options and config, two helpers doing one job, a dependency the standard library, platform, or another installed package already covers, abstractions with one implementation, and near-copies that must change together. Before it calls anything unused it searches the whole tree, including tests, config, and string or dynamic references, and records the search in `verification`. Its remedies only delete or merge code. `lens:lean`, `category:all`, or a request to find bloat or what can be deleted adds it. The default roster is unchanged, and the Architecture tab counts the lens toward coverage only when it ran.

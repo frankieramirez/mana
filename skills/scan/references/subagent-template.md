@@ -116,6 +116,7 @@ Suppress these outright, at any anchor. They never go to a soft bucket.
 | Pre-existing bug the diff does not interact with | Not this change's defect. `pre_existing: true` is for exactly that case; if the diff makes a dormant bug reachable, that is a real diff-adjacent finding instead. |
 | Formatting and lint output | Semicolons, indentation, import order, unused-variable warnings. The toolchain owns those. |
 | Looks wrong, is intentional | A comment, commit message, PR body, or nearby code explains it. Read those before flagging. |
+| A `shortcut:` comment that names its limit | The author recorded the limit and when to revisit it. A finding only when the evidence shows the expected load or use already crosses that limit. |
 | Already handled upstream or elsewhere | A caller, guard, middleware, framework default, or parallel handler covers it. "Missing null check" with a guard one frame up. |
 | Restating what the code already does | "Extract a helper" for a small helper. "Add a guard" under an existing guard. |
 | "Consider adding ..." with no failure mode | If you cannot say what breaks, there is nothing to act on. Find the break or drop it. |

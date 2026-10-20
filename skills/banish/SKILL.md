@@ -45,7 +45,7 @@ If the report fails badly (application code edited, scope escaped, several bad f
 
 ### 3. Act on RESHAPE flags
 
-Each surviving `RESHAPE` names a symbol whose behavior needed a comment to be understood. Make the smallest authorized change inside the scope that makes the behavior obvious: rename, extract, narrow a type, add a guard, or delete a dead path. Where the fix needs code outside the scope, retain the explanation and report it open. Never bolt on a guard that hides the surprise instead of removing it.
+Each surviving `RESHAPE` names a symbol whose behavior needed a comment to be understood. Make the smallest authorized change inside the scope that makes the behavior obvious: rename, extract, narrow a type, add a guard, or delete a dead path. Where the fix needs code outside the scope, retain the explanation and report it open. A marker kept as `Shortcut marker, no trigger` goes under Open with the trigger it lacks, since only its author knows when to revisit it. Never bolt on a guard that hides the surprise instead of removing it.
 
 ### 4. Encode constraints instead of pleading
 

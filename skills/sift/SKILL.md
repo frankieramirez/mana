@@ -1,7 +1,7 @@
 ---
 name: sift
-description: "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, or /sift. Pass you-pick to triage without waiting for answers."
-argument-hint: "[blank to list what needs attention | issue id | issue URL | move ID to STATE] [you-pick]"
+description: "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, list the shortcuts or deferred limits marked in the code and file them as tickets, or /sift. Pass you-pick to triage without waiting for answers."
+argument-hint: "[blank to list what needs attention | issue id | issue URL | move ID to STATE | shortcuts] [you-pick]"
 disable-model-invocation: true
 ---
 
@@ -55,7 +55,7 @@ An unlabeled issue goes to `needs-triage` first. From there it moves to `needs-i
 
 Read `docs/agents/issue-tracker.md` when it exists. Its `Tracker:` line names the tracker and its `Adapter flags:` line gives the flags for the bundled script. Missing file: GitHub, no flags. Ticket ids are whatever the tracker uses (`42`, `ENG-42`, `PLAT-42`, a file path).
 
-Every read and write on the tracker is one of these operations: `list`, `view`, `label`, `comment`, `close`. When the host exposes a connector for that tracker (a Linear or Jira tool set the session can call), use it for them; it is already authenticated and needs no key. Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), `orca linear` is such a connector for Linear; `orca linear --help` lists its operations. Otherwise run `scripts/tickets.sh` with the adapter flags. GitHub always goes through the script. Never mix the two in one run, and never write a credential anywhere. For `local` or `other`, the tracker file's Conventions replace both; do by hand what it says, and report an operation it does not support instead of inventing one. Exit 3 from the script means the token cannot write; report what it would have done and stop.
+Every read and write on the tracker is one of these operations: `list`, `view`, `label`, `comment`, `close`, plus `find` and `create` for the shortcut ledger. When the host exposes a connector for that tracker (a Linear or Jira tool set the session can call), use it for them; it is already authenticated and needs no key. Inside an Orca worktree (`ORCA_WORKTREE_ID` is set and `command -v orca` succeeds), `orca linear` is such a connector for Linear; `orca linear --help` lists its operations. Otherwise run `scripts/tickets.sh` with the adapter flags. GitHub always goes through the script. Never mix the two in one run, and never write a credential anywhere. For `local` or `other`, the tracker file's Conventions replace both; do by hand what it says, and report an operation it does not support instead of inventing one. Exit 3 from the script means the token cannot write; report what it would have done and stop.
 
 `<SKILL_DIR>` is the absolute directory this SKILL.md lives in. Substitute the real path every time it appears. Do not assign it to a shell variable first: a sandboxed or worktree-isolated session refuses `bash "$VAR/script.sh"` because it cannot resolve the path to read the script. On a GitHub Enterprise host, pass `GH_HOST=<host>` inline on every call.
 
@@ -72,6 +72,7 @@ Natural language. Interpret and act.
 - no argument, or "show me what needs attention": Stage 1
 - an id or URL: Stage 2
 - "move #42 to ready-for-agent": Stage 3 (override)
+- `shortcuts`, or "list the shortcuts": Stage 4 (shortcut ledger)
 
 | Token | Effect |
 |-------|--------|
@@ -140,6 +141,10 @@ Load `references/agent-brief.md` before posting a brief.
 
 When the maintainer names the state, trust them. A state-only override requires exactly one valid category already on the issue (`bug` or `enhancement`, or the mapped strings from `docs/agents/triage-labels.md` when that file exists). If there is no category, or category labels conflict, ask for the missing choice unless the user already supplied or delegated it. Explain the label change and any comment or close, then act within the authorization already given. Skip interrogation. If the destination is `ready-for-agent` and there was no interrogation session, reuse an existing usable brief or authority to write one; ask only when that choice remains unresolved.
 
+## Stage 4: Shortcut ledger
+
+Load `references/shortcut-ledger.md`. List every `shortcut:` marker in the code with its limit and trigger, tag the ones that name no trigger, and offer to file them as `needs-triage` issues. Filed issues are sifted through Stage 1 like any other.
+
 ## Needs-info template
 
 ```markdown
@@ -178,3 +183,4 @@ If prior triage notes exist, read them. Check whether the reporter answered. Pre
 | `references/out-of-scope.md` | Stage 2a and 2e, rejected enhancements | `.out-of-scope/` files |
 | `references/control-evidence.md` | Stage 2c, when a project control or control report exists | What a control report establishes, with `scripts/conform.sh evidence` |
 | `references/control-triage.md` | Stage 2a, when a `Control:` line or feature records exist | Candidate features from aliases and reach, scope, and observed versus inferred behavior in the brief |
+| `references/shortcut-ledger.md` | Stage 4 | Collect `shortcut:` markers, list them, and file the chosen ones |

@@ -19,6 +19,7 @@ A comment survives when one of these clauses covers it. Read the surrounding cod
 | Style suppression | A lint suppression whose rule is style-only or pedantic. Suppressions of correctness or safety rules do not qualify. |
 | Constraint link | An issue, RFC, or ticket link that explains a constraint the code cannot express. |
 | Pending constraint | An internal invariant or intent whose replacement is absent, unverified, or outside scope. Keep the explanation until the caller verifies a replacement or establishes that the constraint is obsolete. |
+| Shortcut marker | A `shortcut: <the limit>, <when to revisit>` comment that records a deliberate shortcut and the signal to come back to it. A marker that names no trigger still stays: cite it as `Shortcut marker, no trigger` so the caller can repair it. |
 | Necessary suppression | A correctness, safety, or type suppression needed for an intentional negative test, a verified tool limitation, or an unresolved repair. Report the reason or the missing evidence. |
 
 Remove redundant narration, section banners, obsolete commented-out code, and change logs after checking that they carry no surviving constraint. Wording such as "IMPORTANT" or a missing issue link does not decide whether information is disposable.
