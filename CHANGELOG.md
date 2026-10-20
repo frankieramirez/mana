@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.9
+
+- Deliberate shortcuts get a marker and a ledger. Cast writes `shortcut: <the limit>, <when to revisit>` as a one-line comment when it ships a shortcut with a known limit, and its report gains a Shortcuts row. The Comment Reaper keeps a marker under a new Shortcut marker clause and cites one that names no trigger as `Shortcut marker, no trigger`, which Cast completes and Banish reports open. Scan's reviewers and Ultima's lenses treat a marker that names its limit as a recorded decision, a finding only when evidence shows the load or use already crosses the limit. `/sift shortcuts` loads the new `references/shortcut-ledger.md`, lists every marker with its limit and trigger, tags the ones with no trigger, and on request files them as `needs-triage` issues through `tickets.sh`, skipping any marker `find` already matches.
+
 ## 0.44.5
 
 - Cast looks for what already exists before writing new code. Stage 2 takes the first that does the job: code the repo already has, used the way its neighbours use it, then the standard library or a platform feature, then a dependency the project already installs. A new dependency needs work too large to write in a few lines.

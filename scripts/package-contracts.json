@@ -459,7 +459,8 @@
         "references/control-evidence.md",
         "scripts/conform.sh",
         "references/control-triage.md",
-        "scripts/candidates.sh"
+        "scripts/candidates.sh",
+        "references/shortcut-ledger.md"
       ],
       "smoke": [
         {

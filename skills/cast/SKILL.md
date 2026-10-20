@@ -150,7 +150,7 @@ Typecheck and run meaningful behavior tests around the files you touch as you go
 
 Stay inside the ticket's scope. Adjacent cleanup waits.
 
-Inside that scope, build the smallest shape that satisfies the ticket. Before writing new code, take the first of these that does the job: code this repo already has (a helper, component, or pattern, used the way its neighbours use it), then the standard library or a platform feature, then a dependency the project already installs. Add a dependency only for work too large to write in a few lines. When one plain line does the job, write one line. A helper earns its place when the same line appears a second time, and an interface, option, or registry when a second consumer exists in this diff or the codebase. Later is no reason on its own. The signal has to be present now.
+Inside that scope, build the smallest shape that satisfies the ticket. Before writing new code, take the first of these that does the job: code this repo already has (a helper, component, or pattern, used the way its neighbours use it), then the standard library or a platform feature, then a dependency the project already installs. Add a dependency only for work too large to write in a few lines. When one plain line does the job, write one line. A helper earns its place when the same line appears a second time, and an interface, option, or registry when a second consumer exists in this diff or the codebase. Later is no reason on its own. The signal has to be present now. When you deliberately ship a shortcut with a known limit, mark it with a one-line comment in the file's own syntax, `shortcut: <the limit>, <when to revisit>`, and list each marker in the report.
 
 ## Stage 2a: Comment cleanup
 
@@ -251,6 +251,7 @@ Write the result as markdown, not as a code block and not as plain indented line
 | **Mergeability** | clean \| conflicting: files and base \| unknown: reason \| skipped: no-pr |
 | **Evidence** | files and what they demonstrate, or none |
 | **Comment cleanup** | skipped: reason \| deleted count, repairs, and open items |
+| **Shortcuts** | none \| each marker added, as `file:line` and its limit |
 | **Validation** | command, checked state, outcome, and unverified claims |
 | **Orca** | linked \<id>, in-review \| not present \| failed: reason |
 | **Open** | any criterion left unmet, or none |
