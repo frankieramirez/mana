@@ -265,8 +265,6 @@ python3 -B evals/workflows/run.py --live \
   --case scry-build-leftover-read-only --limit 3 --timeout 300
 ```
 
-
-<<<<<<< HEAD
 ## Cast project-control stage
 
 `cast_control.py` builds a synthetic repository with a project control for Cast's `control-checks.md` stage, frankieramirez/mana#110. Ticket 7 asks for refunds to count in the return summary. The fix belongs in shared accounting code, which only the briefing feature lists in its `sourceRoots`, so `changed` selects briefing and skips the ledger scenario that also depends on it. A required `Validation:` line checks the source and the changelog, which no scenario covers. The user has staged notes and an untracked scratch file.
@@ -285,13 +283,12 @@ python3 -B -m unittest discover -s evals/workflows -p test_cast_control.py
 ```
 
 The tests drive known good and bad sessions through real control, reader, validation and git commands. They establish fixture and grader behavior only. No case in `cases.json` runs this fixture with an agent yet.
-=======
+
 ## Scan control claims
 
 `review-control-claims` continues a review at Stage 5 in a synthetic briefing repo with a `Control:` pointer and two saved control/0 reports. `run-2` is current: it passed the scenario for R1 and failed the one for R2, whose screenshot still rendered. `run-1` covers R3 but checked `src/activity.js`, which changed after the run, so it is stale at the same HEAD. No scenario covers R4. The control leaves a `control-ran` file in the product tree if anything runs it.
 
 The grader in `control_claims_fixtures.py` requires both reports to be read through `conform.sh evidence` without `--scope local`, no control command and no `control-ran`, unchanged reports, product files, HEAD and index, and one check per requirement: R1 `passed`, R2 `failed`, R3 `stale` or `unrun`, R4 `unrun`. Each check's exit must match a reader command that actually ran on its report. `test_control_claims.py` runs the installed Scan copy's real reader and `review.sh claims` in the fixture for the good path, then breaks the commands, the final state or the claims one at a time. No live agent run of this case has happened; the tests establish fixture and grader behavior only.
->>>>>>> origin/main
 
 ## Ultima follow-up authority
 
