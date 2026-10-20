@@ -84,6 +84,12 @@ class Group(unittest.TestCase):
         self.assertEqual({row['status'] for row in rows[1:]}, {'not_started'})
         self.assertEqual(len(rows), 24)
 
+    def test_a_host_that_exits_nonzero_stops_the_group(self):
+        _, completion, rows, host = self.group({'exit_code': 1}, 'exited')
+        self.assertIn('host failed or cancelled', completion['stop_reason'])
+        self.assertEqual(len(host.calls()), 1)
+        self.assertEqual({row['status'] for row in rows[1:]}, {'not_started'})
+
     def test_a_group_never_freezes_a_stale_or_dirty_checkout(self):
         host = FakeHost(self, {'response': RESPONSE})
         (self.root / 'notes.txt').write_text('uncommitted')
@@ -99,7 +105,7 @@ class Group(unittest.TestCase):
         git(other, 'push', '-q', 'origin', 'main')
         with host.environment(), self.assertRaisesRegex(ValueError, 'does not contain origin/main'):
             discovery_group.freeze(self.base / 'stale', host.executable, MODEL, root=self.root, evidence_dir=self.registry)
-        self.assertFalse((self.base / 'stale' / 'manifest.json').exists())
+        self.assertFalse((self.base / 'stale').exists())
         self.assertEqual(host.calls(), [])
 
     def test_a_group_refuses_an_unaccepted_host_and_a_second_run(self):

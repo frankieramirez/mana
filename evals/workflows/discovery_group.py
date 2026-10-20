@@ -68,11 +68,14 @@ def sources(root):
 def freeze(out, executable, model, reasoning='medium', root=ROOT, evidence_dir=None, fetch=True, authorization=None):
     """Write the manifest and the allocation before the first invocation. Refuses to replace an existing group."""
     out = Path(out).resolve()
-    out.mkdir(parents=True, exist_ok=False)
+    if out.exists():
+        raise ValueError('%s already exists; a new group needs a new directory' % out)
     executable = Path(executable).resolve()
     state = source_state(root, fetch=fetch)
     version = subprocess.check_output([str(executable), '--version'], text=True, timeout=20).strip()
     assessment = hosts.require(version, 'discovery', directory=evidence_dir)
+    # Only after the checks, so a refused freeze leaves nothing that blocks the retry.
+    out.mkdir(parents=True)
     data = discovery.load_cases(Path(root) / 'evals/workflows/discovery-cases.json')
     catalog = discovery.snapshot(Path(root) / 'skills')
     discovery.check_catalog(data, catalog)
@@ -110,7 +113,8 @@ def stop_reason(row, result):
         return 'slot %d: %s' % (row['slot'], '; '.join(result['failures']) or result['execution'])
     if result.get('judgment', {}).get('children') == 'created':
         return 'slot %d: a child thread was created, so the zero-child bound no longer holds' % row['slot']
-    if result.get('process_family', {}).get('outcome') in ('agent_failed', 'cancelled'):
+    family = result.get('process_family', {})
+    if family.get('outcome') == 'cancelled' or (family.get('outcome') == 'completed' and family.get('exit_code')):
         return 'slot %d: host failed or cancelled' % row['slot']
     return None
 
