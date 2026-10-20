@@ -25,6 +25,13 @@ except ImportError:
         if m and not m.group(2).startswith(('"', "'")) and ': ' in m.group(2):
             sys.exit(1)
 PY
+  # Claude Code reads disable-model-invocation; Codex reads only agents/openai.yaml. An explicit-only skill carries both.
+  policy="$dir/agents/openai.yaml"
+  if sed -n '2,20p' "$f" | grep -q '^disable-model-invocation:[[:space:]]*true'; then
+    grep -qx '  allow_implicit_invocation: false' "$policy" 2>/dev/null || err "$f is explicit-only but $policy does not set allow_implicit_invocation: false"
+  elif grep -qx '  allow_implicit_invocation: false' "$policy" 2>/dev/null; then
+    err "$policy hides $f from Codex but its frontmatter is not explicit-only"
+  fi
 done
 
 # 2. Agent paths in plugin.json exist and the generated agent matches its source.
