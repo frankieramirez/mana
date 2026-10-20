@@ -1,0 +1,17 @@
+{
+  "bytes": 18615279,
+  "excluded": [
+    "**/.git/**",
+    "**/home/**",
+    "**/__pycache__/**",
+    "symlinks"
+  ],
+  "files": 6105,
+  "original_indexed_files_verified": 7073,
+  "parent_invocations_added_for_publication": 0,
+  "path": "evals/workflows/evidence/discovery-group-2026-10-20.json.gz",
+  "result_records_unchanged": true,
+  "sha256": "b1c1bbedef0a3aaac3a8f25dd33bafefb22e4076917edbdfed34c658ae14a607",
+  "source_run": "discovery-group-2026-10-20-issue-101",
+  "verified_files": 6105
+}

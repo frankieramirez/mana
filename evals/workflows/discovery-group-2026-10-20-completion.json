@@ -1,0 +1,19 @@
+{
+  "children_attempted_slots": [
+    1,
+    4,
+    5,
+    6,
+    13,
+    14,
+    16,
+    17,
+    19,
+    23
+  ],
+  "ended_at": "2026-10-20T14:10:00.285+00:00",
+  "model_invocations": 24,
+  "slots": 24,
+  "stop_reason": null,
+  "wall_seconds": 1306.84
+}

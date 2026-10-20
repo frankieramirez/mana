@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "source_unchanged": true,
+  "checks": [
+    {
+      "name": "discovery route/catalog check",
+      "command": "python3 -B evals/workflows/run.py --discovery-check",
+      "exit_code": 0,
+      "cases": 46,
+      "model_invocations": 0
+    },
+    {
+      "name": "offline discovery group tests",
+      "command": "python3 -B -m unittest discover -s evals/workflows -p test_discovery_group.py",
+      "exit_code": 0,
+      "tests": 7,
+      "seconds": 16.66,
+      "model_invocations": 0
+    },
+    {
+      "name": "initial full repo validation",
+      "command": "bash scripts/validate.sh",
+      "exit_code": 1,
+      "log": "validation.log",
+      "fixture_jobs": 81,
+      "workers": 40,
+      "failed_jobs": 4,
+      "failures": [
+        "test_discovery.Transport: killed (exit -9)",
+        "standalone packages: broken mise python3 shim",
+        "Leyline installation: subprocess killed (exit 137)",
+        "Leyline refresh: directory rename assertion"
+      ],
+      "ran_concurrently_with_early_discovery_slots": true
+    },
+    {
+      "name": "full repo validation with system Python and four fixture workers",
+      "command": "PATH=\"/usr/bin:/bin:$PATH\" MANA_FIXTURE_JOBS=4 bash scripts/validate.sh",
+      "exit_code": 1,
+      "log": "validation-system-python-4-workers.log",
+      "fixture_jobs": 81,
+      "workers": 4,
+      "failed_jobs": 1,
+      "fixture_seconds": 82,
+      "failures": [
+        "RefreshTests.test_directory_rename_follows_source_roots_and_the_break_patch: expected break-renamed/proposed, received break-stale/needs_adjudication"
+      ],
+      "ran_after_discovery_group": true,
+      "baseline_evidence": "Source and tracked working tree unchanged; the same failure is documented in the retained historical pilot report."
+    },
+    {
+      "name": "working tree and whitespace",
+      "command": "git status --short; git diff --check",
+      "exit_code": 0,
+      "tracked_changes": 0
+    }
+  ]
+}

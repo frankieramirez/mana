@@ -1,0 +1,50 @@
+{
+  "baseline_evidence": "The same failure is retained in the original group validation and historical pilot reports.",
+  "checked_branch": "codex/101-discovery-results",
+  "checked_changed_file_sha256": {
+    "docs/specs/discovery-and-hosts.md": "43ecc143d0a74530f434b44de2d056846d995dc078f9b263486c48b28b076d97",
+    "evals/workflows/README.md": "ba606e9a043230c510cb3e8bd448976d18abed71292dc652d07fbf985341b1ef",
+    "evals/workflows/discovery-group-2026-10-20-allocation.json": "04d7bd3026c2b7b39fca5084ae1c2e1418310721f8e04e96ab6ee21c1e5f6e18",
+    "evals/workflows/discovery-group-2026-10-20-completion.json": "b799ac103304729645cbac9f70482754801af5929ce16c6e44cc43a9eee54647",
+    "evals/workflows/discovery-group-2026-10-20-evidence.json": "5f93206675d1362745e111acc132d465af90bc96946ab98241cbf9c140347220",
+    "evals/workflows/discovery-group-2026-10-20-manifest.json": "9e4cc970742dccc3efbbfec7fd9efc9babb4b520ec474b264f9b6243aa61abf4",
+    "evals/workflows/discovery-group-2026-10-20-operator-context.json": "24076f149c57f68b57b9c1c5d4d2497e407a4e24e27507156df44fdf1682f294",
+    "evals/workflows/discovery-group-2026-10-20-operator-notes.json": "cf09c1b3da9453e766200d0b0b36736854b477762c5cd6dc39eeb9c76fa7aca0",
+    "evals/workflows/discovery-group-2026-10-20-results.json": "d3fcb4a70c25fa7812fba5322fa4ea5d7ea01c90477b30c0691267a0ed5eaad8",
+    "evals/workflows/discovery-group-2026-10-20-validation.json": "468589844d96a74d61d8d5d946f5999157d6d4a59efaa983763259efd955a99b",
+    "evals/workflows/discovery-group-2026-10-20.md": "5e1aa3dd7739cfcf774cba6d1817cdd073d671e8132f19e4a4c9c4d133a622f7",
+    "evals/workflows/discovery-pilot-2026-10-20.md": "617d08269854774c6ea96eb60dec8a27dce5c71a217ffaa72cf3315882b9390f",
+    "evals/workflows/evidence/discovery-group-2026-10-20.json.gz": "b1c1bbedef0a3aaac3a8f25dd33bafefb22e4076917edbdfed34c658ae14a607"
+  },
+  "checked_head": "2b3d3108a30ab252c204f28989173e5d17192bff",
+  "claim_limits": [
+    "Selection evidence does not establish workflow completion.",
+    "Requested model identity does not establish backend model identity.",
+    "Validation failed; passing archive verification does not turn validation green."
+  ],
+  "command": "PATH=\"/usr/bin:/bin:$PATH\" MANA_FIXTURE_JOBS=4 bash scripts/validate.sh",
+  "evidence_generated_after_validation": [
+    "evals/workflows/discovery-group-2026-10-20-publication-validation.json",
+    "evals/workflows/evidence/discovery-group-2026-10-20-publication-validation.txt.gz"
+  ],
+  "exit_code": 1,
+  "failed_jobs": 1,
+  "failure": "RefreshTests.test_directory_rename_follows_source_roots_and_the_break_patch: expected break-renamed/proposed; received break-stale/needs_adjudication.",
+  "fixture_jobs": 81,
+  "fixture_seconds": 82,
+  "live_invocations_added": 0,
+  "log": "evals/workflows/evidence/discovery-group-2026-10-20-publication-validation.txt.gz",
+  "log_sha256": "212dc44319a755df1eb457884288a4e025358a891e59067e54b404676954f678",
+  "outcome": "failed",
+  "passed_jobs": 80,
+  "record_verification": {
+    "command": "python3 -B verify-publication.py (from the repository root; exact script retained below)",
+    "exit_code": 0,
+    "output": "Archive verification: 6105 exact file digests match.\nPublished controls and original grades: byte-identical to archived records.\nAll 24 allocated slots and 24 parent invocations retained; no replacement calls.\nFirst routes: 15 correct, 9 wrong. Activation: 7 correct, 17 unnecessary.\nProcess outcomes: 21 completed, 3 timeouts. Original execution grades preserved.\nFinal product states match all 24 baselines; all process families terminated.\nRequested model identity is not resolved backend identity; workflow quality unmeasured.\n",
+    "script": "import collections\nimport gzip\nimport hashlib\nimport json\nfrom pathlib import Path\nimport sys\n\nroot = Path.cwd() / 'evals/workflows'\nsys.path.insert(0, str(root))\nimport archive_delegated\n\nprefix = 'discovery-group-2026-10-20'\npath = root / 'evidence' / (prefix + '.json.gz')\nmeta = json.loads((root / (prefix + '-evidence.json')).read_text())\nassert hashlib.sha256(path.read_bytes()).hexdigest() == meta['sha256']\nchecked = archive_delegated.verify(path)\nassert checked['verified_files'] == meta['verified_files']\npayload = json.loads(gzip.decompress(path.read_bytes()))\nfiles = payload['files']\n\ndef archived(name):\n    return json.loads(files[name]['text'])\n\nfor suffix, name in [('manifest', 'manifest.json'), ('allocation', 'allocation.json'),\n                     ('completion', 'completion.json'), ('results', 'summary.json'),\n                     ('operator-context', 'operator-context.json'), ('operator-notes', 'operator-notes.json'),\n                     ('validation', 'validation-summary.json')]:\n    assert (root / (prefix + '-' + suffix + '.json')).read_bytes() == files[name]['text'].encode(), name\nsummary = archived('summary.json')\nallocation = archived('allocation.json')\nassert len(allocation) == len(summary['rows']) == 24\nassert sum(row['model_invocations'] for row in allocation) == 24\ncounts = {field: collections.Counter() for field in ('activation', 'routing', 'execution', 'children', 'process_outcome')}\nstates = archived('publication-final-product-states.json')\nfor row, original in zip(summary['rows'], allocation):\n    name = original['directory'] + '/result.json'\n    result = archived(name)\n    assert hashlib.sha256(files[name]['text'].encode()).hexdigest() == original['result_sha256']\n    assert row['judgment'] == result['judgment']\n    assert states[str(row['slot'])]['state'] == result['baseline']\n    assert result['process_family']['family_terminated'] is True\n    assert not result['failures']\n    for field in ('activation', 'routing', 'execution', 'children'):\n        counts[field][result['judgment'][field]] += 1\n    counts['process_outcome'][result['process_family']['outcome']] += 1\nassert {key: dict(value) for key, value in counts.items()} == summary['counts']\nassert all(summary['integrity'].values())\nassert hashlib.sha256(files['frozen/evals/workflows/discovery-cases.json']['text'].encode()).hexdigest() == archived('manifest.json')['routes_sha256']\nprint('Archive verification: %s exact file digests match.' % checked['verified_files'])\nprint('Published controls and original grades: byte-identical to archived records.')\nprint('All 24 allocated slots and 24 parent invocations retained; no replacement calls.')\nprint('First routes: 15 correct, 9 wrong. Activation: 7 correct, 17 unnecessary.')\nprint('Process outcomes: 21 completed, 3 timeouts. Original execution grades preserved.')\nprint('Final product states match all 24 baselines; all process families terminated.')\nprint('Requested model identity is not resolved backend identity; workflow quality unmeasured.')\n",
+    "script_sha256": "fb8d9a2a02a276f893f10e6b821e02898b1537147386576b03e5ae07200325a6"
+  },
+  "schema_version": 1,
+  "workers": 4,
+  "working_tree": "Report, frozen record copies, raw archive and documentation links were uncommitted; runtime and skill sources unchanged."
+}

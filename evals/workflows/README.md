@@ -144,6 +144,8 @@ It refuses a dirty tree and a HEAD that does not contain `origin/main` after a f
 
 The [2026-10-20 historical pilot](discovery-pilot-2026-10-20.md) used the older 0.44.12 worktree and retains all 24 allocations; it does not measure the corrected 0.44.13 catalog. It stopped after five parent attempts, including one process timeout, on unexpected collaboration events and failed spawns under the no-child profile. Nineteen slots remain unrun. Its frozen manifest, original grades and raw archive are linked from the report; this incomplete group does not establish a discovery success rate.
 
+The separate [2026-10-20 discovery group](discovery-group-2026-10-20.md) invoked all 24 allocated parents against the fetched 0.44.15 main commit `2b3d310`, with no group stop. Its original first-route grades are 15 correct and 9 wrong, with three process timeouts. All nine wrong first routes began with dispel. The report preserves every allocation, the original grades and a hashed raw archive, with capability failures and operator caveats kept separate. No product mutation or child creation was observed. Selection results do not establish full workflow quality, and no expanded study ran.
+
 ## Results and regrading
 
 Runs go into a new ignored `evals/results/workflows-*` directory. Each case retains its request, skill payload hashes, starting repository state, host version, event stream, process result, structured response, final diff, and judgment. Recorded usage comes from the host's turn events. The host event stream may omit the resolved model identity; the report then records only the requested host default, without inventing a model name.

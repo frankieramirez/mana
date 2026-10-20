@@ -1,6 +1,8 @@
 # Discovery pilot: incomplete after five parent attempts
 
-The bounded discovery pilot for [issue #101](https://github.com/frankieramirez/mana/issues/101) stopped after five of 24 allocated slots on 2026-10-20. Slot 4 timed out and exposed a host-control/event-classification discrepancy. Nineteen slots remain unrun. This is an incomplete diagnostic group; it does not establish a discovery success rate. Issue #101 remains open.
+The bounded discovery pilot for [issue #101](https://github.com/frankieramirez/mana/issues/101) stopped after five of 24 allocated slots on 2026-10-20. Slot 4 timed out and exposed a host-control/event-classification discrepancy. Nineteen slots remain unrun. This is an incomplete diagnostic group; it does not establish a discovery success rate. Issue #101 remained open after that pilot.
+
+A separate [follow-up group](discovery-group-2026-10-20.md) later invoked all 24 parents against Mana 0.44.15. Its report and evidence have their own identifiers. The original allocations, attempts and grades below remain unchanged.
 
 ## Frozen controls and retained evidence
 
