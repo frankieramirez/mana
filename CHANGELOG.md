@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.44.13
 
 - The discovery probe now tells the model to use only the skills the session offers and not to search the workspace. The 0.163.0 record left `explicit_only_honored` unknown because the model reached the explicit canary through a file listing, which shows nothing about what the host offered. With search ruled out, an unloaded explicit canary beside a direct automatic load can verify the capability, and a direct load still fails it.
 
