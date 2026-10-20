@@ -1477,6 +1477,8 @@ for lens, c in (doc.get("coverage", {}) or {}).items():
         for note in c.get("notes") or []:
             bits.append(e(note))
         cov_items.append(dd(LENS_LABEL.get(lens, lens), " · ".join(bits) or "no notes"))
+if meta.get("assumed_load"):
+    cov_items.append(dd("Assumed load", e(meta["assumed_load"])))
 missing = doc.get("counts", {}).get("lenses_missing") or []
 if missing:
     cov_items.append(dd("No usable output", e(", ".join(missing)), "dimmed"))
