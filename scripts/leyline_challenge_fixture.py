@@ -317,7 +317,8 @@ class Fixture:
         self.git("add", ".")
         self.git("commit", "-qm", "synthetic hosted fixture")
         write(self.repo, "src/hosted/briefing.mjs", BRIEFING.replace("'Welcome back'", "'Old summary'"))
-        patch = self.git("diff", "--", "src/hosted/briefing.mjs").stdout
+        # Pinned prefixes, so an operator's diff.mnemonicprefix cannot change the fixture.
+        patch = self.git("diff", "--src-prefix=a/", "--dst-prefix=b/", "--", "src/hosted/briefing.mjs").stdout
         write(self.repo, "src/hosted/briefing.mjs", BRIEFING)
         write(self.repo, "control-inputs/briefing.return-summary.patch", patch)
         self.git("add", ".")

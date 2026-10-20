@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.44.17
+
+- A new `evals/workflows/integration.py` freezes the paired project-control integration pilot for frankieramirez/mana#112: Sift, Cast and Scan task families, a control arm and a baseline arm, two repetitions, exactly 12 invocations and no retries. Both arms get one Mana payload and the same request, setup, host, model, timeout and prerequisites. The baseline drops only the declared control paths and the one `Control:` pointer line, and freeze refuses arms that differ in anything else or setup that applies to one arm only. Fixtures rebuild to the frozen HEAD with the operator's Git configuration ignored. Every private input and the frozen study must sit outside the Mana checkout, and `--summary` prints only counts, digests and the schedule. Freezing runs no agent.
+
 ## 0.44.16
 
-- A new `evals/workflows/integration.py` freezes the paired project-control integration pilot for frankieramirez/mana#112: Sift, Cast and Scan task families, a control arm and a baseline arm, two repetitions, exactly 12 invocations and no retries. Both arms get one Mana payload and the same request, setup, host, model, timeout and prerequisites. The baseline drops only the declared control paths and the one `Control:` pointer line, and freeze refuses arms that differ in anything else or setup that applies to one arm only. Fixtures rebuild to the frozen HEAD with the operator's Git configuration ignored. Every private input and the frozen study must sit outside the Mana checkout, and `--summary` prints only counts, digests and the schedule. Freezing runs no agent. `evals/workflows/README.md` also loses a pair of unresolved merge-conflict markers.
+- Leyline refresh follows a rename in a break patch written with `diff.mnemonicprefix`, whose headers use `i/` and `w/` in place of `a/` and `b/`. Before, such a patch was reported stale and sent to a person. The refresh fixtures now pin their own diff prefixes, so an operator's git config no longer fails the suite. The workflow eval README loses merge conflict markers left from an earlier merge.
 
 ## 0.44.15
 

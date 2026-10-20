@@ -265,7 +265,6 @@ python3 -B evals/workflows/run.py --live \
   --case scry-build-leftover-read-only --limit 3 --timeout 300
 ```
 
-
 ## Cast project-control stage
 
 `cast_control.py` builds a synthetic repository with a project control for Cast's `control-checks.md` stage, frankieramirez/mana#110. Ticket 7 asks for refunds to count in the return summary. The fix belongs in shared accounting code, which only the briefing feature lists in its `sourceRoots`, so `changed` selects briefing and skips the ledger scenario that also depends on it. A required `Validation:` line checks the source and the changelog, which no scenario covers. The user has staged notes and an untracked scratch file.
