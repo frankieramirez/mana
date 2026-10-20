@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.14
+
+- `scripts/validate.sh` runs its fixture suites side by side through the new `scripts/fixtures.py`, one workflow test class per process, and prints only the failures. A full run drops from about seven minutes to about two on four cores. The Leyline challenge fixture's evict mode now kills only the sentinel its own challenge started, so a concurrent suite keeps its listener.
+
 ## 0.44.13
 
 - Codex now treats the eight explicit-only skills as explicit. Codex CLI 0.163.0 ignores `disable-model-invocation: true` and reads `policy.allow_implicit_invocation: false` from a skill's `agents/openai.yaml`. Before this release it listed banish, cast, conjure, portal, scry, setup-mana, sift, and vision for implicit use. Each of them now ships that file. `scripts/validate.sh` and the discovery adapter's catalog snapshot fail when the two markers disagree. A new `run.py --probe-catalog` renders the host's model-visible input with `codex debug prompt-input`, makes no model call, and records which canaries and shipped skills the host lists. `--probe-discovery` runs the same canary render. The committed 2026-10-20 record verifies `explicit_only_honored` for Codex CLI 0.163.0.
