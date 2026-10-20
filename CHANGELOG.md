@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.7
+
+- The workflow evals gain a one-line control arm. `evals/workflows/one_line.py` builds a payload where each skill keeps its frontmatter and its body is the first sentence of its description, so the same cases can run against it with `--skill-root` beside the baseline and candidate. It shows whether a skill's full instructions beat a one-sentence version of its goal. `test_one_line.py` checks the builder, its refusals and that the payload installs through the existing runner.
+
 ## 0.44.5
 
 - Cast looks for what already exists before writing new code. Stage 2 takes the first that does the job: code the repo already has, used the way its neighbours use it, then the standard library or a platform feature, then a dependency the project already installs. A new dependency needs work too large to write in a few lines.
