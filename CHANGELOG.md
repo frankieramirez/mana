@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.5
+
+- Cast looks for what already exists before writing new code. Stage 2 takes the first that does the job: code the repo already has, used the way its neighbours use it, then the standard library or a platform feature, then a dependency the project already installs. A new dependency needs work too large to write in a few lines.
+
 ## 0.44.4
 
 - Cast verifies acceptance criteria through a project control. With a `Control:` line it loads the new `references/control-checks.md` in Stage 1 and maps each criterion to scenario ids before the first edit. In Stage 3, after the final relevant edit and when local runs are authorized, it runs `changed --base`, widens with `feature` runs wherever the selection missed a mapped criterion, and reads every report through `conform.sh evidence`. A mapped criterion is met only when a current executed report supports it, so a stale run or a partial selection keeps the ticket open with a `Refs` line, and the `Validation:` line still runs after the final edit. The report gains a criteria table with each criterion's evidence kind, check, checked state, status and claim. `evals/workflows/test_cast_control.py` drives synthetic sessions through real control, reader, validation and git commands, and `cast_control.py` grades the logged runs, the final repository and the report's claims.
