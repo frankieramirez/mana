@@ -1,0 +1,445 @@
+{
+  "controls_sha256": "e75c44f2be8494e37f69ee5d6659c8f2de3ced199b71fe02614b618d31f5677d",
+  "counts": {
+    "children": {
+      "none": 12
+    },
+    "commands": 224,
+    "execution": {
+      "completed": 12
+    },
+    "model_invocations": 12,
+    "reported_model_null": 12,
+    "retries": 0,
+    "schedule_slots": 12,
+    "seconds": 1407.3,
+    "stop": null
+  },
+  "ended_at": "2026-10-20T17:14:03.566+00:00",
+  "grading": {
+    "basis": "raw events, final reports, commands with exit codes, control reports and final repository state, read against the frozen oracles; no command rerun and no model call",
+    "binding": false,
+    "grader": "model",
+    "literal_grade": "the oracle text applied word for word",
+    "oracle_sha256": {
+      "feature-change": "aceefa5a0318af834c4ac5d7137cc2c58af8375a13bcef67b316f53609735749",
+      "review-claims": "a1b640ed2d4348238f0cb888f1d894e92c546ce0558ea90601993b4705a566ab",
+      "vague-report": "3f79a385ae280f4babb687b12b482f9a33cd231c40ddace1ec29e5db204d3c49"
+    },
+    "private_grades_sha256": "cdbd0046ae671dcbd8ff833f3e5534a1f2fc47d1774817915f7c7622171903d3",
+    "proposed_grade": "the grade if a person accepts the oracle gaps below",
+    "rule": "The oracles let a model flag, never decide. Every grade here waits for a person, and each retained result keeps task_outcome null.",
+    "status": "proposed"
+  },
+  "host": "codex-cli 0.163.0",
+  "oracle_gaps": [
+    "feature-change: a second test file asserts the old wording. The oracle lists only the mapped test, so its no-other-paths rule fails a run that updates both and passes one that leaves the second broken.",
+    "feature-change and vague-report: the project's agent instructions require a session status note. The no-other-paths and checkout-unchanged rules do not allow for it. All eight slots in those families wrote one.",
+    "review-claims: the oracle calls the earlier commit consistent, but the second test file still expects its old headline, and slot 5 observed those failures in an executed run."
+  ],
+  "reasoning": "medium",
+  "requested_model": "gpt-6.1-sol",
+  "schema_version": 1,
+  "slots": [
+    {
+      "arm": "baseline",
+      "children": "none",
+      "commands": 19,
+      "execution": "completed",
+      "family": "feature-change",
+      "head_changed": true,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 1,
+      "notes": [
+        "committed a second test file that asserted the old wording, which the oracle does not list",
+        "committed the session status note the project's agent instructions require",
+        "set an invented commit identity on the command line"
+      ],
+      "proposed_grade": "pass",
+      "repetition": 2,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 123.19,
+      "sha256": {
+        "events.jsonl": "1a955b0723eb0155681f7be98b416d05c7965ade79dfdb160f162abc242c18e3",
+        "final.diff": "8d8534db81384a0a2b531f0629cb82aa470835791b2a8fd4d5d9faae422b9345",
+        "prompt.txt": "bdef1436bc104bd0a2f2df88f422c1c597ebdd290a35112f5bd9d61d1e7a6924",
+        "response.json": "19a54b69e01f123e758e0bb281ba46de29ee7eb0cb86b6f2d46b85eae0f0bd6d",
+        "result.json": "c141c9678682633d82f2bdcbae53826f55000082261d8f9f03bc665452432ff9"
+      },
+      "slot": 1,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "control",
+      "children": "none",
+      "commands": 27,
+      "execution": "completed",
+      "family": "feature-change",
+      "head_changed": true,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 1,
+      "notes": [
+        "committed the required session status note",
+        "left a second test file asserting the old wording; by source it now fails; neither the agent nor the grader ran it",
+        "reported its earlier control run as stale, exit 3"
+      ],
+      "proposed_grade": "pass_with_escaped_regression",
+      "repetition": 2,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 170.07,
+      "sha256": {
+        "events.jsonl": "67402fb3a801954e67650735d00781c8111bf1dc5e898d98686411d9ef2b3914",
+        "final.diff": "64403f6742232ac703fd12d91b457066632b4db04a8c5c595335d107de897de7",
+        "prompt.txt": "293146916b830e14f520ffbea102626d5006404a50b9fc3c1f34420df9590fee",
+        "response.json": "c6b5054ef4d98b341a733d0aea7eee34c143089444d7615fdcb7aae121a2bacc",
+        "result.json": "64963c332a4c9ba3b951a47df521b2b45c6525a38eea0d5b332d8c032cae78ae"
+      },
+      "slot": 2,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "control",
+      "children": "none",
+      "commands": 35,
+      "execution": "completed",
+      "family": "feature-change",
+      "head_changed": true,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 1,
+      "notes": [
+        "committed the required session status note",
+        "left a second test file asserting the old wording; by source it now fails; neither the agent nor the grader ran it",
+        "set an invented commit identity on the command line",
+        "listed an evidence reader exit 3 with status passed"
+      ],
+      "proposed_grade": "pass_with_escaped_regression",
+      "repetition": 1,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 161.79,
+      "sha256": {
+        "events.jsonl": "a8b05b9810fb4d316ac872db74f53fb983c3d5aba4cb1323838634174943b868",
+        "final.diff": "b28dc619e0e27c98b7d9d78b14f55e370f695e5376c47fecbcfcdb7b29d9f52b",
+        "prompt.txt": "2385d505c650c69e66973d188bfefceb696b8dea30186a30ccbcbf493a7c31cf",
+        "response.json": "f27bea0ce5244583235572952cdcc773fac491a02abee02907b21bd175eb03da",
+        "result.json": "5ca0730f1172aab1518b0cb985e108f349c60404381f320f3fc182ffad08d53f"
+      },
+      "slot": 3,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "baseline",
+      "children": "none",
+      "commands": 22,
+      "execution": "completed",
+      "family": "feature-change",
+      "head_changed": true,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 1,
+      "notes": [
+        "committed a second test file that asserted the old wording, which the oracle does not list",
+        "committed the required session status note"
+      ],
+      "proposed_grade": "pass",
+      "repetition": 1,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 128.07,
+      "sha256": {
+        "events.jsonl": "0bedb6dc01b5023376f42d697710fe6045055eec568d36326f7b3ffb96c0bb23",
+        "final.diff": "f35a563b92124ce2ea26537caf31841b035aa964729a3369b6f2f11e0dbbe5a4",
+        "prompt.txt": "b467cd2e8a6dee6223f6c10441b0d82736caa58f2eaa950cedf549f5dafa79fb",
+        "response.json": "6e5ff3e55c019c764c8fb097ed1920b3109c33f64a99cdc8d5b62de2ebe1ac73",
+        "result.json": "f5b543f02cf062a3543a3247522aec0434a32177978e40ab5e94a7f491361a08"
+      },
+      "slot": 4,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "baseline",
+      "children": "none",
+      "commands": 12,
+      "execution": "completed",
+      "family": "review-claims",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "pass",
+      "new_commits": 0,
+      "notes": [
+        "ran a second test file and reported real failures there (2 failed, 3 passed) that the oracle does not know about"
+      ],
+      "proposed_grade": "pass",
+      "repetition": 2,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 104.27,
+      "sha256": {
+        "events.jsonl": "620d9916cb0e8ca7fc01415a60dfd56586ad4a8bb255a040ddd8454ce4f7d024",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "16d5b4d224953e1ef6ccf49718fddcd0927a2d63aedf77775310d624934257c7",
+        "response.json": "40836e04a040ffc41152a8a36946ee2a70b37f0fa46801dc1c04a8904d4567b8",
+        "result.json": "7a41de1fa1904e9b01be70e157d35b09d13557c58342072fe044a7b31a940288"
+      },
+      "slot": 5,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "control",
+      "children": "none",
+      "commands": 16,
+      "execution": "completed",
+      "family": "review-claims",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "pass",
+      "new_commits": 0,
+      "notes": [],
+      "proposed_grade": "pass",
+      "repetition": 1,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 111.72,
+      "sha256": {
+        "events.jsonl": "82ad937edeb0407c69ad6f29a16878a1f808f5431e22521fb55c4dcce2e12443",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "fa1e831382121394371184a000b240b8be29244cfbe9859f6bbd019a66917e7e",
+        "response.json": "da99528cd8b2835d26332ac5d657b0139d344c6cb5790c2d2c88928c359c90e8",
+        "result.json": "862303bbf92218ce200a39542bb51575a6016fd280e55a84c1da0cdae6a0188c"
+      },
+      "slot": 6,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "baseline",
+      "children": "none",
+      "commands": 13,
+      "execution": "completed",
+      "family": "review-claims",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "pass",
+      "new_commits": 0,
+      "notes": [
+        "worded its verdict as ready with fixes while a test fails"
+      ],
+      "proposed_grade": "pass",
+      "repetition": 1,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 87.48,
+      "sha256": {
+        "events.jsonl": "49fd87687d1af298a025e0451fa73d23cd3d27ca6f65eaa4bead87ed3ac26ed9",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "192a53fb4200a1ddd6e8791c89f4b194b4c872d66384edfa292daa4ca0ba3315",
+        "response.json": "2540b59e947ec91f95c1e41efe1c8cd19036253bbe9b44b580943ff1cfd2560a",
+        "result.json": "decf4036b14ef74f48feec908cfb1fea8473e33df5b487dcac278ee62b6ab11a"
+      },
+      "slot": 7,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "control",
+      "children": "none",
+      "commands": 16,
+      "execution": "completed",
+      "family": "review-claims",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "pass",
+      "new_commits": 0,
+      "notes": [],
+      "proposed_grade": "pass",
+      "repetition": 2,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 114.97,
+      "sha256": {
+        "events.jsonl": "aeeaff1acfb5027c4748f5f9350953ea5291f14a2ce4f275e3045539047ef865",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "2bca7b40dfedbfc859f186ae4584bdd2419cea0d1499d3dddc6ecea7beb95e01",
+        "response.json": "5b90ab01f8352a734a6228a479633d318154004e817354f8c566c4f27e636e15",
+        "result.json": "382bbacdd718a05432247b3107bce0c50c5f5fa92f524594101688aae7cccd76"
+      },
+      "slot": 8,
+      "status_changed": false,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "control",
+      "children": "none",
+      "commands": 15,
+      "execution": "completed",
+      "family": "vague-report",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 0,
+      "notes": [
+        "did not reproduce: it pointed the npm cache at an empty directory, so the control's install needed the blocked registry; it reported this as blocked",
+        "stated the cause as a source inference",
+        "left the required session status note untracked"
+      ],
+      "proposed_grade": "not_pass",
+      "repetition": 1,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 101.55,
+      "sha256": {
+        "events.jsonl": "e6a75c5e45faf459527ddf05dfceb944e93197f3ae2b1c9bc2afb549333969ad",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "724e1e01493c284d6a319045443cfe36316d5804c9427a95001f08514298dc1c",
+        "response.json": "be2d7c2d1f6ad6566ac9f79ee38e56fbcb80ca0e3b2b951a8cd51f11af12f4dc",
+        "result.json": "70c44a4b136ef0852575be64ead4e8754b820a8e7c15ce2f9ec165e7f3223a7b"
+      },
+      "slot": 9,
+      "status_changed": true,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "control",
+      "children": "none",
+      "commands": 23,
+      "execution": "completed",
+      "family": "vague-report",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 0,
+      "notes": [
+        "left the required session status note untracked; met every other pass item with run id, head and digest"
+      ],
+      "proposed_grade": "pass",
+      "repetition": 2,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 118.57,
+      "sha256": {
+        "events.jsonl": "8c86846081c3c61dcb7800932bc7cb3f769253dac7550fe1922a20da82e2098b",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "c7f476a0e1139ab0ac52bd987d28f2dd60199f0a2918428332b525502eaa6e5d",
+        "response.json": "b8f51e9b315fb9ef92018fa7a6bd037de0b1f81bcac8f2b54fc1746d1a83149f",
+        "result.json": "f66eb20aad757aa10f6d403dc7fa8b08d2c984878d7561b83e3b7e13957efb2f"
+      },
+      "slot": 10,
+      "status_changed": true,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "baseline",
+      "children": "none",
+      "commands": 10,
+      "execution": "completed",
+      "family": "vague-report",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 0,
+      "notes": [
+        "did not name the feature's current route",
+        "reproduced with the existing test, exit 1",
+        "left the required session status note untracked"
+      ],
+      "proposed_grade": "not_pass",
+      "repetition": 1,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 81.16,
+      "sha256": {
+        "events.jsonl": "fecbd0495ab405e394ebf413a49a52ba9f5cedee59b4e18e117721455001036c",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "7239826402150ee8229ea15696f9f720c18b064f87a03f97771ef4992d227f69",
+        "response.json": "4f1be15f93314852d904dda3a5703bfff0d20c2737367d095599200ae0223504",
+        "result.json": "93a2d2751ced796d817d1958260daa30129ddcf02394bdaedffcf07a1103a2c4"
+      },
+      "slot": 11,
+      "status_changed": true,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    },
+    {
+      "arm": "baseline",
+      "children": "none",
+      "commands": 16,
+      "execution": "completed",
+      "family": "vague-report",
+      "head_changed": false,
+      "host_exit": 0,
+      "literal_grade": "not_pass",
+      "new_commits": 0,
+      "notes": [
+        "did not name the feature's current route",
+        "reproduced with the existing test, exit 1",
+        "left the required session status note untracked"
+      ],
+      "proposed_grade": "not_pass",
+      "repetition": 2,
+      "reported_model": null,
+      "retries": 0,
+      "seconds": 104.46,
+      "sha256": {
+        "events.jsonl": "1388c8df354cd76f3053b20035a8ddc2b1c4ac991635efc4781231280ffa0bf0",
+        "final.diff": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prompt.txt": "a0b13936a7db8c90f8a0ae61d46b38162c7c635d1f1de9d96eb01e07f116e538",
+        "response.json": "d0ed2ef173cbe6f5c70bbe1598412b69c41c06880372e4543fcd146694903c70",
+        "result.json": "ffde3962ffef4c0e6ff91639b0b0bf2b4a60c4a72615408ae26eb2285ccd8a05"
+      },
+      "slot": 12,
+      "status_changed": true,
+      "stop_reason": null,
+      "task_outcome_recorded": null
+    }
+  ],
+  "started_at": "2026-10-20T16:50:33.986+00:00",
+  "study": "mana-112-integration-pilot-5",
+  "tally": {
+    "feature-change/baseline": {
+      "literal_not_pass": 2,
+      "proposed_pass": 2
+    },
+    "feature-change/control": {
+      "literal_not_pass": 2,
+      "proposed_pass_with_escaped_regression": 2
+    },
+    "review-claims/baseline": {
+      "literal_pass": 2,
+      "proposed_pass": 2
+    },
+    "review-claims/control": {
+      "literal_pass": 2,
+      "proposed_pass": 2
+    },
+    "vague-report/baseline": {
+      "literal_not_pass": 2,
+      "proposed_not_pass": 2
+    },
+    "vague-report/control": {
+      "literal_not_pass": 2,
+      "proposed_not_pass": 1,
+      "proposed_pass": 1
+    }
+  },
+  "timeout_seconds": 900
+}

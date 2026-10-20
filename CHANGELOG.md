@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.20
+
+- `evals/workflows/integration-pilot-5-results.json` records the live frankieramirez/mana#112 pilot on `mana-112-integration-pilot-5`: 12 of 12 slots completed with no retries, no children and no stop. Grades are model-proposed and wait for a person. With the recorded oracle gaps accepted, control passes 5 of 6 and baseline 4 of 6, and both control feature-change runs let a regression in an unmapped test escape. The README describes the result.
+
 ## 0.44.19
 
 - The frankieramirez/mana#112 runner refuses any symlink in its quarantined copy of the agent's `.git`. The copy kept links as links, so writing the clean config went through a `.git/config` the agent had pointed at an operator file and overwrote that file outside the sandbox, and a linked index or HEAD let reads leave the tree. A link now stops the slot as a collection failure, and the clean config is written after an unlink with `O_CREAT`, `O_EXCL` and `O_NOFOLLOW`. The runnable freeze is now `mana-112-integration-pilot-5`, with a passing no-model sandbox preflight.
