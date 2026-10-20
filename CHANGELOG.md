@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.44.6
+## 0.44.8
 
 - Scan and Ultima say which load they assumed. Each reads the README, deploy config, and docs for the load the project expects, such as a CLI one person runs or a multi-tenant service, and writes one `Assumed load:` line naming its source, or `not stated`. Scan passes the line to every reviewer through `subagent-template.md`, and Fire Mage judges scale against it. Ultima writes it into the shared context and `metadata.json`, the performance lens judges reach against it, and the HTML report shows it under Coverage. Neither invents traffic or data volume.
+
+## 0.44.7
+
+- The workflow evals gain a one-line control arm. `evals/workflows/one_line.py` builds a payload where each skill keeps its frontmatter and its body is the first sentence of its description, so the same cases can run against it with `--skill-root` beside the baseline and candidate. It shows whether a skill's full instructions beat a one-sentence version of its goal. `test_one_line.py` checks the builder, its refusals and that the payload installs through the existing runner.
 
 ## 0.44.5
 
