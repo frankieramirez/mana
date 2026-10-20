@@ -1,0 +1,68 @@
+{
+  "capabilities": {
+    "explicit_only_honored": {
+      "evidence": [
+        "catalog render listed automatic, frontmatter and hid explicit, policy"
+      ],
+      "markers": {
+        "allow_implicit_invocation": "honored",
+        "disable-model-invocation": "ignored"
+      },
+      "notes": "no model call; the host printed its model-visible input, and the record keeps which random canary names it listed",
+      "observed_at": "2026-10-20T05:53:24.059+00:00",
+      "status": "verified"
+    },
+    "installation": {
+      "evidence": [
+        "codex --version: codex-cli 0.163.0"
+      ],
+      "observed_at": "2026-10-20T05:53:23.881+00:00",
+      "status": "verified"
+    }
+  },
+  "catalog_findings": [],
+  "host": "codex-cli 0.163.0",
+  "model_invocations": 0,
+  "platform": "linux",
+  "probes": [
+    {
+      "bodies_rendered": [],
+      "canaries": {
+        "automatic": "probe-d391bcb5",
+        "explicit": "probe-5d676c66",
+        "frontmatter": "probe-3821ef39",
+        "policy": "probe-07752f34"
+      },
+      "checked_at": "2026-10-20T05:53:23.889+00:00",
+      "command": "codex debug prompt-input",
+      "exit_code": 0,
+      "listed": {
+        "automatic": true,
+        "explicit": false,
+        "frontmatter": true,
+        "policy": false
+      },
+      "model_invocations": 0,
+      "name": "catalog-render"
+    },
+    {
+      "catalog_sha256": "1d209b425723a6e70029187a28cbad6157fe5ad1c2f7dccfda741adf157d9ebe",
+      "checked_at": "2026-10-20T05:53:24.004+00:00",
+      "command": "codex debug prompt-input",
+      "counts": {
+        "automatic": 11,
+        "explicit": 8
+      },
+      "exit_code": 0,
+      "hidden_automatic": [],
+      "listed_explicit": [],
+      "model_invocations": 0,
+      "name": "installed-catalog-render"
+    }
+  ],
+  "recorded_at": "2026-10-20T05:53:24.059+00:00",
+  "schema_version": 1,
+  "skills_dir": ".agents/skills",
+  "source": "run.py --probe-catalog",
+  "unknown": []
+}

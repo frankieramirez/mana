@@ -344,10 +344,37 @@ def app_server():
     return 0
 
 
+def prompt_input(argv):
+    """The model-visible skill list the way Codex 0.163.0 renders it. `render_honors` names the explicit-only
+    markers this fake leaves out: `policy` for agents/openai.yaml, `frontmatter` for disable-model-invocation."""
+    if PLAN.get('prompt_input') == 'unsupported':
+        print("error: unrecognized subcommand 'prompt-input'", file=sys.stderr)
+        return 2
+    STATE.mkdir(parents=True, exist_ok=True)
+    (STATE / ('render-%03d.json' % len(list(STATE.glob('render-*.json'))))).write_text(
+        json.dumps({'argv': argv, 'cwd': os.getcwd(), 'home': os.environ.get('HOME'), 'codex_home': os.environ.get('CODEX_HOME')}))
+    honors = PLAN.get('render_honors', ['frontmatter', 'policy'])
+    lines = []
+    for path in [] if PLAN.get('render_empty') else sorted(Path('.agents', 'skills').glob('*/SKILL.md')):
+        text = path.read_text()
+        policy = path.parent / 'agents' / 'openai.yaml'
+        if 'frontmatter' in honors and 'disable-model-invocation: true' in text:
+            continue
+        if 'policy' in honors and policy.is_file() and 'allow_implicit_invocation: false' in policy.read_text():
+            continue
+        description = re.search(r'^description: "(.*)"$', text, re.M)
+        lines.append('- %s: %s (file: r1/%s/SKILL.md)' % (path.parent.name, description.group(1) if description else '', path.parent.name))
+    skills = '<skills_instructions>\n### Available skills\n%s\n</skills_instructions>' % '\n'.join(lines)
+    print(json.dumps([{'type': 'message', 'role': 'developer', 'content': [{'type': 'input_text', 'text': skills}]}]))
+    return 0
+
+
 def main(argv):
     if argv == ['--version']:
         print(PLAN['version'])
         return 0
+    if argv[:2] == ['debug', 'prompt-input']:
+        return prompt_input(argv[2:])
     if argv[:1] == ['exec']:
         return execute(argv[1:])
     if argv[:1] == ['sandbox']:

@@ -1,0 +1,9 @@
+{
+  "archive": "evals/workflows/evidence/discovery-pilot-2026-10-20-postmerge-catalog.json.gz",
+  "capability": "explicit_only_honored",
+  "catalog_source_revision": "239a63c260efb89bd7cd66b7c8462e463094eaa7",
+  "files": 238,
+  "model_invocations": 0,
+  "sha256": "40a34bfb97621cace635d469123c3139143c6da2aefd7a1ba6d7410400c07383",
+  "status": "verified"
+}
