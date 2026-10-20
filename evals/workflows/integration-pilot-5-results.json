@@ -18,7 +18,9 @@
   "ended_at": "2026-10-20T17:14:03.566+00:00",
   "grading": {
     "basis": "raw events, final reports, commands with exit codes, control reports and final repository state, read against the frozen oracles; no command rerun and no model call",
-    "binding": false,
+    "binding": true,
+    "confirmed_at": "2026-10-20T18:51:13Z",
+    "confirmed_by": "project owner",
     "grader": "model",
     "literal_grade": "the oracle text applied word for word",
     "oracle_sha256": {
@@ -26,10 +28,10 @@
       "review-claims": "a1b640ed2d4348238f0cb888f1d894e92c546ce0558ea90601993b4705a566ab",
       "vague-report": "3f79a385ae280f4babb687b12b482f9a33cd231c40ddace1ec29e5db204d3c49"
     },
-    "private_grades_sha256": "cdbd0046ae671dcbd8ff833f3e5534a1f2fc47d1774817915f7c7622171903d3",
-    "proposed_grade": "the grade if a person accepts the oracle gaps below",
-    "rule": "The oracles let a model flag, never decide. Every grade here waits for a person, and each retained result keeps task_outcome null.",
-    "status": "proposed"
+    "private_grades_sha256": "95266d4819cd00e1c75c4f49ab79600525dccfb991bf6ebca074b7f9f66764e3",
+    "proposed_grade": "the grade with the oracle gaps below accepted; this is the confirmed grade",
+    "rule": "The oracles let a model flag, never decide. A model proposed these grades and the project owner confirmed the proposed grade for every slot. The retained results keep task_outcome null so their digests still match the evidence; this file and the private grades file hold the confirmed grades.",
+    "status": "confirmed"
   },
   "host": "codex-cli 0.163.0",
   "oracle_gaps": [

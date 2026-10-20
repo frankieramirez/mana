@@ -2,7 +2,7 @@
 
 ## 0.44.20
 
-- `evals/workflows/integration-pilot-5-results.json` records the live frankieramirez/mana#112 pilot on `mana-112-integration-pilot-5`: 12 of 12 slots completed with no retries, no children and no stop. Grades are model-proposed and wait for a person. With the recorded oracle gaps accepted, control passes 5 of 6 and baseline 4 of 6, and both control feature-change runs let a regression in an unmapped test escape. The README describes the result.
+- `evals/workflows/integration-pilot-5-results.json` records the live frankieramirez/mana#112 pilot on `mana-112-integration-pilot-5`: 12 of 12 slots completed with no retries, no children and no stop. A model proposed the grades and the project owner confirmed them. With the recorded oracle gaps accepted, control passes 5 of 6 and baseline 4 of 6, and both control feature-change runs let a regression in an unmapped test escape. The README describes the result.
 
 ## 0.44.19
 
