@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.13
+
+- `scripts/validate.sh` runs its fixture suites side by side through the new `scripts/fixtures.py`, one workflow test class per process, and prints only the failures. A full run drops from about seven minutes to about two on four cores. The Leyline challenge fixture's evict mode now kills only the sentinel its own challenge started, so a concurrent suite keeps its listener.
+
 ## 0.44.12
 
 - Leyline's control skill no longer asks an agent to quote a repair that an exit 3 report does not give. The contract has no required repair field, so the agent quotes the missing prerequisite exactly, quotes its repair when the report has one, and says when it has none.

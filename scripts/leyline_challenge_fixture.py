@@ -64,11 +64,15 @@ function listen(port) {
   });
 }
 // A careless fixture clears its preferred port by pattern. The challenge must catch it.
+// Only the sentinel its own challenge started, so suites running side by side keep theirs.
 function evict() {
-  const table = spawnSync('ps', ['-A', '-o', 'pid=,args='], {encoding: 'utf8'}).stdout || '';
-  for (const line of table.split('\n')) {
-    const [pid, ...args] = line.trim().split(/\s+/);
-    if (args.join(' ').includes('leyline-challenge-sentinel')) try { process.kill(Number(pid), 'SIGTERM'); } catch {}
+  const table = spawnSync('ps', ['-A', '-o', 'pid=,ppid=,args='], {encoding: 'utf8'}).stdout || '';
+  const rows = table.split('\n').map((line) => line.trim().split(/\s+/)).filter((row) => row.length > 2);
+  const parent = new Map(rows.map(([pid, ppid]) => [Number(pid), Number(ppid)]));
+  const ancestors = new Set();
+  for (let pid = process.pid; pid > 1 && !ancestors.has(pid); pid = parent.get(pid) || 0) ancestors.add(pid);
+  for (const [pid, ppid, ...args] of rows) {
+    if (ancestors.has(Number(ppid)) && args.join(' ').includes('leyline-challenge-sentinel')) try { process.kill(Number(pid), 'SIGTERM'); } catch {}
   }
 }
 let preferredBusy = false;
