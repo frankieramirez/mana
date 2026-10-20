@@ -37,7 +37,7 @@ Name the feature id and every route in its `reach` records. Cite each executed r
 
 Give each check's coverage in its scenario record's own words. A scenario that asserts the API alone says nothing about the page, so an empty page can be correct while that scenario passes.
 
-An incomplete run (exit 3) proves nothing about the reported behavior. Report verification as blocked, quote the missing prerequisite and its repair exactly as the report gives them, and diagnose no defect from the checks that did run. Install a prerequisite only when the request authorizes it; then say you did and rerun the control before you claim anything.
+An incomplete run (exit 3) proves nothing about the reported behavior. Report verification as blocked and quote the missing prerequisite exactly as the report gives it. Quote its repair the same way when the report has one, and say so when it has none. Diagnose no defect from the checks that did run. Install a prerequisite only when the request authorizes it; then say you did and rerun the control before you claim anything.
 
 ## Evidence limits
 
