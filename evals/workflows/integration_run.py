@@ -83,14 +83,24 @@ def quarantine(consumer, destination):
     source = consumer / '.git'
     if source.is_symlink() or not source.is_dir():
         raise ValueError('the checkout .git is not a plain directory')
+    # Links are copied as links, never followed, and then refused: writing or reading through one would reach
+    # outside the copy, for example a .git/config pointing at an operator file.
     shutil.copytree(source, destination, symlinks=True)
+    links = [path.relative_to(destination).as_posix() for path in destination.rglob('*') if path.is_symlink()]
+    if links:
+        raise ValueError('the checkout .git holds symlinks: ' + ', '.join(sorted(links)[:5]))
     for name in ('hooks', 'info/attributes', 'config.worktree', 'commondir'):
         path = destination / name
-        if path.is_symlink() or path.is_file():
+        if path.is_file():
             path.unlink()
         elif path.is_dir():
             shutil.rmtree(path)
-    (destination / 'config').write_text(CLEAN_CONFIG)
+    config = destination / 'config'
+    if config.exists():
+        config.unlink()
+    descriptor = os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+    with os.fdopen(descriptor, 'w') as handle:
+        handle.write(CLEAN_CONFIG)
     return destination
 
 
