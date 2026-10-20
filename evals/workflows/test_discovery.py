@@ -410,6 +410,21 @@ class LiveRecord(unittest.TestCase):
         self.assertEqual('verified', result['capabilities']['skill_discovery']['status'])
 
 
+    def test_live_codex_0163_catalog_record(self):
+        # Recorded by run.py --probe-catalog on a real Codex CLI 0.163.0 host, with no model call.
+        path = hosts.EVIDENCE / '2026-10-20-codex-cli-0.163.0-catalog.json'
+        self.assertEqual('97e9fb3f86079c47703694a12c520aa419ebc41da1923a7fb28a997577f38c3d',
+                         hashlib.sha256(path.read_bytes()).hexdigest())
+        record = json.loads(path.read_text())
+        self.assertEqual((0, [], []), (record['model_invocations'], record['unknown'], record['catalog_findings']))
+        honored = record['capabilities']['explicit_only_honored']
+        self.assertEqual('verified', honored['status'])
+        # The host reads only the agents/openai.yaml policy, which is why every explicit-only skill ships one.
+        self.assertEqual({'allow_implicit_invocation': 'honored', 'disable-model-invocation': 'ignored'}, honored['markers'])
+        found = hosts.capabilities('codex-cli 0.163.0')['explicit_only_honored']
+        self.assertEqual((path.name, 'verified'), (found['record'], found['status']))
+
+
 class ActivationProbe(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
@@ -478,12 +493,79 @@ class ActivationProbe(unittest.TestCase):
         }
         for name, (plan, expected) in plans.items():
             with self.subTest(name):
-                record, _ = self.probe(plan, name.replace(' ', '-'))
+                # No catalog render, so the live run alone decides explicit_only_honored.
+                record, _ = self.probe(dict(plan, prompt_input='unsupported'), name.replace(' ', '-'))
                 expected = dict({'installation': 'verified'}, **expected)
                 self.assertEqual(self.statuses(record), expected)
                 self.assertEqual(self.accepted(name.replace(' ', '-')), expected.get('skill_discovery') == 'verified')
                 if 'skill_discovery' not in expected:
                     self.assertTrue(any(note.startswith('skill_discovery: ') for note in record['unknown']), record['unknown'])
+
+    def test_catalog_render_decides_explicit_only_without_a_model_call(self):
+        plans = {
+            # What Codex 0.163.0 printed: the policy file hides a skill and the frontmatter flag does not.
+            'policy only': ({'render_honors': ['policy']}, 'verified',
+                            {'allow_implicit_invocation': 'honored', 'disable-model-invocation': 'ignored'}),
+            'both markers': ({}, 'verified', {'allow_implicit_invocation': 'honored', 'disable-model-invocation': 'honored'}),
+            'neither marker': ({'render_honors': []}, 'failed',
+                               {'allow_implicit_invocation': 'ignored', 'disable-model-invocation': 'ignored'}),
+        }
+        for name, (plan, status, markers) in plans.items():
+            with self.subTest(name):
+                slug = name.replace(' ', '-')
+                host = FakeHost(self, dict({'response': RESPONSE}, **plan))
+                with host.environment():
+                    record = discovery_probe.probe_catalog(host.executable, self.root / slug)
+                self.assertEqual(self.statuses(record), {'installation': 'verified', 'explicit_only_honored': status})
+                self.assertEqual(record['capabilities']['explicit_only_honored']['markers'], markers)
+                self.assertEqual((record['model_invocations'], host.calls()), (0, []))
+                # The operator's home and Codex home never reach either render.
+                for path in sorted(host.state.glob('render-*.json')):
+                    render = json.loads(path.read_text())
+                    self.assertTrue(render['home'].startswith(str(self.root / slug)), render)
+                    self.assertTrue(render['codex_home'].startswith(str(self.root / slug)), render)
+                self.assertEqual(len(list(host.state.glob('render-*.json'))), 2)
+                self.assertNotIn(str(self.root), json.dumps(record))
+
+    def test_the_shipped_catalog_render_names_each_misplaced_skill(self):
+        explicit = sorted(item['name'] for item in discovery.snapshot(run.ROOT / 'skills')['skills'] if item['activation'] == 'explicit')
+        for name, plan, findings in (('honored', {'render_honors': ['policy']}, []),
+                                     ('ignored', {'render_honors': []}, ['explicit-only %s is listed for implicit use' % n for n in explicit])):
+            with self.subTest(name):
+                host = FakeHost(self, dict({'response': RESPONSE}, **plan))
+                with host.environment():
+                    record = discovery_probe.probe_catalog(host.executable, self.root / ('shipped-' + name))
+                self.assertEqual(record['catalog_findings'], findings)
+                installed = next(p for p in record['probes'] if p['name'] == 'installed-catalog-render')
+                self.assertEqual(installed['counts'], {'automatic': 11, 'explicit': 8})
+                self.assertEqual(installed['hidden_automatic'], [])
+
+    def test_a_live_direct_read_overrides_a_hidden_catalog_entry(self):
+        record, _ = self.probe({'parent': {'commands': ['cat ' + ALPHA, 'cat ' + BETA]}}, 'contradicted')
+        self.assertEqual(record['capabilities']['explicit_only_honored']['status'], 'failed')
+
+    def test_a_missing_render_leaves_explicit_only_unknown(self):
+        for name, plan in {'unsupported': {'prompt_input': 'unsupported'},
+                           'no catalog': {'render_empty': True}}.items():
+            with self.subTest(name):
+                host = FakeHost(self, dict({'response': RESPONSE}, **plan))
+                with host.environment():
+                    record = discovery_probe.probe_catalog(host.executable, self.root / name.replace(' ', '-'))
+                self.assertEqual(self.statuses(record), {'installation': 'verified'})
+                self.assertTrue(any(note.startswith('explicit_only_honored: catalog render') for note in record['unknown']),
+                                record['unknown'])
+
+    def test_explicit_only_markers_must_agree_in_the_catalog(self):
+        for frontmatter, policy in ((True, False), (False, True)):
+            with self.subTest(frontmatter=frontmatter, policy=policy):
+                root = self.root / ('markers-%s-%s' % (frontmatter, policy))
+                discovery_probe.write_canary(root, 'probe-1', 'Gives a word.', 'gamma', 'secret', frontmatter, policy)
+                with self.assertRaisesRegex(ValueError, 'explicit-only markers disagree'):
+                    discovery.snapshot(root)
+        catalog = discovery.snapshot(run.ROOT / 'skills')
+        explicit = {item['name'] for item in catalog['skills'] if item['activation'] == 'explicit'}
+        for name in explicit:
+            self.assertEqual((run.ROOT / 'skills' / name / 'agents/openai.yaml').read_text(), discovery_probe.OPENAI_POLICY)
 
     def test_outside_reads_are_recorded_without_hiding_a_direct_load(self):
         label, folder = self.folders[0]
@@ -534,6 +616,9 @@ class ActivationProbe(unittest.TestCase):
             ['--discover', '--live', '--case', 'scan-positive', '--routes-sha256', 'x', '--model', MODEL, '--timeout', '600'],
             ['--discovery-check', '--live'],
             ['--discovery-check', '--probe-discovery'],
+            ['--probe-catalog', '--out', str(self.root / 'x'), '--model', MODEL],
+            ['--probe-catalog'],
+            ['--probe-catalog', '--probe-discovery', '--out', str(self.root / 'x'), '--model', MODEL],
         ]
         for extra in attempts:
             with self.subTest(extra=extra):

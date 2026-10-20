@@ -34,6 +34,8 @@ npx skills add frankieramirez/mana -g
 npx skills add frankieramirez/mana -a codex
 ```
 
+Eight skills run only when you name them: setup-mana, scry, sift, conjure, cast, portal, vision, and banish. Each says so twice, because hosts read different files. Claude Code reads `disable-model-invocation: true` in the `SKILL.md` frontmatter, and Codex reads `policy.allow_implicit_invocation: false` in the skill's `agents/openai.yaml`.
+
 ## The loop
 
 Start with [setup-mana](#setup-mana) for a new repo, [scry](#scry) for an idea, [sift](#sift) for an incoming report, or [cast](#cast) for a ready ticket. When you do not know which applies, [portal](#portal) reads the board and names the next one.
