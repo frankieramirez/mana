@@ -1,6 +1,6 @@
 ---
 name: ultima
-description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, or /ultima."
+description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima."
 argument-hint: "[path:<dir>] [category:<a,b>] [lens:<a,b>] [since:<days>] [report|tickets|fix[:<n>]]"
 ---
 
@@ -54,7 +54,7 @@ Accept ordinary language for scope and follow-up, including instructions already
 | Token | Effect |
 |-------|--------|
 | `path:<dir>` | Audit only that directory; default is the repository root, including its packages. |
-| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, `security`, or `performance-delivery`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security and Performance & Delivery are opt-in through their category, `all`, or their lenses. |
+| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, `security`, or `performance-delivery`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security and Performance & Delivery are opt-in through their category, `all`, or their lenses. The `lean` lens is opt-in inside Architecture through `all`, `lens:lean`, or a request to find bloat or code to delete. |
 | `lens:<a,b>` | Override the recommended roster with named lenses from the table below. |
 | `since:<days>` | Churn window for hot spots. Default 90. |
 | `report` | Deliver the report and stop. |
@@ -71,12 +71,12 @@ Create the run directory first (Stage 3 has the block; run it now, then come bac
 bash "<SKILL_DIR>/scripts/ultima.sh" orient --path <explicit dir or repository root> --category <categories or ux,architecture,data-reliability> --since <days> --run-dir "$RUN_DIR"
 ```
 
-The script writes `$RUN_DIR/profile.json`. It inventories manifests, components, dependency edges, entrypoints, data files, and deployment files under `system_map`, alongside frontend conventions, churn, decision docs, and lint packages. These are discovery seeds, not a verified architecture model. Use `recommended_lenses` unless `lens:` overrides it. Missing frontend code does not stop an architecture audit. Exit 2 means no applicable source for the selected categories: report that and stop. An explicit lens roster determines the categories passed to profiling, so a category filter cannot block a lens override. Exit 4 means no `python3`: gather the same profile shape by hand and disclose this in Coverage.
+The script writes `$RUN_DIR/profile.json`. It inventories manifests, components, dependency edges, entrypoints, data files, and deployment files under `system_map`, alongside frontend conventions, churn, decision docs, and lint packages. These are discovery seeds, not a verified architecture model. Use `recommended_lenses` unless `lens:` overrides it. A request to find bloat, dead code, unused dependencies, or what can be deleted adds `lean` to the roster. Missing frontend code does not stop an architecture audit. Exit 2 means no applicable source for the selected categories: report that and stop. An explicit lens roster determines the categories passed to profiling, so a category filter cannot block a lens override. Exit 4 means no `python3`: gather the same profile shape by hand and disclose this in Coverage.
 
 | Category | Lenses |
 |---|---|
 | `ux` | `design-system`, `interaction-states`, `accessibility`, `component-architecture` |
-| `architecture` | `system-architecture` |
+| `architecture` | `system-architecture`, and `lean` when opted in |
 | `data-reliability` | `data-integrity`, `failure-recovery` |
 | `security` | `access-control`, `input-boundaries`, `sensitive-data` |
 | `performance-delivery` | `performance`, `delivery` |

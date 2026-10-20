@@ -19,6 +19,7 @@
         "accessibility",
         "component-architecture",
         "system-architecture",
+        "lean",
         "data-integrity",
         "failure-recovery",
         "access-control",
