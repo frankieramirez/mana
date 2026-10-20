@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.17
+
+- A new `evals/workflows/integration.py` freezes the paired project-control integration pilot for frankieramirez/mana#112: Sift, Cast and Scan task families, a control arm and a baseline arm, two repetitions, exactly 12 invocations and no retries. Both arms install the same Mana skills in the consumer's own skills directory and get the same request, setup, host, model, timeout and prerequisites. The baseline drops only the declared control paths and applies declared edits that remove the `Control:` pointer and other references to the control. Freeze refuses arms that differ in anything else or setup that applies to one arm only. Each fixture is one fresh commit plus folded, committed or uncommitted setup, so no history carries the control, and it rebuilds to the frozen HEAD with the operator's Git configuration ignored. Every private input and the frozen study must sit outside the Mana checkout, and `--summary` prints only counts, digests and the schedule. `integration-pilot-1-summary.json` records the first freeze. Freezing runs no agent.
+
 ## 0.44.16
 
 - Leyline refresh follows a rename in a break patch written with `diff.mnemonicprefix`, whose headers use `i/` and `w/` in place of `a/` and `b/`. Before, such a patch was reported stale and sent to a person. The refresh fixtures now pin their own diff prefixes, so an operator's git config no longer fails the suite. The workflow eval README loses merge conflict markers left from an earlier merge.

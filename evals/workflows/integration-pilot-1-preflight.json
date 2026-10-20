@@ -1,0 +1,101 @@
+{
+  "cells": [
+    {
+      "arm": "baseline",
+      "family": "feature-change",
+      "head": "a59ece1b6f292eba28099b82e01c029c289ba74d",
+      "test": {
+        "exit": 0,
+        "failed": 0,
+        "passed": 2,
+        "seconds": 10.0
+      },
+      "unexpected_status_lines": []
+    },
+    {
+      "arm": "control",
+      "control": {
+        "executed": 2,
+        "exit": 0,
+        "seconds": 12.2,
+        "status": "passed"
+      },
+      "family": "feature-change",
+      "head": "2891d58ee9828c50a7198ab2e33ec3ab359692f6",
+      "test": {
+        "exit": 0,
+        "failed": 0,
+        "passed": 2,
+        "seconds": 9.9
+      },
+      "unexpected_status_lines": []
+    },
+    {
+      "arm": "baseline",
+      "family": "review-claims",
+      "head": "4f3178d4c5ec5637fe5dc7f7c6204238d0748d9b",
+      "test": {
+        "exit": 1,
+        "failed": 1,
+        "passed": 1,
+        "seconds": 39.5
+      },
+      "unexpected_status_lines": []
+    },
+    {
+      "arm": "control",
+      "control": {
+        "executed": 2,
+        "exit": 1,
+        "seconds": 41.9,
+        "status": "failed"
+      },
+      "family": "review-claims",
+      "head": "59836c7ecdbf524978cef10779f017af7347e208",
+      "test": {
+        "exit": 1,
+        "failed": 1,
+        "passed": 1,
+        "seconds": 39.6
+      },
+      "unexpected_status_lines": []
+    },
+    {
+      "arm": "control",
+      "control": {
+        "executed": 2,
+        "exit": 1,
+        "seconds": 11.7,
+        "status": "failed"
+      },
+      "family": "vague-report",
+      "head": "54712e83e052f359769beb924a99767663868f03",
+      "test": {
+        "exit": 1,
+        "failed": 1,
+        "passed": 1,
+        "seconds": 9.3
+      },
+      "unexpected_status_lines": []
+    },
+    {
+      "arm": "baseline",
+      "family": "vague-report",
+      "head": "32b789595e7dbcd2613fe34983593b58bdd209b8",
+      "test": {
+        "exit": 1,
+        "failed": 1,
+        "passed": 1,
+        "seconds": 9.3
+      },
+      "unexpected_status_lines": []
+    }
+  ],
+  "controls_sha256": "ff078e81fa18c82444d7fe2a7f1a51c64590f64b5d1dc5406cfc1925837c18b7",
+  "kind": "no-model fixture preflight",
+  "model_invocations": 0,
+  "ran_at": "2026-10-20",
+  "schema_version": 1,
+  "scope": "One rebuilt fixture per family and arm, outside the Codex sandbox with command networking available. The project test file for the mapped feature ran in both arms and the project control ran in the control arm. It checks each oracle's expected test and control outcome and fixture identity, not the sandboxed live path.",
+  "study": "mana-112-integration-pilot-1"
+}
