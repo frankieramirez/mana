@@ -11,8 +11,10 @@ import json
 import os
 from pathlib import Path
 import re
+import socket
 import subprocess
 import sys
+import threading
 import time
 
 PLAN = json.loads(Path(os.environ['MANA_FAKE_HOST_PLAN']).read_text())
@@ -22,6 +24,8 @@ PRELUDE = r'''
 import os as _os, sys as _sys
 _TABLE = %(table)r
 _NETWORK = %(network)r
+_PROXY = %(proxy)r
+_BYPASS = %(bypass)r
 _MINIMAL = ('/usr', '/lib', '/lib64', '/etc', '/proc', '/dev', _sys.base_prefix, _sys.prefix)
 def _inside(path, root):
     root = root.rstrip('/') or '/'
@@ -52,7 +56,8 @@ def _hook(event, args):
     elif event == 'socket.connect' and _NETWORK == 'local':
         # Loopback inside the sandbox only: a port this process bound itself, like a private network namespace.
         host, port = args[1][0], args[1][1]
-        if not (host in ('127.0.0.1', 'localhost') and any(_port(s) == port for s in _BOUND)):
+        loopback = host in ('127.0.0.1', 'localhost')
+        if not (_BYPASS or (loopback and (port == _PROXY or any(_port(s) == port for s in _BOUND)))):
             raise ConnectionRefusedError(111, 'fake sandbox proxy refused')
 _BOUND = []
 def _port(sock):
@@ -115,16 +120,42 @@ def policy(configs):
     return table, network
 
 
+def proxy():
+    """The host's network proxy with no allowed domain: every CONNECT is refused unless the plan says otherwise."""
+    server = socket.socket()
+    server.bind(('127.0.0.1', 0))
+    server.listen(8)
+
+    def serve():
+        while True:
+            connection, _ = server.accept()
+            with connection:
+                request = b''
+                while b'\r\n\r\n' not in request:
+                    chunk = connection.recv(1024)
+                    if not chunk:
+                        break
+                    request += chunk
+                reply = b'200 Connection established' if PLAN.get('proxy_allows') else b'403 Forbidden'
+                connection.sendall(b'HTTP/1.1 ' + reply + b'\r\n\r\n')
+    threading.Thread(target=serve, daemon=True).start()
+    return server.getsockname()[1]
+
+
 def python_command(args, configs, cwd):
     """Run python3 -c CODE or python3 SCRIPT ARGS, contained when the plan says so."""
     if args[1] == '-c':
         body = 'import sys\nsys.argv = %r\n' % (['-c'] + list(args[3:])) + args[2]
     else:
         body = 'import runpy, sys\nsys.argv = %r\nrunpy.run_path(%r, run_name="__main__")\n' % (args[1:], args[1])
+    env = dict(os.environ)
     if PLAN.get('containment', 'enforced') == 'enforced':
         table, network = policy(configs)
-        body = PRELUDE % {'table': table, 'network': network} + body
-    return subprocess.run(['/usr/bin/python3', '-c', body], cwd=cwd, capture_output=True, text=True)
+        port = proxy() if network == 'local' else None
+        if port:
+            env['HTTPS_PROXY'] = 'http://127.0.0.1:%d' % port
+        body = PRELUDE % {'table': table, 'network': network, 'proxy': port, 'bypass': PLAN.get('proxy_bypass', False)} + body
+    return subprocess.run(['/usr/bin/python3', '-c', body], cwd=cwd, capture_output=True, text=True, env=env)
 
 
 def run_command(command, configs, cwd):

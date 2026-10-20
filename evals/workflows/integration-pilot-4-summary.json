@@ -27,7 +27,7 @@
     "replaced_skill_files": 172,
     "revision": "9aa28a8fd7b20930b0d2e5fe76728300453902ca"
   },
-  "controls_sha256": "9442d5b9799889cb6e4dc2b764725c44f84d63273b9bc4aaeaede2d75d11e615",
+  "controls_sha256": "f68ee5a440ba3d75204cad3d85d180be090d4329c5e16439f724da8127bcbd15",
   "families": {
     "feature-change": {
       "attachments_sha256": [],
@@ -166,7 +166,7 @@
   "reasoning": "medium",
   "repetitions": 2,
   "requested_model": "gpt-6.1-sol",
-  "runner_inventory_sha256": "9eb6edcf846ee2dd81dd8e5da19bf80c571a4c6d032e1be60d36343b0a9b1ba2",
+  "runner_inventory_sha256": "da59e2dcf09468b93b45003431d5a719bd3bf944ade03f2345563561d010894d",
   "runtime": {
     "browsers_sha256": "89c2a5bf595606ca049b1229421052cf20baa704fb5857d52bc3f38b022348e2",
     "codex_sha256": "399ff69c431c066e40de318fba45c2b07f45a76b19939d247ee4828fc70c4215",
@@ -250,6 +250,6 @@
   ],
   "schema_version": 1,
   "seed": 20261017,
-  "study": "mana-112-integration-pilot-2",
+  "study": "mana-112-integration-pilot-4",
   "timeout_seconds": 900
 }

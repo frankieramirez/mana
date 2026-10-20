@@ -1,7 +1,10 @@
 """The paired integration runner, offline against fake_host.py and a synthetic consumer. No model is invoked."""
 import json
+import socket
+import subprocess
 import sys
 import unittest
+from unittest import mock
 
 import integration
 import integration_run
@@ -13,6 +16,20 @@ RESPONSE = {'report': 'done', 'checks': []}
 
 @unittest.skipUnless(LINUX, 'the fake sandbox and the process-family sweep target Linux')
 class Runner(Consumer):
+    def setUp(self):
+        super().setUp()
+        # Stand-ins for the public endpoints: reachable from the runner, never bound inside the fake sandbox.
+        self.public = []
+        for name in ('EXTERNAL', 'PROXY_TARGET'):
+            listener = socket.socket()
+            listener.bind(('127.0.0.1', 0))
+            listener.listen(16)
+            self.addCleanup(listener.close)
+            self.public.append(listener)
+            patcher = mock.patch.object(integration_run, name, ('127.0.0.1', listener.getsockname()[1]))
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def study(self, name='study'):
         result = integration.freeze(self.manifest(), self.base / name)
         return integration.FrozenIntegration(self.base / name, result['controls_sha256'])
@@ -32,6 +49,8 @@ class Runner(Consumer):
         for (family, arm), row in cells.items():
             self.assertEqual(row['checks'][0]['exit'], EXITS[family])
             self.assertEqual(row['probe']['outside_listener'], 'refused')
+            self.assertEqual((row['probe']['external'], row['probe']['proxy_connect']), ('refused', 'refused'))
+            self.assertEqual(row['probe']['proxy_status'], 'HTTP/1.1 403 Forbidden')
             self.assertEqual(row['probe']['loopback'], 'allowed')
             self.assertEqual(row['head'], study.controls['families'][family]['fixtures'][arm]['head'])
             self.assertTrue((self.base / 'preflight' / ('%s-%s' % (family, arm)) / 'work/consumer/node_modules/pkg').is_dir())
@@ -49,6 +68,24 @@ class Runner(Consumer):
         record = integration_run.preflight(self.study(), self.base / 'preflight')
         self.assertFalse(record['passed'])
         self.assertTrue(all('containment probe failed' in r['failures'][0] and not r['checks'] for r in record['cells']))
+
+    def test_a_proxy_that_allows_a_connect_fails_the_probe(self):
+        self.host.write({'version': 'codex-cli 0.163.0', 'proxy_allows': True})
+        record = integration_run.preflight(self.study(), self.base / 'preflight')
+        self.assertFalse(record['passed'])
+        self.assertTrue(all('"proxy_connect": "allowed"' in r['failures'][0] for r in record['cells']))
+
+    def test_a_direct_route_around_the_proxy_fails_the_probe(self):
+        self.host.write({'version': 'codex-cli 0.163.0', 'proxy_bypass': True})
+        record = integration_run.preflight(self.study(), self.base / 'preflight')
+        self.assertFalse(record['passed'])
+        self.assertTrue(all('"external": "connected"' in r['failures'][0] for r in record['cells']))
+
+    def test_an_unreachable_public_endpoint_leaves_the_probe_unproven(self):
+        self.public[0].close()
+        record = integration_run.preflight(self.study(), self.base / 'preflight')
+        self.assertFalse(record['passed'])
+        self.assertTrue(all('unproven' in r['failures'][0] for r in record['cells']))
 
     def test_live_runs_all_twelve_slots_in_order_with_one_invocation_each(self):
         study = self.study()
@@ -76,6 +113,31 @@ class Runner(Consumer):
             prompts.setdefault(cell['family'], set()).add(call['prompt'].split('\n', 1)[1])
         self.assertTrue(all(len(texts) == 1 for texts in prompts.values()), 'both arms get the same request')
         self.assertEqual(integration_run.run_all(study), [], 'a finished slot never runs again')
+
+    def test_collection_never_runs_git_commands_the_agent_planted(self):
+        study = self.study()
+        markers = {name: self.base / ('planted-' + name) for name in ('fsmonitor', 'external', 'hook')}
+        hook = 'printf "#!/bin/sh\\ntouch %s\\n" > .git/hooks/post-index-change && chmod +x .git/hooks/post-index-change' % markers['hook']
+        self.plan(parent={'commands': ['git config core.fsmonitor "touch %s"' % markers['fsmonitor'],
+                                       'git config diff.external "touch %s"' % markers['external'], hook,
+                                       'echo changed >> src/briefing.mjs']})
+        result = integration_run.run_slot(study, 1)
+        self.assertEqual(result['execution'], 'completed')
+        self.assertIsNone(result['stop_reason'])
+        self.assertNotEqual(result['final_state']['status_sha256'], result['initial_state']['status_sha256'])
+        self.assertIn('changed', (study.root / 'results/001/final.diff').read_text())
+        self.assertEqual([name for name, path in markers.items() if path.exists()], [], 'collection ran planted code')
+        consumer = study.root / 'results/001/work/consumer'
+        subprocess.run(['git', '-C', str(consumer), 'status'], capture_output=True, env=integration.git_env())
+        self.assertTrue(markers['fsmonitor'].exists(), 'the plant is live, so the quarantine is what stopped it')
+
+    def test_a_collection_failure_is_recorded_and_releases_the_lock(self):
+        study = self.study()
+        self.plan(parent={'commands': ['rm -rf .git && echo gitdir: /nowhere > .git']})
+        result = integration_run.run_slot(study, 1)
+        self.assertTrue(any('final state unavailable' in f for f in result['failures']), result['failures'])
+        self.assertFalse((study.root / 'results/.active').exists())
+        self.assertTrue((study.root / 'results/STOP.json').is_file())
 
     def test_a_created_child_stops_the_group(self):
         study = self.study()

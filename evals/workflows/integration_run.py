@@ -52,7 +52,7 @@ def toml_table(values):
 def sandbox_config(work, runtime):
     """One permission profile for every attempt and check in both arms."""
     filesystem = {':root': 'deny', ':minimal': 'read', str(work): 'write', str(work / 'attachments'): 'read',
-                  runtime['node']: 'read', runtime['browsers']: 'read', str(Path(runtime['codex']).parent.parent): 'read'}
+                  runtime['node']: 'read', runtime['browsers']: 'read', str(Path(runtime['codex']).parent): 'read'}
     return ['default_permissions="mana-eval"', 'approval_policy="never"',
             'permissions.mana-eval.filesystem=' + toml_table(filesystem),
             'permissions.mana-eval.network.enabled=true', 'permissions.mana-eval.network.allow_local_binding=true',
@@ -70,18 +70,45 @@ def config_args(values):
     return [part for value in values for part in ('-c', value)]
 
 
-def git(work, *args):
-    return subprocess.run(['git', '-C', str(work), *args], capture_output=True, text=True,
-                          env=integration.git_env(), timeout=120)
+CLEAN_CONFIG = '[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n'
 
 
-def state(consumer):
-    """HEAD, the index and the status, including untracked files and ignored dependencies left out."""
-    status = git(consumer, 'status', '--porcelain=v1', '-z', '--untracked-files=all')
-    index = consumer / '.git' / 'index'
-    return {'head': git(consumer, 'rev-parse', 'HEAD').stdout.strip(),
-            'status_sha256': conditions.digest(status.stdout.encode()),
-            'index_sha256': conditions.digest(index.read_bytes()) if index.is_file() else None}
+def quarantine(consumer, destination):
+    """A copy of the checkout's .git with its config, hooks and attributes reset.
+
+    The agent can write .git, and Git runs commands named there: core.fsmonitor, diff.external, textconv and
+    filter drivers, hooks, and anything an include.path pulls in. The evaluator reads state outside the sandbox,
+    so it only ever reads this copy, where none of those settings survive.
+    """
+    source = consumer / '.git'
+    if source.is_symlink() or not source.is_dir():
+        raise ValueError('the checkout .git is not a plain directory')
+    shutil.copytree(source, destination, symlinks=True)
+    for name in ('hooks', 'info/attributes', 'config.worktree', 'commondir'):
+        path = destination / name
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+    (destination / 'config').write_text(CLEAN_CONFIG)
+    return destination
+
+
+def git(consumer, git_dir, *args):
+    env = dict(integration.git_env(), GIT_ATTR_NOSYSTEM='1')
+    return subprocess.run(['git', '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null',
+                           '--git-dir', str(git_dir), '--work-tree', str(consumer), *args],
+                          capture_output=True, text=True, env=env, timeout=120)
+
+
+def state(consumer, destination):
+    """HEAD, the index and the status, read from a quarantined copy of the checkout's .git."""
+    git_dir = quarantine(consumer, destination)
+    index = git_dir / 'index'
+    index_sha256 = conditions.digest(index.read_bytes()) if index.is_file() else None
+    status = git(consumer, git_dir, 'status', '--porcelain=v1', '-z', '--untracked-files=all')
+    return {'head': git(consumer, git_dir, 'rev-parse', 'HEAD').stdout.strip(),
+            'status_sha256': conditions.digest(status.stdout.encode()), 'index_sha256': index_sha256}
 
 
 def workspace(study, slot, out, runtime):
@@ -101,15 +128,21 @@ def workspace(study, slot, out, runtime):
                                    stderr=subprocess.STDOUT, env=agent_env(work, runtime), timeout=900)
     if installed.returncode:
         raise ValueError('offline dependency install exited %d' % installed.returncode)
-    after = git(work / 'consumer', 'status', '--porcelain=v1', '-z', '--untracked-files=all').stdout.encode()
-    if conditions.digest(after) != built['status_sha256']:
+    if state(work / 'consumer', out / 'collect-install.git')['status_sha256'] != built['status_sha256']:
         raise ValueError('dependency install changed the fixture status')
     return cell, work
 
 
-PROBE = r'''
-import json, pathlib, socket, sys
+# A routable public address and a public host for a CONNECT through the sandbox's proxy. The runner reaches
+# both directly first, outside the sandbox, so a refusal inside proves the profile and not an outage.
+EXTERNAL = ('1.1.1.1', 443)
+PROXY_TARGET = ('registry.npmjs.org', 443)
+
+PROBE = r"""
+import json, os, pathlib, socket, sys, urllib.parse
 canary, outside_port = sys.argv[1], int(sys.argv[2])
+external = (sys.argv[3], int(sys.argv[4]))
+target = '%s:%s' % (sys.argv[5], sys.argv[6])
 result = {}
 result['outside_read'] = 'visible' if pathlib.Path(canary).exists() else 'denied'
 pathlib.Path('../tmp/probe').write_text('allowed'); pathlib.Path('../tmp/probe').unlink(); result['workspace_write'] = 'allowed'
@@ -119,15 +152,30 @@ except OSError:
     result['attachment_write'] = 'denied'
 own = socket.socket(); own.bind(('127.0.0.1', 0)); own.listen(1)
 client = socket.socket(); client.settimeout(3); client.connect(own.getsockname()); result['loopback'] = 'allowed'
-for name, address in (('outside_listener', ('127.0.0.1', outside_port)), ('external', ('192.0.2.1', 443))):
+for name, address in (('outside_listener', ('127.0.0.1', outside_port)), ('external', external)):
     try:
-        probe = socket.socket(); probe.settimeout(3); probe.connect(address); result[name] = 'connected'
+        probe = socket.socket(); probe.settimeout(5); probe.connect(address); result[name] = 'connected'
     except OSError:
         result[name] = 'refused'
+proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
+if not proxy:
+    result['proxy_connect'] = 'no proxy'
+else:
+    parsed = urllib.parse.urlsplit(proxy if '://' in proxy else 'http://' + proxy)
+    try:
+        tunnel = socket.create_connection((parsed.hostname, parsed.port or 80), timeout=10)
+        tunnel.sendall(('CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n' % (target, target)).encode())
+        status = tunnel.recv(256).split(b'\r\n', 1)[0].decode(errors='replace')
+        code = status.split(' ')[1] if len(status.split(' ')) > 1 else ''
+        result['proxy_connect'] = 'allowed' if code.startswith('2') else 'refused'
+        result['proxy_status'] = status[:80]
+    except OSError as exc:
+        result['proxy_connect'] = 'refused'
+        result['proxy_status'] = type(exc).__name__
 print(json.dumps(result))
-'''
+"""
 EXPECTED_PROBE = {'outside_read': 'denied', 'workspace_write': 'allowed', 'attachment_write': 'denied',
-                  'loopback': 'allowed', 'outside_listener': 'refused', 'external': 'refused'}
+                  'loopback': 'allowed', 'outside_listener': 'refused', 'external': 'refused', 'proxy_connect': 'refused'}
 
 
 def sandboxed(executable, work, runtime, argv, timeout, **kwargs):
@@ -136,8 +184,21 @@ def sandboxed(executable, work, runtime, argv, timeout, **kwargs):
     return subprocess.run(command, capture_output=True, text=True, timeout=timeout, **kwargs)
 
 
+def reachable(address):
+    """The control for a refusal: the same endpoint answers from outside the sandbox."""
+    try:
+        socket.create_connection(address, timeout=10).close()
+        return True
+    except OSError:
+        return False
+
+
 def probe(executable, work, runtime):
-    """Containment through the same profile: denied outside reads, writes and network, allowed loopback."""
+    """Containment through the same profile: denied outside reads, writes and network, allowed loopback, and a
+    proxy that refuses a CONNECT to a public host the runner itself can reach."""
+    for address in (EXTERNAL, PROXY_TARGET):
+        if not reachable(address):
+            raise ValueError('containment probe unproven: %s:%d is unreachable from outside the sandbox' % address)
     canary = work.parent / 'outside-canary'
     canary.write_text('evaluator only, never visible to the agent')
     listener = socket.socket()
@@ -146,7 +207,8 @@ def probe(executable, work, runtime):
     listener.settimeout(0.2)
     try:
         result = sandboxed(executable, work, runtime, ['/usr/bin/python3', '-c', PROBE, str(canary),
-                                                       str(listener.getsockname()[1])], 60)
+                                                       str(listener.getsockname()[1]), EXTERNAL[0], str(EXTERNAL[1]),
+                                                       PROXY_TARGET[0], str(PROXY_TARGET[1])], 90)
         try:
             listener.accept()
             reached = True
@@ -160,7 +222,7 @@ def probe(executable, work, runtime):
         raise ValueError('containment probe failed: ' + (result.stderr or result.stdout)[-800:])
     if reached:
         observed['outside_listener'] = 'connected'
-    if result.returncode or observed != EXPECTED_PROBE:
+    if result.returncode or {k: observed.get(k) for k in EXPECTED_PROBE} != EXPECTED_PROBE:
         raise ValueError('containment probe failed: ' + json.dumps(observed, sort_keys=True))
     return dict(observed, checked_at=process_family.now())
 
@@ -190,7 +252,7 @@ def preflight(study, out):
             try:
                 _, work = workspace(study, slot, cell_dir, runtime)
                 row['probe'] = probe(executable, work, runtime)
-                before = state(work / 'consumer')
+                before = state(work / 'consumer', cell_dir / 'collect-before.git')
                 row['head'] = before['head']
                 for index, check in enumerate(c for c in family['checks'] if arm in c['arms']):
                     started = time.monotonic()
@@ -201,7 +263,7 @@ def preflight(study, out):
                                           'seconds': round(time.monotonic() - started, 1)})
                     if result.returncode != check['exit']:
                         row['failures'].append('check %d exited %d, expected %d' % (index, result.returncode, check['exit']))
-                if state(work / 'consumer') != before:
+                if state(work / 'consumer', cell_dir / 'collect-after.git') != before:
                     row['failures'].append('a check changed the checkout')
             except (OSError, ValueError, subprocess.SubprocessError) as exc:
                 row['failures'].append(str(exc))
@@ -253,7 +315,7 @@ def run_slot(study, slot):
     try:
         executable, runtime = executable_for(study)
         cell, work = workspace(study, slot, out, runtime)
-        initial = state(work / 'consumer')
+        initial = state(work / 'consumer', out / 'collect-initial.git')
         result['initial_state'] = initial
         result['isolation'] = probe(executable, work, runtime)
         text = prompt(study, cell, work)
@@ -289,22 +351,32 @@ def run_slot(study, slot):
         result['failures'].append(str(exc))
         result.setdefault('model_invocations', 0)
     finally:
-        if work is not None and initial is not None:
-            consumer = work / 'consumer'
-            result['final_state'] = state(consumer)
-            result['new_commits'] = git(consumer, 'log', '--format=%H %s', initial['head'] + '..HEAD').stdout.splitlines()
-            (out / 'final.diff').write_text(git(consumer, 'diff', initial['head']).stdout)
         try:
-            study.verify()
-        except (OSError, ValueError) as exc:
-            result['failures'].append('frozen study invalid after the attempt: %s' % exc)
-        result['seconds'] = round(time.monotonic() - started, 2)
-        result['ended_at'] = process_family.now()
-        result['stop_reason'] = stop_reason(result)
-        (out / 'result.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
-        if result['stop_reason']:
-            (study.root / 'results' / 'STOP.json').write_text(json.dumps({'slot': slot, 'reason': result['stop_reason']}) + '\n')
-        study.release()
+            try:
+                if work is not None and initial is not None:
+                    consumer = work / 'consumer'
+                    result['final_state'] = state(consumer, out / 'collect-final.git')
+                    git_dir = out / 'collect-final.git'
+                    result['new_commits'] = git(consumer, git_dir, 'log', '--format=%H %s',
+                                                initial['head'] + '..HEAD').stdout.splitlines()
+                    (out / 'final.diff').write_text(git(consumer, git_dir, 'diff', '--no-ext-diff', '--no-textconv',
+                                                        initial['head']).stdout)
+            except (OSError, ValueError, subprocess.SubprocessError) as exc:
+                result['failures'].append('final state unavailable: %s' % exc)
+            try:
+                study.verify()
+            except (OSError, ValueError) as exc:
+                result['failures'].append('frozen study invalid after the attempt: %s' % exc)
+            result['seconds'] = round(time.monotonic() - started, 2)
+            result['ended_at'] = process_family.now()
+            result['stop_reason'] = stop_reason(result)
+            (out / 'result.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
+            if result['stop_reason']:
+                (study.root / 'results' / 'STOP.json').write_text(
+                    json.dumps({'slot': slot, 'reason': result['stop_reason']}) + '\n')
+        finally:
+            # A failure while recording the slot must never strand the serial lock.
+            study.release()
     return result
 
 

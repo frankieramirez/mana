@@ -7,13 +7,13 @@
           "exit": 0,
           "expected_exit": 0,
           "index": 0,
-          "seconds": 13.7
+          "seconds": 14.7
         },
         {
           "exit": 0,
           "expected_exit": 0,
           "index": 1,
-          "seconds": 17.2
+          "seconds": 20.5
         }
       ],
       "failures": 0,
@@ -25,6 +25,8 @@
         "loopback": "allowed",
         "outside_listener": "refused",
         "outside_read": "denied",
+        "proxy_connect": "refused",
+        "proxy_status": "HTTP/1.1 403 Forbidden",
         "workspace_write": "allowed"
       }
     },
@@ -35,7 +37,7 @@
           "exit": 0,
           "expected_exit": 0,
           "index": 0,
-          "seconds": 13.8
+          "seconds": 16.3
         }
       ],
       "failures": 0,
@@ -47,6 +49,8 @@
         "loopback": "allowed",
         "outside_listener": "refused",
         "outside_read": "denied",
+        "proxy_connect": "refused",
+        "proxy_status": "HTTP/1.1 403 Forbidden",
         "workspace_write": "allowed"
       }
     },
@@ -57,13 +61,13 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 43.2
+          "seconds": 46.0
         },
         {
           "exit": 1,
           "expected_exit": 1,
           "index": 1,
-          "seconds": 46.6
+          "seconds": 48.3
         }
       ],
       "failures": 0,
@@ -75,6 +79,8 @@
         "loopback": "allowed",
         "outside_listener": "refused",
         "outside_read": "denied",
+        "proxy_connect": "refused",
+        "proxy_status": "HTTP/1.1 403 Forbidden",
         "workspace_write": "allowed"
       }
     },
@@ -97,6 +103,8 @@
         "loopback": "allowed",
         "outside_listener": "refused",
         "outside_read": "denied",
+        "proxy_connect": "refused",
+        "proxy_status": "HTTP/1.1 403 Forbidden",
         "workspace_write": "allowed"
       }
     },
@@ -107,13 +115,13 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 12.8
+          "seconds": 12.9
         },
         {
           "exit": 1,
           "expected_exit": 1,
           "index": 1,
-          "seconds": 16.7
+          "seconds": 16.3
         }
       ],
       "failures": 0,
@@ -125,6 +133,8 @@
         "loopback": "allowed",
         "outside_listener": "refused",
         "outside_read": "denied",
+        "proxy_connect": "refused",
+        "proxy_status": "HTTP/1.1 403 Forbidden",
         "workspace_write": "allowed"
       }
     },
@@ -135,7 +145,7 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 13.4
+          "seconds": 13.3
         }
       ],
       "failures": 0,
@@ -147,17 +157,19 @@
         "loopback": "allowed",
         "outside_listener": "refused",
         "outside_read": "denied",
+        "proxy_connect": "refused",
+        "proxy_status": "HTTP/1.1 403 Forbidden",
         "workspace_write": "allowed"
       }
     }
   ],
-  "controls_sha256": "9442d5b9799889cb6e4dc2b764725c44f84d63273b9bc4aaeaede2d75d11e615",
+  "controls_sha256": "f68ee5a440ba3d75204cad3d85d180be090d4329c5e16439f724da8127bcbd15",
   "host": "codex-cli 0.163.0",
   "kind": "no-model sandbox preflight",
   "model_invocations": 0,
   "passed": true,
-  "ran_at": "2026-10-20T16:14:10.685+00:00",
+  "ran_at": "2026-10-20T16:34:10.973+00:00",
   "schema_version": 1,
-  "scope": "One workspace per family and arm, built exactly as a live slot builds it, inside the host sandbox profile the live slots use. Check 0 is the mapped feature's test file in both arms; check 1 is the project control in the control arm.",
-  "study": "mana-112-integration-pilot-2"
+  "scope": "One workspace per family and arm, built exactly as a live slot builds it, inside the host sandbox profile the live slots use. Check 0 is the mapped feature's test file in both arms; check 1 is the project control in the control arm. The probe reached the public address and the CONNECT target from outside the sandbox before every cell.",
+  "study": "mana-112-integration-pilot-4"
 }
