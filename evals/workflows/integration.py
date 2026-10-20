@@ -3,8 +3,15 @@
 Both arms install the same Mana payload and get the same request, host, model, reasoning,
 tools, authority, prerequisites and timeout. Only the consumer fixture differs. Arm `control`
 is the pinned consumer revision as committed. Arm `baseline` is the same tree with the declared
-control paths removed and the root Control pointer line dropped. Three task families, two arms
-and two repetitions give exactly 12 parent invocations, with no retries.
+control paths removed and the declared baseline edits applied, which drop the root Control pointer
+line and any other reference to the control. Three task families, two arms and two repetitions give
+exactly 12 parent invocations, with no retries.
+
+Both arms install the payload where the consumer installs its skills, replacing whatever copy the
+pinned revision holds there, so an older installed copy cannot answer for the payload.
+
+Fixtures carry no history from the consumer: each is one commit of the arm's tree plus the family's
+setup, so the baseline arm cannot recover the control from an earlier commit.
 
 The consumer is private and Mana is public. The frozen study therefore lives outside this
 checkout, and so does every request, oracle and setup patch. Only `summary()` output, which
@@ -18,6 +25,7 @@ from pathlib import Path, PurePosixPath
 import random
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -36,6 +44,8 @@ MAX_TIMEOUT = 900
 POINTER = re.compile(r'^Control:')
 REVISION = re.compile(r'[0-9a-f]{40}')
 FIXTURE_DATE = '2000-01-01T00:00:00+00:00'
+# fold: amend into the pinned commit; commit: a commit of its own; worktree: an uncommitted edit, applied last.
+SETUP_MODES = ('fold', 'commit', 'worktree')
 RUNNER_SOURCES = ('integration.py', 'conditions.py', 'hosts.py', 'delegation.py', 'archive_delegated.py')
 KEYS = ('version', 'study', 'host', 'model', 'reasoning', 'seed', 'repetitions', 'timeout_seconds',
         'budget', 'payload', 'consumer', 'families')
@@ -57,6 +67,33 @@ def git(root, *args, binary=False):
     if result.returncode:
         raise ValueError('git %s failed: %s' % (args[0], result.stderr.decode(errors='replace').strip()[-400:]))
     return result.stdout if binary else result.stdout.decode().strip()
+
+
+def tree_inventory(root):
+    """Like conditions.inventory, but a consumer tree may track relative symlinks that stay inside it."""
+    root = Path(root)
+    files = {}
+    for path in sorted(root.rglob('*')):
+        info = path.lstat()
+        name = path.relative_to(root).as_posix()
+        if stat.S_ISLNK(info.st_mode):
+            target = os.readlink(path)
+            if Path(target).is_absolute() or not (path.parent / target).resolve().is_relative_to(root.resolve()):
+                raise ValueError('symlink leaves the tree: ' + name)
+            files[name] = {'link': target}
+        elif stat.S_ISREG(info.st_mode):
+            files[name] = {'sha256': conditions.digest(path.read_bytes()), 'bytes': info.st_size,
+                           'executable': bool(info.st_mode & 0o111)}
+        elif not stat.S_ISDIR(info.st_mode):
+            raise ValueError('special file in consumer tree: ' + name)
+    return files
+
+
+def writable(root):
+    """Disposable copies keep only the executable bit Git records."""
+    for path in [root, *root.rglob('*')]:
+        if not path.is_symlink():
+            path.chmod(0o755 if path.is_dir() or path.stat().st_mode & 0o111 else 0o644)
 
 
 def outside(path, root, label):
@@ -106,7 +143,9 @@ def checked_manifest(data, root=ROOT, evidence_dir=None):
     for skill in FAMILIES.values():
         conditions.relative_file(Path(payload['root']), skill + '/SKILL.md')
     consumer = data['consumer']
-    conditions.keys(consumer, ('repository', 'revision', 'control_paths', 'pointer', 'prerequisites'), 'consumer')
+    conditions.keys(consumer, ('repository', 'revision', 'skills_dir', 'control_paths', 'pointer', 'baseline_edits',
+                               'prerequisites'), 'consumer')
+    relative_path(consumer['skills_dir'], 'skills_dir')
     if not isinstance(consumer['repository'], str) or not Path(consumer['repository']).is_absolute():
         raise ValueError('consumer repository must be an absolute path')
     outside(consumer['repository'], root, 'consumer repository')
@@ -117,11 +156,22 @@ def checked_manifest(data, root=ROOT, evidence_dir=None):
         raise ValueError('declare the control paths the baseline arm removes')
     for path in consumer['control_paths']:
         relative_path(path, 'control_paths')
+        if path == consumer['skills_dir'] or path.startswith(consumer['skills_dir'] + '/'):
+            raise ValueError('the installed payload is the same in both arms; it cannot be a control path')
     if len(set(consumer['control_paths'])) != len(consumer['control_paths']):
         raise ValueError('duplicate control path')
     relative_path(consumer['pointer'], 'pointer')
     if consumer['pointer'] in consumer['control_paths']:
         raise ValueError('the pointer file stays in both arms; only its Control line is dropped')
+    edits = consumer['baseline_edits']
+    if not isinstance(edits, list) or not edits:
+        raise ValueError('baseline edits must at least drop the Control pointer line')
+    for edit in edits:
+        conditions.keys(edit, ('path', 'old', 'new'), 'baseline edit')
+        relative_path(edit['path'], 'baseline_edits')
+        if (not isinstance(edit['old'], str) or not edit['old'] or not isinstance(edit['new'], str)
+                or edit['old'] == edit['new'] or edit['path'] in consumer['control_paths']):
+            raise ValueError('a baseline edit replaces text in a file both arms keep')
     if (not isinstance(consumer['prerequisites'], list)
             or any(not isinstance(p, str) or not p.strip() for p in consumer['prerequisites'])):
         raise ValueError('prerequisites are a list of descriptions, identical for both arms')
@@ -136,11 +186,17 @@ def checked_manifest(data, root=ROOT, evidence_dir=None):
             outside(absolute_file(name, family['id'] + ' input'), root, family['id'] + ' input')
         if not isinstance(family['attachments'], list) or not isinstance(family['commits'], list):
             raise ValueError('attachments and commits are lists')
+        modes = []
         for commit in family['commits']:
-            conditions.keys(commit, ('patch', 'message'), 'setup commit')
+            conditions.keys(commit, ('patch', 'mode', 'message'), 'setup step')
             outside(absolute_file(commit['patch'], 'setup patch'), root, 'setup patch')
-            if not isinstance(commit['message'], str) or not commit['message'].strip():
-                raise ValueError('setup commits need a message')
+            if commit['mode'] not in SETUP_MODES:
+                raise ValueError('setup mode is one of ' + ', '.join(SETUP_MODES))
+            if (commit['mode'] == 'commit') != (isinstance(commit['message'], str) and bool(commit['message'].strip())):
+                raise ValueError('a setup commit needs a message, and only a commit has one')
+            modes.append(SETUP_MODES.index(commit['mode']))
+        if modes != sorted(modes):
+            raise ValueError('setup steps run fold, then commit, then worktree')
     if len({f['source_group'] for f in families}) != len(families):
         raise ValueError('each family is its own source group')
     return data
@@ -162,8 +218,11 @@ def export(repository, revision, destination):
     """The committed tree at the pinned revision, never the operator's working copy."""
     archive = git(repository, 'archive', '--format=tar', revision, binary=True)
     destination.mkdir(parents=True)
-    with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
-        tar.extractall(destination, filter='data')
+    try:
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(destination, filter='data')
+    except tarfile.FilterError as exc:
+        raise ValueError('symlink leaves the tree: %s' % exc.tarinfo.name)
 
 
 def pointer_lines(text):
@@ -171,23 +230,28 @@ def pointer_lines(text):
 
 
 def derive_baseline(control, baseline, consumer):
-    """Copy the control tree, drop the declared control paths and the one Control pointer line."""
+    """Copy the control tree, drop the declared control paths and apply the baseline edits."""
     pointer = control / consumer['pointer']
     if not pointer.is_file():
         raise ValueError('pointer file is missing from the pinned revision')
-    lines = pointer.read_text().splitlines(True)
-    found = pointer_lines(''.join(lines))
+    found = pointer_lines(pointer.read_text())
     if len(found) != 1:
         raise ValueError('the pinned pointer file must hold exactly one Control line, found %d' % len(found))
     for path in consumer['control_paths']:
         if not (control / path).exists():
             raise ValueError('declared control path is absent from the pinned revision: ' + path)
-    shutil.copytree(control, baseline)
+    shutil.copytree(control, baseline, symlinks=True)
     for path in consumer['control_paths']:
         target = baseline / path
         shutil.rmtree(target) if target.is_dir() else target.unlink()
-    del lines[found[0]]
-    (baseline / consumer['pointer']).write_text(''.join(lines))
+    for edit in consumer['baseline_edits']:
+        target = baseline / edit['path']
+        text = target.read_text() if target.is_file() else ''
+        if text.count(edit['old']) != 1:
+            raise ValueError('a baseline edit must match exactly once in ' + edit['path'])
+        target.write_text(text.replace(edit['old'], edit['new']))
+    if pointer_lines((baseline / consumer['pointer']).read_text()):
+        raise ValueError('the baseline pointer file still holds a Control line')
 
 
 def arm_difference(control_inventory, baseline_inventory, consumer):
@@ -196,25 +260,29 @@ def arm_difference(control_inventory, baseline_inventory, consumer):
     declared = {name for name in control_inventory
                 if any(name == p or name.startswith(p.rstrip('/') + '/') for p in consumer['control_paths'])}
     changed = {name for name in baseline_inventory if baseline_inventory[name] != control_inventory.get(name)}
-    if removed != declared or changed != {consumer['pointer']}:
-        raise ValueError('arms differ beyond the declared control paths and pointer line')
+    if removed != declared or changed != {edit['path'] for edit in consumer['baseline_edits']}:
+        raise ValueError('arms differ beyond the declared control paths and baseline edits')
     return {'removed_files': len(removed), 'changed_files': len(changed)}
 
 
 def build_fixture(tree, commits, destination):
     """A disposable Git checkout of one arm with the family's setup commits. Deterministic, so HEAD is reproducible."""
-    shutil.copytree(tree, destination)
-    # The frozen arm is read-only; the disposable copy keeps only the executable bit Git records.
-    for path in [destination, *destination.rglob('*')]:
-        executable = path.is_dir() or path.stat().st_mode & 0o111
-        path.chmod(0o755 if executable else 0o644)
+    shutil.copytree(tree, destination, symlinks=True)
+    writable(destination)
     git(destination, 'init', '-q', '-b', 'main')
     git(destination, 'add', '-A')
+    for commit in [c for c in commits if c['mode'] == 'fold']:
+        git(destination, 'apply', '--index', '--whitespace=nowarn', str(commit['patch']))
     git(destination, 'commit', '-q', '--no-verify', '-m', 'Pinned consumer revision')
     for commit in commits:
-        git(destination, 'apply', '--index', '--whitespace=nowarn', str(commit['patch']))
-        git(destination, 'commit', '-q', '--no-verify', '-m', commit['message'])
-    return {'head': git(destination, 'rev-parse', 'HEAD'), 'commits': len(commits) + 1}
+        if commit['mode'] == 'commit':
+            git(destination, 'apply', '--index', '--whitespace=nowarn', str(commit['patch']))
+            git(destination, 'commit', '-q', '--no-verify', '-m', commit['message'])
+        elif commit['mode'] == 'worktree':
+            git(destination, 'apply', '--whitespace=nowarn', str(commit['patch']))
+    status = git(destination, 'status', '--porcelain=v1', '-z', '--untracked-files=all', binary=True)
+    return {'head': git(destination, 'rev-parse', 'HEAD'), 'commits': 1 + sum(c['mode'] == 'commit' for c in commits),
+            'status_sha256': conditions.digest(status)}
 
 
 def copy_input(source, destination):
@@ -236,8 +304,15 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
     consumer = data['consumer']
     arms = destination / 'arms'
     export(consumer['repository'], consumer['revision'], arms / 'control')
+    installed = arms / 'control' / consumer['skills_dir']
+    if installed.is_symlink() or (installed.exists() and not installed.is_dir()):
+        raise ValueError('the skills directory must be a real directory or absent')
+    replaced = len(tree_inventory(installed)) if installed.is_dir() else 0
+    if installed.is_dir():
+        shutil.rmtree(installed)
+    shutil.copytree(data['payload']['root'], installed)
     derive_baseline(arms / 'control', arms / 'baseline', consumer)
-    arm_inventory = {arm: conditions.inventory(arms / arm) for arm in ARMS}
+    arm_inventory = {arm: tree_inventory(arms / arm) for arm in ARMS}
     difference = arm_difference(arm_inventory['control'], arm_inventory['baseline'], consumer)
     shutil.copytree(data['payload']['root'], destination / 'payload')
     payload_inventory = conditions.inventory(destination / 'payload')
@@ -247,7 +322,8 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
     scratch = destination / 'scratch'
     for family in sorted(data['families'], key=lambda f: f['id']):
         base = destination / 'families' / family['id']
-        frozen = {'id': family['id'], 'skill': FAMILIES[family['id']], 'entrypoint': FAMILIES[family['id']] + '/SKILL.md',
+        frozen = {'id': family['id'], 'skill': FAMILIES[family['id']],
+                  'entrypoint': consumer['skills_dir'] + '/' + FAMILIES[family['id']] + '/SKILL.md',
                   'source_group': family['source_group'],
                   'request_sha256': copy_input(family['request'], base / 'request.txt'),
                   'attachments': [], 'commits': []}
@@ -258,9 +334,9 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
         commits = []
         for index, commit in enumerate(family['commits'], 1):
             target = base / ('setup-%02d.patch' % index)
-            frozen['commits'].append({'patch': target.name, 'message': commit['message'],
+            frozen['commits'].append({'patch': target.name, 'mode': commit['mode'], 'message': commit['message'],
                                       'sha256': copy_input(commit['patch'], target)})
-            commits.append({'patch': target, 'message': commit['message']})
+            commits.append({'patch': target, 'mode': commit['mode'], 'message': commit['message']})
         frozen['fixtures'] = {}
         for arm in ARMS:
             work = scratch / family['id'] / arm
@@ -269,7 +345,7 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
             except ValueError as exc:
                 raise ValueError('%s setup does not apply to the %s arm: %s' % (family['id'], arm, exc))
             built['tree_inventory_sha256'] = conditions.digest(conditions.encoded(
-                {k: v for k, v in conditions.inventory(work).items() if not k.startswith('.git/')}))
+                {k: v for k, v in tree_inventory(work).items() if not k.startswith('.git/')}))
             frozen['fixtures'][arm] = built
         families[family['id']] = frozen
     shutil.rmtree(scratch)
@@ -286,8 +362,9 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
         'kind': 'paired-integration', 'children': 0, 'actual_model': None,
         'payload': {'revision': data['payload']['revision'], 'inventory': payload_inventory},
         'consumer': {'revision': consumer['revision'], 'pointer': consumer['pointer'],
-                     'control_paths': consumer['control_paths'], 'prerequisites': consumer['prerequisites'],
-                     'arm_difference': difference},
+                     'skills_dir': consumer['skills_dir'], 'replaced_skill_files': replaced,
+                     'control_paths': consumer['control_paths'], 'baseline_edits': consumer['baseline_edits'],
+                     'prerequisites': consumer['prerequisites'], 'arm_difference': difference},
         'arms': {arm: {'inventory': arm_inventory[arm]} for arm in ARMS},
         'families': families, 'schedule_sha256': conditions.digest(conditions.encoded(slots)),
         'family_inventory': conditions.inventory(destination / 'families'),
@@ -298,9 +375,9 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
     (destination / 'controls.json').write_bytes(control_bytes)
     for tree in (arms, destination / 'payload', destination / 'families', destination / 'oracles', source):
         for path in tree.rglob('*'):
-            if path.is_file():
+            if path.is_file() and not path.is_symlink():
                 path.chmod(0o555 if path.stat().st_mode & 0o111 else 0o444)
-        for path in sorted((p for p in tree.rglob('*') if p.is_dir()), reverse=True):
+        for path in sorted((p for p in tree.rglob('*') if p.is_dir() and not p.is_symlink()), reverse=True):
             path.chmod(0o555)
         tree.chmod(0o555)
     for name in ('controls.json', 'schedule.json'):
@@ -327,7 +404,7 @@ class FrozenIntegration:
             raise ValueError('frozen schedule changed')
         self.schedule = json.loads(schedule_bytes)
         for arm in ARMS:
-            if conditions.inventory(self.root / 'arms' / arm) != self.controls['arms'][arm]['inventory']:
+            if tree_inventory(self.root / 'arms' / arm) != self.controls['arms'][arm]['inventory']:
                 raise ValueError('frozen arm changed: ' + arm)
         checks = (('payload', self.controls['payload']['inventory']), ('families', self.controls['family_inventory']),
                   ('oracles', self.controls['oracle_inventory']), ('runner-source', self.controls['runner_inventory']))
@@ -342,11 +419,11 @@ class FrozenIntegration:
         cell = self.schedule[slot - 1]
         family = self.controls['families'][cell['family']]
         base = self.root / 'families' / family['id']
-        commits = [{'patch': base / c['patch'], 'message': c['message']} for c in family['commits']]
+        commits = [{'patch': base / c['patch'], 'mode': c['mode'], 'message': c['message']} for c in family['commits']]
         built = build_fixture(self.root / 'arms' / cell['arm'], commits, Path(destination))
         expected = family['fixtures'][cell['arm']]
-        if built['head'] != expected['head']:
-            raise ValueError('rebuilt fixture HEAD differs from the frozen fixture')
+        if (built['head'], built['status_sha256']) != (expected['head'], expected['status_sha256']):
+            raise ValueError('rebuilt fixture differs from the frozen fixture')
         return cell, built
 
 
@@ -362,7 +439,8 @@ def summary(study):
             'oracle_sha256': family['oracle_sha256'],
             'attachments_sha256': [a['sha256'] for a in family['attachments']],
             'setup_patches_sha256': [s['sha256'] for s in family['commits']],
-            'fixtures': {arm: {'head': f['head'], 'commits': f['commits'],
+            'setup_modes': [s['mode'] for s in family['commits']],
+            'fixtures': {arm: {'head': f['head'], 'commits': f['commits'], 'status_sha256': f['status_sha256'],
                                'tree_inventory_sha256': f['tree_inventory_sha256']}
                          for arm, f in family['fixtures'].items()}}
     return {'schema_version': 1, 'study': c['study'], 'kind': c['kind'], 'controls_sha256': study.expected_digest,
@@ -372,6 +450,8 @@ def summary(study):
             'payload': {'revision': c['payload']['revision'],
                         'inventory_sha256': conditions.digest(conditions.encoded(c['payload']['inventory']))},
             'consumer': {'revision': c['consumer']['revision'], 'control_paths': len(c['consumer']['control_paths']),
+                         'replaced_skill_files': c['consumer']['replaced_skill_files'],
+                         'baseline_edits': len(c['consumer']['baseline_edits']),
                          'prerequisites': len(c['consumer']['prerequisites']),
                          'arm_difference': c['consumer']['arm_difference']},
             'arms': arms, 'families': families,

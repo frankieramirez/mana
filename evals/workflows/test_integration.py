@@ -13,9 +13,9 @@ import conditions
 import integration
 
 HOST = 'codex-cli 0.163.0'
-CONTROL_LINE = 'Control: .agents/skills/briefing-control/SKILL.md\n'
+CONTROL_LINE = 'Control: skills/briefing-control/SKILL.md\n'
 SOURCE = "export function briefing(workers) {\n  return workers.length ? 'Welcome back' : 'No activity';\n}\n"
-SECRET_REQUEST = 'came back and the briefing is empty ??? zz-private-marker'
+SECRET_REQUEST = 'synthetic report text zz-private-marker'
 
 
 def git(root, *args):
@@ -48,14 +48,19 @@ class Freeze(unittest.TestCase):
         self.consumer = self.base / 'consumer'
         files = {
             'AGENTS.md': '# Agents\n\nRead the docs first.\n' + CONTROL_LINE + 'Keep the hosted product current.\n',
-            '.agents/skills/briefing-control/SKILL.md': '---\nname: briefing-control\n---\nCommand: node verify.mjs\n',
+            'skills/briefing-control/SKILL.md': '---\nname: briefing-control\n---\nCommand: node verify.mjs\n',
             'verification/features/briefing.json': '{"id": "briefing"}\n',
             'verify.mjs': 'process.exit(0)\n',
             'src/briefing.mjs': SOURCE,
-            'package.json': '{"name": "consumer"}\n',
+            'package.json': '{\n  "scripts": {\n    "test": "node test.mjs",\n    "verify": "node verify.mjs"\n  }\n}\n',
+            'docs/notes.md': '# Notes\n',
+            '.agents/skills/sift/SKILL.md': 'an older installed copy\n',
+            '.agents/skills/sift/references/old.md': 'stale\n',
         }
         for name, text in files.items():
             write(self.consumer, name, text)
+        (self.consumer / '.claude/skills').mkdir(parents=True)
+        (self.consumer / '.claude/skills/sift').symlink_to('../../.agents/skills/sift')
         (self.consumer / 'verify.mjs').chmod(0o755)
         git(self.consumer, 'init', '-q', '-b', 'main')
         git(self.consumer, 'add', '-A')
@@ -71,13 +76,16 @@ class Freeze(unittest.TestCase):
         claim = write(self.inputs, 'claim.patch', patch(self.base, 'src/briefing.mjs', SOURCE,
                                                         SOURCE.replace('Welcome back', 'Welcome home')))
         self.families = []
-        for family, commits in (('vague-report', [defect]), ('feature-change', []), ('review-claims', [claim])):
+        note = write(self.inputs, 'note.patch', patch(self.base, 'docs/notes.md', '# Notes\n', '# Notes\n\nDraft.\n'))
+        setups = {'vague-report': [(defect, 'fold', None)], 'feature-change': [(note, 'worktree', None)],
+                  'review-claims': [(claim, 'commit', 'Setup review-claims')]}
+        for family, commits in setups.items():
             request = write(self.inputs, family + '/request.txt', SECRET_REQUEST + ' ' + family)
             oracle = write(self.inputs, family + '/oracle.json', '{"expected": "%s"}' % family)
             attachments = [str(write(self.inputs, family + '/crop.PNG', 'png-bytes'))] if family == 'vague-report' else []
             self.families.append({'id': family, 'source_group': 'consumer-' + family, 'request': str(request),
                                   'attachments': attachments, 'oracle': str(oracle),
-                                  'commits': [{'patch': str(p), 'message': 'Setup ' + family} for p in commits]})
+                                  'commits': [{'patch': str(p), 'mode': m, 'message': msg} for p, m, msg in commits]})
 
     def manifest(self, **changes):
         data = {'version': 1, 'study': 'integration-pilot-test', 'host': HOST, 'model': 'gpt-6.1-sol',
@@ -85,9 +93,12 @@ class Freeze(unittest.TestCase):
                 'budget': {'invocations': 12, 'retries': 0},
                 'payload': {'root': str(self.payload), 'revision': '1' * 40,
                             'inventory_sha256': conditions.inventory_digest(self.payload)},
-                'consumer': {'repository': str(self.consumer), 'revision': self.revision,
-                             'control_paths': ['.agents/skills/briefing-control', 'verification', 'verify.mjs'],
-                             'pointer': 'AGENTS.md', 'prerequisites': ['node 22 on PATH', 'dependencies installed offline']},
+                'consumer': {'repository': str(self.consumer), 'revision': self.revision, 'skills_dir': '.agents/skills',
+                             'control_paths': ['skills/briefing-control', 'verification', 'verify.mjs'],
+                             'pointer': 'AGENTS.md', 'prerequisites': ['node 22 on PATH', 'dependencies installed offline'],
+                             'baseline_edits': [{'path': 'AGENTS.md', 'old': CONTROL_LINE, 'new': ''},
+                                                {'path': 'package.json', 'old': '"node test.mjs",\n    "verify": "node verify.mjs"',
+                                                 'new': '"node test.mjs"'}]},
                 'families': self.families}
         for key, value in changes.items():
             data[key] = value
@@ -123,13 +134,18 @@ class Freeze(unittest.TestCase):
         self.assertIn(CONTROL_LINE, (control / 'AGENTS.md').read_text())
         self.assertNotIn('Control:', (baseline / 'AGENTS.md').read_text())
         self.assertEqual((baseline / 'AGENTS.md').read_text(), (control / 'AGENTS.md').read_text().replace(CONTROL_LINE, ''))
-        for path in ('verification', '.agents/skills/briefing-control', 'verify.mjs'):
+        for path in ('verification', 'skills/briefing-control', 'verify.mjs'):
             self.assertTrue((control / path).exists())
             self.assertFalse((baseline / path).exists())
         self.assertEqual((control / 'src/briefing.mjs').read_text(), SOURCE, 'froze the working copy, not the revision')
         self.assertTrue((control / 'verify.mjs').stat().st_mode & stat.S_IXUSR)
+        for arm in (control, baseline):
+            self.assertEqual((arm / '.agents/skills/sift/SKILL.md').read_text(), (self.payload / 'sift/SKILL.md').read_text())
+            self.assertFalse((arm / '.agents/skills/sift/references/old.md').exists(), 'the older copy is replaced whole')
+            self.assertEqual(os.readlink(arm / '.claude/skills/sift'), '../../.agents/skills/sift')
         controls = json.loads((self.base / 'study/controls.json').read_text())
-        self.assertEqual(controls['consumer']['arm_difference'], {'removed_files': 3, 'changed_files': 1})
+        self.assertEqual(controls['consumer']['arm_difference'], {'removed_files': 3, 'changed_files': 2})
+        self.assertEqual(json.loads((baseline / 'package.json').read_text()), {'scripts': {'test': 'node test.mjs'}})
         self.assertEqual(controls['budget'], {'invocations': 12, 'retries': 0})
         self.assertEqual(controls['children'], 0)
         self.assertIsNone(controls['actual_model'])
@@ -142,8 +158,14 @@ class Freeze(unittest.TestCase):
         for slot in range(1, 13):
             cell, built = study.fixture(slot, self.base / 'work' / str(slot))
             heads.setdefault((cell['family'], cell['arm']), set()).add(built['head'])
+            work = self.base / 'work' / str(slot)
             if cell['family'] == 'vague-report':
-                self.assertIn("? '' :", (self.base / 'work' / str(slot) / 'src/briefing.mjs').read_text())
+                self.assertIn("? '' :", (work / 'src/briefing.mjs').read_text())
+                self.assertEqual(git(work, 'rev-list', '--count', 'HEAD'), '1', 'the seeded fault is folded in')
+            if cell['family'] == 'feature-change':
+                self.assertEqual(git(work, 'status', '--porcelain'), 'M docs/notes.md')
+            if cell['family'] == 'review-claims':
+                self.assertEqual(git(work, 'log', '-1', '--format=%s'), 'Setup review-claims')
         self.assertTrue(all(len(v) == 1 for v in heads.values()), 'repetitions of one cell must share HEAD')
         self.assertNotEqual(heads[('vague-report', 'control')], heads[('vague-report', 'baseline')])
 
@@ -152,12 +174,13 @@ class Freeze(unittest.TestCase):
         study = integration.FrozenIntegration(self.base / 'study', result['controls_sha256'])
         text = json.dumps(integration.summary(study))
         for private in (str(self.base), 'zz-private-marker', 'briefing-control', 'verification', 'AGENTS.md',
-                        'node 22', 'Setup vague-report', 'consumer-'):
+                        'node 22', 'Setup review-claims', 'consumer-', 'package.json'):
             self.assertNotIn(private, text)
         data = json.loads(text)
         self.assertEqual(data['consumer']['revision'], self.revision)
         self.assertEqual(len(data['schedule']), 12)
-        self.assertEqual(data['families']['vague-report']['fixtures']['control']['commits'], 2)
+        self.assertEqual(data['families']['vague-report']['fixtures']['control']['commits'], 1)
+        self.assertEqual(data['families']['review-claims']['fixtures']['baseline']['commits'], 2)
         with contextlib.redirect_stdout(io.StringIO()) as printed:
             code = integration.main(['--summary', str(self.base / 'study'), '--controls-sha256', result['controls_sha256']])
         self.assertEqual((code, json.loads(printed.getvalue())), (0, data))
@@ -198,12 +221,27 @@ class Freeze(unittest.TestCase):
         self.refused('full commit id', consumer=dict(consumer, revision='HEAD'))
         self.refused('absent from the pinned revision', consumer=dict(consumer, control_paths=['missing']))
         self.refused('pointer file stays', consumer=dict(consumer, control_paths=['AGENTS.md']))
+        self.refused('baseline edit', consumer=dict(consumer, baseline_edits=[]))
+        only_pointer = [consumer['baseline_edits'][0]]
+        self.refused('still holds a Control line', consumer=dict(consumer, baseline_edits=only_pointer[:0] + [
+            {'path': 'package.json', 'old': '"verify"', 'new': '"check"'}]))
+        self.refused('exactly once', consumer=dict(consumer, baseline_edits=only_pointer + [
+            {'path': 'package.json', 'old': 'node', 'new': 'deno'}]))
+        late_fold = [dict(f, commits=[{'patch': f['commits'][0]['patch'], 'mode': 'worktree', 'message': None},
+                                      {'patch': f['commits'][0]['patch'], 'mode': 'fold', 'message': None}])
+                     if f['id'] == 'vague-report' else f for f in self.families]
+        self.refused('fold, then commit, then worktree', families=late_fold)
+        unnamed = [dict(f, commits=[dict(f['commits'][0], message=None)]) if f['id'] == 'review-claims' else f
+                   for f in self.families]
+        self.refused('needs a message', families=unnamed)
         self.refused('invalid relative path', consumer=dict(consumer, control_paths=['../escape']))
+        self.refused('cannot be a control path', consumer=dict(consumer, control_paths=['.agents/skills/sift']))
         shared = [dict(f, source_group='shared') for f in self.families]
         self.refused('own source group', families=shared)
 
     def test_pointer_must_name_one_control_line(self):
         consumer = self.manifest_data()['consumer']
+        consumer['baseline_edits'] = consumer['baseline_edits'][1:]
         write(self.consumer, 'NOTES.md', 'no pointer here\n')
         write(self.consumer, 'TWO.md', CONTROL_LINE + CONTROL_LINE)
         git(self.consumer, 'add', 'NOTES.md', 'TWO.md')
@@ -212,10 +250,17 @@ class Freeze(unittest.TestCase):
         self.refused('exactly one Control line, found 0', consumer=dict(consumer, revision=revision, pointer='NOTES.md'))
         self.refused('exactly one Control line, found 2', consumer=dict(consumer, revision=revision, pointer='TWO.md'))
 
+    def test_symlinks_must_stay_inside_the_consumer(self):
+        (self.consumer / 'escape').symlink_to('../../outside')
+        git(self.consumer, 'add', 'escape')
+        git(self.consumer, 'commit', '-qm', 'escape')
+        consumer = dict(self.manifest_data()['consumer'], revision=git(self.consumer, 'rev-parse', 'HEAD'))
+        self.refused('symlink leaves the tree: escape', consumer=consumer)
+
     def test_setup_that_needs_the_control_fails_on_the_baseline(self):
         control_edit = write(self.inputs, 'control.patch', patch(self.base, 'verify.mjs', 'process.exit(0)\n',
                                                                  'process.exit(1)\n'))
-        families = [dict(f, commits=[{'patch': str(control_edit), 'message': 'break the control'}])
+        families = [dict(f, commits=[{'patch': str(control_edit), 'mode': 'commit', 'message': 'break the control'}])
                     if f['id'] == 'review-claims' else f for f in self.families]
         self.refused('review-claims setup does not apply to the baseline arm', families=families)
 

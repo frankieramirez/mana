@@ -297,25 +297,27 @@ The grader in `control_claims_fixtures.py` requires both reports to be read thro
 | Arm | Consumer fixture |
 |---|---|
 | `control` | The pinned revision as committed, with its project control, Control pointer and records |
-| `baseline` | The same tree with the declared control paths removed and the one `Control:` line dropped from the pointer file |
+| `baseline` | The same tree with the declared control paths removed and the declared baseline edits applied, which drop the `Control:` pointer and every other reference to the control |
 
-Both arms install one Mana payload and get the same request, attachments, setup commits, host, model, reasoning, timeout and prerequisites. Freeze proves the arms differ only in the declared paths and the pointer line, and refuses a setup patch that applies to one arm and not the other. Each fixture is rebuilt as a Git checkout with a fixed identity and date and the operator's Git configuration ignored, so every repetition of a cell starts at the same frozen HEAD.
+Both arms get the same request, attachments, setup, host, model, reasoning, timeout and prerequisites. The payload replaces whatever skill copy the consumer installs in its own skills directory, in both arms, so an older installed copy cannot answer for it. Freeze proves the arms differ only in the declared paths and edits, and refuses setup that applies to one arm and not the other. Setup steps run in a fixed order: `fold` amends a patch into the pinned commit, `commit` adds a commit with its message, and `worktree` leaves an uncommitted edit. Each fixture is a fresh repository holding one commit of the arm's tree plus that setup, so the baseline cannot recover the control from history. Fixtures use a fixed identity and date and ignore the operator's Git configuration, so every repetition of a cell starts at the same HEAD and status.
 
 The consumer is private and Mana is public. The manifest, frozen study, requests, attachments, oracles and setup patches all live outside this checkout, and freeze refuses any of them inside it. Freeze exports the committed tree at the pinned revision with `git archive`, so the operator's uncommitted work never enters a fixture. Only the summary goes into Mana: the schedule, counts and SHA-256 digests, with no paths, names, request text or consumer bytes.
 
 ```bash
-python3 -B evals/workflows/integration.py --freeze /private/manifest.json --out /private/integration-pilot-1
-python3 -B evals/workflows/integration.py --check /private/integration-pilot-1 --controls-sha256 SAVED_DIGEST
-python3 -B evals/workflows/integration.py --summary /private/integration-pilot-1 --controls-sha256 SAVED_DIGEST
+python3 -B evals/workflows/integration.py --freeze /private/manifest.json --out /private/study
+python3 -B evals/workflows/integration.py --check /private/study --controls-sha256 SAVED_DIGEST
+python3 -B evals/workflows/integration.py --summary /private/study --controls-sha256 SAVED_DIGEST
 ```
 
-The manifest names `version`, `study`, `host`, `model`, `reasoning`, `seed`, `repetitions` (2), `timeout_seconds` (at most 900), `budget` (`{"invocations": 12, "retries": 0}`), `payload` (absolute root, revision and inventory digest), `consumer` (repository, full revision, `control_paths`, `pointer`, `prerequisites`) and the three `families`. Each family gives its `source_group`, absolute `request`, `attachments` and `oracle` paths and its ordered setup `commits`, each a patch and a message. The host must hold a `focused` record in `host-evidence/`. Freeze makes no model call and prints the external `controls_sha256` pin.
+The manifest names `version`, `study`, `host`, `model`, `reasoning`, `seed`, `repetitions` (2), `timeout_seconds` (at most 900), `budget` (`{"invocations": 12, "retries": 0}`), `payload` (absolute root, revision and inventory digest), `consumer` (repository, full revision, `skills_dir`, `control_paths`, `pointer`, `baseline_edits`, `prerequisites`) and the three `families`. Each family gives its `source_group`, absolute `request`, `attachments` and `oracle` paths, and its setup steps as `patch`, `mode` and `message`. The host must hold a `focused` record in `host-evidence/`. Freeze makes no model call and prints the external `controls_sha256` pin.
+
+[integration-pilot-1-summary.json](integration-pilot-1-summary.json) is the public record of the first freeze, `mana-112-integration-pilot-1`. It pins Codex CLI 0.163.0, requested `gpt-6.1-sol` at `medium`, 900 seconds per invocation, the Mana skills at `9f0b6d5`, and the consumer revision the private consumer app's cold-session challenge passed on. The two arms differ by nine removed files and two edited ones. [integration-pilot-1-preflight.json](integration-pilot-1-preflight.json) records a no-model preflight: one rebuilt fixture per family and arm, run outside the Codex sandbox. The mapped feature's test file passed in both feature-change arms and failed one of two tests in both arms of the other two families. The control matched in each control arm, exit 0 and exit 1 respectively. That matches every oracle's expected outcome. No invocation has run. No live attempt runner exists for this study yet, and the sandboxed path, including the control's own `npm ci` with command networking denied, is unproven.
 
 ```bash
 python3 -B -m unittest discover -s evals/workflows -p test_integration.py
 ```
 
-The tests freeze a synthetic consumer, rebuild all 12 fixtures, and check the arm difference, the schedule, the refusals, the frozen-input checks and that the summary leaks nothing private. No live attempt runner exists for this study yet, and no invocation has run.
+The tests freeze a synthetic consumer with an older installed skill copy and tracked symlinks, rebuild all 12 fixtures, and check the arm difference, the setup modes, the schedule, the refusals, the frozen-input checks and that the summary leaks nothing private.
 
 ## Ultima follow-up authority
 
