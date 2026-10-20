@@ -7,13 +7,13 @@
           "exit": 0,
           "expected_exit": 0,
           "index": 0,
-          "seconds": 14.7
+          "seconds": 13.7
         },
         {
           "exit": 0,
           "expected_exit": 0,
           "index": 1,
-          "seconds": 20.5
+          "seconds": 16.9
         }
       ],
       "failures": 0,
@@ -37,7 +37,7 @@
           "exit": 0,
           "expected_exit": 0,
           "index": 0,
-          "seconds": 16.3
+          "seconds": 13.4
         }
       ],
       "failures": 0,
@@ -61,13 +61,13 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 46.0
+          "seconds": 43.1
         },
         {
           "exit": 1,
           "expected_exit": 1,
           "index": 1,
-          "seconds": 48.3
+          "seconds": 46.3
         }
       ],
       "failures": 0,
@@ -91,7 +91,7 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 43.3
+          "seconds": 42.7
         }
       ],
       "failures": 0,
@@ -115,13 +115,13 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 12.9
+          "seconds": 12.6
         },
         {
           "exit": 1,
           "expected_exit": 1,
           "index": 1,
-          "seconds": 16.3
+          "seconds": 16.1
         }
       ],
       "failures": 0,
@@ -145,7 +145,7 @@
           "exit": 1,
           "expected_exit": 1,
           "index": 0,
-          "seconds": 13.3
+          "seconds": 12.6
         }
       ],
       "failures": 0,
@@ -163,13 +163,13 @@
       }
     }
   ],
-  "controls_sha256": "f68ee5a440ba3d75204cad3d85d180be090d4329c5e16439f724da8127bcbd15",
+  "controls_sha256": "e75c44f2be8494e37f69ee5d6659c8f2de3ced199b71fe02614b618d31f5677d",
   "host": "codex-cli 0.163.0",
   "kind": "no-model sandbox preflight",
   "model_invocations": 0,
   "passed": true,
-  "ran_at": "2026-10-20T16:34:10.973+00:00",
+  "ran_at": "2026-10-20T16:42:09.988+00:00",
   "schema_version": 1,
   "scope": "One workspace per family and arm, built exactly as a live slot builds it, inside the host sandbox profile the live slots use. Check 0 is the mapped feature's test file in both arms; check 1 is the project control in the control arm. The probe reached the public address and the CONNECT target from outside the sandbox before every cell.",
-  "study": "mana-112-integration-pilot-4"
+  "study": "mana-112-integration-pilot-5"
 }

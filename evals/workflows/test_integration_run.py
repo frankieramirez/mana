@@ -131,6 +131,17 @@ class Runner(Consumer):
         subprocess.run(['git', '-C', str(consumer), 'status'], capture_output=True, env=integration.git_env())
         self.assertTrue(markers['fsmonitor'].exists(), 'the plant is live, so the quarantine is what stopped it')
 
+    def test_a_symlinked_git_file_stops_the_slot_and_writes_nothing_outside(self):
+        study = self.study()
+        outside = self.base / 'operator-file'
+        outside.write_text('operator bytes\n')
+        self.plan(parent={'commands': ['rm .git/config && ln -s %s .git/config' % outside]})
+        result = integration_run.run_slot(study, 1)
+        self.assertEqual(outside.read_text(), 'operator bytes\n')
+        self.assertTrue(any('symlinks: config' in f for f in result['failures']), result['failures'])
+        self.assertIn('final state unavailable', result['stop_reason'])
+        self.assertFalse((study.root / 'results/.active').exists())
+
     def test_a_collection_failure_is_recorded_and_releases_the_lock(self):
         study = self.study()
         self.plan(parent={'commands': ['rm -rf .git && echo gitdir: /nowhere > .git']})
