@@ -26,7 +26,7 @@ Build the work described by one ticket, spec, or the current conversation. Stay 
 ## Operating principles
 
 - **One ticket.** The invocation names the work. Do not wander onto adjacent issues.
-- **Smallest shape that passes.** Build the least structure that satisfies the ticket, and write one plain line when one line does the job. A helper, option, or abstraction needs a consumer that exists now. This is YAGNI: you aren't gonna need it.
+- **Smallest shape that passes.** Reuse what the repo, the standard library, or an installed dependency already provides. Build the least structure that satisfies the ticket, and write one plain line when one line does the job. A helper, option, or abstraction needs a consumer that exists now. This is YAGNI: you aren't gonna need it.
 - **Never switch to an existing branch.** `git checkout <branch>`, `git switch <branch>`, and `gh pr checkout` are out. If the ticket belongs on another branch, stop and say so. The one branch this skill creates is a fresh one off the default branch, when the session starts there, before any edit (Stage 1). It renames only an empty, unpushed branch a worktree tool made, so the name follows the repo's convention.
 - **Claim before work.** A ticket from the tracker gets assigned to the person driving this session first, so a parallel session skips it. Held by someone else: stop.
 - **The ticket is the contract.** A comment labelled as an agent brief, or a spec file, wins over the original issue body when they disagree.
@@ -150,7 +150,7 @@ Typecheck and run meaningful behavior tests around the files you touch as you go
 
 Stay inside the ticket's scope. Adjacent cleanup waits.
 
-Inside that scope, build the smallest shape that satisfies the ticket. When one plain line does the job, write one line. A helper earns its place when the same line appears a second time, and an interface, option, or registry when a second consumer exists in this diff or the codebase. Later is no reason on its own. The signal has to be present now.
+Inside that scope, build the smallest shape that satisfies the ticket. Before writing new code, take the first of these that does the job: code this repo already has (a helper, component, or pattern, used the way its neighbours use it), then the standard library or a platform feature, then a dependency the project already installs. Add a dependency only for work too large to write in a few lines. When one plain line does the job, write one line. A helper earns its place when the same line appears a second time, and an interface, option, or registry when a second consumer exists in this diff or the codebase. Later is no reason on its own. The signal has to be present now.
 
 ## Stage 2a: Comment cleanup
 
