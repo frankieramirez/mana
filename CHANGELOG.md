@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.11
+
+- Leyline's generated control skill tells a cold agent what a control report lets it claim. A new "Report what ran" section says a bug report asks for a diagnosis, so the agent leaves the checkout unchanged unless asked. It reproduces through the control only and names the feature's `reach` routes. It cites each run by full `runId`, exit, head and manifest digest, gives scenario coverage in the record's own words, and reports an exit 3 run as blocked with the prerequisite and repair quoted from the report. Install also writes a sentence under the `Control:` pointer telling agents to read that skill before they change or run anything. In a consumer cold-session challenge with the same three cases and oracle, the agent passed none of the three before these changes and all three after.
+
 ## 0.44.10
 
 - Deliberate shortcuts get a marker and a ledger. Cast writes `shortcut: <the limit>, <when to revisit>` as a one-line comment when it ships a shortcut with a known limit, and its report gains a Shortcuts row. The Comment Reaper keeps a marker under a new Shortcut marker clause and cites one that names no trigger as `Shortcut marker, no trigger`, which Cast completes and Banish reports open. Scan's reviewers and Ultima's lenses treat a marker that names its limit as a recorded decision, a finding only when evidence shows the load or use already crosses the limit. `/sift shortcuts` loads the new `references/shortcut-ledger.md`, lists every marker with its limit and trigger, tags the ones with no trigger, and on request files them as `needs-triage` issues through `tickets.sh`, skipping any marker `find` already matches.

@@ -281,7 +281,8 @@ def build_outputs(root, info, spec):
     skill_path = f"skills/{spec['project']}-control/SKILL.md"
     agent_path = root_guidance(root, info, spec)
     old_guidance = (root / agent_path).read_text() if (root / agent_path).exists() else ''
-    pointer = 'Control: ' + skill_path
+    # A bare path reads as a reference, so a cold agent edited code before it opened the control.
+    pointer = 'Control: ' + skill_path + "\nRead that control skill before you change or run anything for a report about this app's behavior."
     header = re.search(r'^## Agent skills[ \t]*$', old_guidance, re.M)
     if header:
         guidance = old_guidance[:header.end()] + '\n\n' + pointer + old_guidance[header.end():]
