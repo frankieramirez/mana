@@ -12,6 +12,8 @@ The `## Agent skills` block in `CLAUDE.md` or `AGENTS.md` carries one line:
 Control: skills/<project>-control/SKILL.md
 ```
 
+Install writes a sentence under it telling agents to read that skill before they change or run anything for a report about the app. Only the `Control:` line is parsed.
+
 The path is relative to the repository root. The control skill it names holds these key lines, each on its own line, values optionally in backticks:
 
 | Key | Required | Default | Meaning |

@@ -261,6 +261,7 @@ class InstallationTests(unittest.TestCase):
         self.assertIn("Keep this human-owned paragraph.", updated)
         self.assertTrue(updated.endswith("## Notes\n\nPreserve this exact final section.\n"))
         self.assertIn("Control:", updated)
+        self.assertIn("Read that control skill before you change or run anything", updated)
         self.assertEqual((self.repo / "src/hosted/briefing.mjs").read_text(), SOURCE)
         self.assertEqual((self.repo / "tests/hosted/briefing.test.mjs").read_text(), RUNNER)
         self.assertTrue((self.repo / "docs/agents/readiness.md").is_file())
