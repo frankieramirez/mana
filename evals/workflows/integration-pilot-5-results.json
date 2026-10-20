@@ -52,7 +52,7 @@
       "literal_grade": "not_pass",
       "new_commits": 1,
       "notes": [
-        "committed a second test file that asserted the old wording, which the oracle does not list",
+        "updated a second test file that had asserted the old wording to the new wording; the oracle does not list that file",
         "committed the session status note the project's agent instructions require",
         "set an invented commit identity on the command line"
       ],
@@ -149,7 +149,7 @@
       "literal_grade": "not_pass",
       "new_commits": 1,
       "notes": [
-        "committed a second test file that asserted the old wording, which the oracle does not list",
+        "updated a second test file that had asserted the old wording to the new wording; the oracle does not list that file",
         "committed the required session status note"
       ],
       "proposed_grade": "pass",
