@@ -1,6 +1,6 @@
 ---
 name: ultima
-description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, or /ultima."
+description: "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima."
 argument-hint: "[path:<dir>] [category:<a,b>] [lens:<a,b>] [since:<days>] [report|tickets|fix[:<n>]]"
 ---
 
@@ -54,7 +54,7 @@ Accept ordinary language for scope and follow-up, including instructions already
 | Token | Effect |
 |-------|--------|
 | `path:<dir>` | Audit only that directory; default is the repository root, including its packages. |
-| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, `security`, or `performance-delivery`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security and Performance & Delivery are opt-in through their category, `all`, or their lenses. |
+| `category:<a,b>` | Select `all`, `ux`, `architecture`, `data-reliability`, `security`, or `performance-delivery`; comma lists are allowed without mixing `all` with another category. Default `ux,architecture,data-reliability`; Security and Performance & Delivery are opt-in through their category, `all`, or their lenses. The `lean` lens is opt-in inside Architecture through `all`, `lens:lean`, or a request to find bloat or code to delete. |
 | `lens:<a,b>` | Override the recommended roster with named lenses from the table below. |
 | `since:<days>` | Churn window for hot spots. Default 90. |
 | `report` | Deliver the report and stop. |
@@ -71,12 +71,12 @@ Create the run directory first (Stage 3 has the block; run it now, then come bac
 bash "<SKILL_DIR>/scripts/ultima.sh" orient --path <explicit dir or repository root> --category <categories or ux,architecture,data-reliability> --since <days> --run-dir "$RUN_DIR"
 ```
 
-The script writes `$RUN_DIR/profile.json`. It inventories manifests, components, dependency edges, entrypoints, data files, and deployment files under `system_map`, alongside frontend conventions, churn, decision docs, and lint packages. These are discovery seeds, not a verified architecture model. Use `recommended_lenses` unless `lens:` overrides it. Missing frontend code does not stop an architecture audit. Exit 2 means no applicable source for the selected categories: report that and stop. An explicit lens roster determines the categories passed to profiling, so a category filter cannot block a lens override. Exit 4 means no `python3`: gather the same profile shape by hand and disclose this in Coverage.
+The script writes `$RUN_DIR/profile.json`. It inventories manifests, components, dependency edges, entrypoints, data files, and deployment files under `system_map`, alongside frontend conventions, churn, decision docs, and lint packages. These are discovery seeds, not a verified architecture model. Use `recommended_lenses` unless `lens:` overrides it. A request to find bloat, dead code, unused dependencies, or what can be deleted adds `lean` to the roster. Missing frontend code does not stop an architecture audit. Exit 2 means no applicable source for the selected categories: report that and stop. An explicit lens roster determines the categories passed to profiling, so a category filter cannot block a lens override. Exit 4 means no `python3`: gather the same profile shape by hand and disclose this in Coverage.
 
 | Category | Lenses |
 |---|---|
 | `ux` | `design-system`, `interaction-states`, `accessibility`, `component-architecture` |
-| `architecture` | `system-architecture` |
+| `architecture` | `system-architecture`, and `lean` when opted in |
 | `data-reliability` | `data-integrity`, `failure-recovery` |
 | `security` | `access-control`, `input-boundaries`, `sensitive-data` |
 | `performance-delivery` | `performance`, `delivery` |
@@ -91,7 +91,7 @@ Read the profile's decision docs and relevant ADRs, including decisions about pa
 
 For Performance & Delivery, trace callers to costly boundaries and consumers, then connect build outputs to their runtime consumers and documented release order. Inspect bounds and cache contracts before assuming avoidable cost. Separate source hypotheses from existing attributable measurements. Verify release gates, migration compatibility and rollback contracts; inaccessible external steps remain coverage gaps.
 
-Write `$RUN_DIR/system-context.md` with the verified boundaries, important flows and file references, documented decisions, and coverage limits. Distinguish discovered paths from verified dependencies. This file is shared evidence for specialists, not permission to expand an explicit path scope. For Security, trace trust transitions and the identity or tenant attached to each flow; inspect enclosing middleware, policy registration, and framework guarantees before treating a control as absent. An unavailable gateway or identity-provider policy is a coverage gap. Keep its deployment assumptions unresolved. Include a concise `<prior-decisions>` block with doc paths; no docs means an empty block and a coverage note. An accepted tradeoff, a violation of that decision, and a proposal to revisit it are different outcomes.
+Write `$RUN_DIR/system-context.md` with the verified boundaries, important flows and file references, documented decisions, and coverage limits. Distinguish discovered paths from verified dependencies. This file is shared evidence for specialists, not permission to expand an explicit path scope. For Security, trace trust transitions and the identity or tenant attached to each flow; inspect enclosing middleware, policy registration, and framework guarantees before treating a control as absent. An unavailable gateway or identity-provider policy is a coverage gap. Keep its deployment assumptions unresolved. Add one `Assumed load:` line naming the load the project expects and the file it came from, such as a CLI one person runs or a multi-tenant service with background workers (README.md, deploy/worker.yaml). When the README, deploy config, and docs say nothing, write `Assumed load: not stated`. Never invent traffic or data volume. Include a concise `<prior-decisions>` block with doc paths; no docs means an empty block and a coverage note. An accepted tradeoff, a violation of that decision, and a proposal to revisit it are different outcomes.
 
 ## Stage 3: Run directory and roster
 
@@ -107,7 +107,7 @@ RUN_DIR="$SCRATCH_ROOT/$RUN_ID";
 echo "$RUN_DIR"
 ```
 
-Write `$RUN_DIR/metadata.json` with `repo` (the `owner/name` from the origin URL, or the directory name), `head` (`git rev-parse HEAD`), `scope`, `framework`, `lenses`, and `started_at`. Then look through `$SCRATCH_ROOT/*/metadata.json` for a run with the same `repo` and `head`. A match means the report used the same commit, which can still have different uncommitted files. Say so in one line with its `report` path, record current working-tree status, then continue. Never skip the audit on that basis.
+Write `$RUN_DIR/metadata.json` with `repo` (the `owner/name` from the origin URL, or the directory name), `head` (`git rev-parse HEAD`), `scope`, `framework`, `lenses`, `assumed_load` (the Stage 2 line without its label), and `started_at`. Then look through `$SCRATCH_ROOT/*/metadata.json` for a run with the same `repo` and `head`. A match means the report used the same commit, which can still have different uncommitted files. Say so in one line with its `report` path, record current working-tree status, then continue. Never skip the audit on that basis.
 
 **Announce the roster** before spawning: the lenses by their plain names and what each looks for, in one line each. This is progress reporting, not a confirmation prompt.
 

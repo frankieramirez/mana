@@ -23,6 +23,7 @@ Lens: {lens_name}
 Profile: {profile_path}
 Shared context: {system_context_path}
 Scope: {scope_path} ({scope_reason})
+Assumed load: {assumed_load}
 
 Read the profile and shared context first. Verify relevant source yourself; the discovery map and another agent's conclusions are leads, not proof. Read your lens's important flows before using churn to choose additional files.
 
@@ -62,6 +63,6 @@ You are a leaf. Do not spawn agents or invoke other skills. Non-mutating inspect
 
 ## Slots
 
-The orchestrator supplies the selected `references/lenses/<lens_name>.md`, `references/candidates-schema.json`, the Stage 2 prior-decisions block, run identity, `$RUN_DIR/profile.json`, `$RUN_DIR/system-context.md`, and the scope path and reason from the profile. The lens name is also its artifact filename stem. Category follows the roster mapping in SKILL.md.
+The orchestrator supplies the selected `references/lenses/<lens_name>.md`, `references/candidates-schema.json`, the Stage 2 prior-decisions block, run identity, `$RUN_DIR/profile.json`, `$RUN_DIR/system-context.md`, the scope path and reason from the profile, and the `Assumed load:` line from the shared context. The lens name is also its artifact filename stem. Category follows the roster mapping in SKILL.md.
 
 Coverage must set `status` to `complete` only after inspecting the selected scope and its consequential flows; otherwise use `partial` and name the gaps. A completed worker is not evidence of complete coverage.

@@ -71,7 +71,8 @@ out_path = os.environ.get("ULTIMA_OUT") or ""
 categories = os.environ["ULTIMA_CATEGORY"].split(",")
 if any(c not in ("all", "ux", "architecture", "data-reliability", "security", "performance-delivery") for c in categories) or ("all" in categories and len(categories) > 1):
     sys.exit("ultima.sh orient: invalid category")
-if categories == ["all"]:
+all_categories = categories == ["all"]
+if all_categories:
     categories = ["ux", "architecture", "data-reliability", "security", "performance-delivery"]
 
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", "out", ".next", ".nuxt", ".svelte-kit", ".output",
@@ -425,7 +426,8 @@ performance_delivery_surfaces["external_deployment"] = {"status": "unavailable",
     "notes": ["External release gates and rollback steps need supplied evidence; discovery executes no project commands."]}
 has_frontend = any(p["frameworks"] for p in packages) or any(f.endswith(COMPONENT_EXT + (".html", ".css", ".scss")) for f in source_files)
 category_lenses = {"ux": ["design-system", "interaction-states", "accessibility", "component-architecture"],
-                   "architecture": ["system-architecture"], "data-reliability": ["data-integrity", "failure-recovery"]}
+                   "architecture": ["system-architecture"] + (["lean"] if all_categories else []),
+                   "data-reliability": ["data-integrity", "failure-recovery"]}
 applicable = {"ux": has_frontend, "architecture": bool(source_files or manifests),
               "data-reliability": bool(source_files), "security": bool(source_files),
               "performance-delivery": bool(source_files or manifests or deployment_files or ci_files or release_files)}
@@ -517,9 +519,9 @@ out_path = os.environ["ULTIMA_OUT"]
 roster = [r for r in (os.environ.get("ULTIMA_ROSTER") or "").split(",") if r]
 
 LENSES = ["design-system", "interaction-states", "accessibility", "component-architecture",
-          "system-architecture", "data-integrity", "failure-recovery", "access-control", "input-boundaries", "sensitive-data", "performance", "delivery"]
+          "system-architecture", "lean", "data-integrity", "failure-recovery", "access-control", "input-boundaries", "sensitive-data", "performance", "delivery"]
 CATEGORY = {l: "ux" for l in LENSES[:4]}
-CATEGORY.update({"system-architecture": "architecture", "data-integrity": "data-reliability", "failure-recovery": "data-reliability",
+CATEGORY.update({"system-architecture": "architecture", "lean": "architecture", "data-integrity": "data-reliability", "failure-recovery": "data-reliability",
                  "access-control": "security", "input-boundaries": "security", "sensitive-data": "security", "performance": "performance-delivery", "delivery": "performance-delivery"})
 IMPACT = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 REACH = {"local": 1, "package": 2, "system": 3}
@@ -1042,13 +1044,15 @@ profile = load("profile.json")
 meta = load("metadata.json")
 LENS_LABEL = {"design-system": "Design system", "interaction-states": "Interaction states",
               "accessibility": "Accessibility", "component-architecture": "Component architecture",
-              "system-architecture": "System architecture", "data-integrity": "Data integrity", "failure-recovery": "Failure recovery",
+              "system-architecture": "System architecture", "lean": "Lean code", "data-integrity": "Data integrity", "failure-recovery": "Failure recovery",
               "access-control": "Access control", "input-boundaries": "Input boundaries", "sensitive-data": "Sensitive data", "performance": "Performance", "delivery": "Build and deployment"}
 CATEGORY_LABEL = {"ux": "UX & accessibility", "architecture": "Architecture", "data-reliability": "Data & reliability", "security": "Security", "performance-delivery": "Performance & Delivery"}
-CATEGORY_LENSES = {"ux": list(LENS_LABEL)[:4], "architecture": ["system-architecture"],
+CATEGORY_LENSES = {"ux": list(LENS_LABEL)[:4], "architecture": ["system-architecture", "lean"],
                    "data-reliability": ["data-integrity", "failure-recovery"],
                    "security": ["access-control", "input-boundaries", "sensitive-data"],
                    "performance-delivery": ["performance", "delivery"]}
+# An opt-in lens counts toward its tab's coverage only when it ran.
+OPT_IN_LENSES = {"lean"}
 EFFORT_LABEL = {"S": "small", "M": "medium", "L": "large"}
 COLOR = {100: "#8ff5ff", 75: "#e8b45a", 50: "#a8acc4"}
 
@@ -1398,7 +1402,7 @@ def unexamined_source(lens):
     return any(not (set(str(path).strip("/").split("/")) & excluded_dirs) for path in skipped)
 category_coverage = []
 for category, label in CATEGORY_LABEL.items():
-    expected = CATEGORY_LENSES[category]
+    expected = [l for l in CATEGORY_LENSES[category] if l not in OPT_IN_LENSES or l in statuses]
     completed = [l for l in expected if statuses.get(l) == "ok"]
     attempted = [l for l in expected if l in statuses]
     examined = [l for l in completed if doc.get("coverage", {}).get(l, {}).get("status") == "complete"
@@ -1473,6 +1477,8 @@ for lens, c in (doc.get("coverage", {}) or {}).items():
         for note in c.get("notes") or []:
             bits.append(e(note))
         cov_items.append(dd(LENS_LABEL.get(lens, lens), " · ".join(bits) or "no notes"))
+if meta.get("assumed_load"):
+    cov_items.append(dd("Assumed load", e(meta["assumed_load"])))
 missing = doc.get("counts", {}).get("lenses_missing") or []
 if missing:
     cov_items.append(dd("No usable output", e(", ".join(missing)), "dimmed"))

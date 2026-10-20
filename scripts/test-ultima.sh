@@ -147,7 +147,7 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     assert merged2["candidates"][0]["id"] == top["id"]
     assert merged2["counts"]["strong"] == 2 and len(merged2["dismissed"]) == 3, merged2["counts"]
 
-    (run_dir / "metadata.json").write_text(json.dumps({"repo": "acme/app", "head": "abc123def456"}))
+    (run_dir / "metadata.json").write_text(json.dumps({"repo": "acme/app", "head": "abc123def456", "assumed_load": "internal tool for <one> team (README.md)"}))
     out = run("render", str(run_dir)).stdout.strip()
     html = pathlib.Path(out).read_text()
     assert out == str(run_dir / "report.html"), (out, str(run_dir))
@@ -164,6 +164,7 @@ with tempfile.TemporaryDirectory(prefix="ultima-") as td:
     assert "Use Radix primitives" not in html and "docs/adr/0001-radix.md" in html
     assert html.count("<article") == 2, html.count("<article")
     assert "eslint-plugin-jsx-a11y" in html
+    assert "<dt>Assumed load</dt>" in html and "internal tool for &lt;one&gt; team (README.md)" in html
 
     empty = pathlib.Path(td) / "empty"
     empty.mkdir()

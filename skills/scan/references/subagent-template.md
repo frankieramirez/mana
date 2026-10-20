@@ -155,6 +155,8 @@ Reviewer name: {reviewer_name}
 
 Intent: {intent_summary}
 
+Assumed load: {assumed_load}
+
 Scope mode: {scope_mode}
 Reviewed head ref (when remote): {remote_head_ref}
 
@@ -175,6 +177,7 @@ When either of the last two values is a file path rather than content, Read that
 | `{diff_scope_rules}` | `references/diff-scope.md` | Scope tiers and the evidence tool rules |
 | `{schema}` | `references/findings-schema.json` | The artifact contract |
 | `{intent_summary}` | Stage 2 | Two or three lines on what the change is for |
+| `{assumed_load}` | Stage 2 | One line on the load the project expects and the file it came from, or `not stated` |
 | `{pr_metadata}` | Stage 1 | PR title, body, URL; empty for a branch or standalone review |
 | `{requirements}` | Stage 2c | The ticket line, title, numbered requirements, and out-of-scope notes; empty when no ticket resolved |
 | `{scope_mode}` | Stage 1 | `local-aligned`, `pr-remote`, `branch-remote`, or `standalone` |

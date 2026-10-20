@@ -159,6 +159,16 @@ python3 -B evals/workflows/run.py --live \
   --skill-root /absolute/baseline/skills
 ```
 
+### One-line control arm
+
+A candidate that beats its baseline can still lose to a one-sentence instruction. Build a third payload where each skill keeps its frontmatter and its body is only the first sentence of its description, with no references or scripts:
+
+```bash
+python3 -B evals/workflows/one_line.py --build skills --out /absolute/one-line/skills
+```
+
+Pass `--skill NAME` one or more times to build only those skills. The builder reads its source, refuses a destination that already exists or sits under `skills/`, `agents/` or `output-styles/`, and prints the sentence it kept for each skill. Run the same cases with `--skill-root /absolute/one-line/skills` beside the baseline and candidate runs. A full skill that does no better than its one-line arm is carrying instructions that add nothing. The payload also works as a condition root in a frozen manifest, since each entrypoint keeps its `NAME/SKILL.md` path. `test_one_line.py` checks the builder offline.
+
 The feedback fixtures exercise the real bundled helper against an offline `gh` double. Unknown GraphQL operations fail rather than returning unrelated synthetic data. `targeted-incorrect-suggestion` rejects a suggestion contradicted by a caller. `full-feedback-judgment` must also accept a demonstrated arithmetic defect and a useful spelling correction. Both are dry runs. `targeted-supported-fix` is a held-out one-thread repair through the supported no-subagent fallback: it must fix the arithmetic defect, preserve the negative-input guard, verify, and commit without pushing. `small-risk-roster` ends at Stage 3 and checks security/adversarial coverage plus both ticket requirements. It does not measure reviewer findings or independent validation.
 
 `context.full_reads` counts complete Markdown/JSON file contents observed in command output, including repeat retrievals. Counts exclude mere filename mentions. `total_full_read_bytes` includes duplicates; `redundant_full_read_bytes` measures the repeated portion. `tool_output_bytes` is all observed command output. Partial or truncated reads are not reconstructed as full file reads. Inspect saved command events for those reads before interpreting a zero. These are observable context measures, not an exact reconstruction of the model's context window. Host input tokens are cumulative processing, including repeated conversation context. Actual model identity remains null when the host does not expose it.

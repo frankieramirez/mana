@@ -59,6 +59,8 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
     run('orient', '--category', 'ux', cwd=backend, code=2)
     arch = json.loads(run('orient', '--category', 'architecture', cwd=backend))
     assert arch['recommended_lenses'] == ['system-architecture'], arch['recommended_lenses']
+    assert 'lean' not in profile['recommended_lenses'], 'lean is opt-in'
+    assert 'lean' in json.loads(run('orient', '--category', 'all', cwd=backend))['recommended_lenses']
     run('orient', '--category', 'nonsense', cwd=backend, code=1)
 
     performance = json.loads(run('orient', '--category', 'performance-delivery', cwd=backend))
@@ -319,6 +321,31 @@ with tempfile.TemporaryDirectory(prefix='ultima-project-') as tmp:
         assert 'Specialists completed:' not in focused_html
         assert '<p class="lede">' not in focused_html
         assert focused_html.index('<h2>Coverage</h2>') < focused_html.index('<dt>Architecture</dt>')
+
+    # The opt-in lean lens lands under Architecture and counts toward its coverage once it runs.
+    lean_run = tmp / 'lean-run'
+    lean_run.mkdir()
+    write(lean_run, 'profile.json', arch)
+    write(lean_run, 'system-architecture.json', dict(lens='system-architecture', candidates=[], residual_risks=[],
+        coverage={'status': 'complete', 'files_read': 3, 'dirs_skipped': []}))
+    unused = dict(title='Delete legacy write helpers nothing calls', problem='Three helpers survive a removed import path and still need upkeep.',
+                  fix='Delete write_legacy from each module; no caller changes.', strength=75, effort='S', impact='low', reach='package',
+                  convention_source='api/store.py:1', root_cause='helpers left after the import path moved', affected_boundary='store helpers',
+                  verification='rg -n "write_legacy" over the whole tree returned only the three definitions.',
+                  decision_status='none', evidence_status='static', evidence_kind='pattern', category='architecture',
+                  instances=[dict(file=f'api/old{i}.py', line=1, quote='def write_legacy(record):') for i in range(3)])
+    for lean_coverage, expected in [({'status': 'complete', 'files_read': 5, 'dirs_skipped': []}, 'complete'),
+                                    ({'status': 'partial', 'files_read': 5, 'dirs_skipped': []}, 'partial')]:
+        write(lean_run, 'lean.json', dict(lens='lean', candidates=[unused], residual_risks=[], coverage=lean_coverage))
+        run('merge', str(lean_run), '--roster', 'system-architecture,lean')
+        lean_merged = json.loads((lean_run / 'merged.json').read_text())
+        [lean_candidate] = lean_merged['candidates']
+        assert lean_candidate['lenses'] == ['lean'] and lean_candidate['categories'] == ['architecture'], lean_candidate
+        assert lean_candidate['strength'] == 75 and lean_candidate['action'] == 'fix', lean_candidate
+        run('render', str(lean_run))
+        lean_html = (lean_run / 'report.html').read_text()
+        assert 'Lean code' in lean_html
+        assert '<dt>Architecture</dt><dd class="">' + expected + '</dd>' in lean_html, lean_coverage
 
     security_run = tmp / 'security-run'
     security_run.mkdir()
