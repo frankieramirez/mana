@@ -11,11 +11,15 @@ import unittest
 
 import conditions
 import integration
+from test_host_validation import FakeHost
 
 HOST = 'codex-cli 0.163.0'
 CONTROL_LINE = 'Control: skills/briefing-control/SKILL.md\n'
 SOURCE = "export function briefing(workers) {\n  return workers.length ? 'Welcome back' : 'No activity';\n}\n"
 SECRET_REQUEST = 'synthetic report text zz-private-marker'
+CHECK = "import sys\nsys.exit(1 if \"? '' :\" in open('src/briefing.mjs').read() else 0)\n"
+INSTALL = ['python3', '-c', "import os; os.makedirs('node_modules/pkg', exist_ok=True)"]
+EXITS = {'vague-report': 1, 'feature-change': 0, 'review-claims': 0}
 
 
 def git(root, *args):
@@ -40,13 +44,27 @@ def patch(tree, name, old, new):
     return git(work, 'diff') + '\n'
 
 
-class Freeze(unittest.TestCase):
+class Consumer(unittest.TestCase):
+    """A synthetic consumer, payload, runtime and fake host. Holds no tests of its own."""
+
     def setUp(self):
         temp = tempfile.TemporaryDirectory(prefix='mana-integration-')
         self.addCleanup(temp.cleanup)
         self.base = Path(temp.name)
+        self.host = FakeHost(self, {'version': HOST})
+        environment = self.host.environment()
+        environment.start()
+        self.addCleanup(environment.stop)
+        self.runtime = {'codex': str(self.host.executable), 'node': str(self.base / 'node'),
+                        'browsers': str(self.base / 'browsers'), 'npm_cache': str(self.base / 'npm-cache'),
+                        'env': {'NODE_DISABLE_COMPILE_CACHE': '1'}}
+        write(self.base, 'node/bin/node', '#!/bin/sh\necho v22.0.0\n').chmod(0o755)
+        write(self.base, 'browsers/shell-1/chrome', 'browser bytes')
+        write(self.base, 'npm-cache/_cacache/index', 'cache bytes')
         self.consumer = self.base / 'consumer'
         files = {
+            '.gitignore': 'node_modules/\n',
+            'check.py': CHECK,
             'AGENTS.md': '# Agents\n\nRead the docs first.\n' + CONTROL_LINE + 'Keep the hosted product current.\n',
             'skills/briefing-control/SKILL.md': '---\nname: briefing-control\n---\nCommand: node verify.mjs\n',
             'verification/features/briefing.json': '{"id": "briefing"}\n',
@@ -85,7 +103,9 @@ class Freeze(unittest.TestCase):
             attachments = [str(write(self.inputs, family + '/crop.PNG', 'png-bytes'))] if family == 'vague-report' else []
             self.families.append({'id': family, 'source_group': 'consumer-' + family, 'request': str(request),
                                   'attachments': attachments, 'oracle': str(oracle),
-                                  'commits': [{'patch': str(p), 'mode': m, 'message': msg} for p, m, msg in commits]})
+                                  'commits': [{'patch': str(p), 'mode': m, 'message': msg} for p, m, msg in commits],
+                                  'checks': [{'arms': ['control', 'baseline'], 'argv': ['python3', 'check.py'],
+                                              'exit': EXITS[family]}]})
 
     def manifest(self, **changes):
         data = {'version': 1, 'study': 'integration-pilot-test', 'host': HOST, 'model': 'gpt-6.1-sol',
@@ -96,10 +116,11 @@ class Freeze(unittest.TestCase):
                 'consumer': {'repository': str(self.consumer), 'revision': self.revision, 'skills_dir': '.agents/skills',
                              'control_paths': ['skills/briefing-control', 'verification', 'verify.mjs'],
                              'pointer': 'AGENTS.md', 'prerequisites': ['node 22 on PATH', 'dependencies installed offline'],
+                             'install': INSTALL,
                              'baseline_edits': [{'path': 'AGENTS.md', 'old': CONTROL_LINE, 'new': ''},
                                                 {'path': 'package.json', 'old': '"node test.mjs",\n    "verify": "node verify.mjs"',
                                                  'new': '"node test.mjs"'}]},
-                'families': self.families}
+                'runtime': self.runtime, 'families': self.families}
         for key, value in changes.items():
             data[key] = value
         path = self.base / ('manifest-%d.json' % len(list(self.base.glob('manifest-*.json'))))
@@ -113,6 +134,11 @@ class Freeze(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, message):
             self.freeze(self.manifest(**changes), name='refused-%d' % len(list(self.base.glob('refused-*'))))
 
+    def manifest_data(self):
+        return json.loads(self.manifest().read_text())
+
+
+class Freeze(Consumer):
     def test_freeze_allocates_twelve_paired_slots_without_an_agent(self):
         result = self.freeze()
         self.assertEqual(result['parent_slots'], 12)
@@ -174,7 +200,7 @@ class Freeze(unittest.TestCase):
         study = integration.FrozenIntegration(self.base / 'study', result['controls_sha256'])
         text = json.dumps(integration.summary(study))
         for private in (str(self.base), 'zz-private-marker', 'briefing-control', 'verification', 'AGENTS.md',
-                        'node 22', 'Setup review-claims', 'consumer-', 'package.json'):
+                        'node 22', 'Setup review-claims', 'consumer-', 'package.json', 'check.py', 'node_modules'):
             self.assertNotIn(private, text)
         data = json.loads(text)
         self.assertEqual(data['consumer']['revision'], self.revision)
@@ -250,6 +276,33 @@ class Freeze(unittest.TestCase):
         self.refused('exactly one Control line, found 0', consumer=dict(consumer, revision=revision, pointer='NOTES.md'))
         self.refused('exactly one Control line, found 2', consumer=dict(consumer, revision=revision, pointer='TWO.md'))
 
+    def test_baseline_edits_cannot_touch_the_installed_payload(self):
+        consumer = self.manifest_data()['consumer']
+        edits = consumer['baseline_edits'] + [{'path': '.agents/skills/sift/SKILL.md', 'old': 'older', 'new': 'newer'}]
+        self.refused('a baseline edit cannot touch it', consumer=dict(consumer, baseline_edits=edits))
+
+    def test_a_refused_freeze_leaves_nothing_and_can_be_retried(self):
+        broken = [dict(f, commits=[{'patch': str(self.inputs / 'claim.patch'), 'mode': 'commit', 'message': 'x'},
+                                   {'patch': str(self.inputs / 'claim.patch'), 'mode': 'commit', 'message': 'again'}])
+                  if f['id'] == 'review-claims' else f for f in self.families]
+        with self.assertRaisesRegex(ValueError, 'setup does not apply'):
+            self.freeze(self.manifest(families=broken))
+        self.assertEqual(sorted(p.name for p in self.base.iterdir() if p.name.startswith(('study', '.study'))), [])
+        self.assertEqual(self.freeze()['parent_slots'], 12)
+        self.assertEqual(sorted(p.name for p in self.base.iterdir() if p.name.startswith(('study', '.study'))), ['study'])
+
+    def test_runtime_is_pinned_and_checked(self):
+        self.refused('not the study host', runtime=dict(self.runtime, codex=str(self.base / 'node/bin/node')))
+        self.refused('no credential', runtime=dict(self.runtime, env={'GITHUB_TOKEN': 'x'}))
+        self.refused('must hold bin/node', runtime=dict(self.runtime, node=str(self.base / 'browsers')))
+        self.refused('sandbox checks', families=[dict(f, checks=[]) for f in self.families])
+        result = self.freeze()
+        study = integration.FrozenIntegration(self.base / 'study', result['controls_sha256'])
+        self.assertEqual(study.runtime()['pins']['node_version'], 'v22.0.0')
+        write(self.base, 'npm-cache/_cacache/index', 'changed cache')
+        with self.assertRaisesRegex(ValueError, 'runtime changed'):
+            study.runtime()
+
     def test_symlinks_must_stay_inside_the_consumer(self):
         (self.consumer / 'escape').symlink_to('../../outside')
         git(self.consumer, 'add', 'escape')
@@ -275,9 +328,6 @@ class Freeze(unittest.TestCase):
         finally:
             os.environ['HOME'] = saved
         self.assertEqual(first['controls_sha256'], second['controls_sha256'])
-
-    def manifest_data(self):
-        return json.loads(self.manifest().read_text())
 
 
 if __name__ == '__main__':

@@ -13,6 +13,10 @@ pinned revision holds there, so an older installed copy cannot answer for the pa
 Fixtures carry no history from the consumer: each is one commit of the arm's tree plus the family's
 setup, so the baseline arm cannot recover the control from an earlier commit.
 
+The runtime is pinned too: the host binary, the Node install, the browser builds and a seeded npm
+cache. `integration_run.py` installs dependencies offline from that cache and runs every attempt and
+every no-model check inside the same host sandbox.
+
 The consumer is private and Mana is public. The frozen study therefore lives outside this
 checkout, and so does every request, oracle and setup patch. Only `summary()` output, which
 holds counts, digests and the schedule, may be committed here. Freezing runs no agent.
@@ -29,6 +33,7 @@ import stat
 import subprocess
 import sys
 import tarfile
+import tempfile
 
 import conditions
 import hosts
@@ -46,9 +51,13 @@ REVISION = re.compile(r'[0-9a-f]{40}')
 FIXTURE_DATE = '2000-01-01T00:00:00+00:00'
 # fold: amend into the pinned commit; commit: a commit of its own; worktree: an uncommitted edit, applied last.
 SETUP_MODES = ('fold', 'commit', 'worktree')
-RUNNER_SOURCES = ('integration.py', 'conditions.py', 'hosts.py', 'delegation.py', 'archive_delegated.py')
+RUNNER_SOURCES = ('integration.py', 'integration_run.py', 'conditions.py', 'hosts.py', 'delegation.py',
+                  'process_family.py', 'archive_delegated.py', 'response-schema.json')
 KEYS = ('version', 'study', 'host', 'model', 'reasoning', 'seed', 'repetitions', 'timeout_seconds',
-        'budget', 'payload', 'consumer', 'families')
+        'budget', 'payload', 'consumer', 'runtime', 'families')
+ENV_NAME = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+# The agent environment never carries a credential or a session handle.
+FORBIDDEN_ENV = re.compile(r'^(GH_|GITHUB_|AWS_|CLOUDSDK_|GOOGLE_|OPENAI_|ANTHROPIC_|CODEX_|CLAUDE_)|TOKEN|SECRET|PASSWORD|KEY$', re.I)
 
 
 def git_env():
@@ -144,7 +153,7 @@ def checked_manifest(data, root=ROOT, evidence_dir=None):
         conditions.relative_file(Path(payload['root']), skill + '/SKILL.md')
     consumer = data['consumer']
     conditions.keys(consumer, ('repository', 'revision', 'skills_dir', 'control_paths', 'pointer', 'baseline_edits',
-                               'prerequisites'), 'consumer')
+                               'install', 'prerequisites'), 'consumer')
     relative_path(consumer['skills_dir'], 'skills_dir')
     if not isinstance(consumer['repository'], str) or not Path(consumer['repository']).is_absolute():
         raise ValueError('consumer repository must be an absolute path')
@@ -172,14 +181,26 @@ def checked_manifest(data, root=ROOT, evidence_dir=None):
         if (not isinstance(edit['old'], str) or not edit['old'] or not isinstance(edit['new'], str)
                 or edit['old'] == edit['new'] or edit['path'] in consumer['control_paths']):
             raise ValueError('a baseline edit replaces text in a file both arms keep')
+        if edit['path'] == consumer['skills_dir'] or edit['path'].startswith(consumer['skills_dir'] + '/'):
+            raise ValueError('the installed payload is the same in both arms; a baseline edit cannot touch it')
+    argv(consumer['install'], 'install')
     if (not isinstance(consumer['prerequisites'], list)
             or any(not isinstance(p, str) or not p.strip() for p in consumer['prerequisites'])):
         raise ValueError('prerequisites are a list of descriptions, identical for both arms')
+    checked_runtime(data['runtime'], data['host'])
     families = data['families']
     if not isinstance(families, list) or sorted(f.get('id') for f in families if isinstance(f, dict)) != sorted(FAMILIES):
         raise ValueError('the pilot has exactly the families ' + ', '.join(sorted(FAMILIES)))
     for family in families:
-        conditions.keys(family, ('id', 'source_group', 'request', 'attachments', 'oracle', 'commits'), 'family')
+        conditions.keys(family, ('id', 'source_group', 'request', 'attachments', 'oracle', 'commits', 'checks'), 'family')
+        if not isinstance(family['checks'], list) or not family['checks']:
+            raise ValueError('each family declares its no-model sandbox checks')
+        for check in family['checks']:
+            conditions.keys(check, ('arms', 'argv', 'exit'), 'sandbox check')
+            argv(check['argv'], 'sandbox check')
+            if (not isinstance(check['arms'], list) or not check['arms'] or not set(check['arms']) <= set(ARMS)
+                    or type(check['exit']) is not int):
+                raise ValueError('a sandbox check names its arms and expected exit')
         if not isinstance(family['source_group'], str) or not conditions.IDENTIFIER.fullmatch(family['source_group']):
             raise ValueError('invalid source group')
         for name in [family['request'], family['oracle']] + list(family['attachments'] or []):
@@ -200,6 +221,42 @@ def checked_manifest(data, root=ROOT, evidence_dir=None):
     if len({f['source_group'] for f in families}) != len(families):
         raise ValueError('each family is its own source group')
     return data
+
+
+def argv(value, label):
+    if not isinstance(value, list) or not value or any(not isinstance(a, str) or not a for a in value):
+        raise ValueError(label + ' is a non-empty argument list')
+    return value
+
+
+def checked_runtime(runtime, host):
+    """The pinned host binary, Node install, browser builds and npm cache, the same for both arms."""
+    conditions.keys(runtime, ('codex', 'node', 'browsers', 'npm_cache', 'env'), 'runtime')
+    codex = Path(runtime['codex']) if isinstance(runtime['codex'], str) else None
+    if codex is None or not codex.is_absolute() or not codex.is_file() or not os.access(codex, os.X_OK):
+        raise ValueError('runtime codex must be an absolute path to the host executable')
+    reported = subprocess.run([str(codex), '--version'], capture_output=True, text=True, timeout=20).stdout.strip()
+    if reported != host:
+        raise ValueError('runtime codex reports %r, not the study host' % reported)
+    for key in ('node', 'browsers', 'npm_cache'):
+        if not isinstance(runtime[key], str) or not Path(runtime[key]).is_absolute() or not Path(runtime[key]).is_dir():
+            raise ValueError('runtime %s must be an absolute directory' % key)
+    if not (Path(runtime['node']) / 'bin' / 'node').is_file():
+        raise ValueError('runtime node must hold bin/node')
+    if (not isinstance(runtime['env'], dict)
+            or any(not ENV_NAME.fullmatch(k) or FORBIDDEN_ENV.search(k) or not isinstance(v, str)
+                   for k, v in runtime['env'].items())):
+        raise ValueError('runtime env holds plain names and string values and no credential')
+
+
+def runtime_pins(runtime):
+    """Byte identity of the runtime, checked again before every attempt."""
+    node = Path(runtime['node']) / 'bin' / 'node'
+    return {'codex_sha256': conditions.digest(Path(runtime['codex']).read_bytes()),
+            'node_version': subprocess.run([str(node), '--version'], capture_output=True, text=True, timeout=20).stdout.strip(),
+            'node_sha256': conditions.digest(node.read_bytes()),
+            'browsers_sha256': conditions.digest(conditions.encoded(tree_inventory(runtime['browsers']))),
+            'npm_cache_sha256': conditions.digest(conditions.encoded(tree_inventory(runtime['npm_cache'])))}
 
 
 def schedule(seed):
@@ -294,12 +351,27 @@ def copy_input(source, destination):
 def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=HERE):
     """Create once. Prints nothing private; the caller keeps the returned controls pin outside the study."""
     data = checked_manifest(json.loads(Path(manifest_path).read_text()), root, evidence_dir)
-    destination = Path(destination)
-    outside(destination, root, 'frozen study')
+    final = Path(destination)
+    outside(final, root, 'frozen study')
     outside(manifest_path, root, 'study manifest')
-    if destination.resolve().is_relative_to(Path(data['consumer']['repository']).resolve()):
+    if final.resolve().is_relative_to(Path(data['consumer']['repository']).resolve()):
         raise ValueError('frozen study cannot be inside the consumer checkout')
-    destination.mkdir(parents=False, exist_ok=False)
+    if final.exists() or not final.parent.is_dir():
+        raise ValueError('the frozen study needs a new directory in an existing parent')
+    # Everything is built in a private sibling and renamed into place only when every check passed,
+    # so a refused freeze leaves nothing behind and can be retried with the same destination.
+    destination = Path(tempfile.mkdtemp(prefix='.' + final.name + '.partial-', dir=final.parent))
+    try:
+        result = build_study(data, destination, evidence_dir, source_dir)
+        os.rename(destination, final)
+        return result
+    except BaseException:
+        writable(destination)
+        shutil.rmtree(destination, ignore_errors=True)
+        raise
+
+
+def build_study(data, destination, evidence_dir, source_dir):
     (destination / 'results').mkdir()
     consumer = data['consumer']
     arms = destination / 'arms'
@@ -337,6 +409,7 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
             frozen['commits'].append({'patch': target.name, 'mode': commit['mode'], 'message': commit['message'],
                                       'sha256': copy_input(commit['patch'], target)})
             commits.append({'patch': target, 'mode': commit['mode'], 'message': commit['message']})
+        frozen['checks'] = family['checks']
         frozen['fixtures'] = {}
         for arm in ARMS:
             work = scratch / family['id'] / arm
@@ -353,6 +426,7 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
     source.mkdir()
     for name in RUNNER_SOURCES:
         shutil.copy2(Path(source_dir) / name, source / name)
+    runtime = dict(data['runtime'], pins=runtime_pins(data['runtime']))
     shutil.copytree(Path(evidence_dir or source_dir / 'host-evidence'), source / 'host-evidence')
     slots = schedule(data['seed'])
     (destination / 'schedule.json').write_bytes(conditions.encoded(slots))
@@ -364,7 +438,9 @@ def freeze(manifest_path, destination, root=ROOT, evidence_dir=None, source_dir=
         'consumer': {'revision': consumer['revision'], 'pointer': consumer['pointer'],
                      'skills_dir': consumer['skills_dir'], 'replaced_skill_files': replaced,
                      'control_paths': consumer['control_paths'], 'baseline_edits': consumer['baseline_edits'],
-                     'prerequisites': consumer['prerequisites'], 'arm_difference': difference},
+                     'install': consumer['install'], 'prerequisites': consumer['prerequisites'],
+                     'arm_difference': difference},
+        'runtime': runtime,
         'arms': {arm: {'inventory': arm_inventory[arm]} for arm in ARMS},
         'families': families, 'schedule_sha256': conditions.digest(conditions.encoded(slots)),
         'family_inventory': conditions.inventory(destination / 'families'),
@@ -413,6 +489,37 @@ class FrozenIntegration:
                 raise ValueError('frozen %s changed' % name)
         return self
 
+    def runtime(self):
+        """Fail when the host binary, Node, the browsers or the npm cache changed since the freeze."""
+        runtime = self.controls['runtime']
+        if runtime_pins(runtime) != runtime['pins']:
+            raise ValueError('pinned runtime changed since the freeze')
+        return runtime
+
+    def claim(self, slot):
+        """Serial, in schedule order, once per slot, and never after a stop."""
+        self.verify()
+        if type(slot) is not int or not 1 <= slot <= len(self.schedule):
+            raise ValueError('invalid scheduled slot')
+        results = self.root / 'results'
+        lock = results / '.active'
+        lock.mkdir()
+        try:
+            if (results / 'STOP.json').exists():
+                raise ValueError('study stopped; a follow-up needs its own freeze')
+            for earlier in range(1, slot):
+                if not (results / ('%03d' % earlier) / 'result.json').is_file():
+                    raise ValueError('run the frozen schedule in order')
+            out = results / ('%03d' % slot)
+            out.mkdir()
+            return out
+        except BaseException:
+            lock.rmdir()
+            raise
+
+    def release(self):
+        (self.root / 'results' / '.active').rmdir()
+
     def fixture(self, slot, destination):
         """Rebuild one slot's disposable checkout and prove it matches the frozen HEAD and tree."""
         self.verify()
@@ -440,6 +547,7 @@ def summary(study):
             'attachments_sha256': [a['sha256'] for a in family['attachments']],
             'setup_patches_sha256': [s['sha256'] for s in family['commits']],
             'setup_modes': [s['mode'] for s in family['commits']],
+            'sandbox_checks': [{'arms': k['arms'], 'exit': k['exit']} for k in family['checks']],
             'fixtures': {arm: {'head': f['head'], 'commits': f['commits'], 'status_sha256': f['status_sha256'],
                                'tree_inventory_sha256': f['tree_inventory_sha256']}
                          for arm, f in family['fixtures'].items()}}
@@ -449,6 +557,10 @@ def summary(study):
             'budget': c['budget'], 'children': c['children'], 'schedule': study.schedule,
             'payload': {'revision': c['payload']['revision'],
                         'inventory_sha256': conditions.digest(conditions.encoded(c['payload']['inventory']))},
+            'runtime': {'codex_sha256': c['runtime']['pins']['codex_sha256'], 'node_version': c['runtime']['pins']['node_version'],
+                        'browsers_sha256': c['runtime']['pins']['browsers_sha256'],
+                        'npm_cache_sha256': c['runtime']['pins']['npm_cache_sha256'],
+                        'network': 'host proxy, loopback binding only, no allowed domains'},
             'consumer': {'revision': c['consumer']['revision'], 'control_paths': len(c['consumer']['control_paths']),
                          'replaced_skill_files': c['consumer']['replaced_skill_files'],
                          'baseline_edits': len(c['consumer']['baseline_edits']),
