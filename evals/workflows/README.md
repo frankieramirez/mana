@@ -266,7 +266,6 @@ python3 -B evals/workflows/run.py --live \
 ```
 
 
-<<<<<<< HEAD
 ## Cast project-control stage
 
 `cast_control.py` builds a synthetic repository with a project control for Cast's `control-checks.md` stage, frankieramirez/mana#110. Ticket 7 asks for refunds to count in the return summary. The fix belongs in shared accounting code, which only the briefing feature lists in its `sourceRoots`, so `changed` selects briefing and skips the ledger scenario that also depends on it. A required `Validation:` line checks the source and the changelog, which no scenario covers. The user has staged notes and an untracked scratch file.
@@ -285,13 +284,39 @@ python3 -B -m unittest discover -s evals/workflows -p test_cast_control.py
 ```
 
 The tests drive known good and bad sessions through real control, reader, validation and git commands. They establish fixture and grader behavior only. No case in `cases.json` runs this fixture with an agent yet.
-=======
+
 ## Scan control claims
 
 `review-control-claims` continues a review at Stage 5 in a synthetic briefing repo with a `Control:` pointer and two saved control/0 reports. `run-2` is current: it passed the scenario for R1 and failed the one for R2, whose screenshot still rendered. `run-1` covers R3 but checked `src/activity.js`, which changed after the run, so it is stale at the same HEAD. No scenario covers R4. The control leaves a `control-ran` file in the product tree if anything runs it.
 
 The grader in `control_claims_fixtures.py` requires both reports to be read through `conform.sh evidence` without `--scope local`, no control command and no `control-ran`, unchanged reports, product files, HEAD and index, and one check per requirement: R1 `passed`, R2 `failed`, R3 `stale` or `unrun`, R4 `unrun`. Each check's exit must match a reader command that actually ran on its report. `test_control_claims.py` runs the installed Scan copy's real reader and `review.sh claims` in the fixture for the good path, then breaks the commands, the final state or the claims one at a time. No live agent run of this case has happened; the tests establish fixture and grader behavior only.
->>>>>>> origin/main
+
+## Paired project-control integration pilot
+
+`integration.py` freezes the bounded paired study in [the readiness plan](../../docs/plans/project-readiness.md#integration-acceptance-and-delivery), frankieramirez/mana#112. Three task families run on disposable copies of the pinned private consumer app: `vague-report` loads Sift, `feature-change` loads Cast and `review-claims` loads Scan. Each family runs in two arms with two repetitions, so the study is exactly 12 parent invocations with no retries.
+
+| Arm | Consumer fixture |
+|---|---|
+| `control` | The pinned revision as committed, with its project control, Control pointer and records |
+| `baseline` | The same tree with the declared control paths removed and the one `Control:` line dropped from the pointer file |
+
+Both arms install one Mana payload and get the same request, attachments, setup commits, host, model, reasoning, timeout and prerequisites. Freeze proves the arms differ only in the declared paths and the pointer line, and refuses a setup patch that applies to one arm and not the other. Each fixture is rebuilt as a Git checkout with a fixed identity and date and the operator's Git configuration ignored, so every repetition of a cell starts at the same frozen HEAD.
+
+The consumer is private and Mana is public. The manifest, frozen study, requests, attachments, oracles and setup patches all live outside this checkout, and freeze refuses any of them inside it. Freeze exports the committed tree at the pinned revision with `git archive`, so the operator's uncommitted work never enters a fixture. Only the summary goes into Mana: the schedule, counts and SHA-256 digests, with no paths, names, request text or consumer bytes.
+
+```bash
+python3 -B evals/workflows/integration.py --freeze /private/manifest.json --out /private/integration-pilot-1
+python3 -B evals/workflows/integration.py --check /private/integration-pilot-1 --controls-sha256 SAVED_DIGEST
+python3 -B evals/workflows/integration.py --summary /private/integration-pilot-1 --controls-sha256 SAVED_DIGEST
+```
+
+The manifest names `version`, `study`, `host`, `model`, `reasoning`, `seed`, `repetitions` (2), `timeout_seconds` (at most 900), `budget` (`{"invocations": 12, "retries": 0}`), `payload` (absolute root, revision and inventory digest), `consumer` (repository, full revision, `control_paths`, `pointer`, `prerequisites`) and the three `families`. Each family gives its `source_group`, absolute `request`, `attachments` and `oracle` paths and its ordered setup `commits`, each a patch and a message. The host must hold a `focused` record in `host-evidence/`. Freeze makes no model call and prints the external `controls_sha256` pin.
+
+```bash
+python3 -B -m unittest discover -s evals/workflows -p test_integration.py
+```
+
+The tests freeze a synthetic consumer, rebuild all 12 fixtures, and check the arm difference, the schedule, the refusals, the frozen-input checks and that the summary leaks nothing private. No live attempt runner exists for this study yet, and no invocation has run.
 
 ## Ultima follow-up authority
 

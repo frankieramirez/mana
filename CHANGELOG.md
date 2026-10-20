@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.16
+
+- A new `evals/workflows/integration.py` freezes the paired project-control integration pilot for frankieramirez/mana#112: Sift, Cast and Scan task families, a control arm and a baseline arm, two repetitions, exactly 12 invocations and no retries. Both arms get one Mana payload and the same request, setup, host, model, timeout and prerequisites. The baseline drops only the declared control paths and the one `Control:` pointer line, and freeze refuses arms that differ in anything else or setup that applies to one arm only. Fixtures rebuild to the frozen HEAD with the operator's Git configuration ignored. Every private input and the frozen study must sit outside the Mana checkout, and `--summary` prints only counts, digests and the schedule. Freezing runs no agent. `evals/workflows/README.md` also loses a pair of unresolved merge-conflict markers.
+
 ## 0.44.15
 
 - The discovery runner judges child activity per slot. An empty collaboration `wait` is no longer counted as delegation. A spawn that failed, which Codex 0.163.0 logs only to stderr under `--ephemeral`, counts as an attempted delegation, and a collaboration call naming a thread counts as a created child. Each judgment gains `children`, and a timeout now reports as `timeout` before failed commands go to a person. `--probe-catalog` records a new `children_disabled` capability from the same zero-call render. The committed 2026-10-20 record marks it failed for Codex 0.163.0, because `spawn_agent` stays in the model's input with both multi-agent features off. A new `run.py --discover-group` freezes and runs the 24-slot first live group. It refuses a dirty tree or a HEAD behind `origin/main` after a fetch, keeps every allocation, continues past a failed spawn, and stops on a created child or a nonzero host exit. The historical pilot's slot 3 adjudication now matches its recorded exit code.
