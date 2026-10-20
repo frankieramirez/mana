@@ -1,7 +1,7 @@
 # Skill discovery and host capability evaluation
 
 Decision: [Evaluate natural-language skill selection and host compatibility separately](https://github.com/frankieramirez/mana/issues/83), following the [workflow effectiveness protocol](effectiveness-evaluation.md).
-Status: matrix settled on 2026-10-17. The selection-only adapter, preregistered routes and activation probe exist and pass offline against the fake host ([issue 100](https://github.com/frankieramirez/mana/issues/100)); a zero-call catalog render on 2026-10-20 verified `explicit_only_honored` for Codex CLI 0.163.0; the live discovery group is unstarted.
+Status: matrix settled on 2026-10-17. The selection-only adapter, preregistered routes and activation probe exist and pass offline against the fake host ([issue 100](https://github.com/frankieramirez/mana/issues/100)); a zero-call catalog render on 2026-10-20 verified `explicit_only_honored` for Codex CLI 0.163.0; the live group for the corrected 0.44.13 catalog is unstarted. An [interrupted historical pilot](../../evals/workflows/discovery-pilot-2026-10-20.md) used the older 0.44.12 worktree and stopped after five of 24 allocated slots on unexpected collaboration events and spawn failures under the no-child profile. Nineteen slots remain unrun; issue 101 stays open.
 
 ## Decision
 
@@ -78,6 +78,7 @@ The catalog can have several acceptable routes. Lock the allowed set before resu
 | Delivery container for issue 99, Claude Code 2.1.302 | `claude --version` on 2026-10-17; Codex CLI absent | Installation only; no evaluator adapter, containment unexercised, no live probe run |
 | Linux Codex CLI 0.163.0, natural discovery | Live `--probe-discovery` record on 2026-10-18, one model call: the automatic canary was read directly from the installed catalog, with 0 outside loads. The explicit canary was read in the same command as a search hit | Accepted for discovery runs |
 | Linux Codex CLI 0.163.0, explicit-only handling | `--probe-catalog` record on 2026-10-20, no model call: `codex debug prompt-input` listed the automatic canary and the frontmatter-only canary, and hid the two-marker and policy-only canaries. With the shipped catalog installed it hid all 8 explicit-only skills and listed all 11 automatic ones | `explicit_only_honored` verified through `agents/openai.yaml`; the frontmatter flag alone is ignored |
+| Linux Codex CLI 0.163.0, historical 0.44.12 discovery pilot | [2026-10-20 retained attempts](../../evals/workflows/discovery-pilot-2026-10-20.md): five parents, one timeout, failed spawns and empty collaboration waits despite disabled multi-agent flags | Incomplete; zero-child tool exposure and event attribution need revalidation before another group; not evidence for the corrected 0.44.13 catalog |
 | Any other Codex CLI version, natural discovery | No live activation probe | Unvalidated |
 | Claude Code, installed plugin | Manifests and optional host validator exist; prose outputs were supplied instructions in a separate experiment | No comparative discovery/host-control result established by these artifacts |
 | Cursor, Copilot or other skill hosts | Standalone package contract targets portability | Untested for this matrix; packaging does not establish runtime behavior |

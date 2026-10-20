@@ -1,0 +1,2242 @@
+{
+  "activation_counts": {
+    "correct": 1,
+    "unnecessary": 4,
+    "unrun": 19
+  },
+  "actual_model": null,
+  "allocated_slots": 24,
+  "completion": {
+    "ended_at": "2026-10-20T11:26:48.995+00:00",
+    "model_invocations": 5,
+    "slots": 24,
+    "stop_reason": "slot 4: delegation violated pilot bounds",
+    "wall_seconds": 241.22
+  },
+  "human_effort": null,
+  "manifest_sha256": "4076e8c5d2498e1cf471d63dd060967b733c65e340f4d854bf45f0f4220f71e2",
+  "routing_counts": {
+    "correct": 3,
+    "unrun": 19,
+    "wrong": 2
+  },
+  "rows": [
+    {
+      "case": "vague-bug",
+      "directory": "slot-00-vague-bug-r1",
+      "model_invocations": 1,
+      "product_unchanged": true,
+      "recorded_completed_turns": 1,
+      "repetition": 1,
+      "result": {
+        "actual_model": null,
+        "baseline": {
+          "branch": "fixture-work",
+          "files": {
+            ".gitignore": "d4486e645446349dabca9143a7bfa8f4d9f9f39c54634c3e075b2b541e1062a3",
+            "README.md": "33d6421b1b7bea7b9f078dcda72712e8e225ca15948edfd2af064f2ae625e204",
+            "app.py": "b6ab43c84e47e4fe73a1486d9fc88799a98717a7f1c6df7e38c36b122d2b0894",
+            "checkout.py": "8f434e54acb2f434ce9b8e2955b5bf4d0d752a7eb8e1a14d9b5e8a44b1802aca",
+            "test_app.py": "769e2f2c3ae8bc2ccaa68fd30e5ec1b32f681240606371d1bae5ba481325ceba"
+          },
+          "head": "5c314a0c3b9e76728988a80eaeadd8af40ead754",
+          "index": "a781dc1021221494239f3bd85047d1932d17cc7a0986ccae6b419a833f24f376",
+          "refs": "refs/heads/fixture-work 5c314a0c3b9e76728988a80eaeadd8af40ead754\nrefs/heads/main 5c314a0c3b9e76728988a80eaeadd8af40ead754\nrefs/remotes/origin/main 5c314a0c3b9e76728988a80eaeadd8af40ead754",
+          "sequencer": [],
+          "status": ""
+        },
+        "case": "vague-bug",
+        "catalog": {
+          "sha256": "7c9add97abe78dd6a0ad9e4736504b2eaff06a7e26ca629725566dacc557a297",
+          "skills": [
+            {
+              "activation": "automatic",
+              "description": "Inspect or change repository workflow settings. Use to set validation or branch naming, change triage labels, configure review or proof, set the roadmap pointer, adjust persona or session style, or /attune.",
+              "entry_sha256": "92dc85b11fb7df7952f82ab2e3bc5b28104899278f045855851f1cc5a9d58b7c",
+              "inventory_sha256": "fc90932c1cc16904eedb24d9557515627226f7d2aca1e29efbf8e3a04d2f93fe",
+              "name": "attune"
+            },
+            {
+              "activation": "automatic",
+              "description": "Find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code instead of writing it up. Use for blast radius, what could this break, is this change safe, what else does this touch, reviewing a small diff you do not trust, or /augur.",
+              "entry_sha256": "9954834fd71ddd1709a8283ec6809636c2725ab38200e0ec45538506027014c5",
+              "inventory_sha256": "6e95fcc36f843fd6762e1006ab0c20c6502a573d0aea90da8c9364908c83682c",
+              "name": "augur"
+            },
+            {
+              "activation": "explicit",
+              "description": "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to banish comments, remove comments, clean up comments, decomment, or run /banish.",
+              "entry_sha256": "fba423ef66db994f607ac3532c3620d3b0e42093594fc4bdb9ae0ac7378fe623",
+              "inventory_sha256": "d4219a5fbb85825808f7be4a779ce1e196ba46be0ceb7fa19c56bcc41b724c39",
+              "name": "banish"
+            },
+            {
+              "activation": "explicit",
+              "description": "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, take the next ready ticket, or /cast. Pass next to claim the oldest unclaimed ready-for-agent issue, and no-pr to stop after the commit.",
+              "entry_sha256": "2ec7e2e907a98fb713d7a0fa2c08fb4e8ffbb0bbf55f9d875d165a84cbe6dffc",
+              "inventory_sha256": "563bfa44237487cb649231edd1bb214d09efa2b4ed00639d69d077dad7c0c4c9",
+              "name": "cast"
+            },
+            {
+              "activation": "explicit",
+              "description": "Turn a finished plan, spec, or decision map into a build effort with ready-for-agent tickets, or resume its filing and check progress. Use when asked to file the build tickets, break this spec into issues, turn the plan into tickets, slice the work, resume filing build tickets, check progress and close out a build effort, or /conjure.",
+              "entry_sha256": "789dfd182788b0eee92e728832ee3b771276e99c100b4c3d0899e38202451732",
+              "inventory_sha256": "c16262406f39e782f31fd496d7c724069520b5ba68364a557ad7921c4fbbf6f7",
+              "name": "conjure"
+            },
+            {
+              "activation": "automatic",
+              "description": "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel.",
+              "entry_sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7",
+              "inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+              "name": "dispel"
+            },
+            {
+              "activation": "automatic",
+              "description": "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, refresh or reconcile an installed control after the code or config changed, or /leyline.",
+              "entry_sha256": "92c4802ec6ea59449b1f54266a2b28ccce64ea0c8c7a4544084efd55fae5f1bb",
+              "inventory_sha256": "24998714d5c5e9beac482a12d3012040ed64495dce896618a618c9287f17ba87",
+              "name": "leyline"
+            },
+            {
+              "activation": "automatic",
+              "description": "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into that pull request's branch and resolve what conflicts, from any checkout. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts.",
+              "entry_sha256": "bcb4506f0f46c549106f02870451037d8dacd5bb05fdc5614f963f08a1b3f145",
+              "inventory_sha256": "2f97e508ecbcebe6c13590f987cfc5d4100f420a08cb184eba406b8cf0562cf4",
+              "name": "mend"
+            },
+            {
+              "activation": "automatic",
+              "description": "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /mimic. Pulls the user's voice from examples in context and applies the dispel register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing.",
+              "entry_sha256": "a7562ddfdb7f72d14328535ab4673491949a6315ccf48177e9ca7a8f8735be74",
+              "inventory_sha256": "b4d96e0967993378f6a11dfe52159e5fd7e135b48593c26b69a10f8740ad9c25",
+              "name": "mimic"
+            },
+            {
+              "activation": "explicit",
+              "description": "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, pick up where I left off, portal run, or continue this named map or build effort.",
+              "entry_sha256": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+              "inventory_sha256": "e4afcade5a5e8607113608dfc7fa62926d322129c25942fbe54e47b13ef62759",
+              "name": "portal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Remedy PR review feedback by fixing the code and pushing, without replying on the PR. Use when addressing review comments, resolving review threads, clearing code-review feedback on a pull request, remedying a review, or asked to handle PR feedback without commenting.",
+              "entry_sha256": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+              "inventory_sha256": "f2a34f2441fbda71cb3ba8afa4e95bcdf32247b3403d57a69491fcee335f36d7",
+              "name": "remedy"
+            },
+            {
+              "activation": "automatic",
+              "description": "Open or update a pull request with a scannable description (compact trees and diffs) plus a screenshot, recording, or command-output image. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, writing a visual PR description, attaching evidence to a pull request, or /reveal.",
+              "entry_sha256": "f4f4b6e9a1f11c8d47ff310002c3c8a043720a2fe12e1f4a5c9ca00d66ddc60b",
+              "inventory_sha256": "500181a22a781140d1f3d0dca0cc54cde119787ba2b8ab739f8226a1dddadc0a",
+              "name": "reveal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Deep multi-reviewer code review for bugs, regressions, tests, standards, and whether the change meets its ticket. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, checks the diff against the ticket's acceptance criteria, then performs the authorized follow-up or asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to scan a branch, or to review a PR.",
+              "entry_sha256": "66617de6f17db09fa75b00289b48fa8bc5d291626e046a036e09fe2ed16ae583",
+              "inventory_sha256": "4b855c558577b6d4073f36eea714ac3c1ece35c196e84bd5baef98d170870116",
+              "name": "scan"
+            },
+            {
+              "activation": "explicit",
+              "description": "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, check or close out a build effort, or /scry.",
+              "entry_sha256": "f1fc6575a5d4026c13c2770f789e6dc0049ada1aac346625ff984d71474c9ccb",
+              "inventory_sha256": "4cea5ac605223be16f8b05985e69cb47ac9a35b32d080eefdba9d29782974eb2",
+              "name": "scry"
+            },
+            {
+              "activation": "explicit",
+              "description": "Set up a repository for the other skills using your chosen tracker, asking where tickets live when that choice is missing. Supports GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Detects and writes the configuration and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to refresh configuration or switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana.",
+              "entry_sha256": "dde3865bebfb0812eeb98345ee00d20a05332eb55f401919cead867af6087b3e",
+              "inventory_sha256": "75029a742861165506e1085b969c31d4122795960d3ff483bc6142001ae6839b",
+              "name": "setup-mana"
+            },
+            {
+              "activation": "explicit",
+              "description": "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, list the shortcuts or deferred limits marked in the code and file them as tickets, or /sift. Pass you-pick to triage without waiting for answers.",
+              "entry_sha256": "31d3daecb70387ae675ef05e0ae3bc71c48810879999ff7473a37a3f4d6ceaaa",
+              "inventory_sha256": "12270ed9bc90ccea0394d073c353f42aa712ee6ce4293acc4d490d447a94c57f",
+              "name": "sift"
+            },
+            {
+              "activation": "automatic",
+              "description": "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima.",
+              "entry_sha256": "49200427cce828cdcf7f04023e9509f3113849c22ad0b926b0a87588c094be3b",
+              "inventory_sha256": "fcf9168449fa48f232e66f3c92197064690d552cd301559ab31480a307d94291",
+              "name": "ultima"
+            },
+            {
+              "activation": "explicit",
+              "description": "Create or update a project roadmap. Use for milestone planning, overall progress, what remains toward a goal, or /vision.",
+              "entry_sha256": "196562aa33ac7b304380dfda728277edf4f6f8d6c9bcdbdbcb135e156655f663",
+              "inventory_sha256": "6278b3687adf51f49aa653ff854ba88478e42a223459a5c50e514abd30c6c18c",
+              "name": "vision"
+            },
+            {
+              "activation": "automatic",
+              "description": "Monitor an open GitHub pull request until it merges or closes, fixing valid review feedback and branch-caused CI failures along the way. Use when asked to ward a PR, monitor a pull request, watch CI and review feedback, keep an eye on a PR, or keep handling feedback until merge.",
+              "entry_sha256": "ce305c0329ccd96c17c00aba0f753c6c37f2fd59453c1b77b1c07fa0ca64cb1d",
+              "inventory_sha256": "27f238fc4f92cf008920cd28d8410407f9a916931d319e218bf07840917b498a",
+              "name": "ward"
+            }
+          ]
+        },
+        "command": [
+          "/home/f/.local/share/mise/installs/codex/0.163.0/bin/codex",
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--json",
+          "--color",
+          "never",
+          "-C",
+          "<out>/workspace",
+          "-c",
+          "default_permissions=\"mana-eval\"",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "permissions.mana-eval.filesystem={ \":root\"=\"deny\", \":minimal\"=\"read\", \"<out>/workspace\"=\"read\", \"<out>/workspace/artifacts\"=\"write\", \"/home/f/.local/share/mise/installs/codex/0.163.0\"=\"read\" }",
+          "-c",
+          "permissions.mana-eval.network.enabled=false",
+          "-c",
+          "shell_environment_policy.inherit=\"none\"",
+          "-c",
+          "shell_environment_policy.set={ \"PATH\"=\"<out>/workspace/bin:/usr/bin:/bin\", \"HOME\"=\"<out>/workspace/home\", \"GIT_CONFIG_NOSYSTEM\"=\"1\", \"GIT_CONFIG_GLOBAL\"=\"/dev/null\", \"LC_ALL\"=\"C\", \"PYTHONDONTWRITEBYTECODE\"=\"1\", \"TMPDIR\"=\"<out>/workspace/artifacts\" }",
+          "-c",
+          "features.apps=false",
+          "-c",
+          "features.plugins=false",
+          "-c",
+          "features.remote_plugin=false",
+          "-c",
+          "features.hooks=false",
+          "-c",
+          "features.memories=false",
+          "-c",
+          "features.multi_agent=false",
+          "-c",
+          "features.multi_agent_v2=false",
+          "-c",
+          "features.browser_use=false",
+          "-c",
+          "features.browser_use_external=false",
+          "-c",
+          "features.computer_use=false",
+          "-c",
+          "features.image_generation=false",
+          "-c",
+          "features.in_app_browser=false",
+          "-c",
+          "features.workspace_dependencies=false",
+          "-c",
+          "features.shell_snapshot=false",
+          "-c",
+          "features.skill_mcp_dependency_install=false",
+          "-c",
+          "features.goals=false",
+          "-c",
+          "web_search=\"disabled\"",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "mcp_servers={}",
+          "-c",
+          "model_reasoning_effort=\"medium\"",
+          "-c",
+          "model=\"gpt-6.1-sol\"",
+          "--output-schema",
+          "/home/f/.codex/worktrees/5758/mana/evals/workflows/response-schema.json",
+          "-o",
+          "<out>/response.json",
+          "-"
+        ],
+        "ended_at": "2026-10-20T11:23:21.427+00:00",
+        "execution": "not_exercised",
+        "failures": [],
+        "host": "codex-cli 0.163.0",
+        "host_capability": {
+          "accepted": true,
+          "assessed_at": "2026-10-20T11:22:48+00:00",
+          "missing": [],
+          "mode": "discovery",
+          "stale": []
+        },
+        "host_skill_folders": {
+          "/etc/codex/skills": null,
+          "~/.agents/skills": 7,
+          "~/.codex/skills": 3
+        },
+        "host_support": {
+          "explicit_only_honored": null,
+          "skill_discovery": "verified"
+        },
+        "isolation": {
+          "artifact_write": "allowed",
+          "catalog_write": "denied",
+          "checked_at": "2026-10-20T11:22:48.171+00:00",
+          "git_write": "denied",
+          "network": "denied",
+          "outside_read": "denied",
+          "product_write": "denied",
+          "routes_read": "denied",
+          "tool_write": "denied"
+        },
+        "judgment": {
+          "activation": "unnecessary",
+          "adjudicate": [],
+          "attempted_actions": [],
+          "capability_limit": {
+            "declared": [],
+            "status": "none"
+          },
+          "execution": "not_exercised",
+          "forbidden_attempts": [],
+          "loaded_entrypoints": [
+            "dispel"
+          ],
+          "notes": [],
+          "observed_route": "skill:dispel",
+          "routing": "wrong"
+        },
+        "live": true,
+        "model_invocations": 1,
+        "observation": {
+          "actions": [],
+          "all_loads": [
+            {
+              "command": "/usr/bin/bash -lc \"cat .agents/skills/dispel/SKILL.md; cat app.py; rg --files -g '\"'!artifacts/**'\"' -g '\"'!.agents/**'\"'; git status --short; nl -ba checkout.py\"",
+              "first": true,
+              "index": 3,
+              "skill": "dispel",
+              "via": "search"
+            }
+          ],
+          "catalog_scans": [],
+          "first_consequential_action": null,
+          "first_substantive_operation": {
+            "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '*checkout*' -g '*Checkout*' -g 'package.json' -g '*log*' -g '*README*' -g '*test*' -g '*spec*'\"",
+            "exit_code": 0,
+            "index": 1,
+            "kind": "command"
+          },
+          "loads": [
+            {
+              "command": "/usr/bin/bash -lc \"cat .agents/skills/dispel/SKILL.md; cat app.py; rg --files -g '\"'!artifacts/**'\"' -g '\"'!.agents/**'\"'; git status --short; nl -ba checkout.py\"",
+              "first": true,
+              "index": 3,
+              "skill": "dispel",
+              "via": "search"
+            }
+          ],
+          "operations": [
+            {
+              "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '*checkout*' -g '*Checkout*' -g 'package.json' -g '*log*' -g '*README*' -g '*test*' -g '*spec*'\"",
+              "exit_code": 0,
+              "index": 1,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'ls -la; cat README.md checkout.py test_app.py'",
+              "exit_code": 0,
+              "index": 2,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"cat .agents/skills/dispel/SKILL.md; cat app.py; rg --files -g '\"'!artifacts/**'\"' -g '\"'!.agents/**'\"'; git status --short; nl -ba checkout.py\"",
+              "exit_code": 0,
+              "index": 3,
+              "kind": "skill-load"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"PYTHONDONTWRITEBYTECODE=1 python - <<'PY'\nfrom unittest.mock import patch\nfrom checkout import reserve\nstock = {'widget': 1}\nfor draw, expected in [(0.05, False), (0.1, True), (0.5, True)]:\n    with patch('checkout.random.random', return_value=draw):\n        actual = reserve(stock, 'widget')\n        assert actual is expected\n        print(f'stock={stock}, random={draw}: reserve={actual}')\nwith patch('checkout.random.random', return_value=0.5):\n    assert reserve({'widget': 0}, 'widget') is False\nprint('Deterministic reproduction passed')\nPY\nPYTHONDONTWRITEBYTECODE=1 python -m unittest discover -v\"",
+              "exit_code": 0,
+              "index": 5,
+              "kind": "command"
+            }
+          ],
+          "outside_loads": [],
+          "unavailable": []
+        },
+        "observation_kind": "live-discovery",
+        "process_family": {
+          "ended_at": "2026-10-20T11:23:21.421+00:00",
+          "exit_code": 0,
+          "family_terminated": true,
+          "host_pid": 1686364,
+          "method": "session, group and subtree sweep with runner subreaper",
+          "outcome": "completed",
+          "platform": "linux",
+          "signalled_pids": [],
+          "started_at": "2026-10-20T11:22:48.171+00:00",
+          "subreaper": true,
+          "surviving_pids": [],
+          "timeout_seconds": 120
+        },
+        "reasoning": "medium",
+        "reported_model": null,
+        "requested_model": "gpt-6.1-sol",
+        "routes_sha256": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+        "schema_version": 1,
+        "seconds": 33.38,
+        "started_at": "2026-10-20T11:22:48.046+00:00",
+        "study": "discovery-selection-v1",
+        "timeout_seconds": 120
+      },
+      "result_sha256": "3e7174caa3260161b8e7d4aaf91235e6e223acf430e9652a395ab8b5c52ea79b",
+      "seconds": 33.38,
+      "slot": 0,
+      "status": "not_exercised",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 57728,
+        "input_tokens": 75768,
+        "output_tokens": 726,
+        "reasoning_output_tokens": 49
+      }
+    },
+    {
+      "case": "scan-positive",
+      "directory": "slot-01-scan-positive-r2",
+      "model_invocations": 1,
+      "product_unchanged": true,
+      "recorded_completed_turns": 1,
+      "repetition": 2,
+      "result": {
+        "actual_model": null,
+        "baseline": {
+          "branch": "fixture-work",
+          "files": {
+            ".gitignore": "d4486e645446349dabca9143a7bfa8f4d9f9f39c54634c3e075b2b541e1062a3",
+            "README.md": "33d6421b1b7bea7b9f078dcda72712e8e225ca15948edfd2af064f2ae625e204",
+            "TICKET.md": "fb6f3e998506bb4c72e1164e4afa15e3b0db507111e5cce8d4cc60753dfa13f0",
+            "app.py": "4a1181e2dd982c1b346ad58070ece5b93f3738edb167ac68845842cdddc0670c",
+            "test_app.py": "769e2f2c3ae8bc2ccaa68fd30e5ec1b32f681240606371d1bae5ba481325ceba"
+          },
+          "head": "26083d3d630e1b96a599dd666be1f2a95ac586e9",
+          "index": "1ee0d3c76563e26bd5d50b940f2e1f78f67f980bf40a728c76bb5f5b0b3125ea",
+          "refs": "refs/heads/fixture-work 26083d3d630e1b96a599dd666be1f2a95ac586e9\nrefs/heads/main 84c7d76ba5b57ccf34c50afee66ad9a4fdbcb842\nrefs/remotes/origin/main 84c7d76ba5b57ccf34c50afee66ad9a4fdbcb842",
+          "sequencer": [],
+          "status": ""
+        },
+        "case": "scan-positive",
+        "catalog": {
+          "sha256": "7c9add97abe78dd6a0ad9e4736504b2eaff06a7e26ca629725566dacc557a297",
+          "skills": [
+            {
+              "activation": "automatic",
+              "description": "Inspect or change repository workflow settings. Use to set validation or branch naming, change triage labels, configure review or proof, set the roadmap pointer, adjust persona or session style, or /attune.",
+              "entry_sha256": "92dc85b11fb7df7952f82ab2e3bc5b28104899278f045855851f1cc5a9d58b7c",
+              "inventory_sha256": "fc90932c1cc16904eedb24d9557515627226f7d2aca1e29efbf8e3a04d2f93fe",
+              "name": "attune"
+            },
+            {
+              "activation": "automatic",
+              "description": "Find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code instead of writing it up. Use for blast radius, what could this break, is this change safe, what else does this touch, reviewing a small diff you do not trust, or /augur.",
+              "entry_sha256": "9954834fd71ddd1709a8283ec6809636c2725ab38200e0ec45538506027014c5",
+              "inventory_sha256": "6e95fcc36f843fd6762e1006ab0c20c6502a573d0aea90da8c9364908c83682c",
+              "name": "augur"
+            },
+            {
+              "activation": "explicit",
+              "description": "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to banish comments, remove comments, clean up comments, decomment, or run /banish.",
+              "entry_sha256": "fba423ef66db994f607ac3532c3620d3b0e42093594fc4bdb9ae0ac7378fe623",
+              "inventory_sha256": "d4219a5fbb85825808f7be4a779ce1e196ba46be0ceb7fa19c56bcc41b724c39",
+              "name": "banish"
+            },
+            {
+              "activation": "explicit",
+              "description": "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, take the next ready ticket, or /cast. Pass next to claim the oldest unclaimed ready-for-agent issue, and no-pr to stop after the commit.",
+              "entry_sha256": "2ec7e2e907a98fb713d7a0fa2c08fb4e8ffbb0bbf55f9d875d165a84cbe6dffc",
+              "inventory_sha256": "563bfa44237487cb649231edd1bb214d09efa2b4ed00639d69d077dad7c0c4c9",
+              "name": "cast"
+            },
+            {
+              "activation": "explicit",
+              "description": "Turn a finished plan, spec, or decision map into a build effort with ready-for-agent tickets, or resume its filing and check progress. Use when asked to file the build tickets, break this spec into issues, turn the plan into tickets, slice the work, resume filing build tickets, check progress and close out a build effort, or /conjure.",
+              "entry_sha256": "789dfd182788b0eee92e728832ee3b771276e99c100b4c3d0899e38202451732",
+              "inventory_sha256": "c16262406f39e782f31fd496d7c724069520b5ba68364a557ad7921c4fbbf6f7",
+              "name": "conjure"
+            },
+            {
+              "activation": "automatic",
+              "description": "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel.",
+              "entry_sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7",
+              "inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+              "name": "dispel"
+            },
+            {
+              "activation": "automatic",
+              "description": "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, refresh or reconcile an installed control after the code or config changed, or /leyline.",
+              "entry_sha256": "92c4802ec6ea59449b1f54266a2b28ccce64ea0c8c7a4544084efd55fae5f1bb",
+              "inventory_sha256": "24998714d5c5e9beac482a12d3012040ed64495dce896618a618c9287f17ba87",
+              "name": "leyline"
+            },
+            {
+              "activation": "automatic",
+              "description": "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into that pull request's branch and resolve what conflicts, from any checkout. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts.",
+              "entry_sha256": "bcb4506f0f46c549106f02870451037d8dacd5bb05fdc5614f963f08a1b3f145",
+              "inventory_sha256": "2f97e508ecbcebe6c13590f987cfc5d4100f420a08cb184eba406b8cf0562cf4",
+              "name": "mend"
+            },
+            {
+              "activation": "automatic",
+              "description": "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /mimic. Pulls the user's voice from examples in context and applies the dispel register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing.",
+              "entry_sha256": "a7562ddfdb7f72d14328535ab4673491949a6315ccf48177e9ca7a8f8735be74",
+              "inventory_sha256": "b4d96e0967993378f6a11dfe52159e5fd7e135b48593c26b69a10f8740ad9c25",
+              "name": "mimic"
+            },
+            {
+              "activation": "explicit",
+              "description": "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, pick up where I left off, portal run, or continue this named map or build effort.",
+              "entry_sha256": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+              "inventory_sha256": "e4afcade5a5e8607113608dfc7fa62926d322129c25942fbe54e47b13ef62759",
+              "name": "portal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Remedy PR review feedback by fixing the code and pushing, without replying on the PR. Use when addressing review comments, resolving review threads, clearing code-review feedback on a pull request, remedying a review, or asked to handle PR feedback without commenting.",
+              "entry_sha256": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+              "inventory_sha256": "f2a34f2441fbda71cb3ba8afa4e95bcdf32247b3403d57a69491fcee335f36d7",
+              "name": "remedy"
+            },
+            {
+              "activation": "automatic",
+              "description": "Open or update a pull request with a scannable description (compact trees and diffs) plus a screenshot, recording, or command-output image. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, writing a visual PR description, attaching evidence to a pull request, or /reveal.",
+              "entry_sha256": "f4f4b6e9a1f11c8d47ff310002c3c8a043720a2fe12e1f4a5c9ca00d66ddc60b",
+              "inventory_sha256": "500181a22a781140d1f3d0dca0cc54cde119787ba2b8ab739f8226a1dddadc0a",
+              "name": "reveal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Deep multi-reviewer code review for bugs, regressions, tests, standards, and whether the change meets its ticket. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, checks the diff against the ticket's acceptance criteria, then performs the authorized follow-up or asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to scan a branch, or to review a PR.",
+              "entry_sha256": "66617de6f17db09fa75b00289b48fa8bc5d291626e046a036e09fe2ed16ae583",
+              "inventory_sha256": "4b855c558577b6d4073f36eea714ac3c1ece35c196e84bd5baef98d170870116",
+              "name": "scan"
+            },
+            {
+              "activation": "explicit",
+              "description": "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, check or close out a build effort, or /scry.",
+              "entry_sha256": "f1fc6575a5d4026c13c2770f789e6dc0049ada1aac346625ff984d71474c9ccb",
+              "inventory_sha256": "4cea5ac605223be16f8b05985e69cb47ac9a35b32d080eefdba9d29782974eb2",
+              "name": "scry"
+            },
+            {
+              "activation": "explicit",
+              "description": "Set up a repository for the other skills using your chosen tracker, asking where tickets live when that choice is missing. Supports GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Detects and writes the configuration and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to refresh configuration or switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana.",
+              "entry_sha256": "dde3865bebfb0812eeb98345ee00d20a05332eb55f401919cead867af6087b3e",
+              "inventory_sha256": "75029a742861165506e1085b969c31d4122795960d3ff483bc6142001ae6839b",
+              "name": "setup-mana"
+            },
+            {
+              "activation": "explicit",
+              "description": "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, list the shortcuts or deferred limits marked in the code and file them as tickets, or /sift. Pass you-pick to triage without waiting for answers.",
+              "entry_sha256": "31d3daecb70387ae675ef05e0ae3bc71c48810879999ff7473a37a3f4d6ceaaa",
+              "inventory_sha256": "12270ed9bc90ccea0394d073c353f42aa712ee6ce4293acc4d490d447a94c57f",
+              "name": "sift"
+            },
+            {
+              "activation": "automatic",
+              "description": "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima.",
+              "entry_sha256": "49200427cce828cdcf7f04023e9509f3113849c22ad0b926b0a87588c094be3b",
+              "inventory_sha256": "fcf9168449fa48f232e66f3c92197064690d552cd301559ab31480a307d94291",
+              "name": "ultima"
+            },
+            {
+              "activation": "explicit",
+              "description": "Create or update a project roadmap. Use for milestone planning, overall progress, what remains toward a goal, or /vision.",
+              "entry_sha256": "196562aa33ac7b304380dfda728277edf4f6f8d6c9bcdbdbcb135e156655f663",
+              "inventory_sha256": "6278b3687adf51f49aa653ff854ba88478e42a223459a5c50e514abd30c6c18c",
+              "name": "vision"
+            },
+            {
+              "activation": "automatic",
+              "description": "Monitor an open GitHub pull request until it merges or closes, fixing valid review feedback and branch-caused CI failures along the way. Use when asked to ward a PR, monitor a pull request, watch CI and review feedback, keep an eye on a PR, or keep handling feedback until merge.",
+              "entry_sha256": "ce305c0329ccd96c17c00aba0f753c6c37f2fd59453c1b77b1c07fa0ca64cb1d",
+              "inventory_sha256": "27f238fc4f92cf008920cd28d8410407f9a916931d319e218bf07840917b498a",
+              "name": "ward"
+            }
+          ]
+        },
+        "command": [
+          "/home/f/.local/share/mise/installs/codex/0.163.0/bin/codex",
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--json",
+          "--color",
+          "never",
+          "-C",
+          "<out>/workspace",
+          "-c",
+          "default_permissions=\"mana-eval\"",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "permissions.mana-eval.filesystem={ \":root\"=\"deny\", \":minimal\"=\"read\", \"<out>/workspace\"=\"read\", \"<out>/workspace/artifacts\"=\"write\", \"/home/f/.local/share/mise/installs/codex/0.163.0\"=\"read\" }",
+          "-c",
+          "permissions.mana-eval.network.enabled=false",
+          "-c",
+          "shell_environment_policy.inherit=\"none\"",
+          "-c",
+          "shell_environment_policy.set={ \"PATH\"=\"<out>/workspace/bin:/usr/bin:/bin\", \"HOME\"=\"<out>/workspace/home\", \"GIT_CONFIG_NOSYSTEM\"=\"1\", \"GIT_CONFIG_GLOBAL\"=\"/dev/null\", \"LC_ALL\"=\"C\", \"PYTHONDONTWRITEBYTECODE\"=\"1\", \"TMPDIR\"=\"<out>/workspace/artifacts\" }",
+          "-c",
+          "features.apps=false",
+          "-c",
+          "features.plugins=false",
+          "-c",
+          "features.remote_plugin=false",
+          "-c",
+          "features.hooks=false",
+          "-c",
+          "features.memories=false",
+          "-c",
+          "features.multi_agent=false",
+          "-c",
+          "features.multi_agent_v2=false",
+          "-c",
+          "features.browser_use=false",
+          "-c",
+          "features.browser_use_external=false",
+          "-c",
+          "features.computer_use=false",
+          "-c",
+          "features.image_generation=false",
+          "-c",
+          "features.in_app_browser=false",
+          "-c",
+          "features.workspace_dependencies=false",
+          "-c",
+          "features.shell_snapshot=false",
+          "-c",
+          "features.skill_mcp_dependency_install=false",
+          "-c",
+          "features.goals=false",
+          "-c",
+          "web_search=\"disabled\"",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "mcp_servers={}",
+          "-c",
+          "model_reasoning_effort=\"medium\"",
+          "-c",
+          "model=\"gpt-6.1-sol\"",
+          "--output-schema",
+          "/home/f/.codex/worktrees/5758/mana/evals/workflows/response-schema.json",
+          "-o",
+          "<out>/response.json",
+          "-"
+        ],
+        "ended_at": "2026-10-20T11:24:05.242+00:00",
+        "execution": "needs_adjudication",
+        "failures": [],
+        "host": "codex-cli 0.163.0",
+        "host_capability": {
+          "accepted": true,
+          "assessed_at": "2026-10-20T11:23:21+00:00",
+          "missing": [],
+          "mode": "discovery",
+          "stale": []
+        },
+        "host_skill_folders": {
+          "/etc/codex/skills": null,
+          "~/.agents/skills": 7,
+          "~/.codex/skills": 3
+        },
+        "host_support": {
+          "explicit_only_honored": null,
+          "skill_discovery": "verified"
+        },
+        "isolation": {
+          "artifact_write": "allowed",
+          "catalog_write": "denied",
+          "checked_at": "2026-10-20T11:23:21.817+00:00",
+          "git_write": "denied",
+          "network": "denied",
+          "outside_read": "denied",
+          "product_write": "denied",
+          "routes_read": "denied",
+          "tool_write": "denied"
+        },
+        "judgment": {
+          "activation": "unnecessary",
+          "adjudicate": [
+            "/usr/bin/bash -lc 'git diff main; cat TICKET.md app.py test_app.py README.md; git remote -v; command -v gh; rg --files --hidden .agents/skills/scan/references; cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json,personas/protection-warrior,personas/marksmanship-hunter}.md'"
+          ],
+          "attempted_actions": [],
+          "capability_limit": {
+            "declared": [],
+            "status": "none"
+          },
+          "execution": "needs_adjudication",
+          "forbidden_attempts": [],
+          "loaded_entrypoints": [
+            "scan",
+            "dispel"
+          ],
+          "notes": [],
+          "observed_route": "skill:scan",
+          "routing": "correct"
+        },
+        "live": true,
+        "model_invocations": 1,
+        "observation": {
+          "actions": [],
+          "all_loads": [
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/SKILL.md'",
+              "first": true,
+              "index": 1,
+              "skill": "scan",
+              "via": "direct"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"cat .agents/skills/dispel/SKILL.md; sed -n '185,255p' .agents/skills/scan/references/finish-review.md; git rev-parse HEAD main; git diff main -- app.py; git diff main | git patch-id --stable\"",
+              "first": true,
+              "index": 10,
+              "skill": "dispel",
+              "via": "search"
+            }
+          ],
+          "catalog_scans": [],
+          "first_consequential_action": null,
+          "first_substantive_operation": {
+            "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '*ticket*' -g '*issue*' -g '*mana*' -g 'SKILL.md' -g 'package.json' -g 'pyproject.toml' -g 'README*' -g '.git'\"",
+            "exit_code": 0,
+            "index": 2,
+            "kind": "command"
+          },
+          "loads": [
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/SKILL.md'",
+              "first": true,
+              "index": 1,
+              "skill": "scan",
+              "via": "direct"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"cat .agents/skills/dispel/SKILL.md; sed -n '185,255p' .agents/skills/scan/references/finish-review.md; git rev-parse HEAD main; git diff main -- app.py; git diff main | git patch-id --stable\"",
+              "first": true,
+              "index": 10,
+              "skill": "dispel",
+              "via": "search"
+            }
+          ],
+          "operations": [
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/SKILL.md'",
+              "exit_code": 0,
+              "index": 1,
+              "kind": "skill-load"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '*ticket*' -g '*issue*' -g '*mana*' -g 'SKILL.md' -g 'package.json' -g 'pyproject.toml' -g 'README*' -g '.git'\"",
+              "exit_code": 0,
+              "index": 2,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'ls -la; git status --short; git branch -avv; cat AGENTS.md CLAUDE.md 2>/dev/null; cat .agents/skills/scan/references/{scope,feedback-requirements,roster,dispatch}.md'",
+              "exit_code": 0,
+              "index": 3,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'git diff main; cat TICKET.md app.py test_app.py README.md; git remote -v; command -v gh; rg --files --hidden .agents/skills/scan/references; cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json,personas/protection-warrior,personas/marksmanship-hunter}.md'",
+              "exit_code": 1,
+              "index": 4,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'gh pr view --json baseRefName,url; git config --get branch.fixture-work.base; git ls-files; cat .agents/skills/scan/references/findings-schema.json; bash .agents/skills/scan/scripts/review.sh signals --base main'",
+              "exit_code": 0,
+              "index": 5,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/references/{finish-review,validator,prove-findings,report-example}.md'",
+              "exit_code": 0,
+              "index": 7,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v; PYTHONDONTWRITEBYTECODE=1 python3 -c 'from app import total; assert total([{\\\"price\\\":2,\\\"qty\\\":3}]) == 6; assert total([{\\\"price\\\":2},{\\\"price\\\":3}]) == 5; print(\\\"R1 and R2 passed\\\")'; git status --short; rg -n 'total|qty' --glob '*.py'\"",
+              "exit_code": 0,
+              "index": 8,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"cat .agents/skills/dispel/SKILL.md; sed -n '185,255p' .agents/skills/scan/references/finish-review.md; git rev-parse HEAD main; git diff main -- app.py; git diff main | git patch-id --stable\"",
+              "exit_code": 0,
+              "index": 10,
+              "kind": "skill-load"
+            }
+          ],
+          "outside_loads": [],
+          "unavailable": []
+        },
+        "observation_kind": "live-discovery",
+        "process_family": {
+          "ended_at": "2026-10-20T11:24:05.232+00:00",
+          "exit_code": 0,
+          "family_terminated": true,
+          "host_pid": 1692642,
+          "method": "session, group and subtree sweep with runner subreaper",
+          "outcome": "completed",
+          "platform": "linux",
+          "signalled_pids": [],
+          "started_at": "2026-10-20T11:23:21.817+00:00",
+          "subreaper": true,
+          "surviving_pids": [],
+          "timeout_seconds": 120
+        },
+        "reasoning": "medium",
+        "reported_model": null,
+        "requested_model": "gpt-6.1-sol",
+        "routes_sha256": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+        "schema_version": 1,
+        "seconds": 43.55,
+        "started_at": "2026-10-20T11:23:21.690+00:00",
+        "study": "discovery-selection-v1",
+        "timeout_seconds": 120
+      },
+      "result_sha256": "ada33af9ee4b5818bf671d8bdb8384671f0efa04c6ce6e7a66888fb89774f15b",
+      "seconds": 43.55,
+      "slot": 1,
+      "status": "needs_adjudication",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 235008,
+        "input_tokens": 286006,
+        "output_tokens": 1523,
+        "reasoning_output_tokens": 127
+      }
+    },
+    {
+      "case": "dispel-negative",
+      "directory": "slot-02-dispel-negative-r1",
+      "model_invocations": 1,
+      "product_unchanged": true,
+      "recorded_completed_turns": 1,
+      "repetition": 1,
+      "result": {
+        "actual_model": null,
+        "baseline": {
+          "branch": "fixture-work",
+          "files": {
+            ".gitignore": "d4486e645446349dabca9143a7bfa8f4d9f9f39c54634c3e075b2b541e1062a3",
+            "README.md": "33d6421b1b7bea7b9f078dcda72712e8e225ca15948edfd2af064f2ae625e204",
+            "app.py": "b6ab43c84e47e4fe73a1486d9fc88799a98717a7f1c6df7e38c36b122d2b0894",
+            "quote.txt": "724c4dd7e32b30f69c138a410af8855b9adda42c2f692bee5c069b0a73b9da12",
+            "test_app.py": "769e2f2c3ae8bc2ccaa68fd30e5ec1b32f681240606371d1bae5ba481325ceba"
+          },
+          "head": "0c8ea43dbbdee6eaadab7d485d323d6c71fb2e90",
+          "index": "8177ddad5a01b7346343045e0a2504a26c99a3c0b5d85a0a8df64879b21d179e",
+          "refs": "refs/heads/fixture-work 0c8ea43dbbdee6eaadab7d485d323d6c71fb2e90\nrefs/heads/main 0c8ea43dbbdee6eaadab7d485d323d6c71fb2e90\nrefs/remotes/origin/main 0c8ea43dbbdee6eaadab7d485d323d6c71fb2e90",
+          "sequencer": [],
+          "status": ""
+        },
+        "case": "dispel-negative",
+        "catalog": {
+          "sha256": "7c9add97abe78dd6a0ad9e4736504b2eaff06a7e26ca629725566dacc557a297",
+          "skills": [
+            {
+              "activation": "automatic",
+              "description": "Inspect or change repository workflow settings. Use to set validation or branch naming, change triage labels, configure review or proof, set the roadmap pointer, adjust persona or session style, or /attune.",
+              "entry_sha256": "92dc85b11fb7df7952f82ab2e3bc5b28104899278f045855851f1cc5a9d58b7c",
+              "inventory_sha256": "fc90932c1cc16904eedb24d9557515627226f7d2aca1e29efbf8e3a04d2f93fe",
+              "name": "attune"
+            },
+            {
+              "activation": "automatic",
+              "description": "Find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code instead of writing it up. Use for blast radius, what could this break, is this change safe, what else does this touch, reviewing a small diff you do not trust, or /augur.",
+              "entry_sha256": "9954834fd71ddd1709a8283ec6809636c2725ab38200e0ec45538506027014c5",
+              "inventory_sha256": "6e95fcc36f843fd6762e1006ab0c20c6502a573d0aea90da8c9364908c83682c",
+              "name": "augur"
+            },
+            {
+              "activation": "explicit",
+              "description": "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to banish comments, remove comments, clean up comments, decomment, or run /banish.",
+              "entry_sha256": "fba423ef66db994f607ac3532c3620d3b0e42093594fc4bdb9ae0ac7378fe623",
+              "inventory_sha256": "d4219a5fbb85825808f7be4a779ce1e196ba46be0ceb7fa19c56bcc41b724c39",
+              "name": "banish"
+            },
+            {
+              "activation": "explicit",
+              "description": "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, take the next ready ticket, or /cast. Pass next to claim the oldest unclaimed ready-for-agent issue, and no-pr to stop after the commit.",
+              "entry_sha256": "2ec7e2e907a98fb713d7a0fa2c08fb4e8ffbb0bbf55f9d875d165a84cbe6dffc",
+              "inventory_sha256": "563bfa44237487cb649231edd1bb214d09efa2b4ed00639d69d077dad7c0c4c9",
+              "name": "cast"
+            },
+            {
+              "activation": "explicit",
+              "description": "Turn a finished plan, spec, or decision map into a build effort with ready-for-agent tickets, or resume its filing and check progress. Use when asked to file the build tickets, break this spec into issues, turn the plan into tickets, slice the work, resume filing build tickets, check progress and close out a build effort, or /conjure.",
+              "entry_sha256": "789dfd182788b0eee92e728832ee3b771276e99c100b4c3d0899e38202451732",
+              "inventory_sha256": "c16262406f39e782f31fd496d7c724069520b5ba68364a557ad7921c4fbbf6f7",
+              "name": "conjure"
+            },
+            {
+              "activation": "automatic",
+              "description": "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel.",
+              "entry_sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7",
+              "inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+              "name": "dispel"
+            },
+            {
+              "activation": "automatic",
+              "description": "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, refresh or reconcile an installed control after the code or config changed, or /leyline.",
+              "entry_sha256": "92c4802ec6ea59449b1f54266a2b28ccce64ea0c8c7a4544084efd55fae5f1bb",
+              "inventory_sha256": "24998714d5c5e9beac482a12d3012040ed64495dce896618a618c9287f17ba87",
+              "name": "leyline"
+            },
+            {
+              "activation": "automatic",
+              "description": "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into that pull request's branch and resolve what conflicts, from any checkout. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts.",
+              "entry_sha256": "bcb4506f0f46c549106f02870451037d8dacd5bb05fdc5614f963f08a1b3f145",
+              "inventory_sha256": "2f97e508ecbcebe6c13590f987cfc5d4100f420a08cb184eba406b8cf0562cf4",
+              "name": "mend"
+            },
+            {
+              "activation": "automatic",
+              "description": "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /mimic. Pulls the user's voice from examples in context and applies the dispel register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing.",
+              "entry_sha256": "a7562ddfdb7f72d14328535ab4673491949a6315ccf48177e9ca7a8f8735be74",
+              "inventory_sha256": "b4d96e0967993378f6a11dfe52159e5fd7e135b48593c26b69a10f8740ad9c25",
+              "name": "mimic"
+            },
+            {
+              "activation": "explicit",
+              "description": "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, pick up where I left off, portal run, or continue this named map or build effort.",
+              "entry_sha256": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+              "inventory_sha256": "e4afcade5a5e8607113608dfc7fa62926d322129c25942fbe54e47b13ef62759",
+              "name": "portal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Remedy PR review feedback by fixing the code and pushing, without replying on the PR. Use when addressing review comments, resolving review threads, clearing code-review feedback on a pull request, remedying a review, or asked to handle PR feedback without commenting.",
+              "entry_sha256": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+              "inventory_sha256": "f2a34f2441fbda71cb3ba8afa4e95bcdf32247b3403d57a69491fcee335f36d7",
+              "name": "remedy"
+            },
+            {
+              "activation": "automatic",
+              "description": "Open or update a pull request with a scannable description (compact trees and diffs) plus a screenshot, recording, or command-output image. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, writing a visual PR description, attaching evidence to a pull request, or /reveal.",
+              "entry_sha256": "f4f4b6e9a1f11c8d47ff310002c3c8a043720a2fe12e1f4a5c9ca00d66ddc60b",
+              "inventory_sha256": "500181a22a781140d1f3d0dca0cc54cde119787ba2b8ab739f8226a1dddadc0a",
+              "name": "reveal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Deep multi-reviewer code review for bugs, regressions, tests, standards, and whether the change meets its ticket. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, checks the diff against the ticket's acceptance criteria, then performs the authorized follow-up or asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to scan a branch, or to review a PR.",
+              "entry_sha256": "66617de6f17db09fa75b00289b48fa8bc5d291626e046a036e09fe2ed16ae583",
+              "inventory_sha256": "4b855c558577b6d4073f36eea714ac3c1ece35c196e84bd5baef98d170870116",
+              "name": "scan"
+            },
+            {
+              "activation": "explicit",
+              "description": "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, check or close out a build effort, or /scry.",
+              "entry_sha256": "f1fc6575a5d4026c13c2770f789e6dc0049ada1aac346625ff984d71474c9ccb",
+              "inventory_sha256": "4cea5ac605223be16f8b05985e69cb47ac9a35b32d080eefdba9d29782974eb2",
+              "name": "scry"
+            },
+            {
+              "activation": "explicit",
+              "description": "Set up a repository for the other skills using your chosen tracker, asking where tickets live when that choice is missing. Supports GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Detects and writes the configuration and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to refresh configuration or switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana.",
+              "entry_sha256": "dde3865bebfb0812eeb98345ee00d20a05332eb55f401919cead867af6087b3e",
+              "inventory_sha256": "75029a742861165506e1085b969c31d4122795960d3ff483bc6142001ae6839b",
+              "name": "setup-mana"
+            },
+            {
+              "activation": "explicit",
+              "description": "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, list the shortcuts or deferred limits marked in the code and file them as tickets, or /sift. Pass you-pick to triage without waiting for answers.",
+              "entry_sha256": "31d3daecb70387ae675ef05e0ae3bc71c48810879999ff7473a37a3f4d6ceaaa",
+              "inventory_sha256": "12270ed9bc90ccea0394d073c353f42aa712ee6ce4293acc4d490d447a94c57f",
+              "name": "sift"
+            },
+            {
+              "activation": "automatic",
+              "description": "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima.",
+              "entry_sha256": "49200427cce828cdcf7f04023e9509f3113849c22ad0b926b0a87588c094be3b",
+              "inventory_sha256": "fcf9168449fa48f232e66f3c92197064690d552cd301559ab31480a307d94291",
+              "name": "ultima"
+            },
+            {
+              "activation": "explicit",
+              "description": "Create or update a project roadmap. Use for milestone planning, overall progress, what remains toward a goal, or /vision.",
+              "entry_sha256": "196562aa33ac7b304380dfda728277edf4f6f8d6c9bcdbdbcb135e156655f663",
+              "inventory_sha256": "6278b3687adf51f49aa653ff854ba88478e42a223459a5c50e514abd30c6c18c",
+              "name": "vision"
+            },
+            {
+              "activation": "automatic",
+              "description": "Monitor an open GitHub pull request until it merges or closes, fixing valid review feedback and branch-caused CI failures along the way. Use when asked to ward a PR, monitor a pull request, watch CI and review feedback, keep an eye on a PR, or keep handling feedback until merge.",
+              "entry_sha256": "ce305c0329ccd96c17c00aba0f753c6c37f2fd59453c1b77b1c07fa0ca64cb1d",
+              "inventory_sha256": "27f238fc4f92cf008920cd28d8410407f9a916931d319e218bf07840917b498a",
+              "name": "ward"
+            }
+          ]
+        },
+        "command": [
+          "/home/f/.local/share/mise/installs/codex/0.163.0/bin/codex",
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--json",
+          "--color",
+          "never",
+          "-C",
+          "<out>/workspace",
+          "-c",
+          "default_permissions=\"mana-eval\"",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "permissions.mana-eval.filesystem={ \":root\"=\"deny\", \":minimal\"=\"read\", \"<out>/workspace\"=\"read\", \"<out>/workspace/artifacts\"=\"write\", \"/home/f/.local/share/mise/installs/codex/0.163.0\"=\"read\" }",
+          "-c",
+          "permissions.mana-eval.network.enabled=false",
+          "-c",
+          "shell_environment_policy.inherit=\"none\"",
+          "-c",
+          "shell_environment_policy.set={ \"PATH\"=\"<out>/workspace/bin:/usr/bin:/bin\", \"HOME\"=\"<out>/workspace/home\", \"GIT_CONFIG_NOSYSTEM\"=\"1\", \"GIT_CONFIG_GLOBAL\"=\"/dev/null\", \"LC_ALL\"=\"C\", \"PYTHONDONTWRITEBYTECODE\"=\"1\", \"TMPDIR\"=\"<out>/workspace/artifacts\" }",
+          "-c",
+          "features.apps=false",
+          "-c",
+          "features.plugins=false",
+          "-c",
+          "features.remote_plugin=false",
+          "-c",
+          "features.hooks=false",
+          "-c",
+          "features.memories=false",
+          "-c",
+          "features.multi_agent=false",
+          "-c",
+          "features.multi_agent_v2=false",
+          "-c",
+          "features.browser_use=false",
+          "-c",
+          "features.browser_use_external=false",
+          "-c",
+          "features.computer_use=false",
+          "-c",
+          "features.image_generation=false",
+          "-c",
+          "features.in_app_browser=false",
+          "-c",
+          "features.workspace_dependencies=false",
+          "-c",
+          "features.shell_snapshot=false",
+          "-c",
+          "features.skill_mcp_dependency_install=false",
+          "-c",
+          "features.goals=false",
+          "-c",
+          "web_search=\"disabled\"",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "mcp_servers={}",
+          "-c",
+          "model_reasoning_effort=\"medium\"",
+          "-c",
+          "model=\"gpt-6.1-sol\"",
+          "--output-schema",
+          "/home/f/.codex/worktrees/5758/mana/evals/workflows/response-schema.json",
+          "-o",
+          "<out>/response.json",
+          "-"
+        ],
+        "ended_at": "2026-10-20T11:24:11.830+00:00",
+        "execution": "not_exercised",
+        "failures": [],
+        "host": "codex-cli 0.163.0",
+        "host_capability": {
+          "accepted": true,
+          "assessed_at": "2026-10-20T11:24:05+00:00",
+          "missing": [],
+          "mode": "discovery",
+          "stale": []
+        },
+        "host_skill_folders": {
+          "/etc/codex/skills": null,
+          "~/.agents/skills": 7,
+          "~/.codex/skills": 3
+        },
+        "host_support": {
+          "explicit_only_honored": null,
+          "skill_discovery": "verified"
+        },
+        "isolation": {
+          "artifact_write": "allowed",
+          "catalog_write": "denied",
+          "checked_at": "2026-10-20T11:24:05.666+00:00",
+          "git_write": "denied",
+          "network": "denied",
+          "outside_read": "denied",
+          "product_write": "denied",
+          "routes_read": "denied",
+          "tool_write": "denied"
+        },
+        "judgment": {
+          "activation": "correct",
+          "adjudicate": [],
+          "attempted_actions": [],
+          "capability_limit": {
+            "declared": [],
+            "status": "none"
+          },
+          "execution": "not_exercised",
+          "forbidden_attempts": [],
+          "loaded_entrypoints": [],
+          "notes": [],
+          "observed_route": "ordinary",
+          "routing": "correct"
+        },
+        "live": true,
+        "model_invocations": 1,
+        "observation": {
+          "actions": [],
+          "all_loads": [],
+          "catalog_scans": [],
+          "first_consequential_action": null,
+          "first_substantive_operation": null,
+          "loads": [],
+          "operations": [],
+          "outside_loads": [],
+          "unavailable": []
+        },
+        "observation_kind": "live-discovery",
+        "process_family": {
+          "ended_at": "2026-10-20T11:24:11.825+00:00",
+          "exit_code": 0,
+          "family_terminated": true,
+          "host_pid": 1707069,
+          "method": "session, group and subtree sweep with runner subreaper",
+          "outcome": "completed",
+          "platform": "linux",
+          "signalled_pids": [],
+          "started_at": "2026-10-20T11:24:05.666+00:00",
+          "subreaper": true,
+          "surviving_pids": [],
+          "timeout_seconds": 120
+        },
+        "reasoning": "medium",
+        "reported_model": null,
+        "requested_model": "gpt-6.1-sol",
+        "routes_sha256": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+        "schema_version": 1,
+        "seconds": 6.31,
+        "started_at": "2026-10-20T11:24:05.521+00:00",
+        "study": "discovery-selection-v1",
+        "timeout_seconds": 120
+      },
+      "result_sha256": "d6acc289c04e41f17427416d63de855ecaaed550cf89f637dfb2ed012f535d47",
+      "seconds": 6.31,
+      "slot": 2,
+      "status": "not_exercised",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 13515,
+        "output_tokens": 86,
+        "reasoning_output_tokens": 61
+      }
+    },
+    {
+      "case": "ordinary-explicit-only",
+      "directory": "slot-03-ordinary-explicit-only-r1",
+      "model_invocations": 1,
+      "product_unchanged": true,
+      "recorded_completed_turns": 1,
+      "repetition": 1,
+      "result": {
+        "actual_model": null,
+        "baseline": {
+          "branch": "fixture-work",
+          "files": {
+            ".gitignore": "d4486e645446349dabca9143a7bfa8f4d9f9f39c54634c3e075b2b541e1062a3",
+            "ISSUE.md": "0bf322ae74a175b84cdc4ccd465914c0553aab8b11c2afc0ce302a90ab59e432",
+            "README.md": "33d6421b1b7bea7b9f078dcda72712e8e225ca15948edfd2af064f2ae625e204",
+            "app.py": "b6ab43c84e47e4fe73a1486d9fc88799a98717a7f1c6df7e38c36b122d2b0894",
+            "test_app.py": "769e2f2c3ae8bc2ccaa68fd30e5ec1b32f681240606371d1bae5ba481325ceba"
+          },
+          "head": "bc6e15e7df4c50fea0e4788e19a771369b23436c",
+          "index": "c1f98cf6179048b46614fb775879f643f6452d99d857f8bb47d36274c08da9c9",
+          "refs": "refs/heads/fixture-work bc6e15e7df4c50fea0e4788e19a771369b23436c\nrefs/heads/main bc6e15e7df4c50fea0e4788e19a771369b23436c\nrefs/remotes/origin/main bc6e15e7df4c50fea0e4788e19a771369b23436c",
+          "sequencer": [],
+          "status": ""
+        },
+        "case": "ordinary-explicit-only",
+        "catalog": {
+          "sha256": "7c9add97abe78dd6a0ad9e4736504b2eaff06a7e26ca629725566dacc557a297",
+          "skills": [
+            {
+              "activation": "automatic",
+              "description": "Inspect or change repository workflow settings. Use to set validation or branch naming, change triage labels, configure review or proof, set the roadmap pointer, adjust persona or session style, or /attune.",
+              "entry_sha256": "92dc85b11fb7df7952f82ab2e3bc5b28104899278f045855851f1cc5a9d58b7c",
+              "inventory_sha256": "fc90932c1cc16904eedb24d9557515627226f7d2aca1e29efbf8e3a04d2f93fe",
+              "name": "attune"
+            },
+            {
+              "activation": "automatic",
+              "description": "Find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code instead of writing it up. Use for blast radius, what could this break, is this change safe, what else does this touch, reviewing a small diff you do not trust, or /augur.",
+              "entry_sha256": "9954834fd71ddd1709a8283ec6809636c2725ab38200e0ec45538506027014c5",
+              "inventory_sha256": "6e95fcc36f843fd6762e1006ab0c20c6502a573d0aea90da8c9364908c83682c",
+              "name": "augur"
+            },
+            {
+              "activation": "explicit",
+              "description": "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to banish comments, remove comments, clean up comments, decomment, or run /banish.",
+              "entry_sha256": "fba423ef66db994f607ac3532c3620d3b0e42093594fc4bdb9ae0ac7378fe623",
+              "inventory_sha256": "d4219a5fbb85825808f7be4a779ce1e196ba46be0ceb7fa19c56bcc41b724c39",
+              "name": "banish"
+            },
+            {
+              "activation": "explicit",
+              "description": "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, take the next ready ticket, or /cast. Pass next to claim the oldest unclaimed ready-for-agent issue, and no-pr to stop after the commit.",
+              "entry_sha256": "2ec7e2e907a98fb713d7a0fa2c08fb4e8ffbb0bbf55f9d875d165a84cbe6dffc",
+              "inventory_sha256": "563bfa44237487cb649231edd1bb214d09efa2b4ed00639d69d077dad7c0c4c9",
+              "name": "cast"
+            },
+            {
+              "activation": "explicit",
+              "description": "Turn a finished plan, spec, or decision map into a build effort with ready-for-agent tickets, or resume its filing and check progress. Use when asked to file the build tickets, break this spec into issues, turn the plan into tickets, slice the work, resume filing build tickets, check progress and close out a build effort, or /conjure.",
+              "entry_sha256": "789dfd182788b0eee92e728832ee3b771276e99c100b4c3d0899e38202451732",
+              "inventory_sha256": "c16262406f39e782f31fd496d7c724069520b5ba68364a557ad7921c4fbbf6f7",
+              "name": "conjure"
+            },
+            {
+              "activation": "automatic",
+              "description": "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel.",
+              "entry_sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7",
+              "inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+              "name": "dispel"
+            },
+            {
+              "activation": "automatic",
+              "description": "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, refresh or reconcile an installed control after the code or config changed, or /leyline.",
+              "entry_sha256": "92c4802ec6ea59449b1f54266a2b28ccce64ea0c8c7a4544084efd55fae5f1bb",
+              "inventory_sha256": "24998714d5c5e9beac482a12d3012040ed64495dce896618a618c9287f17ba87",
+              "name": "leyline"
+            },
+            {
+              "activation": "automatic",
+              "description": "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into that pull request's branch and resolve what conflicts, from any checkout. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts.",
+              "entry_sha256": "bcb4506f0f46c549106f02870451037d8dacd5bb05fdc5614f963f08a1b3f145",
+              "inventory_sha256": "2f97e508ecbcebe6c13590f987cfc5d4100f420a08cb184eba406b8cf0562cf4",
+              "name": "mend"
+            },
+            {
+              "activation": "automatic",
+              "description": "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /mimic. Pulls the user's voice from examples in context and applies the dispel register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing.",
+              "entry_sha256": "a7562ddfdb7f72d14328535ab4673491949a6315ccf48177e9ca7a8f8735be74",
+              "inventory_sha256": "b4d96e0967993378f6a11dfe52159e5fd7e135b48593c26b69a10f8740ad9c25",
+              "name": "mimic"
+            },
+            {
+              "activation": "explicit",
+              "description": "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, pick up where I left off, portal run, or continue this named map or build effort.",
+              "entry_sha256": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+              "inventory_sha256": "e4afcade5a5e8607113608dfc7fa62926d322129c25942fbe54e47b13ef62759",
+              "name": "portal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Remedy PR review feedback by fixing the code and pushing, without replying on the PR. Use when addressing review comments, resolving review threads, clearing code-review feedback on a pull request, remedying a review, or asked to handle PR feedback without commenting.",
+              "entry_sha256": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+              "inventory_sha256": "f2a34f2441fbda71cb3ba8afa4e95bcdf32247b3403d57a69491fcee335f36d7",
+              "name": "remedy"
+            },
+            {
+              "activation": "automatic",
+              "description": "Open or update a pull request with a scannable description (compact trees and diffs) plus a screenshot, recording, or command-output image. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, writing a visual PR description, attaching evidence to a pull request, or /reveal.",
+              "entry_sha256": "f4f4b6e9a1f11c8d47ff310002c3c8a043720a2fe12e1f4a5c9ca00d66ddc60b",
+              "inventory_sha256": "500181a22a781140d1f3d0dca0cc54cde119787ba2b8ab739f8226a1dddadc0a",
+              "name": "reveal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Deep multi-reviewer code review for bugs, regressions, tests, standards, and whether the change meets its ticket. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, checks the diff against the ticket's acceptance criteria, then performs the authorized follow-up or asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to scan a branch, or to review a PR.",
+              "entry_sha256": "66617de6f17db09fa75b00289b48fa8bc5d291626e046a036e09fe2ed16ae583",
+              "inventory_sha256": "4b855c558577b6d4073f36eea714ac3c1ece35c196e84bd5baef98d170870116",
+              "name": "scan"
+            },
+            {
+              "activation": "explicit",
+              "description": "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, check or close out a build effort, or /scry.",
+              "entry_sha256": "f1fc6575a5d4026c13c2770f789e6dc0049ada1aac346625ff984d71474c9ccb",
+              "inventory_sha256": "4cea5ac605223be16f8b05985e69cb47ac9a35b32d080eefdba9d29782974eb2",
+              "name": "scry"
+            },
+            {
+              "activation": "explicit",
+              "description": "Set up a repository for the other skills using your chosen tracker, asking where tickets live when that choice is missing. Supports GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Detects and writes the configuration and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to refresh configuration or switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana.",
+              "entry_sha256": "dde3865bebfb0812eeb98345ee00d20a05332eb55f401919cead867af6087b3e",
+              "inventory_sha256": "75029a742861165506e1085b969c31d4122795960d3ff483bc6142001ae6839b",
+              "name": "setup-mana"
+            },
+            {
+              "activation": "explicit",
+              "description": "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, list the shortcuts or deferred limits marked in the code and file them as tickets, or /sift. Pass you-pick to triage without waiting for answers.",
+              "entry_sha256": "31d3daecb70387ae675ef05e0ae3bc71c48810879999ff7473a37a3f4d6ceaaa",
+              "inventory_sha256": "12270ed9bc90ccea0394d073c353f42aa712ee6ce4293acc4d490d447a94c57f",
+              "name": "sift"
+            },
+            {
+              "activation": "automatic",
+              "description": "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima.",
+              "entry_sha256": "49200427cce828cdcf7f04023e9509f3113849c22ad0b926b0a87588c094be3b",
+              "inventory_sha256": "fcf9168449fa48f232e66f3c92197064690d552cd301559ab31480a307d94291",
+              "name": "ultima"
+            },
+            {
+              "activation": "explicit",
+              "description": "Create or update a project roadmap. Use for milestone planning, overall progress, what remains toward a goal, or /vision.",
+              "entry_sha256": "196562aa33ac7b304380dfda728277edf4f6f8d6c9bcdbdbcb135e156655f663",
+              "inventory_sha256": "6278b3687adf51f49aa653ff854ba88478e42a223459a5c50e514abd30c6c18c",
+              "name": "vision"
+            },
+            {
+              "activation": "automatic",
+              "description": "Monitor an open GitHub pull request until it merges or closes, fixing valid review feedback and branch-caused CI failures along the way. Use when asked to ward a PR, monitor a pull request, watch CI and review feedback, keep an eye on a PR, or keep handling feedback until merge.",
+              "entry_sha256": "ce305c0329ccd96c17c00aba0f753c6c37f2fd59453c1b77b1c07fa0ca64cb1d",
+              "inventory_sha256": "27f238fc4f92cf008920cd28d8410407f9a916931d319e218bf07840917b498a",
+              "name": "ward"
+            }
+          ]
+        },
+        "command": [
+          "/home/f/.local/share/mise/installs/codex/0.163.0/bin/codex",
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--json",
+          "--color",
+          "never",
+          "-C",
+          "<out>/workspace",
+          "-c",
+          "default_permissions=\"mana-eval\"",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "permissions.mana-eval.filesystem={ \":root\"=\"deny\", \":minimal\"=\"read\", \"<out>/workspace\"=\"read\", \"<out>/workspace/artifacts\"=\"write\", \"/home/f/.local/share/mise/installs/codex/0.163.0\"=\"read\" }",
+          "-c",
+          "permissions.mana-eval.network.enabled=false",
+          "-c",
+          "shell_environment_policy.inherit=\"none\"",
+          "-c",
+          "shell_environment_policy.set={ \"PATH\"=\"<out>/workspace/bin:/usr/bin:/bin\", \"HOME\"=\"<out>/workspace/home\", \"GIT_CONFIG_NOSYSTEM\"=\"1\", \"GIT_CONFIG_GLOBAL\"=\"/dev/null\", \"LC_ALL\"=\"C\", \"PYTHONDONTWRITEBYTECODE\"=\"1\", \"TMPDIR\"=\"<out>/workspace/artifacts\" }",
+          "-c",
+          "features.apps=false",
+          "-c",
+          "features.plugins=false",
+          "-c",
+          "features.remote_plugin=false",
+          "-c",
+          "features.hooks=false",
+          "-c",
+          "features.memories=false",
+          "-c",
+          "features.multi_agent=false",
+          "-c",
+          "features.multi_agent_v2=false",
+          "-c",
+          "features.browser_use=false",
+          "-c",
+          "features.browser_use_external=false",
+          "-c",
+          "features.computer_use=false",
+          "-c",
+          "features.image_generation=false",
+          "-c",
+          "features.in_app_browser=false",
+          "-c",
+          "features.workspace_dependencies=false",
+          "-c",
+          "features.shell_snapshot=false",
+          "-c",
+          "features.skill_mcp_dependency_install=false",
+          "-c",
+          "features.goals=false",
+          "-c",
+          "web_search=\"disabled\"",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "mcp_servers={}",
+          "-c",
+          "model_reasoning_effort=\"medium\"",
+          "-c",
+          "model=\"gpt-6.1-sol\"",
+          "--output-schema",
+          "/home/f/.codex/worktrees/5758/mana/evals/workflows/response-schema.json",
+          "-o",
+          "<out>/response.json",
+          "-"
+        ],
+        "ended_at": "2026-10-20T11:24:48.524+00:00",
+        "execution": "needs_adjudication",
+        "failures": [],
+        "host": "codex-cli 0.163.0",
+        "host_capability": {
+          "accepted": true,
+          "assessed_at": "2026-10-20T11:24:12+00:00",
+          "missing": [],
+          "mode": "discovery",
+          "stale": []
+        },
+        "host_skill_folders": {
+          "/etc/codex/skills": null,
+          "~/.agents/skills": 7,
+          "~/.codex/skills": 3
+        },
+        "host_support": {
+          "explicit_only_honored": null,
+          "skill_discovery": "verified"
+        },
+        "isolation": {
+          "artifact_write": "allowed",
+          "catalog_write": "denied",
+          "checked_at": "2026-10-20T11:24:12.208+00:00",
+          "git_write": "denied",
+          "network": "denied",
+          "outside_read": "denied",
+          "product_write": "denied",
+          "routes_read": "denied",
+          "tool_write": "denied"
+        },
+        "judgment": {
+          "activation": "unnecessary",
+          "adjudicate": [
+            "/usr/bin/bash -lc \"cat ISSUE.md app.py test_app.py; git status --short; ls -la artifacts; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!'\"\\\\.agents/**'\""
+          ],
+          "attempted_actions": [
+            "write"
+          ],
+          "capability_limit": {
+            "declared": [],
+            "status": "none"
+          },
+          "execution": "needs_adjudication",
+          "forbidden_attempts": [],
+          "loaded_entrypoints": [
+            "cast"
+          ],
+          "notes": [
+            "explicit-only cast loaded from ordinary language; host explicit_only_honored=None"
+          ],
+          "observed_route": "skill:cast",
+          "routing": "wrong"
+        },
+        "live": true,
+        "model_invocations": 1,
+        "observation": {
+          "actions": [
+            {
+              "action": "write",
+              "index": 6,
+              "paths": [
+                "/home/f/.codex/worktrees/5758/mana/evals/results/discovery-pilot-2026-10-20/slot-03-ordinary-explicit-only-r1/workspace/artifacts/implementation/app.py",
+                "/home/f/.codex/worktrees/5758/mana/evals/results/discovery-pilot-2026-10-20/slot-03-ordinary-explicit-only-r1/workspace/artifacts/implementation/test_app.py"
+              ],
+              "status": "completed",
+              "via": "file_change"
+            }
+          ],
+          "all_loads": [
+            {
+              "command": "/usr/bin/bash -lc 'ls -la; cat README.md; cat .agents/skills/cast/SKILL.md'",
+              "first": true,
+              "index": 2,
+              "skill": "cast",
+              "via": "search"
+            }
+          ],
+          "catalog_scans": [],
+          "first_consequential_action": {
+            "action": "write",
+            "index": 6,
+            "paths": [
+              "/home/f/.codex/worktrees/5758/mana/evals/results/discovery-pilot-2026-10-20/slot-03-ordinary-explicit-only-r1/workspace/artifacts/implementation/app.py",
+              "/home/f/.codex/worktrees/5758/mana/evals/results/discovery-pilot-2026-10-20/slot-03-ordinary-explicit-only-r1/workspace/artifacts/implementation/test_app.py"
+            ],
+            "status": "completed",
+            "via": "file_change"
+          },
+          "first_substantive_operation": {
+            "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '*issue*' -g '*ticket*' -g 'README*' -g 'package.json' -g '.mana*' -g 'SKILL.md'\"",
+            "exit_code": 0,
+            "index": 1,
+            "kind": "command"
+          },
+          "loads": [
+            {
+              "command": "/usr/bin/bash -lc 'ls -la; cat README.md; cat .agents/skills/cast/SKILL.md'",
+              "first": true,
+              "index": 2,
+              "skill": "cast",
+              "via": "search"
+            }
+          ],
+          "operations": [
+            {
+              "command": "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '*issue*' -g '*ticket*' -g 'README*' -g 'package.json' -g '.mana*' -g 'SKILL.md'\"",
+              "exit_code": 0,
+              "index": 1,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'ls -la; cat README.md; cat .agents/skills/cast/SKILL.md'",
+              "exit_code": 0,
+              "index": 2,
+              "kind": "skill-load"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"cat ISSUE.md app.py test_app.py; git status --short; ls -la artifacts; rg --files -g AGENTS.md -g CLAUDE.md -g '\"'!'\"\\\\.agents/**'\"",
+              "exit_code": 1,
+              "index": 3,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'python -B -m unittest -v'",
+              "exit_code": 0,
+              "index": 5,
+              "kind": "command"
+            },
+            {
+              "index": 6,
+              "kind": "file_change"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'python -B -m unittest -v'",
+              "exit_code": 0,
+              "index": 7,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"python -B - <<'PY'\nfrom pathlib import Path\nimport difflib\nparts = []\nfor name in ('app.py', 'test_app.py'):\n    parts.extend(difflib.unified_diff(Path(name).read_text().splitlines(keepends=True), (Path('artifacts/implementation') / name).read_text().splitlines(keepends=True), fromfile='a/' + name, tofile='b/' + name))\nPath('artifacts/quantity-totals.patch').write_text(''.join(parts))\nPY\n git apply --check artifacts/quantity-totals.patch\"",
+              "exit_code": 0,
+              "index": 8,
+              "kind": "command"
+            }
+          ],
+          "outside_loads": [],
+          "unavailable": []
+        },
+        "observation_kind": "live-discovery",
+        "process_family": {
+          "ended_at": "2026-10-20T11:24:48.516+00:00",
+          "exit_code": 0,
+          "family_terminated": true,
+          "host_pid": 1708911,
+          "method": "session, group and subtree sweep with runner subreaper",
+          "outcome": "completed",
+          "platform": "linux",
+          "signalled_pids": [],
+          "started_at": "2026-10-20T11:24:12.208+00:00",
+          "subreaper": true,
+          "surviving_pids": [],
+          "timeout_seconds": 120
+        },
+        "reasoning": "medium",
+        "reported_model": null,
+        "requested_model": "gpt-6.1-sol",
+        "routes_sha256": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+        "schema_version": 1,
+        "seconds": 36.47,
+        "started_at": "2026-10-20T11:24:12.057+00:00",
+        "study": "discovery-selection-v1",
+        "timeout_seconds": 120
+      },
+      "result_sha256": "8e78a0fb50b9f31b96d1e5a4ddb32babc87af6e7d285e68f25844f4a1158a870",
+      "seconds": 36.47,
+      "slot": 3,
+      "status": "needs_adjudication",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 88704,
+        "input_tokens": 111316,
+        "output_tokens": 1098,
+        "reasoning_output_tokens": 65
+      }
+    },
+    {
+      "case": "scan-positive",
+      "directory": "slot-04-scan-positive-r1",
+      "model_invocations": 1,
+      "product_unchanged": true,
+      "recorded_completed_turns": 1,
+      "repetition": 1,
+      "result": {
+        "actual_model": null,
+        "baseline": {
+          "branch": "fixture-work",
+          "files": {
+            ".gitignore": "d4486e645446349dabca9143a7bfa8f4d9f9f39c54634c3e075b2b541e1062a3",
+            "README.md": "33d6421b1b7bea7b9f078dcda72712e8e225ca15948edfd2af064f2ae625e204",
+            "TICKET.md": "fb6f3e998506bb4c72e1164e4afa15e3b0db507111e5cce8d4cc60753dfa13f0",
+            "app.py": "4a1181e2dd982c1b346ad58070ece5b93f3738edb167ac68845842cdddc0670c",
+            "test_app.py": "769e2f2c3ae8bc2ccaa68fd30e5ec1b32f681240606371d1bae5ba481325ceba"
+          },
+          "head": "26083d3d630e1b96a599dd666be1f2a95ac586e9",
+          "index": "c4e0b89eb3d2fb5449014d968083e750f422ea3b4a20f74868d665d261c28b80",
+          "refs": "refs/heads/fixture-work 26083d3d630e1b96a599dd666be1f2a95ac586e9\nrefs/heads/main 84c7d76ba5b57ccf34c50afee66ad9a4fdbcb842\nrefs/remotes/origin/main 84c7d76ba5b57ccf34c50afee66ad9a4fdbcb842",
+          "sequencer": [],
+          "status": ""
+        },
+        "case": "scan-positive",
+        "catalog": {
+          "sha256": "7c9add97abe78dd6a0ad9e4736504b2eaff06a7e26ca629725566dacc557a297",
+          "skills": [
+            {
+              "activation": "automatic",
+              "description": "Inspect or change repository workflow settings. Use to set validation or branch naming, change triage labels, configure review or proof, set the roadmap pointer, adjust persona or session style, or /attune.",
+              "entry_sha256": "92dc85b11fb7df7952f82ab2e3bc5b28104899278f045855851f1cc5a9d58b7c",
+              "inventory_sha256": "fc90932c1cc16904eedb24d9557515627226f7d2aca1e29efbf8e3a04d2f93fe",
+              "name": "attune"
+            },
+            {
+              "activation": "automatic",
+              "description": "Find what a change could break beyond its diff, name the one fact it is safe because of, and prove that fact by running real code instead of writing it up. Use for blast radius, what could this break, is this change safe, what else does this touch, reviewing a small diff you do not trust, or /augur.",
+              "entry_sha256": "9954834fd71ddd1709a8283ec6809636c2725ab38200e0ec45538506027014c5",
+              "inventory_sha256": "6e95fcc36f843fd6762e1006ab0c20c6502a573d0aea90da8c9364908c83682c",
+              "name": "augur"
+            },
+            {
+              "activation": "explicit",
+              "description": "Strip comments that do not earn their place. Spawns the Comment Reaper on the caller's files or the current diff, applies the accepted deletions, and fixes or reports the code the comments were covering for. Use when asked to banish comments, remove comments, clean up comments, decomment, or run /banish.",
+              "entry_sha256": "fba423ef66db994f607ac3532c3620d3b0e42093594fc4bdb9ae0ac7378fe623",
+              "inventory_sha256": "d4219a5fbb85825808f7be4a779ce1e196ba46be0ceb7fa19c56bcc41b724c39",
+              "name": "banish"
+            },
+            {
+              "activation": "explicit",
+              "description": "Implement one ready ticket or spec on the current branch, then open a pull request with visual evidence. Use when asked to cast a ticket, implement this ticket, build this issue, take the next ready ticket, or /cast. Pass next to claim the oldest unclaimed ready-for-agent issue, and no-pr to stop after the commit.",
+              "entry_sha256": "2ec7e2e907a98fb713d7a0fa2c08fb4e8ffbb0bbf55f9d875d165a84cbe6dffc",
+              "inventory_sha256": "563bfa44237487cb649231edd1bb214d09efa2b4ed00639d69d077dad7c0c4c9",
+              "name": "cast"
+            },
+            {
+              "activation": "explicit",
+              "description": "Turn a finished plan, spec, or decision map into a build effort with ready-for-agent tickets, or resume its filing and check progress. Use when asked to file the build tickets, break this spec into issues, turn the plan into tickets, slice the work, resume filing build tickets, check progress and close out a build effort, or /conjure.",
+              "entry_sha256": "789dfd182788b0eee92e728832ee3b771276e99c100b4c3d0899e38202451732",
+              "inventory_sha256": "c16262406f39e782f31fd496d7c724069520b5ba68364a557ad7921c4fbbf6f7",
+              "name": "conjure"
+            },
+            {
+              "activation": "automatic",
+              "description": "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel.",
+              "entry_sha256": "5af33a677f43a9874ba0ed9928cec49ea3f2afe81ac0f13d938493ba3a005ac7",
+              "inventory_sha256": "3024a4f0ae52a0ae4fe8b0d2ecdc4c5ed919070f52810738fea76e3e4dd60c1d",
+              "name": "dispel"
+            },
+            {
+              "activation": "automatic",
+              "description": "Build or check a project-owned way to find a feature, run the app, and report what actually happened: a control CLI plus a feature map owned by the project. Checks the records, the test bindings, the run reports, and whether a deliberately broken feature really fails. Use when asked whether agents can run and verify this app, to check a verify or control CLI, audit a feature map, check a verification report, make agent verification trustworthy, agent readiness for a repo, install a project control, draft a feature map, refresh or reconcile an installed control after the code or config changed, or /leyline.",
+              "entry_sha256": "92c4802ec6ea59449b1f54266a2b28ccce64ea0c8c7a4544084efd55fae5f1bb",
+              "inventory_sha256": "24998714d5c5e9beac482a12d3012040ed64495dce896618a618c9287f17ba87",
+              "name": "leyline"
+            },
+            {
+              "activation": "automatic",
+              "description": "Resolve an in-progress git merge, rebase, cherry-pick, or revert that has conflict markers or unmerged paths, or merge a pull request's base into that pull request's branch and resolve what conflicts, from any checkout. Use when asked to mend, resolve merge conflicts, fix rebase conflicts, finish a conflicted rebase or cherry-pick, resolve the conflicts on this PR, my PR has conflicts, merge main into this branch, bring this branch up to date, /mend, or /resolve-merge-conflicts.",
+              "entry_sha256": "bcb4506f0f46c549106f02870451037d8dacd5bb05fdc5614f963f08a1b3f145",
+              "inventory_sha256": "2f97e508ecbcebe6c13590f987cfc5d4100f420a08cb184eba406b8cf0562cf4",
+              "name": "mend"
+            },
+            {
+              "activation": "automatic",
+              "description": "Reply to a message, comment, thread, review, or email as the user, so the result reads like they typed it themselves and nobody suspects an AI wrote it. Use when asked to reply as me, respond to this, answer this comment, draft a reply, be me, sound like me, or /mimic. Pulls the user's voice from examples in context and applies the dispel register. With setup or refresh, or when asked to build or update my voice profile, spawns Ghost to fill in a voice profile from the user's own writing.",
+              "entry_sha256": "a7562ddfdb7f72d14328535ab4673491949a6315ccf48177e9ca7a8f8735be74",
+              "inventory_sha256": "b4d96e0967993378f6a11dfe52159e5fd7e135b48593c26b69a10f8740ad9c25",
+              "name": "mimic"
+            },
+            {
+              "activation": "explicit",
+              "description": "Choose the next skill and ticket from the tracker and current branch. Use for /portal, what next, route this issue, pick up where I left off, portal run, or continue this named map or build effort.",
+              "entry_sha256": "fadf146e5111782287136a5a99cbf8c9bb782071c4dcd652948a01ef2f3cb513",
+              "inventory_sha256": "e4afcade5a5e8607113608dfc7fa62926d322129c25942fbe54e47b13ef62759",
+              "name": "portal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Remedy PR review feedback by fixing the code and pushing, without replying on the PR. Use when addressing review comments, resolving review threads, clearing code-review feedback on a pull request, remedying a review, or asked to handle PR feedback without commenting.",
+              "entry_sha256": "784d4acc4a7680412683699d5fe808318e6e1aa65a9c9563eebb167463b078a1",
+              "inventory_sha256": "f2a34f2441fbda71cb3ba8afa4e95bcdf32247b3403d57a69491fcee335f36d7",
+              "name": "remedy"
+            },
+            {
+              "activation": "automatic",
+              "description": "Open or update a pull request with a scannable description (compact trees and diffs) plus a screenshot, recording, or command-output image. Use when opening a PR, creating a pull request, adding screenshots or a video to a PR, filing a PR with a demo, writing a visual PR description, attaching evidence to a pull request, or /reveal.",
+              "entry_sha256": "f4f4b6e9a1f11c8d47ff310002c3c8a043720a2fe12e1f4a5c9ca00d66ddc60b",
+              "inventory_sha256": "500181a22a781140d1f3d0dca0cc54cde119787ba2b8ab739f8226a1dddadc0a",
+              "name": "reveal"
+            },
+            {
+              "activation": "automatic",
+              "description": "Deep multi-reviewer code review for bugs, regressions, tests, standards, and whether the change meets its ticket. Dispatches specialist reviewer subagents in parallel, merges their findings into one report, checks the diff against the ticket's acceptance criteria, then performs the authorized follow-up or asks whether to report only, fix and push, or leave inline PR comments. Use before opening a PR, when asked for a thorough review, to scan a branch, or to review a PR.",
+              "entry_sha256": "66617de6f17db09fa75b00289b48fa8bc5d291626e046a036e09fe2ed16ae583",
+              "inventory_sha256": "4b855c558577b6d4073f36eea714ac3c1ece35c196e84bd5baef98d170870116",
+              "name": "scan"
+            },
+            {
+              "activation": "explicit",
+              "description": "Plan a chunk of work too big for one agent session as a shared map of decision tickets on GitHub, and resolve them one at a time. Use when asked to scry, wayfinder, chart a map, walk a map, take the next ticket on the map, check or close out a build effort, or /scry.",
+              "entry_sha256": "f1fc6575a5d4026c13c2770f789e6dc0049ada1aac346625ff984d71474c9ccb",
+              "inventory_sha256": "4cea5ac605223be16f8b05985e69cb47ac9a35b32d080eefdba9d29782974eb2",
+              "name": "scry"
+            },
+            {
+              "activation": "explicit",
+              "description": "Set up a repository for the other skills using your chosen tracker, asking where tickets live when that choice is missing. Supports GitHub Issues, Linear, Jira, markdown files under .scratch/, or a tracker you describe in a paragraph. Detects and writes the configuration and a pointer block in CLAUDE.md or AGENTS.md. Run once per repo, and again to refresh configuration or switch trackers. Use when asked to set up mana, set up this repo for the skills, choose the issue tracker, connect Linear or Jira, point the skills at a tracker, or /setup-mana.",
+              "entry_sha256": "dde3865bebfb0812eeb98345ee00d20a05332eb55f401919cead867af6087b3e",
+              "inventory_sha256": "75029a742861165506e1085b969c31d4122795960d3ff483bc6142001ae6839b",
+              "name": "setup-mana"
+            },
+            {
+              "activation": "explicit",
+              "description": "Move unlabeled and needs-triage issues through inbox states and write agent-ready briefs, on GitHub, Linear, Jira, or local files. Use when asked to sift the inbox, triage issues, show what needs attention, list the shortcuts or deferred limits marked in the code and file them as tickets, or /sift. Pass you-pick to triage without waiting for answers.",
+              "entry_sha256": "31d3daecb70387ae675ef05e0ae3bc71c48810879999ff7473a37a3f4d6ceaaa",
+              "inventory_sha256": "12270ed9bc90ccea0394d073c353f42aa712ee6ce4293acc4d490d447a94c57f",
+              "name": "sift"
+            },
+            {
+              "activation": "automatic",
+              "description": "Audit a whole project for UX problems, architecture weaknesses, data reliability risks, security boundaries, and performance or delivery risks using parallel specialists and a tabbed HTML report. Use when asked to audit project architecture, review system boundaries, audit the frontend, review UI consistency, check data integrity or failure recovery, audit security or authorization, review sensitive-data handling, audit performance, review build or deployment safety, find bloat, find dead code, unused dependencies, or duplicate helpers, ask what can I delete, or /ultima.",
+              "entry_sha256": "49200427cce828cdcf7f04023e9509f3113849c22ad0b926b0a87588c094be3b",
+              "inventory_sha256": "fcf9168449fa48f232e66f3c92197064690d552cd301559ab31480a307d94291",
+              "name": "ultima"
+            },
+            {
+              "activation": "explicit",
+              "description": "Create or update a project roadmap. Use for milestone planning, overall progress, what remains toward a goal, or /vision.",
+              "entry_sha256": "196562aa33ac7b304380dfda728277edf4f6f8d6c9bcdbdbcb135e156655f663",
+              "inventory_sha256": "6278b3687adf51f49aa653ff854ba88478e42a223459a5c50e514abd30c6c18c",
+              "name": "vision"
+            },
+            {
+              "activation": "automatic",
+              "description": "Monitor an open GitHub pull request until it merges or closes, fixing valid review feedback and branch-caused CI failures along the way. Use when asked to ward a PR, monitor a pull request, watch CI and review feedback, keep an eye on a PR, or keep handling feedback until merge.",
+              "entry_sha256": "ce305c0329ccd96c17c00aba0f753c6c37f2fd59453c1b77b1c07fa0ca64cb1d",
+              "inventory_sha256": "27f238fc4f92cf008920cd28d8410407f9a916931d319e218bf07840917b498a",
+              "name": "ward"
+            }
+          ]
+        },
+        "command": [
+          "/home/f/.local/share/mise/installs/codex/0.163.0/bin/codex",
+          "exec",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--ephemeral",
+          "--json",
+          "--color",
+          "never",
+          "-C",
+          "<out>/workspace",
+          "-c",
+          "default_permissions=\"mana-eval\"",
+          "-c",
+          "approval_policy=\"never\"",
+          "-c",
+          "permissions.mana-eval.filesystem={ \":root\"=\"deny\", \":minimal\"=\"read\", \"<out>/workspace\"=\"read\", \"<out>/workspace/artifacts\"=\"write\", \"/home/f/.local/share/mise/installs/codex/0.163.0\"=\"read\" }",
+          "-c",
+          "permissions.mana-eval.network.enabled=false",
+          "-c",
+          "shell_environment_policy.inherit=\"none\"",
+          "-c",
+          "shell_environment_policy.set={ \"PATH\"=\"<out>/workspace/bin:/usr/bin:/bin\", \"HOME\"=\"<out>/workspace/home\", \"GIT_CONFIG_NOSYSTEM\"=\"1\", \"GIT_CONFIG_GLOBAL\"=\"/dev/null\", \"LC_ALL\"=\"C\", \"PYTHONDONTWRITEBYTECODE\"=\"1\", \"TMPDIR\"=\"<out>/workspace/artifacts\" }",
+          "-c",
+          "features.apps=false",
+          "-c",
+          "features.plugins=false",
+          "-c",
+          "features.remote_plugin=false",
+          "-c",
+          "features.hooks=false",
+          "-c",
+          "features.memories=false",
+          "-c",
+          "features.multi_agent=false",
+          "-c",
+          "features.multi_agent_v2=false",
+          "-c",
+          "features.browser_use=false",
+          "-c",
+          "features.browser_use_external=false",
+          "-c",
+          "features.computer_use=false",
+          "-c",
+          "features.image_generation=false",
+          "-c",
+          "features.in_app_browser=false",
+          "-c",
+          "features.workspace_dependencies=false",
+          "-c",
+          "features.shell_snapshot=false",
+          "-c",
+          "features.skill_mcp_dependency_install=false",
+          "-c",
+          "features.goals=false",
+          "-c",
+          "web_search=\"disabled\"",
+          "-c",
+          "project_doc_max_bytes=0",
+          "-c",
+          "mcp_servers={}",
+          "-c",
+          "model_reasoning_effort=\"medium\"",
+          "-c",
+          "model=\"gpt-6.1-sol\"",
+          "--output-schema",
+          "/home/f/.codex/worktrees/5758/mana/evals/workflows/response-schema.json",
+          "-o",
+          "<out>/response.json",
+          "-"
+        ],
+        "ended_at": "2026-10-20T11:26:48.984+00:00",
+        "execution": "needs_adjudication",
+        "failures": [],
+        "host": "codex-cli 0.163.0",
+        "host_capability": {
+          "accepted": true,
+          "assessed_at": "2026-10-20T11:24:48+00:00",
+          "missing": [],
+          "mode": "discovery",
+          "stale": []
+        },
+        "host_skill_folders": {
+          "/etc/codex/skills": null,
+          "~/.agents/skills": 7,
+          "~/.codex/skills": 3
+        },
+        "host_support": {
+          "explicit_only_honored": null,
+          "skill_discovery": "verified"
+        },
+        "isolation": {
+          "artifact_write": "allowed",
+          "catalog_write": "denied",
+          "checked_at": "2026-10-20T11:24:48.875+00:00",
+          "git_write": "denied",
+          "network": "denied",
+          "outside_read": "denied",
+          "product_write": "denied",
+          "routes_read": "denied",
+          "tool_write": "denied"
+        },
+        "judgment": {
+          "activation": "unnecessary",
+          "adjudicate": [
+            "/usr/bin/bash -lc 'ls -la; git status --short; git branch -avv; cat AGENTS.md CLAUDE.md 2>/dev/null'",
+            "/usr/bin/bash -lc 'cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json,finish-review,prove-findings}.md'"
+          ],
+          "attempted_actions": [
+            "delegate"
+          ],
+          "capability_limit": {
+            "declared": [],
+            "status": "none"
+          },
+          "execution": "needs_adjudication",
+          "forbidden_attempts": [],
+          "loaded_entrypoints": [
+            "scan",
+            "dispel"
+          ],
+          "notes": [],
+          "observed_route": "skill:scan",
+          "routing": "correct"
+        },
+        "live": true,
+        "model_invocations": 1,
+        "observation": {
+          "actions": [
+            {
+              "action": "delegate",
+              "index": 14,
+              "via": "collab_tool_call"
+            },
+            {
+              "action": "delegate",
+              "index": 15,
+              "via": "collab_tool_call"
+            },
+            {
+              "action": "delegate",
+              "index": 20,
+              "via": "collab_tool_call"
+            }
+          ],
+          "all_loads": [
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/SKILL.md'",
+              "first": true,
+              "index": 2,
+              "skill": "scan",
+              "via": "search"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"sed -n '35,155p' .agents/skills/scan/references/finish-review.md; cat .agents/skills/scan/references/validator.md; cat .agents/skills/dispel/SKILL.md\"",
+              "first": true,
+              "index": 8,
+              "skill": "dispel",
+              "via": "search"
+            }
+          ],
+          "catalog_scans": [],
+          "first_consequential_action": {
+            "action": "delegate",
+            "index": 14,
+            "via": "collab_tool_call"
+          },
+          "first_substantive_operation": {
+            "command": "/usr/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g '*SKILL.md' -g '*ticket*' -g '*mana*' -g 'package.json' -g 'README*' -g '.mana*'\"",
+            "exit_code": 0,
+            "index": 1,
+            "kind": "command"
+          },
+          "loads": [
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/SKILL.md'",
+              "first": true,
+              "index": 2,
+              "skill": "scan",
+              "via": "search"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"sed -n '35,155p' .agents/skills/scan/references/finish-review.md; cat .agents/skills/scan/references/validator.md; cat .agents/skills/dispel/SKILL.md\"",
+              "first": true,
+              "index": 8,
+              "skill": "dispel",
+              "via": "search"
+            }
+          ],
+          "operations": [
+            {
+              "command": "/usr/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g '*SKILL.md' -g '*ticket*' -g '*mana*' -g 'package.json' -g 'README*' -g '.mana*'\"",
+              "exit_code": 0,
+              "index": 1,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/SKILL.md'",
+              "exit_code": 0,
+              "index": 2,
+              "kind": "skill-load"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'ls -la; git status --short; git branch -avv; cat AGENTS.md CLAUDE.md 2>/dev/null'",
+              "exit_code": 1,
+              "index": 3,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/references/{scope,feedback-requirements,roster,dispatch}.md'",
+              "exit_code": 0,
+              "index": 4,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"git remote -v; git diff main; git log --oneline main..HEAD; cat TICKET.md README.md app.py test_app.py; command -v gh; rg --files --hidden -g 'AGENTS.md' -g 'CLAUDE.md'; ls artifacts\"",
+              "exit_code": 0,
+              "index": 5,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json,finish-review,prove-findings}.md'",
+              "exit_code": 1,
+              "index": 6,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'gh pr view --json baseRefName,url; bash .agents/skills/scan/scripts/review.sh signals --base main; cat .agents/skills/scan/references/findings-schema.json .agents/skills/scan/references/personas/{protection-warrior,marksmanship-hunter}.md'",
+              "exit_code": 0,
+              "index": 7,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"sed -n '35,155p' .agents/skills/scan/references/finish-review.md; cat .agents/skills/scan/references/validator.md; cat .agents/skills/dispel/SKILL.md\"",
+              "exit_code": 0,
+              "index": 8,
+              "kind": "skill-load"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"mkdir -p artifacts/scan/returns; python3 - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('artifacts/scan')\n(p/'fast-pass.json').write_text(json.dumps(dict(reviewer='fast-pass',findings=[],residual_risks=[],testing_gaps=[])))\nPY\n git diff main > artifacts/scan/full.diff\"",
+              "exit_code": 0,
+              "index": 10,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"sed -n '1,110p' .agents/skills/scan/references/finish-review.md; rg -n 'merge|run-dir|reconciled|pass' .agents/skills/scan/scripts/review.sh | head -35; PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v\"",
+              "exit_code": 0,
+              "index": 11,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nfrom app import total\nassert total([{'price':2,'qty':3}]) == 6\nassert total([{'price':2},{'price':3}]) == 5\nprint('Ticket 41: both acceptance criteria passed')\nPY\"",
+              "exit_code": 0,
+              "index": 12,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'cat .agents/skills/scan/references/report-example.md; git ls-files; git diff main | git patch-id --stable'",
+              "exit_code": 0,
+              "index": 13,
+              "kind": "command"
+            },
+            {
+              "index": 14,
+              "kind": "collab_tool_call"
+            },
+            {
+              "index": 15,
+              "kind": "collab_tool_call"
+            },
+            {
+              "command": "/usr/bin/bash -lc 'bash .agents/skills/scan/scripts/review.sh merge artifacts/scan --roster fast-pass,protection-warrior,marksmanship-hunter; cat artifacts/scan/merged.json'",
+              "exit_code": 0,
+              "index": 17,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"python3 - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('artifacts/scan')\nx=json.loads((p/'merged.json').read_text()); x['findings'][0]['severity']='P2'; x['findings'][0]['severity_note']='Missing regression coverage for a small correct change; no current functional defect.'\n(p/'reconciled.json').write_text(json.dumps(x,indent=2))\nPY\nbash .agents/skills/scan/scripts/review.sh merge artifacts/scan --reconciled artifacts/scan/reconciled.json\"",
+              "exit_code": 0,
+              "index": 18,
+              "kind": "command"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport subprocess, unittest\nimport test_app\nold={}\nexec(subprocess.check_output(['git','show','main:app.py'],text=True),old)\ntest_app.total=old['total']\nr=unittest.TextTestRunner(verbosity=1).run(unittest.defaultTestLoader.loadTestsFromModule(test_app))\nassert r.wasSuccessful()\nprint('Confirmed: unchanged suite also passes against main implementation that ignores qty')\nPY\"",
+              "exit_code": 0,
+              "index": 19,
+              "kind": "command"
+            },
+            {
+              "index": 20,
+              "kind": "collab_tool_call"
+            },
+            {
+              "command": "/usr/bin/bash -lc \"python3 - <<'PY'\nimport json, subprocess, datetime\nfrom pathlib import Path\np=Path('artifacts/scan'); x=json.loads((p/'merged.json').read_text()); x['findings'][0]['validated']=True\n(p/'reconciled.json').write_text(json.dumps(x,indent=2))\nmeta=dict(run_id='scan',branch='fixture-work',head_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),base_sha=subprocess.check_output(['git','rev-parse','main'],text=True).strip(),patch_id='583cbf51945497333e5147202f5ccc402f82ae81',pr=None,scope_mode='standalone',ticket={'id':'41','source':'TICKET.md','resolution':'local fixture'},requirements=[{'id':'R1','status':'met','text':'Explicit qty multiplies price','evidence':'app.py:2; direct assertion returned 6'},{'id':'R2','status':'met','text':'Missing qty counts once','evidence':'app.py:2; test_app.py:7'}],peer=None,verdict='Ready with fixes',completed_at=datetime.datetime.now(datetime.timezone.utc).isoformat())\n(p/'metadata.json').write_text(json.dumps(meta,indent=2))\nPY\nbash .agents/skills/scan/scripts/review.sh merge artifacts/scan --reconciled artifacts/scan/reconciled.json\ncp artifacts/scan/merged.json artifacts/scan/findings.json\ncat > artifacts/scan/report.md <<'EOF'\nReview: fixture-work against main, Ticket 41 (local TICKET.md).\nReviewed 26083d3 against 84c7d76; patch-id 583cbf51945497333e5147202f5ccc402f82ae81.\n\nTeam: Protection Warrior (correctness), Marksmanship Hunter (testing, quantity behavior changed without test changes), and independent validation.\n\n#1 P2: Quantity multiplication has no regression test (app.py:2; test_app.py:7).\nThe sole test supplies no qty, so reverting this fix leaves the suite green. Confirmed by running the existing test against the main implementation in memory. Add an assertion that total([{\\\"price\\\": 2, \\\"qty\\\": 3}]) equals 6, retaining the existing missing-qty test. Confidence 75, validated; source: Marksmanship Hunter. Severity reduced from P1 to P2 because the implementation is correct and the gap concerns regression detection.\n\nRequirements:\n- R1 met: explicit qty multiplies price; direct assertion returns 6 (app.py:2).\n- R2 met: missing qty counts once; existing unittest passes (app.py:2, test_app.py:7).\n\nCoverage: both specialist reviews completed, one finding independently validated. Merge: script. No applicable project standards files. Assumed load: not stated; README calls this a small synthetic project. PR discovery unavailable through offline fixture gh, so PR feedback was not reviewed. No untracked project files. No additional correctness findings. Dedicated blocking-finding proof skipped because no P0/P1 findings remain. Checks: unittest passes (1 test), both ticket assertions pass, original implementation also passes unchanged suite. Artifacts stored under artifacts/scan because sandbox permits writes there.\n\nVerdict: Ready with fixes. Add the quantity regression assertion (#1, P2). Report only; project files unchanged.\nEOF\n git status --short\"",
+              "exit_code": 0,
+              "index": 21,
+              "kind": "command"
+            }
+          ],
+          "outside_loads": [],
+          "unavailable": []
+        },
+        "observation_kind": "live-discovery",
+        "process_family": {
+          "ended_at": "2026-10-20T11:26:48.975+00:00",
+          "exit_code": null,
+          "family_terminated": true,
+          "host_pid": 1714789,
+          "method": "session, group and subtree sweep with runner subreaper",
+          "outcome": "timeout",
+          "platform": "linux",
+          "signalled_pids": [
+            1714789
+          ],
+          "started_at": "2026-10-20T11:24:48.875+00:00",
+          "subreaper": true,
+          "surviving_pids": [],
+          "timeout_seconds": 120
+        },
+        "reasoning": "medium",
+        "reported_model": null,
+        "requested_model": "gpt-6.1-sol",
+        "routes_sha256": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+        "schema_version": 1,
+        "seconds": 120.25,
+        "started_at": "2026-10-20T11:24:48.729+00:00",
+        "study": "discovery-selection-v1",
+        "timeout_seconds": 120
+      },
+      "result_sha256": "548517943f4dbc26782928500218a8c64c394b6ec0943ae3192b8d86ec076936",
+      "seconds": 120.25,
+      "slot": 4,
+      "status": "needs_adjudication",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 802688,
+        "input_tokens": 862165,
+        "output_tokens": 3185,
+        "reasoning_output_tokens": 79
+      }
+    },
+    {
+      "case": "ultima-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 5,
+      "status": "not_started"
+    },
+    {
+      "case": "ultima-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 6,
+      "status": "not_started"
+    },
+    {
+      "case": "ordinary-explicit-only",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 7,
+      "status": "not_started"
+    },
+    {
+      "case": "attune-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 8,
+      "status": "not_started"
+    },
+    {
+      "case": "missing-sibling",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 9,
+      "status": "not_started"
+    },
+    {
+      "case": "dispel-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 10,
+      "status": "not_started"
+    },
+    {
+      "case": "vague-bug",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 11,
+      "status": "not_started"
+    },
+    {
+      "case": "dispel-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 12,
+      "status": "not_started"
+    },
+    {
+      "case": "changed-target",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 13,
+      "status": "not_started"
+    },
+    {
+      "case": "mend-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 14,
+      "status": "not_started"
+    },
+    {
+      "case": "missing-sibling",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 15,
+      "status": "not_started"
+    },
+    {
+      "case": "review-or-audit",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 16,
+      "status": "not_started"
+    },
+    {
+      "case": "review-or-audit",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 17,
+      "status": "not_started"
+    },
+    {
+      "case": "remedy-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 18,
+      "status": "not_started"
+    },
+    {
+      "case": "changed-target",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 19,
+      "status": "not_started"
+    },
+    {
+      "case": "dispel-negative",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 2,
+      "slot": 20,
+      "status": "not_started"
+    },
+    {
+      "case": "remedy-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 21,
+      "status": "not_started"
+    },
+    {
+      "case": "attune-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 22,
+      "status": "not_started"
+    },
+    {
+      "case": "mend-positive",
+      "model_invocations": 0,
+      "reason": "slot 4: delegation violated pilot bounds",
+      "repetition": 1,
+      "slot": 23,
+      "status": "not_started"
+    }
+  ],
+  "schema_version": 1,
+  "status_counts": {
+    "needs_adjudication": 3,
+    "not_exercised": 2,
+    "not_started": 19
+  },
+  "study": "discovery-pilot-2026-10-20",
+  "usage": {
+    "cache_write_input_tokens": 0,
+    "cached_input_tokens": 1184128,
+    "input_tokens": 1348770,
+    "output_tokens": 6618,
+    "reasoning_output_tokens": 381
+  }
+}

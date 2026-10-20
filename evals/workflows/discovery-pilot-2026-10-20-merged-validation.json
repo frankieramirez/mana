@@ -1,0 +1,21 @@
+{
+  "archive_sha256": "a48bf98c6a906e86d9211a23bfac2855f3e156349d81e260bf15462719b6d1cd",
+  "baseline_reproduction": "The same failure was reproduced from an extracted unchanged 7e94b1cb992e9a58dbb9acc56b93ddb5e4ce0669 snapshot; its log is in the historical evidence archive",
+  "checked_state": "Current main plus documentation and retained historical-study evidence; no skill or runner modifications beyond that main revision",
+  "command": "PATH=\"/usr/bin:/bin:$PATH\" bash scripts/validate.sh",
+  "exit_code": 1,
+  "failure": "RefreshTests.test_directory_rename_follows_source_roots_and_the_break_patch",
+  "log_archive": "evals/workflows/evidence/discovery-pilot-2026-10-20-merged-validation.txt.gz",
+  "log_sha256": "5440b4284d4bc8078bdc42792e2fe34b4cb117803ef307a4358bcce446eece4d",
+  "schema_version": 1,
+  "source_revision": "239a63c260efb89bd7cd66b7c8462e463094eaa7",
+  "standalone_packages": {
+    "count": 19,
+    "status": "passed"
+  },
+  "validator_sha256": "e6d4eab64783c8756be6bab9702df6a14a6712bc8241389b4eac8a625c0cc9e9",
+  "workflow_tests": {
+    "count": 403,
+    "status": "passed"
+  }
+}
