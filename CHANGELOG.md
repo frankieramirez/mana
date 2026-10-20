@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.12
+
+- Leyline's control skill no longer asks an agent to quote a repair that an exit 3 report does not give. The contract has no required repair field, so the agent quotes the missing prerequisite exactly, quotes its repair when the report has one, and says when it has none.
+
 ## 0.44.11
 
 - Leyline's generated control skill tells a cold agent what a control report lets it claim. A new "Report what ran" section says a bug report asks for a diagnosis, so the agent leaves the checkout unchanged unless asked. It reproduces through the control only and names the feature's `reach` routes. It cites each run by full `runId`, exit, head and manifest digest, gives scenario coverage in the record's own words, and reports an exit 3 run as blocked with the prerequisite and repair quoted from the report. Install also writes a sentence under the `Control:` pointer telling agents to read that skill before they change or run anything. In a consumer cold-session challenge with the same three cases and oracle, the agent passed none of the three before these changes and all three after.
