@@ -285,6 +285,35 @@ class Transport(unittest.TestCase):
         bare, _ = self.run_case('dispel-negative', {'parent': {'commands': ['ls .agents/skills/*/SKILL.md', 'cat quote.txt']}}, name='bare')
         self.assertEqual(bare['observation']['outside_loads'], [])
 
+    def test_child_activity_separates_empty_waits_failed_spawns_and_created_children(self):
+        # Shapes from the 2026-10-20 pilot on Codex 0.163.0: an empty wait event, and a spawn that only the host log shows.
+        wait = {'tool': 'wait', 'sender_thread_id': 'parent', 'receiver_thread_ids': [], 'prompt': None,
+                'agents_states': {}, 'status': 'completed'}
+        failed = ('2026-10-20T11:25:14.995521Z ERROR codex_core::tools::router: error=collab spawn failed: Fatal error: '
+                  'failed to load model context for thread parent: invalid thread-store request: no rollout found for thread id parent')
+        plans = {
+            'empty wait': ({'collab_items': [wait, wait]}, 'none', []),
+            'failed spawn': ({'collab_items': [wait], 'stderr_lines': [failed]}, 'attempted', ['delegate']),
+            'created': ({'collab_items': [{'tool': 'spawn_agent', 'receiver_thread_ids': ['child-1']}]}, 'created', ['delegate']),
+            'named wait': ({'collab_items': [dict(wait, receiver_thread_ids=['child-1'])]}, 'created', ['delegate']),
+        }
+        for name, (plan, children, attempted) in plans.items():
+            with self.subTest(name):
+                result, _ = self.run_case('scan-positive', plan, name='children-' + name.replace(' ', '-'))
+                judged = result['judgment']
+                self.assertEqual((judged['children'], judged['attempted_actions']), (children, attempted))
+                # Delegation is not one of this case's forbidden actions, so the slot's own execution is unchanged.
+                self.assertEqual(judged['execution'], 'not_exercised')
+        result, _ = self.run_case('scan-positive', {'collab_items': [wait, wait, wait], 'stderr_lines': [failed, failed]}, name='counted')
+        self.assertEqual((len(result['observation']['children']['failed_spawns']), result['observation']['children']['empty_waits']), (2, 3))
+
+    def test_a_timeout_is_reported_before_failed_commands_go_to_a_person(self):
+        obs = observation(commands=[('cat missing.txt', 1)])
+        judged = discovery.classify(cases()['scan-positive'], obs, discovery.load_cases()['activation'],
+                                    {'skill_discovery': 'verified'}, True, 'timeout', False)
+        self.assertEqual(judged['execution'], 'timeout')
+        self.assertEqual(judged['adjudicate'], ['cat missing.txt'])
+
     def test_dummy_selector_respects_explicit_only_and_stays_an_offline_fixture(self):
         # The keyword selector is deliberately crude: it reads listed descriptions and nothing else.
         honored, host = self.run_case('ordinary-explicit-only', {'selector': 'keyword', 'selector_threshold': 3})
@@ -421,8 +450,20 @@ class LiveRecord(unittest.TestCase):
         self.assertEqual('verified', honored['status'])
         # The host reads only the agents/openai.yaml policy, which is why every explicit-only skill ships one.
         self.assertEqual({'allow_implicit_invocation': 'honored', 'disable-model-invocation': 'ignored'}, honored['markers'])
-        found = hosts.capabilities('codex-cli 0.163.0')['explicit_only_honored']
-        self.assertEqual((path.name, 'verified'), (found['record'], found['status']))
+        self.assertEqual('verified', hosts.capabilities('codex-cli 0.163.0')['explicit_only_honored']['status'])
+
+    def test_live_codex_0163_children_record(self):
+        # Recorded by run.py --probe-catalog on a real Codex CLI 0.163.0 host, with no model call. The 2026-10-20
+        # pilot saw the same thing live: empty collaboration waits and spawns that failed only because of --ephemeral.
+        path = hosts.EVIDENCE / '2026-10-20-codex-cli-0.163.0-children.json'
+        self.assertEqual('ce63e8a9699585f0f492a13943f99346029edc99290e7f3716c2b25b251d5d9e', hashlib.sha256(path.read_bytes()).hexdigest())
+        record = json.loads(path.read_text())
+        self.assertEqual(0, record['model_invocations'])
+        self.assertEqual('failed', record['capabilities']['children_disabled']['status'])
+        found = hosts.capabilities('codex-cli 0.163.0')
+        self.assertEqual(('failed', path.name), (found['children_disabled']['status'], found['children_disabled']['record']))
+        # Discovery acceptance does not depend on it; each slot's child activity is judged on its own.
+        self.assertTrue(hosts.assess('codex-cli 0.163.0', 'discovery')['accepted'])
 
 
 class ActivationProbe(unittest.TestCase):
@@ -441,7 +482,8 @@ class ActivationProbe(unittest.TestCase):
         return record, host
 
     def statuses(self, record):
-        return {k: v['status'] for k, v in record['capabilities'].items()}
+        # children_disabled has its own test; every other capability is compared exactly.
+        return {k: v['status'] for k, v in record['capabilities'].items() if k != 'children_disabled'}
 
     def accepted(self, name):
         registry = evidence(self.root / ('registry-' + name), discovery_status=None)
@@ -539,6 +581,20 @@ class ActivationProbe(unittest.TestCase):
                 installed = next(p for p in record['probes'] if p['name'] == 'installed-catalog-render')
                 self.assertEqual(installed['counts'], {'automatic': 11, 'explicit': 8})
                 self.assertEqual(installed['hidden_automatic'], [])
+
+    def test_the_render_records_whether_child_tools_reach_the_model(self):
+        for name, plan, status in (('offered', {'render_child_tools': True}, 'failed'), ('withheld', {}, 'verified')):
+            with self.subTest(name):
+                host = FakeHost(self, dict({'response': RESPONSE}, **plan))
+                with host.environment():
+                    record = discovery_probe.probe_catalog(host.executable, self.root / ('children-' + name))
+                self.assertEqual(record['capabilities']['children_disabled']['status'], status)
+                self.assertEqual(host.calls(), [])
+        # A failed render says nothing about children.
+        host = FakeHost(self, {'response': RESPONSE, 'prompt_input': 'unsupported'})
+        with host.environment():
+            record = discovery_probe.probe_catalog(host.executable, self.root / 'children-unknown')
+        self.assertNotIn('children_disabled', record['capabilities'])
 
     def test_a_live_direct_read_overrides_a_hidden_catalog_entry(self):
         record, _ = self.probe({'parent': {'commands': ['cat ' + ALPHA, 'cat ' + BETA]}}, 'contradicted')

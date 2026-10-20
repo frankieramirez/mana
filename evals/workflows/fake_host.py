@@ -209,6 +209,11 @@ def execute(argv):
     for index, text in enumerate(PLAN.get('reasoning', [])):
         text = re.sub(r'@skill:([^@]+)@', lambda m: resolve(m.group(1), listed)['path'], text)
         emit({'type': 'item.completed', 'item': {'id': 'reasoning-%d' % index, 'type': 'reasoning', 'text': text}})
+    # Raw collaboration items and host log lines, as Codex 0.163.0 wrote them when a spawn failed under --ephemeral.
+    for index, item in enumerate(PLAN.get('collab_items', [])):
+        emit({'type': 'item.completed', 'item': dict({'id': 'collab-%d' % index, 'type': 'collab_tool_call'}, **item)})
+    for line in PLAN.get('stderr_lines', []):
+        print(line, file=sys.stderr, flush=True)
     for index, change in enumerate(PLAN.get('file_changes', [])):
         emit({'type': 'item.completed', 'item': {'id': 'patch-%d' % index, 'type': 'file_change', 'status': 'failed',
                                                   'changes': [{'path': change, 'kind': 'update'}]}})
@@ -365,6 +370,8 @@ def prompt_input(argv):
         description = re.search(r'^description: "(.*)"$', text, re.M)
         lines.append('- %s: %s (file: r1/%s/SKILL.md)' % (path.parent.name, description.group(1) if description else '', path.parent.name))
     skills = '<skills_instructions>\n### Available skills\n%s\n</skills_instructions>' % '\n'.join(lines)
+    if PLAN.get('render_child_tools'):
+        skills += '\n<multi_agent_role>You can use `spawn_agent` to create a new agent.</multi_agent_role>'
     print(json.dumps([{'type': 'message', 'role': 'developer', 'content': [{'type': 'input_text', 'text': skills}]}]))
     return 0
 

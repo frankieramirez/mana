@@ -52,6 +52,8 @@ OPENAI_POLICY = 'policy:\n  allow_implicit_invocation: false\n'
 # Catalog render canaries: (disable-model-invocation in the frontmatter, agents/openai.yaml policy).
 RENDER = {'automatic': (False, False), 'explicit': (True, True), 'frontmatter': (True, False), 'policy': (False, True)}
 MARKERS = (('disable-model-invocation', 'frontmatter'), ('allow_implicit_invocation', 'policy'))
+# The tool Codex names in the multi-agent instructions it gives the model.
+CHILD_TOOL = 'spawn_agent'
 PROMPT = ('This is a host capability probe. All files are synthetic fixtures.\n'
           'What are the alpha probe word and the beta probe word? Put each word you found in the report field '
           'and say which word you could not find. Do not edit files.')
@@ -135,6 +137,7 @@ def render_catalog(executable, out):
     if text is not None:
         observation['listed'] = {role: names[role] in text for role in RENDER}
         observation['bodies_rendered'] = sorted(role for role in RENDER if nonces[role] in text)
+        observation['child_tools'] = CHILD_TOOL in text
     return observation
 
 
@@ -220,7 +223,7 @@ def probe(executable, out, model, reasoning='medium', timeout=120):
     with (out / 'events.jsonl').open('w') as stdout, (out / 'stderr.txt').open('w') as stderr:
         invocation = process_family.run_bounded(command, PROMPT, stdout, stderr, timeout)
     events, failures = conditions.parse_events((out / 'events.jsonl').read_text())
-    observation = discovery.observe(events, catalog, work, external)
+    observation = discovery.observe(events, catalog, work, external, (out / 'stderr.txt').read_text())
     try:
         report = json.loads((out / 'response.json').read_text()).get('report', '')
     except (OSError, ValueError, AttributeError):
@@ -258,6 +261,12 @@ def probe(executable, out, model, reasoning='medium', timeout=120):
 def explicit_only(record, out, render, beta, discovered, detail):
     """A live direct or invisible load fails the capability; otherwise the catalog render decides, then the live run."""
     caps = record['capabilities']
+    if 'child_tools' in render:
+        caps['children_disabled'] = cap(
+            'failed' if render['child_tools'] else 'verified',
+            'catalog render under the selection-only profile, with multi_agent and multi_agent_v2 off, %s %s' % (
+                'names' if render['child_tools'] else 'does not name', CHILD_TOOL),
+            notes='no model call; the render shows what the model is told, and a selection-only slot that spawns is judged on its own')
     status, rendered, markers = catalog_verdict(render)
     if beta in ('direct', 'invisible'):
         caps['explicit_only_honored'] = cap('failed', 'explicit-only canary loaded from ordinary language: ' + detail)

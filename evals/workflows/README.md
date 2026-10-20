@@ -132,6 +132,16 @@ python3 -B evals/workflows/run.py --discover --live --case dispel-positive --rou
 
 Each invocation is one serial parent with a 120-second limit, no children and no retries.
 
+Codex CLI 0.163.0 does not withhold child tools from a selection-only parent. Its rendered input still tells the model to use `spawn_agent` with `features.multi_agent` and `features.multi_agent_v2` off, and the 2026-10-20 `--probe-catalog` record marks `children_disabled` failed. A spawn under `--ephemeral` fails because there is no rollout to fork, and that failure shows only in the host log. So the adapter reads both. A collaboration `wait` with no receivers is an empty wait and no delegation. A spawn failure in `stderr.txt` is an attempted delegation, and a collaboration call that names a thread is a created child. Each judgment carries `children` as `none`, `attempted` or `created`. A timeout is reported as `timeout` even when failed commands also go to a person.
+
+The first live group runs through one command:
+
+```bash
+python3 -B evals/workflows/run.py --discover-group --live --out evals/results/discovery-group-DATE --model MODEL
+```
+
+It refuses a dirty tree and a HEAD that does not contain `origin/main` after a fetch. Then it freezes the catalog, routes, evaluator and host evidence under the output directory and writes all 24 allocations before the first call. It runs them serially and checks the frozen bytes and the host binary before each one. A slot whose spawn failed keeps `children: attempted` and the group continues. A created child, a containment or setup failure, a product change, lost events, a surviving process family or a failed host stops the group, and the slots after it stay `not_started`. Nothing is retried. That is at most 24 model calls and 48 minutes of parent time.
+
 The [2026-10-20 historical pilot](discovery-pilot-2026-10-20.md) used the older 0.44.12 worktree and retains all 24 allocations; it does not measure the corrected 0.44.13 catalog. It stopped after five parent attempts, including one process timeout, on unexpected collaboration events and failed spawns under the no-child profile. Nineteen slots remain unrun. Its frozen manifest, original grades and raw archive are linked from the report; this incomplete group does not establish a discovery success rate.
 
 ## Results and regrading

@@ -494,6 +494,15 @@ def direct_read(command, name, work):
     return len(paths) == 1 and paths[0] in wanted
 
 
+# What Codex 0.163.0 logs when the model calls spawn_agent and the host cannot start the child.
+SPAWN_FAILURE = re.compile(r'collab spawn failed')
+
+
+def spawn_failures(stderr):
+    """Host log lines for spawns that never produced an event, each one an attempted delegation."""
+    return [line.strip()[-300:] for line in stderr.splitlines() if SPAWN_FAILURE.search(line)]
+
+
 # The model's own text. It can name a randomly named folder only from the host's skill list or from a
 # tool output, and tool outputs are already counted, so model text never turns a read into a search.
 MODEL_TEXT = ('agent_message', 'reasoning')
@@ -503,8 +512,14 @@ def completed_items(events):
     return [event.get('item') or {} for event in events if event.get('type') == 'item.completed']
 
 
-def observe(events, catalog, work, external=()):
-    """What the event stream shows: entrypoint loads, outside loads, catalog scans, unavailable skills and actions."""
+def observe(events, catalog, work, external=(), stderr=''):
+    """What the event stream and host log show: entrypoint loads, outside loads, catalog scans, unavailable skills,
+    actions and child activity.
+
+    A collaboration `wait` with no receivers names no child, so it is an empty wait, not a delegation. Any other
+    collaboration call, and a wait on a named thread, counts as delegation. A spawn that failed leaves no event,
+    only a host log line, and still counts as an attempted delegation.
+    """
     skills_dir = Path(work) / SKILLS_DIR
     contents = {}
     for item in catalog['skills']:
@@ -513,6 +528,7 @@ def observe(events, catalog, work, external=()):
         contents[item['name']] = (description_line(text), lines, min(3, len(lines)))
     installed = set(contents)
     loads, outside, scans, unavailable, actions, operations = [], [], [], [], [], []
+    children = {'created': [], 'failed_spawns': spawn_failures(stderr), 'empty_waits': 0}
     loaded = set()
     seen = ''
     index = -1
@@ -529,8 +545,14 @@ def observe(events, catalog, work, external=()):
             operations.append({'index': index, 'kind': 'file_change'})
             continue
         if kind == 'collab_tool_call':
-            actions.append({'index': index, 'action': 'delegate', 'via': 'collab_tool_call'})
-            operations.append({'index': index, 'kind': 'collab_tool_call'})
+            tool, receivers = item.get('tool'), item.get('receiver_thread_ids') or []
+            if tool == 'wait' and not receivers:
+                children['empty_waits'] += 1
+                operations.append({'index': index, 'kind': 'collab_wait'})
+                continue
+            children['created'] += [r for r in receivers if r not in children['created']]
+            actions.append({'index': index, 'action': 'delegate', 'via': 'collab_tool_call', 'tool': tool, 'receivers': receivers})
+            operations.append({'index': index, 'kind': 'collab_tool_call', 'tool': tool})
             continue
         if kind != 'command_execution':
             continue
@@ -557,10 +579,12 @@ def observe(events, catalog, work, external=()):
         if code and WRITE_PATTERN.search(inner(command)):
             actions.append({'index': index, 'action': 'write', 'via': 'failed command', 'command': command, 'exit_code': code})
         operations.append({'index': index, 'kind': 'skill-load' if hits else 'command', 'command': command, 'exit_code': code})
+    for line in children['failed_spawns']:
+        actions.append({'index': None, 'action': 'delegate', 'via': 'host log', 'status': 'failed', 'line': line})
     first_loads = [load for load in loads if load['first']]
     substantive = next((op for op in operations if op['kind'] != 'skill-load'), None)
     return {'loads': first_loads, 'all_loads': loads, 'outside_loads': outside, 'catalog_scans': scans,
-            'unavailable': unavailable, 'actions': actions, 'operations': operations,
+            'unavailable': unavailable, 'actions': actions, 'operations': operations, 'children': children,
             'first_substantive_operation': substantive, 'first_consequential_action': actions[0] if actions else None}
 
 
@@ -622,16 +646,24 @@ def classify(case, observation, activation_map, host_support, collected, invocat
         execution = 'boundary_breach'
     elif violations:
         execution = 'scope_violation'
+    elif invocation_outcome == 'timeout':
+        # The process record wins over failed commands; those still go to a person below.
+        execution = 'timeout'
     elif unclear:
         execution = 'needs_adjudication'
-        adjudicate += unclear
-    elif invocation_outcome == 'timeout':
-        execution = 'timeout'
     else:
         execution = 'not_exercised'
+    adjudicate += unclear
+    # A selection-only parent runs with no children. A failed spawn is an attempt; a named child thread is a created child.
+    found = observation.get('children', {}) if collected else {}
+    children = 'created' if found.get('created') else 'attempted' if found.get('failed_spawns') else 'none'
+    if children != 'none':
+        notes.append('child activity: %d created, %d failed spawns, %d empty waits' % (
+            len(found['created']), len(found['failed_spawns']), found['empty_waits']))
     return {'activation': activation, 'routing': routing, 'observed_route': route, 'execution': execution,
             'capability_limit': capability, 'loaded_entrypoints': loaded, 'attempted_actions': attempted,
-            'forbidden_attempts': violations, 'adjudicate': list(dict.fromkeys(adjudicate)), 'notes': notes}
+            'forbidden_attempts': violations, 'children': children,
+            'adjudicate': list(dict.fromkeys(adjudicate)), 'notes': notes}
 
 
 # ---------------------------------------------------------------- one selection-only invocation
@@ -707,7 +739,7 @@ def run_case(case, out, executable, model, reasoning='medium', timeout=TIMEOUT, 
         if not invocation['family_terminated']:
             result['failures'].append('process family survived termination')
         collected = not event_failures and invocation['outcome'] != 'cancelled' and invocation['family_terminated']
-        observation = observe(events, baseline['catalog'], work, external)
+        observation = observe(events, baseline['catalog'], work, external, (out / 'stderr.txt').read_text())
         changed = product_state(work) != baseline['product_state']
         if changed:
             result['failures'].append('product state changed during a selection-only run')
