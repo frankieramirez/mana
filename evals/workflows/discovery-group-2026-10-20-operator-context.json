@@ -1,0 +1,10 @@
+{
+  "recorded_at": "2026-10-20T13:48:34.072083+00:00",
+  "issue": "https://github.com/frankieramirez/mana/issues/101",
+  "authorization": "User: run the #101 discovery group",
+  "scope": "One fresh 24-slot discovery group using the merged runner; serial parents, 120 seconds each, zero children and retries; no conditional or second-host expansion.",
+  "requested_model": "gpt-6.1-sol",
+  "reasoning": "medium",
+  "model_basis": "Matches the retained historical discovery pilot manifest.",
+  "note": "Separate operator context preserves the runner-created manifest unchanged; its resources.authorization field is null."
+}
