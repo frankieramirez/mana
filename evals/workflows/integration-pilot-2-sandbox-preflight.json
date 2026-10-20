@@ -1,0 +1,163 @@
+{
+  "cells": [
+    {
+      "arm": "control",
+      "checks": [
+        {
+          "exit": 0,
+          "expected_exit": 0,
+          "index": 0,
+          "seconds": 13.7
+        },
+        {
+          "exit": 0,
+          "expected_exit": 0,
+          "index": 1,
+          "seconds": 17.2
+        }
+      ],
+      "failures": 0,
+      "family": "feature-change",
+      "head": "2891d58ee9828c50a7198ab2e33ec3ab359692f6",
+      "probe": {
+        "attachment_write": "denied",
+        "external": "refused",
+        "loopback": "allowed",
+        "outside_listener": "refused",
+        "outside_read": "denied",
+        "workspace_write": "allowed"
+      }
+    },
+    {
+      "arm": "baseline",
+      "checks": [
+        {
+          "exit": 0,
+          "expected_exit": 0,
+          "index": 0,
+          "seconds": 13.8
+        }
+      ],
+      "failures": 0,
+      "family": "feature-change",
+      "head": "a59ece1b6f292eba28099b82e01c029c289ba74d",
+      "probe": {
+        "attachment_write": "denied",
+        "external": "refused",
+        "loopback": "allowed",
+        "outside_listener": "refused",
+        "outside_read": "denied",
+        "workspace_write": "allowed"
+      }
+    },
+    {
+      "arm": "control",
+      "checks": [
+        {
+          "exit": 1,
+          "expected_exit": 1,
+          "index": 0,
+          "seconds": 43.2
+        },
+        {
+          "exit": 1,
+          "expected_exit": 1,
+          "index": 1,
+          "seconds": 46.6
+        }
+      ],
+      "failures": 0,
+      "family": "review-claims",
+      "head": "59836c7ecdbf524978cef10779f017af7347e208",
+      "probe": {
+        "attachment_write": "denied",
+        "external": "refused",
+        "loopback": "allowed",
+        "outside_listener": "refused",
+        "outside_read": "denied",
+        "workspace_write": "allowed"
+      }
+    },
+    {
+      "arm": "baseline",
+      "checks": [
+        {
+          "exit": 1,
+          "expected_exit": 1,
+          "index": 0,
+          "seconds": 43.3
+        }
+      ],
+      "failures": 0,
+      "family": "review-claims",
+      "head": "4f3178d4c5ec5637fe5dc7f7c6204238d0748d9b",
+      "probe": {
+        "attachment_write": "denied",
+        "external": "refused",
+        "loopback": "allowed",
+        "outside_listener": "refused",
+        "outside_read": "denied",
+        "workspace_write": "allowed"
+      }
+    },
+    {
+      "arm": "control",
+      "checks": [
+        {
+          "exit": 1,
+          "expected_exit": 1,
+          "index": 0,
+          "seconds": 12.8
+        },
+        {
+          "exit": 1,
+          "expected_exit": 1,
+          "index": 1,
+          "seconds": 16.7
+        }
+      ],
+      "failures": 0,
+      "family": "vague-report",
+      "head": "54712e83e052f359769beb924a99767663868f03",
+      "probe": {
+        "attachment_write": "denied",
+        "external": "refused",
+        "loopback": "allowed",
+        "outside_listener": "refused",
+        "outside_read": "denied",
+        "workspace_write": "allowed"
+      }
+    },
+    {
+      "arm": "baseline",
+      "checks": [
+        {
+          "exit": 1,
+          "expected_exit": 1,
+          "index": 0,
+          "seconds": 13.4
+        }
+      ],
+      "failures": 0,
+      "family": "vague-report",
+      "head": "32b789595e7dbcd2613fe34983593b58bdd209b8",
+      "probe": {
+        "attachment_write": "denied",
+        "external": "refused",
+        "loopback": "allowed",
+        "outside_listener": "refused",
+        "outside_read": "denied",
+        "workspace_write": "allowed"
+      }
+    }
+  ],
+  "controls_sha256": "9442d5b9799889cb6e4dc2b764725c44f84d63273b9bc4aaeaede2d75d11e615",
+  "host": "codex-cli 0.163.0",
+  "kind": "no-model sandbox preflight",
+  "model_invocations": 0,
+  "passed": true,
+  "ran_at": "2026-10-20T16:14:10.685+00:00",
+  "schema_version": 1,
+  "scope": "One workspace per family and arm, built exactly as a live slot builds it, inside the host sandbox profile the live slots use. Check 0 is the mapped feature's test file in both arms; check 1 is the project control in the control arm.",
+  "study": "mana-112-integration-pilot-2"
+}

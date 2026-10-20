@@ -1,0 +1,255 @@
+{
+  "actual_model": null,
+  "agent_executed": false,
+  "arms": {
+    "baseline": {
+      "files": 2049,
+      "inventory_sha256": "19e16d3b68da240dc79a1a484a96800659dc0f185e9d7b1c0a555eee3da26173"
+    },
+    "control": {
+      "files": 2058,
+      "inventory_sha256": "e31022621738b69227f021cb141d38c964d78b1b7bd361577134b72b887d2262"
+    }
+  },
+  "budget": {
+    "invocations": 12,
+    "retries": 0
+  },
+  "children": 0,
+  "consumer": {
+    "arm_difference": {
+      "changed_files": 2,
+      "removed_files": 9
+    },
+    "baseline_edits": 2,
+    "control_paths": 6,
+    "prerequisites": 6,
+    "replaced_skill_files": 172,
+    "revision": "9aa28a8fd7b20930b0d2e5fe76728300453902ca"
+  },
+  "controls_sha256": "9442d5b9799889cb6e4dc2b764725c44f84d63273b9bc4aaeaede2d75d11e615",
+  "families": {
+    "feature-change": {
+      "attachments_sha256": [],
+      "fixtures": {
+        "baseline": {
+          "commits": 1,
+          "head": "a59ece1b6f292eba28099b82e01c029c289ba74d",
+          "status_sha256": "5fea77e98462c7d8cda087cde1fb60dc79806573cb609d90a5c4b2a62be3a99e",
+          "tree_inventory_sha256": "530059c50683cdd92da8a981c4169c004ec0add104b763448ad42a3f603f7229"
+        },
+        "control": {
+          "commits": 1,
+          "head": "2891d58ee9828c50a7198ab2e33ec3ab359692f6",
+          "status_sha256": "5fea77e98462c7d8cda087cde1fb60dc79806573cb609d90a5c4b2a62be3a99e",
+          "tree_inventory_sha256": "8df0f1524045eaf7b7ae9e9f546de980201d5e75cfcfee41362cedd48ebc7a0e"
+        }
+      },
+      "oracle_sha256": "aceefa5a0318af834c4ac5d7137cc2c58af8375a13bcef67b316f53609735749",
+      "request_sha256": "4e94d9735d96b632b7bd60e6d4fa11494bfd053f1f9cff4926c532ebfc13c074",
+      "sandbox_checks": [
+        {
+          "arms": [
+            "control",
+            "baseline"
+          ],
+          "exit": 0
+        },
+        {
+          "arms": [
+            "control"
+          ],
+          "exit": 0
+        }
+      ],
+      "setup_modes": [
+        "worktree"
+      ],
+      "setup_patches_sha256": [
+        "58b6e272f5c0b42a7afea96c9e522bc7a3bc06189c88a801dfd7622e217c46ce"
+      ],
+      "skill": "cast"
+    },
+    "review-claims": {
+      "attachments_sha256": [],
+      "fixtures": {
+        "baseline": {
+          "commits": 3,
+          "head": "4f3178d4c5ec5637fe5dc7f7c6204238d0748d9b",
+          "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tree_inventory_sha256": "5dc922d619c70f09014ebeceb30764fa724238eccf3269f85480ad28999bef46"
+        },
+        "control": {
+          "commits": 3,
+          "head": "59836c7ecdbf524978cef10779f017af7347e208",
+          "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tree_inventory_sha256": "87922b51e482c918d0a04cc0ee78600f9061761035be0f1fdd6c9dbb09757963"
+        }
+      },
+      "oracle_sha256": "a1b640ed2d4348238f0cb888f1d894e92c546ce0558ea90601993b4705a566ab",
+      "request_sha256": "9d227b27390929827ac54b8c0ade1f079e03c2a33b204e87c3e389c75265f061",
+      "sandbox_checks": [
+        {
+          "arms": [
+            "control",
+            "baseline"
+          ],
+          "exit": 1
+        },
+        {
+          "arms": [
+            "control"
+          ],
+          "exit": 1
+        }
+      ],
+      "setup_modes": [
+        "commit",
+        "commit"
+      ],
+      "setup_patches_sha256": [
+        "8c5d403c48ceeb3e0f867465287d2d220b4f288fcdca53648fd3de09ca7c66ce",
+        "eb4a2c1b9814e823dca8383480027dfb67ab1249b85a4f92f76a2147607354f1"
+      ],
+      "skill": "scan"
+    },
+    "vague-report": {
+      "attachments_sha256": [
+        "42f5cb2a02dfae37b84a34ac0a1ddb2a45c29f330486e99f54fd496137e1101a"
+      ],
+      "fixtures": {
+        "baseline": {
+          "commits": 1,
+          "head": "32b789595e7dbcd2613fe34983593b58bdd209b8",
+          "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tree_inventory_sha256": "5091ec40de93b685113b1220ca1e378fcc3714c6528304b04c28934d1b365cef"
+        },
+        "control": {
+          "commits": 1,
+          "head": "54712e83e052f359769beb924a99767663868f03",
+          "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tree_inventory_sha256": "abd4f6457bcc661a5d8ffb9c397c594c453aabf8b5612a8837c51c307e3db645"
+        }
+      },
+      "oracle_sha256": "3f79a385ae280f4babb687b12b482f9a33cd231c40ddace1ec29e5db204d3c49",
+      "request_sha256": "e76b2148610195144c9316bc53712b7b612f6e1ce872ac7fe223864243b383d4",
+      "sandbox_checks": [
+        {
+          "arms": [
+            "control",
+            "baseline"
+          ],
+          "exit": 1
+        },
+        {
+          "arms": [
+            "control"
+          ],
+          "exit": 1
+        }
+      ],
+      "setup_modes": [
+        "fold"
+      ],
+      "setup_patches_sha256": [
+        "3e59c8422ea95e9d0395d636d5d844e274cecdd44f07e7bb50ad7715c1268d60"
+      ],
+      "skill": "sift"
+    }
+  },
+  "host": "codex-cli 0.163.0",
+  "kind": "paired-integration",
+  "payload": {
+    "inventory_sha256": "bb48ff10faad1097656f179927c0de19e1cb49e6f5dfd487c646c74c583df00b",
+    "revision": "9f0b6d596038aaa68dece42df63b8a7279a6dc3c"
+  },
+  "reasoning": "medium",
+  "repetitions": 2,
+  "requested_model": "gpt-6.1-sol",
+  "runner_inventory_sha256": "9eb6edcf846ee2dd81dd8e5da19bf80c571a4c6d032e1be60d36343b0a9b1ba2",
+  "runtime": {
+    "browsers_sha256": "89c2a5bf595606ca049b1229421052cf20baa704fb5857d52bc3f38b022348e2",
+    "codex_sha256": "399ff69c431c066e40de318fba45c2b07f45a76b19939d247ee4828fc70c4215",
+    "network": "host proxy, loopback binding only, no allowed domains",
+    "node_version": "v26.8.1",
+    "npm_cache_sha256": "46b934c33e1bf32003d9efe24081cf02fbbe0e651f995b80add95334a0e2d152"
+  },
+  "schedule": [
+    {
+      "arm": "baseline",
+      "family": "feature-change",
+      "repetition": 2,
+      "slot": 1
+    },
+    {
+      "arm": "control",
+      "family": "feature-change",
+      "repetition": 2,
+      "slot": 2
+    },
+    {
+      "arm": "control",
+      "family": "feature-change",
+      "repetition": 1,
+      "slot": 3
+    },
+    {
+      "arm": "baseline",
+      "family": "feature-change",
+      "repetition": 1,
+      "slot": 4
+    },
+    {
+      "arm": "baseline",
+      "family": "review-claims",
+      "repetition": 2,
+      "slot": 5
+    },
+    {
+      "arm": "control",
+      "family": "review-claims",
+      "repetition": 1,
+      "slot": 6
+    },
+    {
+      "arm": "baseline",
+      "family": "review-claims",
+      "repetition": 1,
+      "slot": 7
+    },
+    {
+      "arm": "control",
+      "family": "review-claims",
+      "repetition": 2,
+      "slot": 8
+    },
+    {
+      "arm": "control",
+      "family": "vague-report",
+      "repetition": 1,
+      "slot": 9
+    },
+    {
+      "arm": "control",
+      "family": "vague-report",
+      "repetition": 2,
+      "slot": 10
+    },
+    {
+      "arm": "baseline",
+      "family": "vague-report",
+      "repetition": 1,
+      "slot": 11
+    },
+    {
+      "arm": "baseline",
+      "family": "vague-report",
+      "repetition": 2,
+      "slot": 12
+    }
+  ],
+  "schema_version": 1,
+  "seed": 20261017,
+  "study": "mana-112-integration-pilot-2",
+  "timeout_seconds": 900
+}

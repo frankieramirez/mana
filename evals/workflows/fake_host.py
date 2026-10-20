@@ -45,8 +45,21 @@ def _hook(event, args):
         granted = _mode(real)
         if granted == 'deny' or (writing and granted != 'write'):
             raise PermissionError(13, 'fake sandbox denied', real)
+    elif event == 'socket.bind' and _NETWORK == 'local':
+        _BOUND.append(args[0])
     elif event == 'socket.connect' and not _NETWORK:
         raise PermissionError(13, 'fake sandbox network denied')
+    elif event == 'socket.connect' and _NETWORK == 'local':
+        # Loopback inside the sandbox only: a port this process bound itself, like a private network namespace.
+        host, port = args[1][0], args[1][1]
+        if not (host in ('127.0.0.1', 'localhost') and any(_port(s) == port for s in _BOUND)):
+            raise ConnectionRefusedError(111, 'fake sandbox proxy refused')
+_BOUND = []
+def _port(sock):
+    try:
+        return sock.getsockname()[1]
+    except OSError:
+        return None
 _sys.addaudithook(_hook)
 # Metadata lookups are not audited, so wrap them to hide denied paths as a sandbox would.
 def _hidden(original):
@@ -94,13 +107,18 @@ def policy(configs):
                 table[json.loads(key)] = json.loads(mode)
         if value == 'permissions.mana-eval.network.enabled=false':
             network = False
+    # Network on, local binding allowed and every request through the proxy with no allowed domain.
+    proxied = {'permissions.mana-eval.network.enabled=true', 'permissions.mana-eval.network.allow_local_binding=true',
+               'permissions.mana-eval.network.domains={}', 'features.network_proxy=true'}
+    if network and proxied <= set(configs):
+        network = 'local'
     return table, network
 
 
 def python_command(args, configs, cwd):
     """Run python3 -c CODE or python3 SCRIPT ARGS, contained when the plan says so."""
     if args[1] == '-c':
-        body = args[2]
+        body = 'import sys\nsys.argv = %r\n' % (['-c'] + list(args[3:])) + args[2]
     else:
         body = 'import runpy, sys\nsys.argv = %r\nrunpy.run_path(%r, run_name="__main__")\n' % (args[1:], args[1])
     if PLAN.get('containment', 'enforced') == 'enforced':
