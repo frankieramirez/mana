@@ -56,6 +56,9 @@ bash scripts/test-persona.sh
 # Workflow fixtures and graders, without an agent
 python3 -B -m unittest discover -s evals/workflows -p 'test_*.py'
 
+# Every fixture suite above and the rest, side by side; MANA_FIXTURE_JOBS sets the worker count
+python3 -B scripts/fixtures.py
+
 # Full required offline validation before committing
 bash scripts/validate.sh
 ```

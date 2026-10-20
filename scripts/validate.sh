@@ -39,27 +39,8 @@ for p in $(python3 -c 'import json;print(" ".join(json.load(open(".claude-plugin
   [ -f "$p" ] || err "plugin.json agent path missing: $p"
 done
 scripts/sync-assets.sh --check || err "shared assets are out of sync"
-scripts/test-persona.sh || err "persona synchronization fixtures failed"
-python3 -B -m unittest discover -s scripts -p 'test_reliability.py' || err "reliability fixtures failed"
-python3 -B -m unittest discover -s scripts -p 'test_augur_proof.py' || err "Augur source proof fixtures failed"
-python3 -B scripts/verify_packages.py || err "standalone packages failed"
-python3 -B evals/workflows/run.py --check || err "workflow definitions failed"
-python3 -B -m unittest discover -s evals/workflows -p 'test_*.py' || err "workflow grader fixtures failed"
-scripts/test-ward.sh || err "PR attendance fixtures failed"
-scripts/test-scry-map.sh || err "scry map closeout fixtures failed"
-scripts/test-scry-frontier.sh || err "scry frontier fixtures failed"
-scripts/test-build-tickets.sh || err "build ticket adapter fixtures failed"
-scripts/test-open-pr.sh || err "open-pr conflict fixtures failed"
-scripts/test-mend.sh || err "mend PR preparation fixtures failed"
-python3 -B scripts/test_review_merge.py || err "review merge fixtures failed"
-scripts/test-ultima.sh || err "ultima audit fixtures failed"
-scripts/test-leyline.sh || err "leyline conformance fixtures failed"
-scripts/test-leyline-install.sh || err "leyline installation fixtures failed"
-python3 -B scripts/test_control_runtime.py || err "generated control runtime fixtures failed"
-python3 -B scripts/test_leyline_challenge.py || err "leyline challenge fixtures failed"
-python3 -B scripts/test_leyline_refresh.py || err "leyline refresh fixtures failed"
-python3 -B scripts/test_control_evidence.py || err "control evidence fixtures failed"
-python3 -B -m unittest discover -s evals/semantic -p 'test_*.py' || err "semantic eval runner fixtures failed"
+# The fixture suites, run side by side by scripts/fixtures.py. Add a new suite there.
+python3 -B scripts/fixtures.py || err "fixture suites failed"
 
 # 2a. Every output style has the frontmatter the Claude Code picker needs.
 for f in output-styles/*.md; do

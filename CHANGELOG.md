@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.44.14
+## 0.44.15
 
 - The discovery runner judges child activity per slot. An empty collaboration `wait` is no longer counted as delegation. A spawn that failed, which Codex 0.163.0 logs only to stderr under `--ephemeral`, counts as an attempted delegation, and a collaboration call naming a thread counts as a created child. Each judgment gains `children`, and a timeout now reports as `timeout` before failed commands go to a person. `--probe-catalog` records a new `children_disabled` capability from the same zero-call render. The committed 2026-10-20 record marks it failed for Codex 0.163.0, because `spawn_agent` stays in the model's input with both multi-agent features off. A new `run.py --discover-group` freezes and runs the 24-slot first live group. It refuses a dirty tree or a HEAD behind `origin/main` after a fetch, keeps every allocation, continues past a failed spawn, and stops on a created child or a nonzero host exit. The historical pilot's slot 3 adjudication now matches its recorded exit code.
+
+## 0.44.14
+
+- `scripts/validate.sh` runs its fixture suites side by side through the new `scripts/fixtures.py`, one workflow test class per process, and prints only the failures. A full run drops from about seven minutes to about two on four cores. The Leyline challenge fixture's evict mode now kills only the sentinel its own challenge started, so a concurrent suite keeps its listener.
 
 ## 0.44.13
 
