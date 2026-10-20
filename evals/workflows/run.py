@@ -850,11 +850,12 @@ def regrade(directory):
 
 
 def discovery_main(parser, args):
-    """Selection-only discovery operations. Each live operation makes at most one model call."""
+    """Selection-only discovery operations. Each live operation makes at most one model call, except --discover-group,
+    which makes one per allocated slot of the frozen first live group."""
     import discovery
     given = [token.split('=')[0] for token in sys.argv[1:] if token.startswith('--')]
-    if sum((args.discovery_check, args.probe_discovery, args.probe_catalog, args.discover)) != 1:
-        parser.error('choose one of --discovery-check, --probe-discovery, --probe-catalog and --discover')
+    if sum((args.discovery_check, args.probe_discovery, args.probe_catalog, args.discover, args.discover_group)) != 1:
+        parser.error('choose one of --discovery-check, --probe-discovery, --probe-catalog, --discover and --discover-group')
     if args.discovery_check:
         if given != ['--discovery-check']:
             parser.error('--discovery-check takes no other options')
@@ -881,6 +882,19 @@ def discovery_main(parser, args):
                           'evidence': str(args.out / 'host-evidence.json')}, indent=2))
         clean = not record['unknown'] and not record['catalog_findings']
         return 0 if clean and all(v['status'] == 'verified' for v in record['capabilities'].values()) else 1
+    if args.discover_group:
+        allowed = {'--discover-group', '--live', '--out', '--model', '--reasoning'}
+        if any(token not in allowed for token in given) or not args.live or not args.out or not args.model:
+            parser.error('--discover-group needs --live, --out and --model, plus --reasoning at most')
+        if not executable:
+            parser.error('Codex CLI is unavailable; nothing was run')
+        import discovery_group
+        manifest = discovery_group.freeze(args.out, executable, args.model, args.reasoning)
+        print(json.dumps({'manifest': str(args.out / 'manifest.json'), 'head': manifest['source']['head'],
+                          'slots': len(manifest['schedule'])}), flush=True)
+        completion = discovery_group.run(args.out, executable)
+        print(json.dumps(completion, indent=2))
+        return 0 if completion['stop_reason'] is None else 1
     if args.probe_discovery:
         allowed = {'--probe-discovery', '--out', '--model', '--timeout', '--reasoning'}
         if any(token not in allowed for token in given) or not args.out or not args.model:
@@ -940,11 +954,13 @@ def main():
                         help='record candidate skill discovery evidence; at most one bounded model call')
     parser.add_argument('--probe-catalog', action='store_true',
                         help='record which canaries the host lists for implicit use; no model call')
+    parser.add_argument('--discover-group', action='store_true',
+                        help='freeze and run the 24-slot first live discovery group serially; needs --live')
     parser.add_argument('--discover', action='store_true',
                         help='one selection-only discovery invocation of the real host; needs --live')
     parser.add_argument('--routes-sha256', help='digest of discovery-cases.json printed by --discovery-check')
     args = parser.parse_args()
-    if args.discovery_check or args.probe_discovery or args.probe_catalog or args.discover:
+    if args.discovery_check or args.probe_discovery or args.probe_catalog or args.discover or args.discover_group:
         return discovery_main(parser, args)
     if args.probe_host:
         allowed = {'--probe-host', '--out', '--model', '--timeout', '--reasoning'}

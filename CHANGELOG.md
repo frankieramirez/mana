@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.14
+
+- The discovery runner judges child activity per slot. An empty collaboration `wait` is no longer counted as delegation. A spawn that failed, which Codex 0.163.0 logs only to stderr under `--ephemeral`, counts as an attempted delegation, and a collaboration call naming a thread counts as a created child. Each judgment gains `children`, and a timeout now reports as `timeout` before failed commands go to a person. `--probe-catalog` records a new `children_disabled` capability from the same zero-call render. The committed 2026-10-20 record marks it failed for Codex 0.163.0, because `spawn_agent` stays in the model's input with both multi-agent features off. A new `run.py --discover-group` freezes and runs the 24-slot first live group. It refuses a dirty tree or a HEAD behind `origin/main` after a fetch, keeps every allocation, continues past a failed spawn, and stops on a created child. The historical pilot's slot 3 adjudication now matches its recorded exit code.
+
 ## 0.44.13
 
 - Codex now treats the eight explicit-only skills as explicit. Codex CLI 0.163.0 ignores `disable-model-invocation: true` and reads `policy.allow_implicit_invocation: false` from a skill's `agents/openai.yaml`. Before this release it listed banish, cast, conjure, portal, scry, setup-mana, sift, and vision for implicit use. Each of them now ships that file. `scripts/validate.sh` and the discovery adapter's catalog snapshot fail when the two markers disagree. A new `run.py --probe-catalog` renders the host's model-visible input with `codex debug prompt-input`, makes no model call, and records which canaries and shipped skills the host lists. `--probe-discovery` runs the same canary render. The committed 2026-10-20 record verifies `explicit_only_honored` for Codex CLI 0.163.0.

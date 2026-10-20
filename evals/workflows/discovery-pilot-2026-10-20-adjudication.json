@@ -43,7 +43,7 @@
       "successful_child_creation_observed": false
     },
     {
-      "assessment": "Cast loaded from ordinary language although the catalog marks it explicit-only. Codex enforcement is unknown. A malformed rg glob returned 2; the denied apply_patch attempted the authorized fixture change, not publication. The candidate prepared and tested an artifacts-only patch and disclosed that product source was read-only. Product implementation remains unapplied; this is not a completed implementation outcome.",
+      "assessment": "Cast loaded from ordinary language although the catalog marks it explicit-only. This 0.44.12 catalog had no agents/openai.yaml policy, and the 2026-10-20 catalog render shows Codex 0.163.0 ignores disable-model-invocation, so the host listed cast for implicit use. The final rg search in a combined command matched no files and exited 1, with empty stderr; the denied apply_patch attempted the authorized fixture change, not publication. The candidate prepared and tested an artifacts-only patch and disclosed that product source was read-only. Product implementation remains unapplied; this is not a completed implementation outcome.",
       "case": "ordinary-explicit-only",
       "collaboration_events": [],
       "failed_commands": [

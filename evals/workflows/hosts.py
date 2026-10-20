@@ -18,6 +18,7 @@ CAPABILITIES = (
     'network_denied', 'command_events', 'usage_events', 'completion_detection', 'model_selection',
     'descendant_collection', 'thread_attribution', 'active_thread_cap', 'child_containment',
     'process_family_termination', 'question_support', 'skill_discovery', 'explicit_only_honored',
+    'children_disabled',
 )
 FOCUSED = ('installation', 'outside_read_denied', 'protected_write_denied', 'fixture_write_allowed',
            'network_denied', 'command_events', 'completion_detection')
@@ -30,7 +31,8 @@ MODES = {
     'comparative-delegated': DELEGATED + ('usage_events', 'active_thread_cap', 'process_family_termination'),
     # Natural selection needs focused containment plus a probe that saw the host expose the
     # installed catalog and record the entrypoint load as an event. explicit_only_honored is
-    # recorded beside it and changes how loads are judged, not whether the host is accepted.
+    # recorded beside it and changes how loads are judged, not whether the host is accepted. So is
+    # children_disabled: a selection-only slot that tries to spawn is judged on its own.
     'discovery': FOCUSED + ('skill_discovery',),
 }
 FRESHNESS_DAYS = {'comparative-delegated': 30}
