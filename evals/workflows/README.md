@@ -112,13 +112,19 @@ python3 -B -m unittest discover -s evals/workflows -p test_discovery.py
 
 The check validates the routes against the catalog and prints their digest and the seeded 24-slot schedule for the first live group; no agent runs. The tests drive every judgment through `fake_host.py`, including its keyword selector over listed descriptions. That selector is an offline fixture. Fake runs are always labelled `offline-fixture` and refuse to run as live.
 
-A live result needs a host record that verifies `skill_discovery`. Codex CLI 0.163.0 has one from a live probe on 2026-10-18, so `--discover` accepts that version and refuses the rest. That probe left `explicit_only_honored` unknown: it read the explicit canary in the same command as a search hit, which judges as ambiguous. The activation probe installs two synthetic canary skills in randomly named folders, each holding a secret word. The explicit one carries both `disable-model-invocation: true` and `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. The probe asks for both words without naming either:
+A live result needs a host record that verifies `skill_discovery`. Codex CLI 0.163.0 has one from a live probe on 2026-10-18, so `--discover` accepts that version and refuses the rest. That probe left `explicit_only_honored` unknown: it read the explicit canary in the same command as a search hit, which judges as ambiguous. A model that searches the workspace can read any skill file, so the live run cannot show whether the host listed it. The catalog probe answers that without a model call:
+
+```bash
+python3 -B evals/workflows/run.py --probe-catalog --out evals/results/catalog-probe
+```
+
+It installs four canaries: one automatic, one with both explicit-only markers, and one with each marker alone. It runs `codex debug prompt-input`, which prints the model-visible input, with `HOME` and `CODEX_HOME` pointed at empty folders, and records which random canary names the render lists. A hidden two-marker canary beside a listed automatic one verifies `explicit_only_honored`, and a listed one fails it. The single-marker canaries record which marker the host reads. It then renders the shipped catalog, installed as the adapter installs it, and names every explicit-only skill still listed and every automatic skill left out. The 2026-10-20 record for Codex CLI 0.163.0 verifies the capability, shows the host reads only `agents/openai.yaml`, and has no catalog findings. The activation probe installs two synthetic canary skills in randomly named folders, each holding a secret word. The explicit one carries both `disable-model-invocation: true` and `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. The probe asks for both words without naming either:
 
 ```bash
 python3 -B evals/workflows/run.py --probe-discovery --out evals/results/discovery-probe --model MODEL
 ```
 
-It makes one model call, limited to 120 seconds, after the containment probe passes. `skill_discovery` is verified when the automatic canary is read directly. A secret that reaches the response while no command output held it records `unavailable`. Everything else stays unknown, including a run where the model never reads the automatic canary. `explicit_only_honored` fails on a direct or invisible load of the explicit canary, is verified when its secret appears nowhere beside a verified automatic load, and otherwise stays unknown. Review the record before copying it into `host-evidence/`. After that, one case runs with:
+It makes one model call, limited to 120 seconds, after the containment probe passes. `skill_discovery` is verified when the automatic canary is read directly. A secret that reaches the response while no command output held it records `unavailable`. Everything else stays unknown, including a run where the model never reads the automatic canary. `explicit_only_honored` fails on a direct or invisible load of the explicit canary. Otherwise the probe's own catalog render decides it, and without a render it is verified when the secret appears nowhere beside a verified automatic load, and stays unknown in every other case. Review the record before copying it into `host-evidence/`. After that, one case runs with:
 
 ```bash
 python3 -B evals/workflows/run.py --discover --live --case dispel-positive --routes-sha256 DIGEST --model MODEL

@@ -101,6 +101,12 @@ def entry(path):
     flag = meta.get('disable-model-invocation', 'false')
     if flag not in ('true', 'false'):
         raise ValueError('disable-model-invocation must be true or false: ' + str(path))
+    # Codex 0.163.0 ignores the frontmatter flag and reads agents/openai.yaml, so the two must agree.
+    policy = Path(path).parent / 'agents' / 'openai.yaml'
+    hidden = policy.is_file() and '  allow_implicit_invocation: false' in policy.read_text().splitlines()
+    if (flag == 'true') != hidden:
+        raise ValueError('explicit-only markers disagree; set both disable-model-invocation and '
+                         'agents/openai.yaml allow_implicit_invocation: false, or neither: ' + str(path))
     return {'name': name, 'description': description,
             'activation': 'explicit' if flag == 'true' else 'automatic'}
 
