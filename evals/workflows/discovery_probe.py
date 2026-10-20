@@ -6,8 +6,10 @@ explicit-only twice over: `disable-model-invocation: true` in its frontmatter,
 which Claude Code reads, and `agents/openai.yaml` with
 `policy.allow_implicit_invocation: false`, which Codex reads. Each SKILL.md holds
 a fresh secret word. The prompt asks for both words without naming a skill or a
-path. The probe writes a candidate evidence record; a maintainer reviews it
-before copying it into host-evidence/.
+path, and it forbids searching the workspace: an explicit canary the model finds
+by listing files says nothing about what the host offered, so it can only judge
+as ambiguous. The probe writes a candidate evidence record; a maintainer reviews
+it before copying it into host-evidence/.
 
 Only unambiguous evidence gives a status. skill_discovery is verified when the
 automatic canary is read directly: one plain read of exactly its path, with its
@@ -34,8 +36,9 @@ CANARIES = {
 }
 OPENAI_POLICY = 'policy:\n  allow_implicit_invocation: false\n'
 PROMPT = ('This is a host capability probe. All files are synthetic fixtures.\n'
-          'What are the alpha probe word and the beta probe word? Put each word you found in the report field '
-          'and say which word you could not find. Do not edit files.')
+          'What are the alpha probe word and the beta probe word? Use only the skills this session offers you. '
+          'You may open a skill file the session lists, but do not search, list or browse the workspace for other files. '
+          'Put each word you found in the report field and say which word you could not find. Do not edit files.')
 
 
 def cap(status, evidence, **fields):
