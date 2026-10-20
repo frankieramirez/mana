@@ -74,3 +74,9 @@ Must not regress tax-exempt edge cases.
 ```
 
 Intent shapes *how hard each reviewer looks*, never which reviewers are selected. When intent is ambiguous, write the best-effort summary and note the uncertainty in Coverage. Never block on a clarifying question.
+
+Then write one line on the load the project expects, from its README, deploy config, or docs: a CLI one person runs, an internal tool for a team, a multi-tenant service. Name the file it came from. When nothing says, write `not stated`. Never invent traffic or row counts. Pass the line to every reviewer and carry it into Coverage:
+
+```
+Assumed load: multi-tenant web service with background workers (README.md, deploy/worker.yaml).
+```

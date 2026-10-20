@@ -51,7 +51,7 @@ Harvested 3 items at the start. 1 became a finding (#1, also reported by coderab
 
 ### Coverage
 
-Reviewers: 4 ran, 0 failed. Full roster (rate logic is a persistence-adjacent change). Suppressed: 2 at anchor 25. Quote-the-line demotions: 1. Validator: 2 of 3 validated. Late harvest: 2 items at 14:32 UTC, 1 finding, 1 not a finding. Merge: script. Untracked files excluded: none. Residual risks: the flat rate is read once at module load, so a config change needs a restart (Restoration Shaman). Ticket: ENG-42 read through tickets.sh. Run artifacts: /tmp/scan-501/20260903-101500-ab12cd34/.
+Reviewers: 4 ran, 0 failed. Full roster (rate logic is a persistence-adjacent change). Suppressed: 2 at anchor 25. Quote-the-line demotions: 1. Validator: 2 of 3 validated. Late harvest: 2 items at 14:32 UTC, 1 finding, 1 not a finding. Merge: script. Untracked files excluded: none. Residual risks: the flat rate is read once at module load, so a config change needs a restart (Restoration Shaman). Ticket: ENG-42 read through tickets.sh. Assumed load: multi-tenant billing service (README.md). Run artifacts: /tmp/scan-501/20260903-101500-ab12cd34/.
 
 ---
 

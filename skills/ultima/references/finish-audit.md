@@ -78,7 +78,7 @@ Top candidates
   (up to 5)
 
 Strong <n>, weaker <n>, dismissed <n>.
-Coverage: lenses <ok list>; missing <list or none>; docs consulted <list>; lint deferred to <list or none>.
+Coverage: lenses <ok list>; missing <list or none>; assumed load <line or not stated>; docs consulted <list>; lint deferred to <list or none>.
 ```
 
 Say briefly that the report is stored temporarily and should be saved elsewhere if the user wants to keep it. If the host supports a local file preview, open the report there as part of delivery and retain the link. If local links are unsupported, provide the absolute path and a platform-appropriate browser-opening command before entering Stage 6, including explicit action modes. On macOS you may offer `open <quoted absolute path>` as a command. Do not launch an external application unprompted.

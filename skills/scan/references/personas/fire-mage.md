@@ -20,7 +20,7 @@ Hold a higher floor than other lenses. A missed issue here is measurable and fix
 
 - Cold paths: startup, migration scripts, admin tooling, one-time initialization.
 - "Add a cache" with no evidence the uncached path is slow or hot.
-- Scale the codebase will not see near term. Flag only what breaks at the expected next size.
+- Scale the codebase will not see near term. Flag only what breaks at the `Assumed load` line in the review context. When it says `not stated`, judge by what the code itself shows (a loop over user data, a table read with no limit) and say the load was unknown.
 - Idiom preferences with negligible measured difference: `for` vs `forEach`, `Map` vs object literal.
 - Async code by itself.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.6
+
+- Scan and Ultima say which load they assumed. Each reads the README, deploy config, and docs for the load the project expects, such as a CLI one person runs or a multi-tenant service, and writes one `Assumed load:` line naming its source, or `not stated`. Scan passes the line to every reviewer through `subagent-template.md`, and Fire Mage judges scale against it. Ultima writes it into the shared context and `metadata.json`, the performance lens judges reach against it, and the HTML report shows it under Coverage. Neither invents traffic or data volume.
+
 ## 0.44.5
 
 - Cast looks for what already exists before writing new code. Stage 2 takes the first that does the job: code the repo already has, used the way its neighbours use it, then the standard library or a platform feature, then a dependency the project already installs. A new dependency needs work too large to write in a few lines.
