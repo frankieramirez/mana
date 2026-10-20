@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.8
+
+- Ultima adds an opt-in `lean` lens under Architecture that finds code the project could delete or merge: dead code, unused options and config, two helpers doing one job, a dependency the standard library, platform, or another installed package already covers, abstractions with one implementation, and near-copies that must change together. Before it calls anything unused it searches the whole tree, including tests, config, and string or dynamic references, and records the search in `verification`. Its remedies only delete or merge code. `lens:lean`, `category:all`, or a request to find bloat or what can be deleted adds it. The default roster is unchanged, and the Architecture tab counts the lens toward coverage only when it ran.
+
 ## 0.44.5
 
 - Cast looks for what already exists before writing new code. Stage 2 takes the first that does the job: code the repo already has, used the way its neighbours use it, then the standard library or a platform feature, then a dependency the project already installs. A new dependency needs work too large to write in a few lines.
