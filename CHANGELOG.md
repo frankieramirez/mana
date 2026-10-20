@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.16
+
+- Leyline refresh follows a rename in a break patch written with `diff.mnemonicprefix`, whose headers use `i/` and `w/` in place of `a/` and `b/`. Before, such a patch was reported stale and sent to a person. The refresh fixtures now pin their own diff prefixes, so an operator's git config no longer fails the suite. The workflow eval README loses merge conflict markers left from an earlier merge.
+
 ## 0.44.15
 
 - The discovery runner judges child activity per slot. An empty collaboration `wait` is no longer counted as delegation. A spawn that failed, which Codex 0.163.0 logs only to stderr under `--ephemeral`, counts as an attempted delegation, and a collaboration call naming a thread counts as a created child. Each judgment gains `children`, and a timeout now reports as `timeout` before failed commands go to a person. `--probe-catalog` records a new `children_disabled` capability from the same zero-call render. The committed 2026-10-20 record marks it failed for Codex 0.163.0, because `spawn_agent` stays in the model's input with both multi-agent features off. A new `run.py --discover-group` freezes and runs the 24-slot first live group. It refuses a dirty tree or a HEAD behind `origin/main` after a fetch, keeps every allocation, continues past a failed spawn, and stops on a created child or a nonzero host exit. The historical pilot's slot 3 adjudication now matches its recorded exit code.

@@ -948,9 +948,10 @@ class Refresh:
                 continue
             text = path.read_text()
             rewritten = text
+            # Any one-letter prefix: diff.mnemonicprefix writes i/, w/, c/ or o/ in place of a/ and b/.
             for old, new in sorted(self.renames.items(), key=lambda item: -len(item[0])):
-                rewritten = re.sub(rf'(?m)^(diff --git a/|--- a/|\+\+\+ b/)({re.escape(old)})(?=/| |$)', lambda m: m.group(1) + new, rewritten)
-                rewritten = re.sub(rf'(?m)^(diff --git a/\S+ b/)({re.escape(old)})(?=/|$)', lambda m: m.group(1) + new, rewritten)
+                rewritten = re.sub(rf'(?m)^(diff --git [a-z]/|--- [a-z]/|\+\+\+ [a-z]/)({re.escape(old)})(?=/| |$)', lambda m: m.group(1) + new, rewritten)
+                rewritten = re.sub(rf'(?m)^(diff --git [a-z]/\S+ [a-z]/)({re.escape(old)})(?=/|$)', lambda m: m.group(1) + new, rewritten)
             applies = False
             if rewritten != text:
                 with tempfile.NamedTemporaryFile('w', suffix='.patch', delete=False) as handle:

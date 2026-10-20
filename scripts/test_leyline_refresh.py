@@ -158,6 +158,22 @@ class RefreshTests(unittest.TestCase):
         self.assertTrue(self.static()["conformant"])
         self.assert_no_diff()
 
+    def test_a_break_patch_with_mnemonic_prefixes_follows_the_rename(self):
+        self.fixture()
+        patch = "verification/breaks/briefing.return-summary.patch"
+        text = self.read(patch)
+        mnemonic = re.sub(r"(?m)^(diff --git )a/(\S+) b/", r"\1i/\2 w/", text)
+        mnemonic = re.sub(r"(?m)^--- a/", "--- i/", re.sub(r"(?m)^\+\+\+ b/", "+++ w/", mnemonic))
+        self.assertNotEqual(mnemonic, text)
+        write(self.fx.repo, patch, mnemonic)
+        self.commit("break patch written under diff.mnemonicprefix")
+        self.fx.git("mv", "src/hosted", "src/app")
+        summary, _candidate, path = self.refresh()
+        self.assertEqual(self.ids(summary)[f"break-renamed:{patch}"], "proposed")
+        self.apply(path)
+        self.fx.git("apply", "--check", patch)
+        self.assertIn("i/src/app/briefing.mjs", self.read(patch))
+
     def test_ambiguous_copy_is_not_guessed_as_a_rename(self):
         self.fixture()
         seed = self.read("fixtures/ready.json")
