@@ -1,0 +1,24 @@
+{
+  "discovery_check": {
+    "agent_executed": false,
+    "command": "python3 -B evals/workflows/run.py --discovery-check",
+    "exit": 0,
+    "log": "validation-discovery-check.log"
+  },
+  "discovery_tests": {
+    "command": "python3 -B -m unittest discover -s evals/workflows -p 'test_discovery*.py'",
+    "exit": 0,
+    "log": "validation-discovery-tests.log",
+    "result": "42 tests OK"
+  },
+  "path_order": "system Python first on PATH",
+  "recorded_at": "2026-10-21T14:25:00+00:00",
+  "repo_validation": {
+    "command": "scripts/validate.sh",
+    "exit": 0,
+    "log": "validation.log",
+    "result": "83 fixture jobs, 0 failed"
+  },
+  "source": "f8252c133dcf3b9a9281939067a5f51ad15076a0",
+  "timing": "Ran after the live group finished, so it did not contend with any slot."
+}

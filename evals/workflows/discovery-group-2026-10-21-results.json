@@ -1,0 +1,2209 @@
+{
+  "by_case": {
+    "attune-positive": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:attune",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "skill:attune",
+        "routing": "correct"
+      }
+    ],
+    "changed-target": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "timeout",
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      }
+    ],
+    "dispel-negative": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "ordinary",
+        "routing": "correct"
+      }
+    ],
+    "dispel-positive": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "skill:dispel",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "skill:dispel",
+        "routing": "correct"
+      }
+    ],
+    "mend-positive": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:mend",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "not_exercised",
+        "observed_route": "skill:mend",
+        "routing": "correct"
+      }
+    ],
+    "missing-sibling": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [
+            "skill:cast"
+          ],
+          "status": "declared"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "skill:portal",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [
+            "skill:cast"
+          ],
+          "status": "declared"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:portal",
+        "routing": "correct"
+      }
+    ],
+    "ordinary-explicit-only": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "ordinary",
+        "routing": "correct"
+      }
+    ],
+    "remedy-positive": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:remedy",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:remedy",
+        "routing": "correct"
+      }
+    ],
+    "review-or-audit": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      }
+    ],
+    "scan-positive": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "timeout",
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      }
+    ],
+    "ultima-positive": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "timeout",
+        "observed_route": "skill:ultima",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "observed_route": "skill:ultima",
+        "routing": "correct"
+      }
+    ],
+    "vague-bug": [
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      {
+        "activation": "correct",
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "observed_route": "ordinary",
+        "routing": "correct"
+      }
+    ]
+  },
+  "catalog_probe": {
+    "capabilities": {
+      "children_disabled": "failed",
+      "explicit_only_honored": "verified",
+      "installation": "verified"
+    },
+    "catalog_findings": [],
+    "dispel_description_verbatim": true,
+    "host": "codex-cli 0.163.0",
+    "model_invocations": 0
+  },
+  "completion": {
+    "children_attempted_slots": [
+      1,
+      4,
+      5,
+      6,
+      13,
+      14,
+      16,
+      17,
+      19,
+      23
+    ],
+    "ended_at": "2026-10-21T14:09:43.567+00:00",
+    "model_invocations": 24,
+    "slots": 24,
+    "stop_reason": null,
+    "wall_seconds": 1378.96
+  },
+  "counts": {
+    "activation": {
+      "correct": 24
+    },
+    "children": {
+      "attempted": 10,
+      "none": 14
+    },
+    "execution": {
+      "needs_adjudication": 12,
+      "not_exercised": 9,
+      "timeout": 3
+    },
+    "process_outcome": {
+      "completed": 21,
+      "timeout": 3
+    },
+    "routing": {
+      "correct": 24
+    }
+  },
+  "findings": {
+    "adjudication_slots": [
+      0,
+      1,
+      3,
+      4,
+      5,
+      6,
+      8,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21
+    ],
+    "children_attempted_slots": [
+      1,
+      4,
+      5,
+      6,
+      13,
+      14,
+      16,
+      17,
+      19,
+      23
+    ],
+    "children_created_slots": [],
+    "comparison_with_prior": {
+      "0": "first route changed",
+      "1": "first route changed",
+      "10": "same",
+      "11": "first route changed",
+      "12": "same",
+      "13": "first route changed",
+      "14": "loads changed",
+      "15": "first route changed",
+      "16": "loads changed",
+      "17": "loads changed",
+      "18": "loads changed",
+      "19": "first route changed",
+      "2": "same",
+      "20": "same",
+      "21": "loads changed",
+      "22": "loads changed",
+      "23": "same",
+      "3": "first route changed",
+      "4": "first route changed",
+      "5": "loads changed",
+      "6": "loads changed",
+      "7": "same",
+      "8": "same",
+      "9": "first route changed"
+    },
+    "needs_adjudication_slots": [
+      0,
+      3,
+      4,
+      6,
+      8,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      21
+    ],
+    "pass_check": {
+      "dispel_load_slots": [
+        10,
+        12
+      ],
+      "dispel_positive_slots": [
+        10,
+        12
+      ],
+      "dispel_positive_slots_routing_to_dispel": [
+        10,
+        12
+      ],
+      "non_prose_slots_routing_to_dispel_first": [],
+      "passed": true,
+      "prior_dispel_load_slots": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22
+      ]
+    },
+    "process_timeout_slots": [
+      1,
+      5,
+      13
+    ]
+  },
+  "integrity": {
+    "all_24_allocations_retained": true,
+    "all_allocations_terminal": true,
+    "all_observed_process_families_terminated": true,
+    "all_observed_products_unchanged": true,
+    "all_result_hashes_match": true,
+    "catalog_hashes_match": true,
+    "frozen_source_hashes_match": true,
+    "host_binary_hash_matches": true,
+    "invocation_count_matches": true,
+    "same_schedule_as_prior": true,
+    "source_hashes_match": true
+  },
+  "issue": 168,
+  "limits": [
+    "Selection only; task completion and independent reviewer effort are not measured.",
+    "Requested model identity does not establish resolved backend model identity.",
+    "No routes or original judgments were changed and no parent calls were retried.",
+    "No human adjudication has been performed.",
+    "Absolute local paths in the published copies are replaced with placeholders; result hashes refer to the original bytes."
+  ],
+  "prior_group": "discovery-group-2026-10-20",
+  "rows": [
+    {
+      "actual_model": null,
+      "case": "vague-bug",
+      "children": "none",
+      "directory": "slot-00-vague-bug-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:46:45.035+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g '\"'!node_modules'\"' -g '\"'!vendor'\"' -g '\"'!dist'\"' -g '\"'!build'\"' -g '\"'!package-lock.json'\"' -g '\"'!yarn.lock'\"' -g '\"'!pnpm-lock.yaml'\"'\""
+        ],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [],
+        "notes": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:47:21.649+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4106473,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:46:45.035+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "c8a31e190e4cdb2fe197c78a8fa4e54e22588879610bab3948345aee93369763",
+      "seconds": 36.75,
+      "slot": 0,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "scan-positive",
+      "children": "attempted",
+      "directory": "slot-01-scan-positive-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:47:22.090+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'git remote -v; git branch -a; git config --get branch.fixture-work.base; git symbolic-ref refs/remotes/origin/HEAD; command -v gh; cat README.md app.py test_app.py; git diff HEAD''^; cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json,finish-review,prove-findings}.md'"
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "timeout",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "scan"
+        ],
+        "notes": [
+          "child activity: 0 created, 2 failed spawns, 3 empty waits"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel",
+          "scan"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:49:22.197+00:00",
+        "exit_code": null,
+        "family_terminated": true,
+        "host_pid": 4107464,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "timeout",
+        "platform": "linux",
+        "signalled_pids": [
+          4107464,
+          4107923
+        ],
+        "started_at": "2026-10-21T13:47:22.090+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "53957964ac455dfbf9dd44f7ed11f5c651ed87f8aa1b2f8c2e80afb31b7f072a",
+      "seconds": 120.25,
+      "slot": 1,
+      "status": "timeout"
+    },
+    {
+      "actual_model": null,
+      "case": "dispel-negative",
+      "children": "none",
+      "directory": "slot-02-dispel-negative-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:49:22.624+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [],
+        "notes": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:49:29.685+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4111449,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:49:22.624+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "fbb0392d9496065b0d9f7f152af8203115fd013ae61f967ecc81c44970829405",
+      "seconds": 7.2,
+      "slot": 2,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "ordinary-explicit-only",
+      "children": "none",
+      "directory": "slot-03-ordinary-explicit-only-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:49:30.083+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"ls -la; cat ISSUE.md README.md; rg --files -g 'AGENTS.md' -g '\"'!node_modules'\"' -g '\"'!vendor'\"'\""
+        ],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [],
+        "notes": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:50:03.237+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4111742,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:49:30.083+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "fbc0ed69d001577823b37413c7b2ae3e5cd927c9502fd0b98207e5dc6be5fa27",
+      "seconds": 33.28,
+      "slot": 3,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "scan-positive",
+      "children": "attempted",
+      "directory": "slot-04-scan-positive-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:50:03.641+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'ls -la; git status --short; git branch -avv; cat AGENTS.md CLAUDE.md TICKET.md README.md'",
+          "/usr/bin/bash -lc 'cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json}.md .agents/skills/scan/references/findings-schema.json .agents/skills/scan/references/personas/{protection-warrior,marksmanship-hunter}.md'",
+          "/usr/bin/bash -lc \"cat .agents/skills/scan/references/validator.md; cat .agents/skills/scan/references/report-example.md; rg --files -g '*.py'; git ls-files --others --exclude-standard; git config --get branch.fixture-work.base; git symbolic-ref refs/remotes/origin/HEAD\""
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "scan"
+        ],
+        "notes": [
+          "child activity: 0 created, 2 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel",
+          "scan"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:51:59.225+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4112726,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:50:03.642+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "cd59588839c4c0edc38a84b6883d08ae2b7077d623f2fb2b37e96cc661e3fa2d",
+      "seconds": 115.72,
+      "slot": 4,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "ultima-positive",
+      "children": "attempted",
+      "directory": "slot-05-ultima-positive-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:51:59.625+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"ls -la && rg --files -g '\"'!'\"\\\\.agents/**' -g '\"'!artifacts/**'\"' && cat AGENTS.md CLAUDE.md 2>/dev/null\""
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "timeout",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "ultima"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 3 empty waits"
+        ],
+        "observed_route": "skill:ultima",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "ultima",
+          "dispel"
+        ],
+        "observed_route": "skill:ultima",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:53:59.734+00:00",
+        "exit_code": null,
+        "family_terminated": true,
+        "host_pid": 4114494,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "timeout",
+        "platform": "linux",
+        "signalled_pids": [
+          4114494,
+          4114641
+        ],
+        "started_at": "2026-10-21T13:51:59.625+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "5bf0319d3edb1853d1c59be51c9766cc2edbf4b853a3170aa5c885eb74c0b3d8",
+      "seconds": 120.24,
+      "slot": 5,
+      "status": "timeout"
+    },
+    {
+      "actual_model": null,
+      "case": "ultima-positive",
+      "children": "attempted",
+      "directory": "slot-06-ultima-positive-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:54:00.128+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g '\"'!node_modules'\"' -g '\"'!vendor'\"' -g '\"'!artifacts'\"'\""
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "ultima"
+        ],
+        "notes": [
+          "child activity: 0 created, 3 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:ultima",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "ultima",
+          "dispel"
+        ],
+        "observed_route": "skill:ultima",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:55:41.688+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4117092,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:54:00.128+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "c95871e964a1bbe448318396d5970228e99c213557b9b4abaff2f02740486d01",
+      "seconds": 101.69,
+      "slot": 6,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "ordinary-explicit-only",
+      "children": "none",
+      "directory": "slot-07-ordinary-explicit-only-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:55:42.079+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [],
+        "notes": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:56:10.224+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4121432,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:55:42.079+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "1daeb9c123faea9e81fd6e5f3889c1d3211054683dc6c1617176007741784f53",
+      "seconds": 28.27,
+      "slot": 7,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "attune-positive",
+      "children": "none",
+      "directory": "slot-08-attune-positive-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:56:10.617+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'cat AGENTS.md; cat .agents/skills/attune/references/settings.md; ls -l CLAUDE.md AGENTS.md docs/agents/issue-tracker.md; cat docs/agents/issue-tracker.md'"
+        ],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "attune"
+        ],
+        "notes": [],
+        "observed_route": "skill:attune",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [
+          "attune"
+        ],
+        "observed_route": "skill:attune",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:56:30.748+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4122189,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:56:10.618+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "93fef3411e70cdcdfc7b6e2341738aab21fb67c71b3f80f592efd1ef601cf77f",
+      "seconds": 20.26,
+      "slot": 8,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "missing-sibling",
+      "children": "none",
+      "directory": "slot-09-missing-sibling-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:56:31.150+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [
+            "skill:cast"
+          ],
+          "status": "declared"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "portal"
+        ],
+        "notes": [],
+        "observed_route": "skill:portal",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel",
+          "portal"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:57:13.318+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4122938,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:56:31.150+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "3fac12742578421a444d9028c59886046881241f235bb34bbae5661869400930",
+      "seconds": 42.3,
+      "slot": 9,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "dispel-positive",
+      "children": "none",
+      "directory": "slot-10-dispel-positive-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:57:13.713+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "notes": [],
+        "observed_route": "skill:dispel",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:57:31.139+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4123761,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:57:13.713+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "b4fb7096558ba2de6f5c6ac7e8d7f6f82a46ae06dd7050dcb1f6e7d03f3cc638",
+      "seconds": 17.55,
+      "slot": 10,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "vague-bug",
+      "children": "none",
+      "directory": "slot-11-vague-bug-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:57:31.532+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [],
+        "notes": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:58:03.280+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4124201,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:57:31.533+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "e12c6f9484bf4015f243f687a30e5adaba8175f368449ec232674180dab65ac1",
+      "seconds": 31.88,
+      "slot": 11,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "dispel-positive",
+      "children": "none",
+      "directory": "slot-12-dispel-positive-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:58:03.671+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "notes": [],
+        "observed_route": "skill:dispel",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [
+          "dispel"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T13:58:19.845+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4125535,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T13:58:03.671+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "05a9361592a43db61816e6ae65c131c341dec7dbafecd2f90d9bdcec7c8f8668",
+      "seconds": 16.31,
+      "slot": 12,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "changed-target",
+      "children": "attempted",
+      "directory": "slot-13-changed-target-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T13:58:20.253+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'git status --short; git branch --show-current; cat CLAUDE.md AGENTS.md .agents/skills/scan/references/scope.md .agents/skills/scan/references/feedback-requirements.md .agents/skills/scan/references/roster.md .agents/skills/scan/references/dispatch.md'",
+          "/usr/bin/bash -lc 'git remote -v; git branch -a; git log -5 --oneline; git config --get branch.fixture-work.base; gh pr view --json baseRefName,url'",
+          "/usr/bin/bash -lc 'git status --short; git merge-base HEAD main; git symbolic-ref refs/remotes/origin/HEAD'"
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "timeout",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "scan"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel",
+          "scan"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:00:20.355+00:00",
+        "exit_code": null,
+        "family_terminated": true,
+        "host_pid": 4126241,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "timeout",
+        "platform": "linux",
+        "signalled_pids": [
+          4126241,
+          4126365
+        ],
+        "started_at": "2026-10-21T13:58:20.253+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "f91d7d99e6641c00abae4ca68845a18ae0094c17c29758072b77710207d78b51",
+      "seconds": 120.25,
+      "slot": 13,
+      "status": "timeout"
+    },
+    {
+      "actual_model": null,
+      "case": "mend-positive",
+      "children": "attempted",
+      "directory": "slot-14-mend-positive-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:00:20.752+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"git status --short; git status; rg --files -g AGENTS.md -g '*mend*' -g '*config*' .agents\"",
+          "/usr/bin/bash -lc \"git log --format=fuller -n 4 HEAD -- app.py; git log --format=fuller -n 4 CHERRY_PICK_HEAD -- app.py; git show :1:app.py; git show :2:app.py; git show :3:app.py; cat app.py test_app.py README.md; git remote -v; git rev-parse --abbrev-ref --symbolic-full-name '@{u}'\"",
+          "/usr/bin/bash -lc 'test -w app.py; test -w .git/index'"
+        ],
+        "attempted_actions": [
+          "delegate",
+          "write"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "mend"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:mend",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "mend",
+          "dispel"
+        ],
+        "observed_route": "skill:mend",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:01:21.558+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4128156,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:00:20.752+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "3f558d205c7c40d00a803bbffb54f7861574f887f3bb40cdc05dc70f7280b650",
+      "seconds": 60.94,
+      "slot": 14,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "missing-sibling",
+      "children": "none",
+      "directory": "slot-15-missing-sibling-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:01:21.946+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'bash .agents/skills/portal/scripts/tickets.sh --tracker local view 7'",
+          "/usr/bin/bash -lc 'bash .agents/skills/portal/scripts/tickets.sh --tracker local children 7'"
+        ],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [
+            "skill:cast"
+          ],
+          "status": "declared"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "portal"
+        ],
+        "notes": [],
+        "observed_route": "skill:portal",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel",
+          "portal"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:02:09.723+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4129064,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:01:21.946+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "3ccfe2e8bb1f17e82295c07c8847f3465910fba7851e3235561c570c12a3a094",
+      "seconds": 47.9,
+      "slot": 15,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "review-or-audit",
+      "children": "attempted",
+      "directory": "slot-16-review-or-audit-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:02:10.126+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"git branch -a; git remote -v; git diff main -- auth.py; cat auth.py app.py test_app.py; ls bin; command -v gh; rg --files -g 'AGENTS.md' -g 'CLAUDE.md' -g '\"'!home/**'\"'\"",
+          "/usr/bin/bash -lc \"gh pr view 7 --json state,title,body,baseRefName,headRefName,headRefOid,isCrossRepository,url,files; gh api graphql -f query='query { repository(owner:\\\"fixture\\\",name:\\\"shop\\\") { pullRequest(number:7) { comments(first:100){nodes{author{login} body createdAt url}} reviews(first:100){nodes{author{login} body state submittedAt url}} reviewThreads(first:100){nodes{id isResolved isOutdated path line comments(first:50){nodes{author{login} body url createdAt}}}} }}}'\""
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "scan"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "scan",
+          "dispel"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:03:34.413+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4129774,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:02:10.126+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "123f82a2addfbf13f7c026f1cc0ec2c95edfb513fb47f80f2f9e4670146c0300",
+      "seconds": 84.44,
+      "slot": 16,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "review-or-audit",
+      "children": "attempted",
+      "directory": "slot-17-review-or-audit-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:03:34.826+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"rg --files -g 'AGENTS.md' -g 'CLAUDE.md' -g '\"'!node_modules'\"' && rg --files services tests\"",
+          "/usr/bin/bash -lc 'gh pr view 7 --json comments,reviews'"
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "scan"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "scan",
+          "dispel"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:04:45.992+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4130967,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:03:34.826+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "30579242b4cbaf2a675f088685d2c1a280df2c4c0fb01257ff83465ba2ffcfad",
+      "seconds": 71.31,
+      "slot": 17,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "remedy-positive",
+      "children": "none",
+      "directory": "slot-18-remedy-positive-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:04:46.387+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'ls -la; cat review-comments.md; git status --short; cat AGENTS.md CLAUDE.md'"
+        ],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "remedy"
+        ],
+        "notes": [],
+        "observed_route": "skill:remedy",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "remedy",
+          "dispel"
+        ],
+        "observed_route": "skill:remedy",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:05:47.033+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4132081,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:04:46.387+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "36894552ab48f5faa433d5bb9d67c484dc6a55ab36b9128596a1d60cce209b9d",
+      "seconds": 60.78,
+      "slot": 18,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "changed-target",
+      "children": "attempted",
+      "directory": "slot-19-changed-target-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:05:47.428+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc \"pwd; rg --files -g 'AGENTS.md' -g 'SKILL.md' -g '*review*' -g '*scan*' -g 'package.json' -g 'pyproject.toml' -g 'Cargo.toml' -g 'go.mod' -g '.git'\"",
+          "/usr/bin/bash -lc 'ls -la; git status --short; git branch -avv; cat AGENTS.md CLAUDE.md'",
+          "/usr/bin/bash -lc 'cat .agents/skills/scan/references/{subagent-template,diff-scope,findings-schema.json,finish-review,prove-findings}.md'"
+        ],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "scan"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:scan",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "dispel",
+          "scan"
+        ],
+        "observed_route": "skill:dispel",
+        "routing": "wrong"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:07:22.931+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4132992,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:05:47.428+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "fe5b3dc613778a1f75abdf74cf2d6801786ddba381a03d1a633c42b9335612d3",
+      "seconds": 95.63,
+      "slot": 19,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "dispel-negative",
+      "children": "none",
+      "directory": "slot-20-dispel-negative-r2",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:07:23.334+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [],
+        "notes": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [],
+        "observed_route": "ordinary",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:07:31.596+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4134233,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:07:23.335+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 2,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "5996a3e5c04cadae18432c507992bf4ca759d833b3dbb23d965470d78024cc25",
+      "seconds": 8.39,
+      "slot": 20,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "remedy-positive",
+      "children": "none",
+      "directory": "slot-21-remedy-positive-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:07:32.004+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [
+          "/usr/bin/bash -lc 'cat CLAUDE.md AGENTS.md review-comments.md'"
+        ],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "needs_adjudication",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "remedy"
+        ],
+        "notes": [],
+        "observed_route": "skill:remedy",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "remedy",
+          "dispel"
+        ],
+        "observed_route": "skill:remedy",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:08:20.585+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4134463,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:07:32.004+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "533d294cf57b2747a8ffac97017e08203bff4bc4bdce2a9088f1de5be769173b",
+      "seconds": 48.72,
+      "slot": 21,
+      "status": "needs_adjudication"
+    },
+    {
+      "actual_model": null,
+      "case": "attune-positive",
+      "children": "none",
+      "directory": "slot-22-attune-positive-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:08:20.978+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "none",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "attune"
+        ],
+        "notes": [],
+        "observed_route": "skill:attune",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "unnecessary",
+        "loaded_entrypoints": [
+          "attune",
+          "dispel"
+        ],
+        "observed_route": "skill:attune",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:08:38.154+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4135270,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:08:20.978+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "6f0ba524c543acb80a3f19b9cebcd4f31c0d5e206f02bc09fa89af5950a4d748",
+      "seconds": 17.3,
+      "slot": 22,
+      "status": "not_exercised"
+    },
+    {
+      "actual_model": null,
+      "case": "mend-positive",
+      "children": "attempted",
+      "directory": "slot-23-mend-positive-r1",
+      "failures": [],
+      "isolation": {
+        "artifact_write": "allowed",
+        "catalog_write": "denied",
+        "checked_at": "2026-10-21T14:08:38.556+00:00",
+        "git_write": "denied",
+        "network": "denied",
+        "outside_read": "denied",
+        "product_write": "denied",
+        "routes_read": "denied",
+        "tool_write": "denied"
+      },
+      "judgment": {
+        "activation": "correct",
+        "adjudicate": [],
+        "attempted_actions": [
+          "delegate"
+        ],
+        "capability_limit": {
+          "declared": [],
+          "status": "none"
+        },
+        "children": "attempted",
+        "execution": "not_exercised",
+        "forbidden_attempts": [],
+        "loaded_entrypoints": [
+          "mend"
+        ],
+        "notes": [
+          "child activity: 0 created, 1 failed spawns, 0 empty waits"
+        ],
+        "observed_route": "skill:mend",
+        "routing": "correct"
+      },
+      "model_invocations": 1,
+      "prior": {
+        "activation": "correct",
+        "loaded_entrypoints": [
+          "mend"
+        ],
+        "observed_route": "skill:mend",
+        "routing": "correct"
+      },
+      "process_family": {
+        "ended_at": "2026-10-21T14:09:43.559+00:00",
+        "exit_code": 0,
+        "family_terminated": true,
+        "host_pid": 4135658,
+        "method": "session, group and subtree sweep with runner subreaper",
+        "outcome": "completed",
+        "platform": "linux",
+        "signalled_pids": [],
+        "started_at": "2026-10-21T14:08:38.557+00:00",
+        "subreaper": true,
+        "surviving_pids": [],
+        "timeout_seconds": 120
+      },
+      "product_unchanged": true,
+      "repetition": 1,
+      "reported_model": null,
+      "requested_model": "gpt-6.1-sol",
+      "result_hash_matches": true,
+      "result_sha256": "db0b65ee12e9f5b7d8a1a9a4b52857427767060c5019f09976149deb3686c629",
+      "seconds": 65.14,
+      "slot": 23,
+      "status": "not_exercised"
+    }
+  ],
+  "schema_version": 1
+}

@@ -2,7 +2,7 @@
 
 ## 0.44.21
 
-- The `dispel` description now matches when the user asks for prose to send or publish, and it tells the model not to load the skill for its own routine summary or plan at the end of other work. In the frankieramirez/mana#101 discovery group on Codex CLI 0.163.0, dispel was the first route in all 9 wrong routes. The old wording listed summaries and plans under "any prose the user will read", and every task ends with a summary. Every trigger phrase a user would type stays. No live run has measured the change yet; frankieramirez/mana#168 stays open for that evidence.
+- The `dispel` description now matches when the user asks for prose to send or publish, and it tells the model not to load the skill for its own routine summary or plan at the end of other work. In the frankieramirez/mana#101 discovery group on Codex CLI 0.163.0, dispel was the first route in all 9 wrong routes. The old wording listed summaries and plans under "any prose the user will read", and every task ends with a summary. Every trigger phrase a user would type stays. A rerun of the same 24-slot schedule on Codex CLI 0.163.0 then routed all 24 first loads correctly: no slot outside the dispel cases started with dispel, both dispel-positive slots did, and dispel loaded in 2 slots against 19 before. `evals/workflows/discovery-group-2026-10-21.md` records it with three process timeouts and grades no person has adjudicated.
 
 ## 0.44.20
 
