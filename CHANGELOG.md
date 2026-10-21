@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.44.21
+
+- The `dispel` description now matches when the user asks for prose to send or publish, and it tells the model not to load the skill for its own routine summary or plan at the end of other work. In the frankieramirez/mana#101 discovery group on Codex CLI 0.163.0, dispel was the first route in all 9 wrong routes. The old wording listed summaries and plans under "any prose the user will read", and every task ends with a summary. Every trigger phrase a user would type stays. A rerun of the same 24-slot schedule on Codex CLI 0.163.0 then routed all 24 first loads correctly: no slot outside the dispel cases started with dispel, both dispel-positive slots did, and dispel loaded in 2 slots against 19 before. `evals/workflows/discovery-group-2026-10-21.md` records it with three process timeouts and grades no person has adjudicated.
+
 ## 0.44.20
 
 - `evals/workflows/integration-pilot-5-results.json` records the live frankieramirez/mana#112 pilot on `mana-112-integration-pilot-5`: 12 of 12 slots completed with no retries, no children and no stop. A model proposed the grades and the project owner confirmed them. With the recorded oracle gaps accepted, control passes 5 of 6 and baseline 4 of 6, and both control feature-change runs let a regression in an unmapped test escape. The README describes the result.

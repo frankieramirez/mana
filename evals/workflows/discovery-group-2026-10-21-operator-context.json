@@ -1,0 +1,10 @@
+{
+  "authorization": "User: run 24",
+  "issue": "https://github.com/frankieramirez/mana/issues/168",
+  "model_basis": "Matches the #101 discovery group manifest.",
+  "note": "Separate operator context preserves the runner-created manifest unchanged.",
+  "reasoning": "medium",
+  "recorded_at": "2026-10-21T14:20:00+00:00",
+  "requested_model": "gpt-6.1-sol",
+  "scope": "One 24-slot rerun of the #101 discovery group schedule on the PR #174 head f8252c1; serial parents, 120 seconds each, zero children and retries. A zero-call --probe-catalog ran first."
+}

@@ -1,0 +1,77 @@
+{
+  "capabilities": {
+    "children_disabled": {
+      "evidence": [
+        "catalog render under the selection-only profile, with multi_agent and multi_agent_v2 off, names spawn_agent"
+      ],
+      "notes": "no model call; the render shows what the model is told, and a selection-only slot that spawns is judged on its own",
+      "observed_at": "2026-10-21T13:46:20.058+00:00",
+      "status": "failed"
+    },
+    "explicit_only_honored": {
+      "evidence": [
+        "catalog render listed automatic, frontmatter and hid explicit, policy"
+      ],
+      "markers": {
+        "allow_implicit_invocation": "honored",
+        "disable-model-invocation": "ignored"
+      },
+      "notes": "no model call; the host printed its model-visible input, and the record keeps which random canary names it listed",
+      "observed_at": "2026-10-21T13:46:20.058+00:00",
+      "status": "verified"
+    },
+    "installation": {
+      "evidence": [
+        "codex --version: codex-cli 0.163.0"
+      ],
+      "observed_at": "2026-10-21T13:46:19.836+00:00",
+      "status": "verified"
+    }
+  },
+  "catalog_findings": [],
+  "host": "codex-cli 0.163.0",
+  "model_invocations": 0,
+  "platform": "linux",
+  "probes": [
+    {
+      "bodies_rendered": [],
+      "canaries": {
+        "automatic": "probe-5227a7f8",
+        "explicit": "probe-9991591d",
+        "frontmatter": "probe-a15a6f89",
+        "policy": "probe-a6bc28cc"
+      },
+      "checked_at": "2026-10-21T13:46:19.845+00:00",
+      "child_tools": true,
+      "command": "codex debug prompt-input",
+      "exit_code": 0,
+      "listed": {
+        "automatic": true,
+        "explicit": false,
+        "frontmatter": true,
+        "policy": false
+      },
+      "model_invocations": 0,
+      "name": "catalog-render"
+    },
+    {
+      "catalog_sha256": "8e6eb49b3676114da1967f08303b2dbfb7503e0e68e597eb4ab3c649959b1c31",
+      "checked_at": "2026-10-21T13:46:20.016+00:00",
+      "command": "codex debug prompt-input",
+      "counts": {
+        "automatic": 11,
+        "explicit": 8
+      },
+      "exit_code": 0,
+      "hidden_automatic": [],
+      "listed_explicit": [],
+      "model_invocations": 0,
+      "name": "installed-catalog-render"
+    }
+  ],
+  "recorded_at": "2026-10-21T13:46:20.058+00:00",
+  "schema_version": 1,
+  "skills_dir": ".agents/skills",
+  "source": "run.py --probe-catalog",
+  "unknown": []
+}

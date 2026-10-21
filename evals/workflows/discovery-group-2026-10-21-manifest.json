@@ -1,0 +1,338 @@
+{
+  "actual_model": null,
+  "catalog_sha256": "8e6eb49b3676114da1967f08303b2dbfb7503e0e68e597eb4ab3c649959b1c31",
+  "children_disabled": "failed",
+  "executable_sha256": "399ff69c431c066e40de318fba45c2b07f45a76b19939d247ee4828fc70c4215",
+  "frozen_at": "2026-10-21T13:46:44.338+00:00",
+  "host": "codex-cli 0.163.0",
+  "host_assessment": {
+    "accepted": true,
+    "assessed_at": "2026-10-21T13:46:44+00:00",
+    "capabilities": {
+      "command_events": {
+        "evidence": [
+          "model probe: 1 parent command events, 0 malformed events"
+        ],
+        "observed_at": "2026-10-18T04:36:16.327+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0.json",
+        "record_sha256": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+        "status": "verified"
+      },
+      "completion_detection": {
+        "evidence": [
+          "model probe outcome completed exit 0 structured response True"
+        ],
+        "observed_at": "2026-10-18T04:36:16.327+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0.json",
+        "record_sha256": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+        "status": "verified"
+      },
+      "fixture_write_allowed": {
+        "evidence": [
+          "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}"
+        ],
+        "observed_at": "2026-10-18T04:35:55.896+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0.json",
+        "record_sha256": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+        "status": "verified"
+      },
+      "installation": {
+        "evidence": [
+          "codex --version: codex-cli 0.163.0"
+        ],
+        "observed_at": "2026-10-20T13:01:51.916+00:00",
+        "record": "2026-10-20-codex-cli-0.163.0-children.json",
+        "record_sha256": "ce63e8a9699585f0f492a13943f99346029edc99290e7f3716c2b25b251d5d9e",
+        "status": "verified"
+      },
+      "network_denied": {
+        "evidence": [
+          "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}; evaluator listener inbound connections: 0"
+        ],
+        "observed_at": "2026-10-18T04:35:55.896+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0.json",
+        "record_sha256": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+        "status": "verified"
+      },
+      "outside_read_denied": {
+        "evidence": [
+          "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}"
+        ],
+        "observed_at": "2026-10-18T04:35:55.896+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0.json",
+        "record_sha256": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+        "status": "verified"
+      },
+      "protected_write_denied": {
+        "evidence": [
+          "sandbox probe: {\"fixture_write\": \"allowed\", \"input_write\": {}, \"label\": \"sandbox\", \"network\": \"denied\", \"nonce\": \"f5849c150d42a7ed\", \"outside_read\": \"denied\", \"protected_write\": {\"bin\": \"denied\", \"installed\": \"denied\"}}"
+        ],
+        "observed_at": "2026-10-18T04:35:55.896+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0.json",
+        "record_sha256": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+        "status": "verified"
+      },
+      "skill_discovery": {
+        "evidence": [
+          "automatic canary read directly from the installed catalog: alpha direct, beta ambiguous, outside loads 0, event failures 0, outcome completed"
+        ],
+        "notes": "one observation; a load is a recorded command that printed the canary SKILL.md",
+        "observed_at": "2026-10-18T04:36:32.396+00:00",
+        "record": "2026-10-18-codex-cli-0.163.0-discovery.json",
+        "record_sha256": "5bf4921e82d7a800bb8b9b604b416050439c9035d83a85f8ad593642524d5d2b",
+        "status": "verified"
+      }
+    },
+    "host": "codex-cli 0.163.0",
+    "missing": [],
+    "mode": "discovery",
+    "platform": "linux",
+    "stale": []
+  },
+  "host_skill_folders": {
+    "/etc/codex/skills": null,
+    "~/.agents/skills": 7,
+    "~/.codex/skills": 3
+  },
+  "host_support": {
+    "explicit_only_honored": "verified",
+    "skill_discovery": "verified"
+  },
+  "protocol_study": "discovery-selection-v1",
+  "reasoning": "medium",
+  "repetitions": 2,
+  "requested_model": "gpt-6.1-sol",
+  "resources": {
+    "authorization": null,
+    "children": 0,
+    "expansions_authorized": false,
+    "max_parent_seconds": 2880,
+    "parent_slots": 24,
+    "retries": 0,
+    "serial_parents": 1,
+    "timeout_seconds": 120
+  },
+  "route_inventory_revision": "9d1aa521974bc7c72bf9cdd676de18c09a036468",
+  "routes_sha256": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+  "schedule": [
+    {
+      "case": "vague-bug",
+      "repetition": 1,
+      "slot": 0
+    },
+    {
+      "case": "scan-positive",
+      "repetition": 2,
+      "slot": 1
+    },
+    {
+      "case": "dispel-negative",
+      "repetition": 1,
+      "slot": 2
+    },
+    {
+      "case": "ordinary-explicit-only",
+      "repetition": 1,
+      "slot": 3
+    },
+    {
+      "case": "scan-positive",
+      "repetition": 1,
+      "slot": 4
+    },
+    {
+      "case": "ultima-positive",
+      "repetition": 2,
+      "slot": 5
+    },
+    {
+      "case": "ultima-positive",
+      "repetition": 1,
+      "slot": 6
+    },
+    {
+      "case": "ordinary-explicit-only",
+      "repetition": 2,
+      "slot": 7
+    },
+    {
+      "case": "attune-positive",
+      "repetition": 2,
+      "slot": 8
+    },
+    {
+      "case": "missing-sibling",
+      "repetition": 2,
+      "slot": 9
+    },
+    {
+      "case": "dispel-positive",
+      "repetition": 1,
+      "slot": 10
+    },
+    {
+      "case": "vague-bug",
+      "repetition": 2,
+      "slot": 11
+    },
+    {
+      "case": "dispel-positive",
+      "repetition": 2,
+      "slot": 12
+    },
+    {
+      "case": "changed-target",
+      "repetition": 1,
+      "slot": 13
+    },
+    {
+      "case": "mend-positive",
+      "repetition": 2,
+      "slot": 14
+    },
+    {
+      "case": "missing-sibling",
+      "repetition": 1,
+      "slot": 15
+    },
+    {
+      "case": "review-or-audit",
+      "repetition": 2,
+      "slot": 16
+    },
+    {
+      "case": "review-or-audit",
+      "repetition": 1,
+      "slot": 17
+    },
+    {
+      "case": "remedy-positive",
+      "repetition": 2,
+      "slot": 18
+    },
+    {
+      "case": "changed-target",
+      "repetition": 2,
+      "slot": 19
+    },
+    {
+      "case": "dispel-negative",
+      "repetition": 2,
+      "slot": 20
+    },
+    {
+      "case": "remedy-positive",
+      "repetition": 1,
+      "slot": 21
+    },
+    {
+      "case": "attune-positive",
+      "repetition": 1,
+      "slot": 22
+    },
+    {
+      "case": "mend-positive",
+      "repetition": 1,
+      "slot": 23
+    }
+  ],
+  "schema_version": 1,
+  "shuffle_seed": 20261017,
+  "slot_conditions": [
+    "a failed spawn marks its slot children=attempted and the group continues"
+  ],
+  "source": {
+    "fetched": true,
+    "head": "f8252c133dcf3b9a9281939067a5f51ad15076a0",
+    "upstream": "2e62790f12d0e8c0e414477bcd2979430376fe4d",
+    "upstream_ref": "origin/main"
+  },
+  "source_sha256": {
+    "evals/workflows/adjudication.py": "b4cab80cf41f5ebcbbfc96edf7e1f5e5ac4b0bab1cc159ca1a0bf803c68898d7",
+    "evals/workflows/archive_delegated.py": "893dc5e3a6240f39c910ad1f668e17b6ce7aa2d41fd4a3fa92b51ba026b38b33",
+    "evals/workflows/attempts.py": "ddfacd60fb87adf5f9f8e1832ab6c72b7e72131e4e0a583ce0b6893147047e82",
+    "evals/workflows/audit_delegated.py": "5e1bd9b86a3528b9b1b95112bf9c435e236c5bd3d01dd3a3151853ffb779044c",
+    "evals/workflows/build_fixtures.py": "9ee5f5557064bca1d28c6433b40645b1926a55351aafd8cad2e87b60289e2658",
+    "evals/workflows/cast_control.py": "7c4b12554a486467a2f0b8789ad9e1fde32c6cfdbe65e36bbca7ead7c4edd8f7",
+    "evals/workflows/child_events.py": "177c78ce4a3418c091508c041dfda35a5da10a6b311f19c8a2490527f2d5f60f",
+    "evals/workflows/cleanup_fixtures.py": "318bc8c039541ef9f0ed649f513cf7bdb71574aeb62c0a2afdd2abf2d34d5dde",
+    "evals/workflows/conditions.py": "056844e035d5271075f60447ec7a38504daf45c9a7e25d7fb2ecb5859f9b9f53",
+    "evals/workflows/control_claims_fixtures.py": "8d3fce4ee3557ee8d71e586cd0b7347bbd4f364c60d59e8485d0e98691703bca",
+    "evals/workflows/debugging_fixtures.py": "170e798d0dea1f4ad2e7567137fc9d13afc5417a1c78017924f3907d67196e89",
+    "evals/workflows/delegated_review.py": "65fc1ce078900d75419f1e085bf7412b2a9df48e4b85165d6ab14d373e3d5a17",
+    "evals/workflows/delegation.py": "3351a42d66b720cd26a601cb5f836239e460650db097207f000ecc2ee328fdae",
+    "evals/workflows/discovery-cases.json": "11b757ee0f1d1551e11c32cc221d75d5d3eea834020f1ab87bee9e745812acbf",
+    "evals/workflows/discovery.py": "aaf3edca43b170b507d14915d30c30167f538912a062dd703fe3861683a30135",
+    "evals/workflows/discovery_group.py": "e19ebddff605e53aa9bba1cdf9ff2abd4ce20686d9e1ac387a3c77b468d0639b",
+    "evals/workflows/discovery_probe.py": "83e1ae8144c0da11c59b4e887b2323486785404459d6c1d81e2066518fb54e9a",
+    "evals/workflows/fake_host.py": "769f86e9809383e073e47546fc650f50f3be35cb01b0f3e2fc84930aca4742a8",
+    "evals/workflows/heldout_debugging.py": "4850c9f6416166399684a480daf6a5416a5d1e7a3ae1c2ba10aa38d27e30d386",
+    "evals/workflows/heldout_prose.py": "c2b1812025c82a0f0732645bba47f8caad8f9b5e0a62d99dd2e5c63e0ef42063",
+    "evals/workflows/heldout_review.py": "3fddf65f28a9afa26ea93855634e16daa856916cc61a84f73064a514a8fd13cc",
+    "evals/workflows/heldout_verification.py": "1aeae760628be1d9dbe800c9b0f42c82dceff77eec22dd2180219a78214a59cd",
+    "evals/workflows/host-evidence/2026-09-22-codex-cli-0.155.1.json": "e308fbc644c2cda3e6c1100a7e3ad520832dab9c511f4b3e98dacbe7adf383b5",
+    "evals/workflows/host-evidence/2026-09-30-codex-cli-0.159.2.json": "d4014dc26c02c7d67b657cd795e05d8e70548e062e340723bbc428a182079596",
+    "evals/workflows/host-evidence/2026-10-17-claude-code-2.1.302.json": "48d28bb01ed13de65efc6b75fa1b7fa7df22fa1aae3c48e95ab4581047d8f087",
+    "evals/workflows/host-evidence/2026-10-17-codex-cli-0.163.0.json": "907fb1372fa49bcf5f6baaf6ebb6a74a1718d7b38149ce5ef15a6206e9529460",
+    "evals/workflows/host-evidence/2026-10-18-codex-cli-0.163.0-discovery.json": "5bf4921e82d7a800bb8b9b604b416050439c9035d83a85f8ad593642524d5d2b",
+    "evals/workflows/host-evidence/2026-10-18-codex-cli-0.163.0.json": "7cd8ae00440ee7c07af6a9b0f621a989e75a688943b2ab72dfd4302e95cad873",
+    "evals/workflows/host-evidence/2026-10-20-codex-cli-0.163.0-catalog.json": "97e9fb3f86079c47703694a12c520aa419ebc41da1923a7fb28a997577f38c3d",
+    "evals/workflows/host-evidence/2026-10-20-codex-cli-0.163.0-children.json": "ce63e8a9699585f0f492a13943f99346029edc99290e7f3716c2b25b251d5d9e",
+    "evals/workflows/host_probe.py": "2b2c4516e18e51e027ba1e1ec283953e081626ac4a477a4ca425872a95ad5312",
+    "evals/workflows/hosts.py": "77e3836c785dc43ec0aca0b33d8935ea89410124c239d9b2d4fefeaa34760867",
+    "evals/workflows/integration.py": "578fd7f55562b14cdcb4e32b0a420aff03c32c92306309bb3a971d69970510e9",
+    "evals/workflows/integration_run.py": "935461a36f59c5fc4ef44e1fc36ed9f9ed60ba1ba598d7ebc49f31ed311b7999",
+    "evals/workflows/one_line.py": "0bad018e4bf8302be14b6a57fc418692d8f81faf889852871ef901bcf2741be9",
+    "evals/workflows/pilot.py": "29f2046000b2053780f54d993b166de38910e72a9547c38792c54a9837fcc248",
+    "evals/workflows/portal_fixtures.py": "53f0167f6688e1b5dab8f0304a5832e76e2e050b69c1e145b9ecb85b7550f382",
+    "evals/workflows/probes.py": "4e7d1c6dc82e412657676146fea2c96cf1789471d3caf181290f2d30e736a49a",
+    "evals/workflows/process_family.py": "a8d98cc4824bb382f34bf02eac5e30a1bb8b43d66ff65a326efa365a6596e98c",
+    "evals/workflows/prose_ablation.py": "170c51bc37beda241beb7b14e6483b1eef71de0e3429dd8efa7748fd3c9009e7",
+    "evals/workflows/prose_confirmation.py": "01b6e30bf61b61ae238bd729d7c20126df6333cf92cb25ee88623c997013fc78",
+    "evals/workflows/response-schema.json": "584d2614acea89f90ee27897523206a45ae1312da06b75db5f31b1b4e1938b7f",
+    "evals/workflows/review_fixtures.py": "bb677690742d98c5bb87dde7b673313277bdbb222d271c7bed7a01682eb516c6",
+    "evals/workflows/run.py": "5002539f2b5c4b76074e28b01a6de39a39906e90e216d4a45677aac58b7cfc44",
+    "evals/workflows/sift_control_fixtures.py": "ef2e6255391223eecfa79428976c3ca4c4c03609d666a89216d366f118e60d8a",
+    "evals/workflows/test_archive_delegated.py": "b39d4ff3f62c9c75aa6c24c9e6160f0199612b5a3b21f5a2dcbf898b71fd05ba",
+    "evals/workflows/test_attempts.py": "2097b28e6d3891248ff5db2c278939357d02e379a770b63947739c24ac564e2e",
+    "evals/workflows/test_audit_delegated.py": "823ed42cf1c8961c8e20c06012b4f32109e1b22c3cb7a9d825821ab716ed4cce",
+    "evals/workflows/test_build_leftover.py": "abd4c579a0ad3f7970cbafee809d7bf5a14e5494287e2238a7f066c426fdd577",
+    "evals/workflows/test_cast_control.py": "d5372e149f0c0c318ca639c90f1d01a7c2d179403b38bc688ddf78086b21c860",
+    "evals/workflows/test_child_events.py": "234d8e2fe9b30c41390cd39bf6577803aad34315121966ab64b59f423b3d1ad3",
+    "evals/workflows/test_cleanup.py": "40a5f3d728de7457ba5c0f579c8a1b5ebe0761487fbf31053d3e15b992fe92d6",
+    "evals/workflows/test_conditions.py": "c767ca5c84b25bc727768b0260ae9de27bfc22a26a5a2838b9245480bdaf35c7",
+    "evals/workflows/test_control_claims.py": "16f133ee02c7d41c07bc4a9c1bd5de1aad8833fa765ca4cc4f732b765bc9417d",
+    "evals/workflows/test_debugging.py": "5421dcb7c65f1fa03d882782d5f1a80e66b8242c71cd587ac90fbe9017e68ac8",
+    "evals/workflows/test_delegated_review.py": "a0512a226785d97ec8e8e07620307b7d05aaaaabb186546a157c2ff38602f559",
+    "evals/workflows/test_discovery.py": "d36026159f79111355f24332e748b93491181dc65ffc80d96cd1ca9adff29eaf",
+    "evals/workflows/test_discovery_group.py": "73ee50f20f4a65217cd9e5a2d10ed41baf81e63420814725b8bfd565aa939164",
+    "evals/workflows/test_heldout_debugging.py": "ce152c74c5892bfaf5595a03ce4e10a15f7aa202d3166aa5d424688f2d772858",
+    "evals/workflows/test_heldout_prose.py": "ddfd30bd7273956ddbe929ead0be91c03b32341f70d5d6880a079a82f9bd4119",
+    "evals/workflows/test_heldout_review.py": "0f4737c5927f5a10f36d8c9b6f82c5700bbbc5a9250e0eca13f7d63d2340344c",
+    "evals/workflows/test_heldout_verification.py": "96c9144007bcae3e76be51782e296d7a4d5711b93bed0a5e8e2fb62c74ba239e",
+    "evals/workflows/test_host_validation.py": "529c0ba207a8b974b84ebb6d1238b30522753d0b14bf627b61d585cbbece928e",
+    "evals/workflows/test_integration.py": "f4ea466adf6e9a8550379840c217d890da11a70b9d02390e7ff2e6af9420a02d",
+    "evals/workflows/test_integration_run.py": "0c8e8953d3802731ae1fc3e06e596194bdf03188d82bb242374d3ae31df242b4",
+    "evals/workflows/test_one_line.py": "5d846157464355b900f9970151f8775c0f5e59889a4ebd30c9f776a73eea2bb1",
+    "evals/workflows/test_pilot.py": "3f289b83f59c5fb9eacd308ca0fa8613a6ab9805ef4da386291f611df49d7bbd",
+    "evals/workflows/test_portal_claims.py": "8c6e2b179dfac2d6c56862e15accd434cf8778d17c84e5cc7fa067b32b710109",
+    "evals/workflows/test_portal_run.py": "a669fc5c01300db2491f78cf066747a5c905386c26384bf239504242f7b06d67",
+    "evals/workflows/test_prose_ablation.py": "9c3d35d1cdba247f0788846ee637eae506bade96e0884043eb37365e2cb77aa2",
+    "evals/workflows/test_prose_confirmation.py": "40b37e4b0a35e331cffab8859145982c91b282f227cfecc997d1fd8b589d50d6",
+    "evals/workflows/test_runner_snapshot.py": "ae7e820e6cc395e6e9774cec082d962e12d820893f632e32d28719ae52fff4c5",
+    "evals/workflows/test_sift_control.py": "d33f0b119210ecc6400adc18b7e00508d96cbabe685c7901896cbc5553b84950",
+    "evals/workflows/test_ultima_followup.py": "5eda441683e216fb8f843daf9ec91e2ace6b1beeff6e85cd1c99c483efa01c23",
+    "evals/workflows/test_workflows.py": "cbf55916d8eb64495b34759ad78e45becc930633133f33761c825029e8872d38",
+    "evals/workflows/ultima_fixtures.py": "e4883c893d214eeac42f0cfd08c83568457a819bca4477718741d3b9d8a876d4"
+  },
+  "stop_conditions": [
+    "containment or setup failure",
+    "product mutation",
+    "event collection failure",
+    "process family survives",
+    "host failed or cancelled",
+    "source, catalog or host changed",
+    "a child thread was created"
+  ],
+  "study": "group"
+}

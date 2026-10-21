@@ -1,6 +1,6 @@
 ---
 name: dispel
-description: "Use when writing or rewriting any prose the user will read or send: Slack messages, PR descriptions, Linear tickets, docs, emails, release notes, summaries, plans, blog posts, commit bodies. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel."
+description: "Use when the user asks you to write, draft, rewrite, or edit prose for them to send or publish: Slack messages, PR descriptions, tickets, docs, emails, release notes, blog posts, commit bodies, or a summary or plan they asked for as the deliverable. Strips the LLM-essay register (em dashes, antithesis, corrective negation, rule of three, setup/payoff, throat-clearing openers, landing sentences, nominalization, hedging, performed enthusiasm, metaphor nouns, passive voice, adverbs) and writes for the spoken voice instead. Also use when the user says \"no em dashes\", \"sounds like AI\", \"make it sound human\", \"strip the AI voice\", or invokes /dispel. Do not load it for your own routine summary or plan at the end of other work."
 ---
 
 <!-- BEGIN MANA PERSONA -->

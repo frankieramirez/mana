@@ -311,7 +311,7 @@ The skill runs in the active agent session. It creates no background schedule an
 
 Rewrites prose so it sounds like a person talking.
 
-Use it for docs, messages, PR descriptions, or other writing. It also triggers on “no em dashes,” “sounds like AI,” “make it sound human,” and “strip the AI voice.”
+Use it for docs, messages, PR descriptions, or other writing. It also triggers on “no em dashes,” “sounds like AI,” “make it sound human,” and “strip the AI voice.” It does not load for the routine summary or plan at the end of other work.
 
 ```text
 # Rewrite the prose in context
